@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#4c8aed</color>
+    <!--<color name="colorPrimaryDark">#00574B</color>-->
+    <color name="colorPrimaryDark">#0176d6</color>
+    <!--<color name="colorAccent">#D81B60</color>-->
+    <color name="colorAccent">#4c8aed</color>
+
+
+
+    <!--<color name="colorPrimary">#e8e9ee</color>-->
+    <!--<color name="colorPrimaryDark">#e8e9ee</color>-->
+    <!--<color name="colorAccent">#292a2e</color>-->
+
+    <color name="app_blue">#4c8aed</color>
+    <color name="reg_main_txt_back">#46454B19</color>
+    <color name="reg_main_txt">#46454B19</color>
+
+
+
+
+    <color name="colorFAB">#0176d6</color> <!--#00b7f1 -->
+    <color name="white">#FFFFFF</color>
+    <color name="light_blue">#098ee8</color>
+    <color name="light_gray">#b3b3b3</color>
+    <color name="dark_pink">#de326f</color>
+    <!-- FAB -->
+
+
+    <color name="black_semi_transparent">#B2000000</color>
+    <color name="background">#e5e5e5</color>
+    <color name="half_black">#808080</color>
+
+    <color name="white_pressed">#f1f1f1</color>
+    <color name="pink">#e91e63</color>
+    <color name="pink_pressed">#ec407a</color>
+    <color name="blue_semi_transparent">#805677fc</color>
+    <color name="blue_semi_transparent_pressed">#80738ffe</color>
+
+
+    <color name="a_nd_black">#292a2e</color>
+    <color name="a_nd_gray">#d2d5dc</color>
+    <color name="a_nd_blue">#0176d6</color>
+
+
+    <color name="a_nd_light_gray">#e8e9ee</color>
+    <color name="a_nd_new_gray">#46454b</color>
+
+    <color name="a_nd_lv_selected">#B3E8FF</color>
+    <color name="a_nd_lv_unselected">#FFFFFF</color>
+
+
+    <color name="black90">#F2000000</color>
+    <color name="black80">#CC000000</color>
+    <color name="black70">#B3000000</color>
+    <color name="black60">#99000000</color>
+    <color name="black50">#80000000</color>
+    <color name="black40">#66000000</color>
+    <color name="black30">#4D000000</color>
+    <color name="black20">#33000000</color>
+    <color name="black10">#1A000000</color>
+    <color name="black00">#00000000</color>
+
+    <color name="white90">#F2FFFFFF</color>
+    <color name="white80">#CCFFFFFF</color>
+    <color name="white70">#B3FFFFFF</color>
+    <color name="white60">#99FFFFFF</color>
+    <color name="white50">#80FFFFFF</color>
+    <color name="white40">#66FFFFFF</color>
+    <color name="white30">#4DFFFFFF</color>
+    <color name="white20">#33FFFFFF</color>
+    <color name="white10">#1AFFFFFF</color>
+    <color name="white00">#00FFFFFF</color>
+
+
+</resources>

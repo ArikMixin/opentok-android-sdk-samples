@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Wochat</string>
+    <string name="splash_title_1">Welcome to Wochat</string>
+    <string name="splash_agree_and_continue">Agree and Continue</string>
+    <string name="splash_read_our_terms">Read our Privacy Policy. Tap Agree and continue to accept the Terms of Service</string>
+    <string name="splash_read_terms">Read our %1$s. Tap \"Agree and Continue\" to accept the %2$s.</string>
+    <string name="splash_terms">&lt;a href="http://wochat.io/privacy">Terms of Service&lt;/a></string>
+    <string name="splash_privacy">&lt;a href="http://wochat.io/privacy">Privacy Policy&lt;/a></string>
+    <string name="msg_permissions_explan_title">Permission Request</string>
+    <string name="msg_permissions_explan_body">To easily connect with friends and family, and send and receive photos and videos, allow Wochat access to your contacts and your device\'s photos, media and files.</string>
+    <string name="msg_permissions_explan_ok_btn">Continue</string>
+    <string name="msg_permissions_explan_cancel_btn">Not now</string>
+    <string name="reg_page_phone_title">YOUR PHONE</string>
+    <string name="reg_page_code_title">ENTER SMS CODE</string>
+    <string name="reg_page_pic_title">YOUR PROFILE PICTURE</string>
+
+</resources>

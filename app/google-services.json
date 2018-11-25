@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "344493067818",
+    "firebase_url": "https://wochat-io.firebaseio.com",
+    "project_id": "wochat-io",
+    "storage_bucket": "wochat-io.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:344493067818:android:d752e75c45364a93",
+        "android_client_info": {
+          "package_name": "io.wochat.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "344493067818-nlj6qd57om4m4n7k8nuqee76v6j3g774.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.wochat.app",
+            "certificate_hash": "9ebfa70c9597bd1c1b3fb18effbd85a13c670841"
+          }
+        },
+        {
+          "client_id": "344493067818-kku20p3rocpfbjdc6gqtvl52627ma8ih.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1EGrSUM6UeS-T4bijkc-aKeNJX_WE2KQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "344493067818-kku20p3rocpfbjdc6gqtvl52627ma8ih.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "344493067818-39i70r6rkq185872con6k6fe1mds7pvn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wochatsas.wochat"
+              }
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
