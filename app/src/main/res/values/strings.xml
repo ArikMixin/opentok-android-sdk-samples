@@ -13,5 +13,11 @@
     <string name="reg_page_phone_title">YOUR PHONE</string>
     <string name="reg_page_code_title">ENTER SMS CODE</string>
     <string name="reg_page_pic_title">YOUR PROFILE PICTURE</string>
-
+    <string name="reg_phone_num_progress_body">Connecting</string>
+    <string name="reg_code_progress_body">Verifying</string>
+    <string name="reg_phone_num_title">Your Phone</string>
+    <string name="reg_phone_num_text">Please confirm your country code and enter your phone number</string>
+    <string name="reg_code_title">Enter Code</string>
+    <string name="reg_code_text">Wochat sent you an SMS with a confirmation code to the phone number below.  %s</string>
+    <string name="reg_code_wrong_num">&lt;a href="">Wrong number?&lt;/a></string>
 </resources>

@@ -1,7 +1,13 @@
 package io.wochat.app.ui;
 
+import android.Manifest;
+import android.app.ProgressDialog;
+import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -19,6 +25,10 @@ import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatTextView;
 import android.telephony.PhoneNumberUtils;
+import android.text.Editable;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
@@ -27,6 +37,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -45,8 +56,12 @@ import org.json.JSONObject;
 import java.util.Locale;
 
 import io.wochat.app.R;
+import io.wochat.app.com.WochatApi;
+import io.wochat.app.logic.SMSReceiver;
+import io.wochat.app.utils.TextViewLinkMovementMethod;
+import io.wochat.app.viewmodel.RegistrationViewModel;
 
-public class RegistrationActivity extends AppCompatActivity {
+public class RegistrationActivity extends PermissionActivity {
 
 	private static final String TAG = "RegistrationActivity";
 	private ViewPager mPager;
@@ -54,7 +69,25 @@ public class RegistrationActivity extends AppCompatActivity {
 	private CountryCodePicker mCountryCodePicker;
 	private AppCompatTextView mCountryCodeTV;
 	private AppCompatEditText mPhoneNumET;
-	private AppCompatButton mNextBtn;
+
+
+	private String[] PERMISSIONS = {
+		//Manifest.permission.READ_SMS
+		Manifest.permission.RECEIVE_SMS
+	};
+	private String mUserTrimmedPhone;
+	private String mUserCountryCode;
+	private AppCompatEditText mCodePhoneNumET;
+	private AppCompatEditText mCodeCodeNumET;
+	private String mUserNiceFormattedPhone;
+	private AppCompatButton mCodeNextBtn;
+	private RegistrationViewModel mRegViewModel;
+	private ProgressDialog mProgressDialog;
+
+	@Override
+	protected String[] getPermissions() {
+		return PERMISSIONS;
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +96,11 @@ public class RegistrationActivity extends AppCompatActivity {
 
 		String token = FirebaseInstanceId.getInstance().getToken();
 		Log.e(TAG, "token: " + token);
+
+
+		mRegViewModel = ViewModelProviders.of(this).get(RegistrationViewModel.class);
+
+
 
 
 		mPager = (ViewPager) findViewById(R.id.view_pager);
@@ -75,7 +113,11 @@ public class RegistrationActivity extends AppCompatActivity {
 
 			@Override
 			public void onPageSelected(int position) {
-				//setTitle(mPagerAdapter.getPageTitle(position));
+				if (position == ModelObject.ENTER_PHONE.ordinal())
+					initPhoneView();
+				else if (position == ModelObject.ENTER_SMS_CODE.ordinal())
+					initCodeView();
+
 			}
 
 			@Override
@@ -111,7 +153,49 @@ public class RegistrationActivity extends AppCompatActivity {
 
 	private void init() {
 		Toast.makeText(this, "permission ok", Toast.LENGTH_LONG).show();
+
+		MutableLiveData<String> userRegistrationResult = mRegViewModel.getUserRegistrationResult();
+		userRegistrationResult.observe(this, new Observer<String>() {
+			@Override
+			public void onChanged(@Nullable String s) {
+				if (mProgressDialog != null) {
+					mProgressDialog.dismiss();
+					mProgressDialog = null;
+				}
+				if (s == null) {
+					mPager.setCurrentItem(1, true);
+					Toast.makeText(RegistrationActivity.this, "result ok", Toast.LENGTH_SHORT).show();
+				}
+				else
+					Toast.makeText(RegistrationActivity.this, "result error: " + s, Toast.LENGTH_SHORT).show();
+			}
+		});
+
+
+		MutableLiveData<String> userVerificationResult = mRegViewModel.getUserVerificationResult();
+		userVerificationResult.observe(this, new Observer<String>() {
+			@Override
+			public void onChanged(@Nullable String s) {
+				if (mProgressDialog != null) {
+					mProgressDialog.dismiss();
+					mProgressDialog = null;
+				}
+				if (s == null) {
+					mPager.setCurrentItem(2, true);
+					Toast.makeText(RegistrationActivity.this, "result ok", Toast.LENGTH_SHORT).show();
+				}
+				else
+					Toast.makeText(RegistrationActivity.this, "result error: " + s, Toast.LENGTH_SHORT).show();
+			}
+		});
+
+
+
 	}
+
+
+
+
 
 
 	private class RegistrationPagerAdapter extends PagerAdapter {
@@ -137,6 +221,8 @@ public class RegistrationActivity extends AppCompatActivity {
 			container.addView(layout);
 			if (position == ModelObject.ENTER_PHONE.ordinal())
 				initPhoneView(layout);
+			else if (position == ModelObject.ENTER_SMS_CODE.ordinal())
+				initCodeView(layout);
 			return layout;
 		}
 
@@ -150,6 +236,12 @@ public class RegistrationActivity extends AppCompatActivity {
 			return view == object;
 		}
 
+
+
+		@Override
+		public void finishUpdate(@NonNull ViewGroup container) {
+			//Log.e(TAG, "finishUpdate: " + container.getTransitionName());
+		}
 
 		@Nullable
 		@Override
@@ -185,6 +277,9 @@ public class RegistrationActivity extends AppCompatActivity {
 
 	}
 
+	private void initPhoneView() {
+
+	}
 
 	private void initPhoneView(ViewGroup layout) {
 		mCountryCodeTV = (AppCompatTextView)layout.findViewById(R.id.country_code_tv);
@@ -202,27 +297,29 @@ public class RegistrationActivity extends AppCompatActivity {
 		int cc = mCountryCodePicker.getSelectedCountryCodeAsInt();
 		mCountryCodeTV.setText("+" + cc);
 
-		mNextBtn = (AppCompatButton)layout.findViewById(R.id.next_btn);
-		mNextBtn.setOnClickListener(new View.OnClickListener() {
+		AppCompatButton nextBtn = (AppCompatButton) layout.findViewById(R.id.next_btn);
+		nextBtn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				int cc = mCountryCodePicker.getSelectedCountryCodeAsInt();
-				String phone = mPhoneNumET.getText().toString().trim();
-				phone = StringUtils.stripStart(phone,"0");
-				final String phoneForValidation = "+" + cc + phone;
+				String phone1 = mPhoneNumET.getText().toString().trim();
+				mUserTrimmedPhone = StringUtils.stripStart(phone1,"0");
+				final String phoneForValidation = "+" + cc + mUserTrimmedPhone;
 				boolean phoneOK = Patterns.PHONE.matcher(phoneForValidation).matches();
-				if (phoneOK && (phone.length() > 6) && (phone.length() < 13)){
+				if (phoneOK && (mUserTrimmedPhone.length() > 6) && (mUserTrimmedPhone.length() < 13)){
 					mPhoneNumET.setError(null);
 					InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 					imm.hideSoftInputFromWindow(mPhoneNumET.getWindowToken(), 0);
-					String nicePhone = PhoneNumberUtils.formatNumber(phoneForValidation, Locale.getDefault().getCountry());
-
+					mUserNiceFormattedPhone = PhoneNumberUtils.formatNumber(phoneForValidation, Locale.getDefault().getCountry());
 					new AlertDialog.Builder(RegistrationActivity.this)
-						.setMessage("We will be verifying the phone number:\n\n" + nicePhone + "\n\nIs this OK or would you like to edit the number?" )
+						.setMessage("We will be verifying the phone number:\n\n" + mUserNiceFormattedPhone + "\n\nIs this OK or would you like to edit the number?" )
 						.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
-								SendNumberToServer(phoneForValidation);
+								if (mCodePhoneNumET != null)
+									mCodePhoneNumET.setText(mUserNiceFormattedPhone);
+								mUserCountryCode = mCountryCodePicker.getSelectedCountryNameCode(); // IL
+								handlePermissions();
 							}
 						})
 						.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
@@ -243,27 +340,142 @@ public class RegistrationActivity extends AppCompatActivity {
 
 	}
 
-	private void SendNumberToServer(String phoneForValidation) {
-		String url = "http://my-json-feed";
-		RequestQueue queue = Volley.newRequestQueue(this);
-		JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-			(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+	private void initCodeView() {
+		mCodeCodeNumET.setText("");
+		mCodePhoneNumET.setText(mUserNiceFormattedPhone);
+	}
 
-				@Override
-				public void onResponse(JSONObject response) {
-					Log.e(TAG, "Response: " + response.toString());
+	private void initCodeView(ViewGroup layout) {
+		mCodePhoneNumET = (AppCompatEditText) layout.findViewById(R.id.code_phone_num_et);
+		mCodeCodeNumET = (AppCompatEditText) layout.findViewById(R.id.code_code_et);
+		mCodeCodeNumET.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			@Override
+			public void afterTextChanged(Editable s) {
+				if(s.toString().length() == 6){
+					mCodeCodeNumET.setError(null);
+					mCodeNextBtn.setEnabled(true);
 				}
-			}, new Response.ErrorListener() {
+				else if(s.toString().length() == 0){
+					mCodeNextBtn.setEnabled(false);
+				}
+				else
+					mCodeNextBtn.setEnabled(true);
+			}
+		});
 
+		TextView codeTextTV = (TextView) layout.findViewById(R.id.code_text_tv);
+		String bottomString = String.format(getString(R.string.reg_code_text),
+			getString(R.string.reg_code_wrong_num));
+
+		codeTextTV.setText(Html.fromHtml(bottomString));
+		TextViewLinkMovementMethod tvlmm = TextViewLinkMovementMethod.getInstance();
+		tvlmm.setOnTouchListener(new TextViewLinkMovementMethod.OnTouchListener() {
+			@Override
+			public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
+				if (event.getAction() == MotionEvent.ACTION_UP) {
+					mPager.setCurrentItem(0, true);
+				}
+				return true;
+			}
+		});
+		codeTextTV.setMovementMethod(tvlmm);
+
+		mCodeNextBtn = (AppCompatButton) layout.findViewById(R.id.next_btn);
+		mCodeNextBtn.setEnabled(false);
+		mCodeNextBtn.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if(mCodeCodeNumET.getText().length() != 6){
+					mCodeCodeNumET.setError("code must be 6 decimal digits");
+				}
+				else {
+					userRegistration();
+				}
+
+			}
+		});
+	}
+
+
+	private void handlePermissions() {
+		if (hasPermissions())
+			userRegistration();
+		else {
+			checkPermissions(new OnPermissionResultListener() {
 				@Override
-				public void onErrorResponse(VolleyError error) {
-					Log.e(TAG, "Error: " + error.getMessage());
-
+				public void OnPermissionGranted(boolean result) {
+					userRegistration();
 				}
 			});
+		}
+	}
 
-// Access the RequestQueue through your singleton class.
-		queue.add(jsonObjectRequest);
+	private void userRegistration() {
+		mProgressDialog = ProgressDialog.show(RegistrationActivity.this,
+			null,
+			getString(R.string.reg_phone_num_progress_body),
+			true,
+			false);
+
+		mRegViewModel.userRegistration(mUserTrimmedPhone, mUserCountryCode);
+
+	}
+
+	private void userVerification(String code){
+		mProgressDialog = ProgressDialog.show(RegistrationActivity.this,
+			null,
+			getString(R.string.reg_code_progress_body),
+			true,
+			false);
+
+		mRegViewModel.userVerification(code);
+
+	}
+
+
+
+	private SMSReceiver smsReceiver = new SMSReceiver(new SMSReceiver.OnSmsReceivedListener() {
+		@Override
+		public void onSmsReceived(String code) {
+			if(code == null) {
+				Log.e(TAG, "onSmsReceived: null");
+			}
+			else {
+				if (mCodeCodeNumET != null)
+					mCodeCodeNumET.setText(code);
+
+				userVerification(code);
+
+				Log.e(TAG, "onSmsReceived: " + code);
+			}
+		}
+	});
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		registerReceiver(smsReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		unregisterReceiver(smsReceiver);
+	}
+
+
+	@Override
+	protected void showPermissionsExplanationDialog() {
+
+	}
+
+	@Override
+	protected boolean isNeededPermissionsExplanationDialog() {
+		return false;
 	}
 
 

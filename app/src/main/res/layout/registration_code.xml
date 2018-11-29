@@ -1,19 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:background="@color/reg_main_txt_back">
+        android:layout_height="160dp"
+        android:background="@color/reg_main_txt_back"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="15dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/reg_code_title"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
+            android:textColor="@color/black80"
+            android:textStyle="bold"/>
+
+
+        <TextView
+            android:id="@+id/code_text_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="@string/reg_code_text"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+            android:textColor="@color/black50"/>
+
 
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="20dp">
+
+
+        <android.support.v7.widget.AppCompatEditText
+            android:id="@+id/code_phone_num_et"
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:editable="false"
+            android:enabled="false"
+            android:gravity="center"
+            android:hint="phone number"
+            android:inputType="phone"
+            android:text="+972 52 666 6666">
+        </android.support.v7.widget.AppCompatEditText>
 
 
 
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+
+            <android.support.v7.widget.AppCompatEditText
+                android:id="@+id/code_code_et"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:hint="Enter the code"
+                android:inputType="numberDecimal"
+                android:text="">
+            </android.support.v7.widget.AppCompatEditText>
+
+
+
+        </LinearLayout>
+
+
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/next_btn"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Widget.Button.Inverse"
+            android:background="@color/app_blue"
+            android:text="Next"/>
+
+    </LinearLayout>
 
 </LinearLayout>

@@ -1,11 +1,15 @@
 package io.wochat.app.ui;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Spannable;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -17,8 +21,20 @@ import io.wochat.app.utils.TextViewLinkMovementMethod;
 
 public class SplashActivity extends PermissionActivity {
 
+	private static final String TAG = "SplashActivity";
 	private TextView mReadTermsTV;
 	private Button mAgreeBtn;
+
+	private String[] PERMISSIONS = {
+		android.Manifest.permission.READ_CONTACTS,
+		android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+	};
+
+	@Override
+	protected String[] getPermissions() {
+		return PERMISSIONS;
+	}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -83,4 +99,34 @@ public class SplashActivity extends PermissionActivity {
 		startActivity(intent);
 		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 	}
+
+
+	@Override
+	protected void showPermissionsExplanationDialog() {
+		new AlertDialog.Builder(this)
+			.setTitle(R.string.msg_permissions_explan_title)
+			.setMessage(R.string.msg_permissions_explan_body)
+			.setPositiveButton(R.string.msg_permissions_explan_ok_btn, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					requestPermissions();
+				}
+			})
+			.setNegativeButton(R.string.msg_permissions_explan_cancel_btn, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					Log.d(TAG, "not now");
+					mOnPermissionResultListener.OnPermissionGranted(false);
+				}
+			})
+			.show();
+
+	}
+
+	@Override
+	protected boolean isNeededPermissionsExplanationDialog() {
+		return true;
+	}
+
+
 }
