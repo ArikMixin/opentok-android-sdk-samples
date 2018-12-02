@@ -135,6 +135,7 @@ public abstract class PermissionActivity extends AppCompatActivity {
 			for (int i=0; i<grantResults.length;i++){
 				if (grantResults[i] != PackageManager.PERMISSION_GRANTED){
 					mOnPermissionResultListener.OnPermissionGranted(false);
+					return;
 				}
 			}
 			mOnPermissionResultListener.OnPermissionGranted(true);

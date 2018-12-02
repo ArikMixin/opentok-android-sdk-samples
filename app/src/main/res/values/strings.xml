@@ -20,4 +20,7 @@
     <string name="reg_code_title">Enter Code</string>
     <string name="reg_code_text">Wochat sent you an SMS with a confirmation code to the phone number below.  %s</string>
     <string name="reg_code_wrong_num">&lt;a href="">Wrong number?&lt;/a></string>
+    <string name="error_sms_code_verification_num_digits">code must be 6 decimal digits</string>
+    <string name="error_sms_code_verification_invalid_code">wrong code</string>
+    <string name="error_sms_code_verification_general_error">error, please try again</string>
 </resources>

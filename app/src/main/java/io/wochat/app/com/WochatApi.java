@@ -12,6 +12,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,7 +30,7 @@ public class WochatApi {
 
 
 	public interface OnServerResponseListener{
-		void OnServerResponse(boolean isSuccess, String error, JSONObject response);
+		void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response);
 	}
 
 	private static WochatApi mInstance;
@@ -74,38 +75,9 @@ public class WochatApi {
 		}
 
 		String url = BASE_URL + "user/register/";
-		RequestQueue queue = Volley.newRequestQueue(mContext);
-		JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-			(Request.Method.POST, url, jsonObject, new Response.Listener<JSONObject>() {
 
-				@Override
-				public void onResponse(JSONObject response) {
-					Log.e(TAG, "Response: " + response.toString());
-					if (response != null) {
-						try {
-							boolean result = response.getBoolean("success");
-							String error = response.getString("error");
-							JSONObject data = response.getJSONObject("data");
-							lsnr.OnServerResponse(result, error, data);
-						} catch (JSONException e) {
-							e.printStackTrace();
-							lsnr.OnServerResponse(false, e.getMessage(), null);
-						}
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
 
-					}
-				}
-			}, new Response.ErrorListener() {
-
-				@Override
-				public void onErrorResponse(VolleyError error) {
-					Log.e(TAG, "Error: " + error.getMessage());
-					lsnr.OnServerResponse(false, error.getMessage(), null);
-
-				}
-			});
-
-		// Access the RequestQueue through your singleton class.
-		queue.add(jsonObjectRequest);
 
 	}
 
@@ -124,22 +96,97 @@ public class WochatApi {
 		}
 
 		String url = BASE_URL + "user/validate_code/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+	}
+
+
+
+	public void userConfirmRegistration(String userName, String profilePicURL, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API userConfirmRegistration - userName: " + userName + ", profilePicURL: " + profilePicURL);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("user_name", userName);
+			jsonObject.put("profile_pic_url", profilePicURL);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "user/confirm_registration/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+
+
+	}
+
+
+	public void userGetContacts(String[] contactIdArray, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API userGetContacts - contactIdList count: " + contactIdArray.length);
+
+		JSONObject jsonObject = new JSONObject();
+
+		try {
+			jsonObject.put("contact_ids", contactIdArray);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "user/contacts_list/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+
+
+	}
+
+
+//	public void dataUploadFile(String fileName, final OnServerResponseListener lsnr) {
+//
+//		Log.e(TAG, "API dataUploadFile - userName: " + fileName);
+//
+//		JSONObject jsonObject = new JSONObject();
+//		try {
+//			jsonObject.put("user_name", userName);
+//			jsonObject.put("profile_pic_url", profilePicURL);
+//		} catch (JSONException e) {
+//			e.printStackTrace();
+//		}
+//
+//		String url = BASE_URL + "user/confirm_registration/";
+//
+//		RequestQueue queue = Volley.newRequestQueue(mContext);
+//		queue.add()
+//
+//
+//
+//		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+//
+//
+//	}
+
+
+
+	private void sendRequestAndHandleResult(int method, String url, JSONObject jsonObject, final OnServerResponseListener lsnr){
 		RequestQueue queue = Volley.newRequestQueue(mContext);
 		JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-			(Request.Method.POST, url, jsonObject, new Response.Listener<JSONObject>() {
+			(method, url, jsonObject, new Response.Listener<JSONObject>() {
 
 				@Override
 				public void onResponse(JSONObject response) {
 					Log.e(TAG, "Response: " + response.toString());
+					JSONObject data = null;
 					if (response != null) {
 						try {
 							boolean result = response.getBoolean("success");
 							String error = response.getString("error");
-							JSONObject data = response.getJSONObject("data");
-							lsnr.OnServerResponse(result, error, data);
+							if (result)
+								data = response.getJSONObject("data");
+							lsnr.OnServerResponse(result, error, null, data);
 						} catch (JSONException e) {
 							e.printStackTrace();
-							lsnr.OnServerResponse(false, e.getMessage(), null);
+							lsnr.OnServerResponse(false, null, e, null);
 						}
 
 					}
@@ -149,7 +196,7 @@ public class WochatApi {
 				@Override
 				public void onErrorResponse(VolleyError error) {
 					Log.e(TAG, "Error: " + error.getMessage());
-					lsnr.OnServerResponse(false, error.getMessage(), null);
+					lsnr.OnServerResponse(false, null, error, null);
 
 				}
 			});
@@ -157,6 +204,7 @@ public class WochatApi {
 		// Access the RequestQueue through your singleton class.
 		queue.add(jsonObjectRequest);
 	}
+
 
 
 }

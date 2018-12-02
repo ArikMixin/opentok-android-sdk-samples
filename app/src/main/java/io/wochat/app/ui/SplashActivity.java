@@ -98,6 +98,7 @@ public class SplashActivity extends PermissionActivity {
 		Intent intent = new Intent(SplashActivity.this, RegistrationActivity.class);
 		startActivity(intent);
 		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
+		finish();
 	}
 
 

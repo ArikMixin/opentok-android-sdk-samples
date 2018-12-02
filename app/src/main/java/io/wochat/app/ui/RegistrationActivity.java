@@ -8,18 +8,11 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.IntentFilter;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatEditText;
@@ -35,29 +28,20 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.hbb20.CountryCodePicker;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 
 import java.util.Locale;
 
 import io.wochat.app.R;
-import io.wochat.app.com.WochatApi;
 import io.wochat.app.logic.SMSReceiver;
+import io.wochat.app.model.StateData;
 import io.wochat.app.utils.TextViewLinkMovementMethod;
 import io.wochat.app.viewmodel.RegistrationViewModel;
 
@@ -113,9 +97,9 @@ public class RegistrationActivity extends PermissionActivity {
 
 			@Override
 			public void onPageSelected(int position) {
-				if (position == ModelObject.ENTER_PHONE.ordinal())
+				if (position == PagerModel.ENTER_PHONE.ordinal())
 					initPhoneView();
-				else if (position == ModelObject.ENTER_SMS_CODE.ordinal())
+				else if (position == PagerModel.ENTER_SMS_CODE.ordinal())
 					initCodeView();
 
 			}
@@ -134,7 +118,7 @@ public class RegistrationActivity extends PermissionActivity {
 		});
 
 		mPager.setAdapter(mPagerAdapter);
-		mPager.setCurrentItem(0);
+		mPager.setCurrentItem(PagerModel.ENTER_PHONE.ordinal());
 		//setTitle(mPagerAdapter.getPageTitle(0));
 
 
@@ -154,38 +138,70 @@ public class RegistrationActivity extends PermissionActivity {
 	private void init() {
 		Toast.makeText(this, "permission ok", Toast.LENGTH_LONG).show();
 
-		MutableLiveData<String> userRegistrationResult = mRegViewModel.getUserRegistrationResult();
-		userRegistrationResult.observe(this, new Observer<String>() {
+		MutableLiveData<StateData<String>> userRegistrationResult = mRegViewModel.getUserRegistrationResult();
+		userRegistrationResult.observe(this, new Observer<StateData<String>>() {
 			@Override
-			public void onChanged(@Nullable String s) {
+			public void onChanged(@Nullable StateData<String> stringStateData) {
 				if (mProgressDialog != null) {
 					mProgressDialog.dismiss();
 					mProgressDialog = null;
 				}
-				if (s == null) {
-					mPager.setCurrentItem(1, true);
+				if (stringStateData.isSuccess()){
+					mPager.setCurrentItem(PagerModel.ENTER_SMS_CODE.ordinal(), true);
 					Toast.makeText(RegistrationActivity.this, "result ok", Toast.LENGTH_SHORT).show();
 				}
-				else
-					Toast.makeText(RegistrationActivity.this, "result error: " + s, Toast.LENGTH_SHORT).show();
+				else if (stringStateData.isErrorComm()){
+					Toast.makeText(RegistrationActivity.this, "result error: " + stringStateData.getErrorCom(), Toast.LENGTH_SHORT).show();
+				}
+				else if (stringStateData.isErrorLogic()){
+					Toast.makeText(RegistrationActivity.this, "result error: " + stringStateData.getErrorLogic(), Toast.LENGTH_SHORT).show();
+				}
+
 			}
 		});
 
 
-		MutableLiveData<String> userVerificationResult = mRegViewModel.getUserVerificationResult();
-		userVerificationResult.observe(this, new Observer<String>() {
+//		userRegistrationResult.observe(this, new Observer<String>() {
+//			@Override
+//			public void onChanged(@Nullable String result) {
+//				if (mProgressDialog != null) {
+//					mProgressDialog.dismiss();
+//					mProgressDialog = null;
+//				}
+//				if (result == null) {
+//					mPager.setCurrentItem(PagerModel.ENTER_SMS_CODE.ordinal(), true);
+//					Toast.makeText(RegistrationActivity.this, "result ok", Toast.LENGTH_SHORT).show();
+//				}
+//				else {
+//					Toast.makeText(RegistrationActivity.this, "result error: " + result, Toast.LENGTH_SHORT).show();
+//				}
+//			}
+//		});
+
+
+		MutableLiveData<StateData<String>> userVerificationResult = mRegViewModel.getUserVerificationResult();
+		userVerificationResult.observe(this, new Observer<StateData<String>>() {
 			@Override
-			public void onChanged(@Nullable String s) {
+			public void onChanged(@Nullable StateData<String> stringStateData) {
 				if (mProgressDialog != null) {
 					mProgressDialog.dismiss();
 					mProgressDialog = null;
 				}
-				if (s == null) {
-					mPager.setCurrentItem(2, true);
-					Toast.makeText(RegistrationActivity.this, "result ok", Toast.LENGTH_SHORT).show();
+				if (stringStateData.isSuccess()){
+					Toast.makeText(RegistrationActivity.this, "result ok: token: " + stringStateData.getData(), Toast.LENGTH_SHORT).show();
+					mPager.setCurrentItem(PagerModel.ENTER_PIC.ordinal(), true);
 				}
-				else
-					Toast.makeText(RegistrationActivity.this, "result error: " + s, Toast.LENGTH_SHORT).show();
+				else if (stringStateData.isErrorLogic()){
+					if (stringStateData.getErrorLogic().equals("invalid code")){
+						mCodeCodeNumET.setError(getString(R.string.error_sms_code_verification_invalid_code));
+					}
+					else {
+						mCodeCodeNumET.setError("error logic unknown");
+					}
+				}
+				else {
+					mCodeCodeNumET.setError(getString(R.string.error_sms_code_verification_general_error));
+				}
 			}
 		});
 
@@ -208,7 +224,7 @@ public class RegistrationActivity extends PermissionActivity {
 
 		@Override
 		public int getCount() {
-			return ModelObject.values().length;
+			return PagerModel.values().length;
 		}
 
 		@NonNull
@@ -216,12 +232,12 @@ public class RegistrationActivity extends PermissionActivity {
 		public Object instantiateItem(@NonNull ViewGroup container, int position) {
 			LayoutInflater inflater = LayoutInflater.from(mContext);
 
-			ModelObject modelObject = ModelObject.values()[position];
-			ViewGroup layout = (ViewGroup) inflater.inflate(modelObject.getLayoutResId(), container, false);
+			PagerModel pagerModel = PagerModel.values()[position];
+			ViewGroup layout = (ViewGroup) inflater.inflate(pagerModel.getLayoutResId(), container, false);
 			container.addView(layout);
-			if (position == ModelObject.ENTER_PHONE.ordinal())
+			if (position == PagerModel.ENTER_PHONE.ordinal())
 				initPhoneView(layout);
-			else if (position == ModelObject.ENTER_SMS_CODE.ordinal())
+			else if (position == PagerModel.ENTER_SMS_CODE.ordinal())
 				initCodeView(layout);
 			return layout;
 		}
@@ -246,14 +262,14 @@ public class RegistrationActivity extends PermissionActivity {
 		@Nullable
 		@Override
 		public CharSequence getPageTitle(int position) {
-			ModelObject modelObject = ModelObject.values()[position];
-			return getString(modelObject.getTitleResId());
+			PagerModel pagerModel = PagerModel.values()[position];
+			return getString(pagerModel.getTitleResId());
 		}
 	}
 
 
 
-	private enum ModelObject {
+	private enum PagerModel {
 
 		ENTER_PHONE(R.string.reg_page_phone_title, R.layout.registration_phone),
 		ENTER_SMS_CODE(R.string.reg_page_code_title, R.layout.registration_code),
@@ -262,7 +278,7 @@ public class RegistrationActivity extends PermissionActivity {
 		private int mTitleResId;
 		private int mLayoutResId;
 
-		ModelObject(int titleResId, int layoutResId) {
+		PagerModel(int titleResId, int layoutResId) {
 			mTitleResId = titleResId;
 			mLayoutResId = layoutResId;
 		}
@@ -377,7 +393,7 @@ public class RegistrationActivity extends PermissionActivity {
 			@Override
 			public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
 				if (event.getAction() == MotionEvent.ACTION_UP) {
-					mPager.setCurrentItem(0, true);
+					mPager.setCurrentItem(PagerModel.ENTER_PHONE.ordinal(), true);
 				}
 				return true;
 			}
@@ -390,10 +406,12 @@ public class RegistrationActivity extends PermissionActivity {
 			@Override
 			public void onClick(View v) {
 				if(mCodeCodeNumET.getText().length() != 6){
-					mCodeCodeNumET.setError("code must be 6 decimal digits");
+					mCodeCodeNumET.setError(getString(R.string.error_sms_code_verification_num_digits));
 				}
 				else {
-					userRegistration();
+					InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+					imm.hideSoftInputFromWindow(mCodeCodeNumET.getWindowToken(), 0);
+					userVerification(mCodeCodeNumET.getText().toString());
 				}
 
 			}
@@ -479,4 +497,12 @@ public class RegistrationActivity extends PermissionActivity {
 	}
 
 
+	@Override
+	public void onBackPressed() {
+		if(mPager.getCurrentItem()== PagerModel.ENTER_SMS_CODE.ordinal()){
+			mPager.setCurrentItem(PagerModel.ENTER_PHONE.ordinal());
+			return;
+		}
+		super.onBackPressed();
+	}
 }

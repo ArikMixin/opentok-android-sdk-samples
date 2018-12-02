@@ -3,8 +3,6 @@ package io.wochat.app;
 import android.app.Application;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -18,7 +16,7 @@ import io.wochat.app.db.WCDatabase;
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.dao.WordDao;
 import io.wochat.app.db.entity.Word;
-import io.wochat.app.logic.SMSReceiver;
+import io.wochat.app.model.StateData;
 
 /**
  * Repository handling the work with products and comments.
@@ -32,8 +30,9 @@ public class WCRepository {
 	private final WochatApi mWochatApi;
 
 
-	private MutableLiveData<String> mUserRegistrationError;
-	private MutableLiveData<String> mUserVerificationError;
+	private MutableLiveData<StateData<String>> mUserRegistrationResult;
+	//private MutableLiveData<String> mUserVerificationResult;
+	private MutableLiveData<StateData<String>> mUserVerificationResult;
 
 
 	private WordDao mWordDao;
@@ -66,9 +65,8 @@ public class WCRepository {
 		mWochatApi = WochatApi.getInstance(application);
 
 
-		mUserRegistrationError = new MutableLiveData<>();
-		mUserVerificationError = new MutableLiveData<>();
-
+		mUserRegistrationResult = new MutableLiveData<>();
+		mUserVerificationResult = new MutableLiveData<>();
 //        WordRoomDatabase db = WordRoomDatabase.getDatabase(application);
 //        mWordDao = db.wordDao();
 //        mAllWords = mWordDao.getAlphabetizedWords();
@@ -79,9 +77,10 @@ public class WCRepository {
 	public void userRegistration(String userTrimmedPhone, String userCountryCode) {
 
 		mWochatApi.userRegistration(userCountryCode, userTrimmedPhone, new WochatApi.OnServerResponseListener() {
+
 			@Override
-			public void OnServerResponse(boolean isSuccess, String error, JSONObject response) {
-				Log.e(TAG, "OnServerResponse userRegistration - isSuccess: " + isSuccess + ", error: " + error + ", response: " + response);
+			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+				Log.e(TAG, "OnServerResponse userRegistration - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
 				if (isSuccess) {
 					try {
 						String userId = response.getString("user_id");
@@ -89,10 +88,13 @@ public class WCRepository {
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
-					mUserRegistrationError.setValue(null);
+					mUserRegistrationResult.setValue(new StateData<String>().success(null));
 				}
-				else
-					mUserRegistrationError.setValue(error);
+				else if (errorLogic != null)
+					mUserRegistrationResult.setValue(new StateData<String>().errorLogic(errorLogic));
+
+				else if (errorComm != null)
+					mUserRegistrationResult.setValue(new StateData<String>().errorComm(errorComm));
 			}
 		});
 
@@ -104,32 +106,38 @@ public class WCRepository {
     	String userId = mSharedPreferences.getUserId();
 		mWochatApi.userVerification(userId, code, new WochatApi.OnServerResponseListener() {
 			@Override
-			public void OnServerResponse(boolean isSuccess, String error, JSONObject response) {
-				Log.e(TAG, "OnServerResponse userVerification - isSuccess: " + isSuccess + ", error: " + error + ", response: " + response);
+			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+				Log.e(TAG, "OnServerResponse userVerification - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+				String token = null;
+				String refresh_token = null;
+				String xmpp_pwd = null;
 				if (isSuccess) {
 					try {
-						String token = response.getString("token");
-						String refresh_token = response.getString("refresh_token");
-						String xmpp_pwd = response.getString("xmpp_pwd");
+						token = response.getString("token");
+						refresh_token = response.getString("refresh_token");
+						xmpp_pwd = response.getString("xmpp_pwd");
 						Log.e(TAG, "OnServerResponse userVerification token: " + token + ", refresh_token: " + refresh_token + ", xmpp_pwd: " + xmpp_pwd);
 						//mSharedPreferences.saveUserId(userId);
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
-					mUserVerificationError.setValue(null);
+					mUserVerificationResult.setValue(new StateData<String>().success(token));
 				}
-				else
-					mUserVerificationError.setValue(error);
+				else if (errorLogic != null)
+					mUserVerificationResult.setValue(new StateData<String>().errorLogic(errorLogic));
+
+				else if (errorComm != null)
+					mUserVerificationResult.setValue(new StateData<String>().errorComm(errorComm));
 			}
 		});
 	}
 
-	public MutableLiveData<String> getUserRegistrationError(){
-    	return mUserRegistrationError;
+	public MutableLiveData<StateData<String>> getUserRegistrationResult(){
+    	return mUserRegistrationResult;
 	}
 
-	public MutableLiveData<String> getUserVerificationError(){
-		return mUserVerificationError;
+	public MutableLiveData<StateData<String>> getUserVerificationResult(){
+		return mUserVerificationResult;
 	}
 
 
