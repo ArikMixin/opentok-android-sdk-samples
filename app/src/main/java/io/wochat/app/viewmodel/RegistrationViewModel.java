@@ -45,4 +45,12 @@ public class RegistrationViewModel extends AndroidViewModel {
 		//return mUserVerificationResult;
 		return mRepository.getUserVerificationResult();
 	}
+
+	public String getUserCountryCode(){
+		return mRepository.getUserCountryCode();
+	}
+
+	public boolean hasUserRegistrationData() {
+		return mRepository.hasUserRegistrationData();
+	}
 }

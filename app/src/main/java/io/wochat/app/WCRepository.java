@@ -75,7 +75,7 @@ public class WCRepository {
 
 
 	public void userRegistration(String userTrimmedPhone, String userCountryCode) {
-
+		mSharedPreferences.saveUserCountryCode(userCountryCode);
 		mWochatApi.userRegistration(userCountryCode, userTrimmedPhone, new WochatApi.OnServerResponseListener() {
 
 			@Override
@@ -109,14 +109,15 @@ public class WCRepository {
 			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
 				Log.e(TAG, "OnServerResponse userVerification - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
 				String token = null;
-				String refresh_token = null;
-				String xmpp_pwd = null;
+				String refreshToken = null;
+				String xmppPwd = null;
 				if (isSuccess) {
 					try {
 						token = response.getString("token");
-						refresh_token = response.getString("refresh_token");
-						xmpp_pwd = response.getString("xmpp_pwd");
-						Log.e(TAG, "OnServerResponse userVerification token: " + token + ", refresh_token: " + refresh_token + ", xmpp_pwd: " + xmpp_pwd);
+						refreshToken = response.getString("refresh_token");
+						xmppPwd = response.getString("xmpp_pwd");
+						mSharedPreferences.saveUserRegistrationData(token, refreshToken, xmppPwd);
+						Log.e(TAG, "OnServerResponse userVerification token: " + token + ", refresh_token: " + refreshToken + ", xmpp_pwd: " + xmppPwd);
 						//mSharedPreferences.saveUserId(userId);
 					} catch (JSONException e) {
 						e.printStackTrace();
@@ -140,7 +141,13 @@ public class WCRepository {
 		return mUserVerificationResult;
 	}
 
+	public String getUserCountryCode() {
+    	return mSharedPreferences.getUserCountryCode();
+	}
 
+	public boolean hasUserRegistrationData() {
+		return mSharedPreferences.hasUserRegistrationData();
+	}
 
     // Room executes all queries on a separate thread.
     // Observed LiveData will notify the observer when the data has changed.
@@ -155,6 +162,7 @@ public class WCRepository {
     public void insert(Word word) {
         new WCRepository.insertAsyncTask(mWordDao).execute(word);
     }
+
 
 
 	private static class insertAsyncTask extends AsyncTask<Word, Void, Void> {

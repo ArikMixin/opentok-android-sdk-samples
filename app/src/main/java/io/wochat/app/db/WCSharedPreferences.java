@@ -42,4 +42,26 @@ public class WCSharedPreferences {
 	public String getUserId(){
 		return mSharedPreferences.getString("USER_ID", null);
 	}
+
+	public void saveUserCountryCode(String userCountryCode) {
+		mSharedPreferences.edit().putString("USER_COUNTRY_CODE", userCountryCode).commit();
+	}
+
+	public String getUserCountryCode(){
+		return mSharedPreferences.getString("USER_COUNTRY_CODE", null);
+	}
+
+
+	public void saveUserRegistrationData(String token, String refreshToken, String xmppPwd) {
+		mSharedPreferences.edit().
+			putString("TOKEN", token).
+			putString("REFRESH_TOKEN", refreshToken).
+			putString("XMPP_PWD", xmppPwd).
+			commit();
+	}
+
+	public boolean hasUserRegistrationData(){
+		return mSharedPreferences.contains("TOKEN");
+	}
+
 }

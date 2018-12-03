@@ -1,7 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
               android:layout_width="match_parent"
-              android:layout_height="match_parent">
+              android:layout_height="match_parent"
+              android:gravity="center"
+              android:orientation="vertical">
+
+
+    <io.wochat.app.cpmponents.CircleImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        app:civ_border_color="@color/black50"
+        app:civ_border_width="1dp"
+        android:src="@drawable/profile_circle"
+        android:id="@+id/reg_pic_profile_iv"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/reg_pic_gallery_ib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="50dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/circle_gallery"/>
+
+        <ImageButton
+            android:id="@+id/reg_pic_camera_ib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="50dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/circle_camera"/>
+
+
+    </LinearLayout>
+
+
+    <android.support.v7.widget.AppCompatEditText
+        android:id="@+id/reg_pic_username_et"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:hint="Enter Your Name"
+        android:inputType="text"
+        android:text="">
+    </android.support.v7.widget.AppCompatEditText>
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/reg_pic_phone_num_tv"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="+972 52 655 6699"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+        android:textColor="@color/black50"/>
+
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/reg_pic_card_view"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:visibility="gone"
+        android:shape="ring"
+        app:cardCornerRadius="20dp">
+
+        <ImageView
+            android:id="@+id/reg_pic_flag1_iv"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/flag_andorra"/>
+    </android.support.v7.widget.CardView>
+
+
+    <io.wochat.app.cpmponents.CircleImageView
+        android:id="@+id/reg_pic_flag_iv"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        app:civ_border_color="@color/black50"
+        app:civ_border_width="1dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/flag_andorra"/>
+
+
+
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/reg_pic_finish_btn"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Widget.Button.Inverse"
+        android:background="@color/app_blue"
+        android:text="Finish"/>
+
 
 </LinearLayout>

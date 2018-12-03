@@ -1,15 +1,30 @@
 package io.wochat.app.ui;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.os.Parcelable;
+import android.os.StrictMode;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
@@ -17,6 +32,8 @@ import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatTextView;
+import android.support.v7.widget.CardView;
+import android.system.ErrnoException;
 import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
 import android.text.Html;
@@ -24,25 +41,41 @@ import android.text.Spannable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.hbb20.CCPCountry;
 import com.hbb20.CountryCodePicker;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import io.wochat.app.R;
 import io.wochat.app.logic.SMSReceiver;
 import io.wochat.app.model.StateData;
+import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.TextViewLinkMovementMethod;
+import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.RegistrationViewModel;
 
 public class RegistrationActivity extends PermissionActivity {
@@ -54,6 +87,9 @@ public class RegistrationActivity extends PermissionActivity {
 	private AppCompatTextView mCountryCodeTV;
 	private AppCompatEditText mPhoneNumET;
 
+	private static final int REQUEST_SELECT_PHOTO = 100;
+	private static final int REQUEST_TAKE_PHOTO = 101;
+	private static final int REQUEST_CROP = 102;
 
 	private String[] PERMISSIONS = {
 		//Manifest.permission.READ_SMS
@@ -67,6 +103,14 @@ public class RegistrationActivity extends PermissionActivity {
 	private AppCompatButton mCodeNextBtn;
 	private RegistrationViewModel mRegViewModel;
 	private ProgressDialog mProgressDialog;
+	private ImageButton mPicCameraIB;
+	private ImageButton mPicGalleryIB;
+	private ImageView mPicProfileIV;
+	private CardView mPicCardView;
+	private ImageView mPicFlagIV;
+	private AppCompatEditText mPicUserNameET;
+	private AppCompatButton mPicFinishBtn;
+	private TextView mPicPhoneNumTV;
 
 	@Override
 	protected String[] getPermissions() {
@@ -101,6 +145,8 @@ public class RegistrationActivity extends PermissionActivity {
 					initPhoneView();
 				else if (position == PagerModel.ENTER_SMS_CODE.ordinal())
 					initCodeView();
+				else if (position == PagerModel.ENTER_PIC.ordinal())
+					initPicView();
 
 			}
 
@@ -118,6 +164,9 @@ public class RegistrationActivity extends PermissionActivity {
 		});
 
 		mPager.setAdapter(mPagerAdapter);
+//		if (mRegViewModel.hasUserRegistrationData())
+//			mPager.setCurrentItem(PagerModel.ENTER_PIC.ordinal());
+//		else
 		mPager.setCurrentItem(PagerModel.ENTER_PHONE.ordinal());
 		//setTitle(mPagerAdapter.getPageTitle(0));
 
@@ -148,7 +197,6 @@ public class RegistrationActivity extends PermissionActivity {
 				}
 				if (stringStateData.isSuccess()){
 					mPager.setCurrentItem(PagerModel.ENTER_SMS_CODE.ordinal(), true);
-					Toast.makeText(RegistrationActivity.this, "result ok", Toast.LENGTH_SHORT).show();
 				}
 				else if (stringStateData.isErrorComm()){
 					Toast.makeText(RegistrationActivity.this, "result error: " + stringStateData.getErrorCom(), Toast.LENGTH_SHORT).show();
@@ -239,6 +287,8 @@ public class RegistrationActivity extends PermissionActivity {
 				initPhoneView(layout);
 			else if (position == PagerModel.ENTER_SMS_CODE.ordinal())
 				initCodeView(layout);
+			else if (position == PagerModel.ENTER_PIC.ordinal())
+				initPicView(layout);
 			return layout;
 		}
 
@@ -314,47 +364,61 @@ public class RegistrationActivity extends PermissionActivity {
 		mCountryCodeTV.setText("+" + cc);
 
 		AppCompatButton nextBtn = (AppCompatButton) layout.findViewById(R.id.next_btn);
-		nextBtn.setOnClickListener(new View.OnClickListener() {
+		nextBtn.setOnClickListener(mPhoneNextBtnClick);
+		mPhoneNumET.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
-			public void onClick(View v) {
-				int cc = mCountryCodePicker.getSelectedCountryCodeAsInt();
-				String phone1 = mPhoneNumET.getText().toString().trim();
-				mUserTrimmedPhone = StringUtils.stripStart(phone1,"0");
-				final String phoneForValidation = "+" + cc + mUserTrimmedPhone;
-				boolean phoneOK = Patterns.PHONE.matcher(phoneForValidation).matches();
-				if (phoneOK && (mUserTrimmedPhone.length() > 6) && (mUserTrimmedPhone.length() < 13)){
-					mPhoneNumET.setError(null);
-					InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-					imm.hideSoftInputFromWindow(mPhoneNumET.getWindowToken(), 0);
-					mUserNiceFormattedPhone = PhoneNumberUtils.formatNumber(phoneForValidation, Locale.getDefault().getCountry());
-					new AlertDialog.Builder(RegistrationActivity.this)
-						.setMessage("We will be verifying the phone number:\n\n" + mUserNiceFormattedPhone + "\n\nIs this OK or would you like to edit the number?" )
-						.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								if (mCodePhoneNumET != null)
-									mCodePhoneNumET.setText(mUserNiceFormattedPhone);
-								mUserCountryCode = mCountryCodePicker.getSelectedCountryNameCode(); // IL
-								handlePermissions();
-							}
-						})
-						.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int which) {
-								InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-								imm.showSoftInput(mPhoneNumET,InputMethodManager.SHOW_IMPLICIT);
-
-							}
-						})
-						.show();
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				if (actionId == EditorInfo.IME_ACTION_DONE){
+					mPhoneNextBtnClick.onClick(v);
+					return true;
 				}
-				else {
-					mPhoneNumET.setError("invalid phone");
-				}
+				return false;
 			}
 		});
 
+
 	}
+
+	private View.OnClickListener mPhoneNextBtnClick = new View.OnClickListener(){
+
+		@Override
+		public void onClick(View v) {
+			int cc = mCountryCodePicker.getSelectedCountryCodeAsInt();
+			String phone1 = mPhoneNumET.getText().toString().trim();
+			mUserTrimmedPhone = StringUtils.stripStart(phone1,"0");
+			final String phoneForValidation = "+" + cc + mUserTrimmedPhone;
+			boolean phoneOK = Patterns.PHONE.matcher(phoneForValidation).matches();
+			if (phoneOK && (mUserTrimmedPhone.length() > 6) && (mUserTrimmedPhone.length() < 13)){
+				mPhoneNumET.setError(null);
+				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(mPhoneNumET.getWindowToken(), 0);
+				mUserNiceFormattedPhone = PhoneNumberUtils.formatNumber(phoneForValidation, Locale.getDefault().getCountry());
+				new AlertDialog.Builder(RegistrationActivity.this)
+					.setMessage("We will be verifying the phone number:\n\n" + mUserNiceFormattedPhone + "\n\nIs this OK or would you like to edit the number?" )
+					.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							if (mCodePhoneNumET != null)
+								mCodePhoneNumET.setText(mUserNiceFormattedPhone);
+							mUserCountryCode = mCountryCodePicker.getSelectedCountryNameCode(); // IL
+							handlePermissions();
+						}
+					})
+					.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+							imm.showSoftInput(mPhoneNumET,InputMethodManager.SHOW_IMPLICIT);
+
+						}
+					})
+					.show();
+			}
+			else {
+				mPhoneNumET.setError("invalid phone");
+			}
+		}
+	};
 
 	private void initCodeView() {
 		mCodeCodeNumET.setText("");
@@ -402,22 +466,108 @@ public class RegistrationActivity extends PermissionActivity {
 
 		mCodeNextBtn = (AppCompatButton) layout.findViewById(R.id.next_btn);
 		mCodeNextBtn.setEnabled(false);
-		mCodeNextBtn.setOnClickListener(new View.OnClickListener() {
+		mCodeNextBtn.setOnClickListener(mCodeNextBtnClick);
+		mCodeCodeNumET.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
-			public void onClick(View v) {
-				if(mCodeCodeNumET.getText().length() != 6){
-					mCodeCodeNumET.setError(getString(R.string.error_sms_code_verification_num_digits));
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				if (actionId == EditorInfo.IME_ACTION_DONE){
+					mCodeNextBtnClick.onClick(v);
+					return true;
 				}
-				else {
-					InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-					imm.hideSoftInputFromWindow(mCodeCodeNumET.getWindowToken(), 0);
-					userVerification(mCodeCodeNumET.getText().toString());
-				}
-
+				return false;
 			}
 		});
 	}
 
+
+	private void initPicView() {
+	}
+
+	private void initPicView(ViewGroup layout) {
+		mPicCameraIB = (ImageButton) layout.findViewById(R.id.reg_pic_camera_ib);
+		mPicGalleryIB = (ImageButton) layout.findViewById(R.id.reg_pic_gallery_ib);
+		mPicProfileIV = (ImageView) layout.findViewById(R.id.reg_pic_profile_iv);
+		mPicCardView = (CardView) layout.findViewById(R.id.reg_pic_card_view);
+		mPicFlagIV = (ImageView) layout.findViewById(R.id.reg_pic_flag_iv);
+		mPicUserNameET = (AppCompatEditText) layout.findViewById(R.id.reg_pic_username_et);
+		mPicPhoneNumTV = (TextView) layout.findViewById(R.id.reg_pic_phone_num_tv);
+		mPicFinishBtn = (AppCompatButton) layout.findViewById(R.id.reg_pic_finish_btn);
+		mPicFinishBtn.setEnabled(false);
+
+		mPicFlagIV.setImageDrawable(getResources().getDrawable(mCountryCodePicker.getSelectedCountry().getFlagID()));
+
+		mPicFinishBtn.setOnClickListener(mPicFinishBtnClick);
+		mPicUserNameET.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				if (actionId == EditorInfo.IME_ACTION_DONE){
+					mPicFinishBtnClick.onClick(v);
+					return true;
+				}
+				return false;
+			}
+		});
+
+		mPicGalleryIB.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK,
+				android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+				photoPickerIntent.setType("image/*");
+				photoPickerIntent.putExtra("crop", "true");
+				photoPickerIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+				startActivityForResult(photoPickerIntent, REQUEST_SELECT_PHOTO);
+			}
+		});
+		mPicCameraIB.setEnabled(getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY));
+		mPicCameraIB.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+				StrictMode.setVmPolicy(builder.build());
+
+				Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+				Uri outputFileUri = ImagePickerUtil.getCaptureImageOutputUri(RegistrationActivity.this);
+				takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+				takePictureIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+				if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+					startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+				}
+
+			}
+		});
+
+		mPicProfileIV.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				startActivityForResult(ImagePickerUtil.getPickImageChooserIntent(RegistrationActivity.this), 200);
+			}
+		});
+
+	}
+
+	private View.OnClickListener mPicFinishBtnClick = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+
+		}
+	};
+
+
+	private View.OnClickListener mCodeNextBtnClick = new View.OnClickListener(){
+
+		@Override
+		public void onClick(View v) {
+			if(mCodeCodeNumET.getText().length() != 6){
+				mCodeCodeNumET.setError(getString(R.string.error_sms_code_verification_num_digits));
+			}
+			else {
+				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(mCodeCodeNumET.getWindowToken(), 0);
+				userVerification(mCodeCodeNumET.getText().toString());
+			}
+		}
+	};
 
 	private void handlePermissions() {
 		if (hasPermissions())
@@ -505,4 +655,85 @@ public class RegistrationActivity extends PermissionActivity {
 		}
 		super.onBackPressed();
 	}
+
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+		if (resultCode == Activity.RESULT_OK) {
+			Uri imageUri = ImagePickerUtil.getPickImageResultUri(this, data);
+			setBitmapAsProfilePic(imageUri);
+
+		}
+
+
+	}
+
+	private void setBitmapAsProfilePic(Uri selectedImage){
+		try {
+			InputStream imageStream;
+			Bitmap imageBitmap = null;
+			try {
+				imageStream = getContentResolver().openInputStream(selectedImage);
+				imageBitmap = BitmapFactory.decodeStream(imageStream);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+
+			int width = imageBitmap.getWidth();
+			int height = imageBitmap.getHeight();
+			String newPath = null;
+
+			File outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+			FileOutputStream out = null;
+			File outputFile = null;
+
+			try {
+				outputFile = File.createTempFile("image", ".png", outputDir);
+				newPath = outputFile.getAbsolutePath();
+				out = new FileOutputStream(newPath);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+
+			if (width > 1300){
+				int newWidth, newHeight;
+				newWidth = 1300;
+				newHeight = 1300 * height / width;
+
+				imageBitmap = Bitmap.createScaledBitmap(imageBitmap, newWidth, newHeight, false);
+
+			}
+
+			imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, out);
+			mPicProfileIV.setImageBitmap(imageBitmap);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+
+
+
+
+
+//	public boolean isUriRequiresPermissions(Uri uri) {
+//		try {
+//			ContentResolver resolver = getContentResolver();
+//			InputStream stream = resolver.openInputStream(uri);
+//			stream.close();
+//			return false;
+//		} catch (FileNotFoundException e) {
+//			if (e.getCause() instanceof ErrnoException) {
+//				return true;
+//			}
+//		} catch (Exception e) {
+//		}
+//		return false;
+//	}
+
 }
