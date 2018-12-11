@@ -15,6 +15,7 @@
     <string name="reg_page_pic_title">YOUR PROFILE PICTURE</string>
     <string name="reg_phone_num_progress_body">Connecting</string>
     <string name="reg_code_progress_body">Verifying</string>
+    <string name="reg_pic_progress_body">Registering</string>
     <string name="reg_phone_num_title">Your Phone</string>
     <string name="reg_phone_num_text">Please confirm your country code and enter your phone number</string>
     <string name="reg_code_title">Enter Code</string>
@@ -23,4 +24,5 @@
     <string name="error_sms_code_verification_num_digits">code must be 6 decimal digits</string>
     <string name="error_sms_code_verification_invalid_code">wrong code</string>
     <string name="error_sms_code_verification_general_error">error, please try again</string>
+    <string name="error_reg_pic_enter_name">Enter your name here.</string>
 </resources>

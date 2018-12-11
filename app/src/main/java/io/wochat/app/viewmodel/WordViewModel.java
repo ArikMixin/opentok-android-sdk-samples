@@ -25,6 +25,7 @@ import io.wochat.app.WCRepository;
 
 import java.util.List;
 
+import io.wochat.app.db.entity.User;
 import io.wochat.app.db.entity.Word;
 
 /**
@@ -41,10 +42,12 @@ public class WordViewModel extends AndroidViewModel {
     // - Repository is completely separated from the UI through the ViewModel.
     private LiveData<List<Word>> mAllWords;
 
+
     public WordViewModel(@NonNull Application application, WCRepository repository) {
         super(application);
         mRepository = repository;
         mAllWords = mRepository.getAllWords();
+
     }
 
     LiveData<List<Word>> getAllWords() {

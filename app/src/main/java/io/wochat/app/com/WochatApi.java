@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -16,9 +18,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import io.wochat.app.BuildConfig;
+import io.wochat.app.db.WCSharedPreferences;
 
 public class WochatApi {
 
@@ -26,7 +31,8 @@ public class WochatApi {
 
 	private static final String TAG = "WochatApi";
 	private final Context mContext;
-
+	String mUserId = null;
+	String mToken = null;
 
 
 	public interface OnServerResponseListener{
@@ -50,6 +56,16 @@ public class WochatApi {
 		super();
 		mContext = context.getApplicationContext();
 	}
+
+	public void setUserId(String userId) {
+		mUserId = userId;
+	}
+
+	public void setToken(String token) {
+		mToken = token;
+	}
+
+
 
 	public void userRegistration(String countryCode, String phoneNumber, final OnServerResponseListener lsnr){
 
@@ -142,29 +158,76 @@ public class WochatApi {
 	}
 
 
-//	public void dataUploadFile(String fileName, final OnServerResponseListener lsnr) {
-//
-//		Log.e(TAG, "API dataUploadFile - userName: " + fileName);
-//
-//		JSONObject jsonObject = new JSONObject();
-//		try {
-//			jsonObject.put("user_name", userName);
-//			jsonObject.put("profile_pic_url", profilePicURL);
-//		} catch (JSONException e) {
-//			e.printStackTrace();
-//		}
-//
-//		String url = BASE_URL + "user/confirm_registration/";
-//
-//		RequestQueue queue = Volley.newRequestQueue(mContext);
-//		queue.add()
-//
-//
-//
-//		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
-//
-//
-//	}
+	public void dataUploadFile(final byte[] fileData, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API dataUploadFile");
+
+		String url = BASE_URL + "media/upload/";
+
+		RequestQueue queue = Volley.newRequestQueue(mContext);
+
+		VolleyMultipartRequest multipartRequest = new VolleyMultipartRequest(Request.Method.POST, url, new Response.Listener<NetworkResponse>() {
+			@Override
+			public void onResponse(NetworkResponse response) {
+
+				try {
+					String res = new String(response.data);
+					JSONObject data = null;
+					Log.e(TAG, "Response: " + res);
+					JSONObject jsonRes = new JSONObject(res);
+					boolean result = jsonRes.getBoolean("success");
+					String error = jsonRes.getString("error");
+					if (result)
+						data = jsonRes.getJSONObject("data");
+					lsnr.OnServerResponse(result, error, null, data);
+				} catch (Exception e) {
+					e.printStackTrace();
+					lsnr.OnServerResponse(false, null, e, null);
+				}
+		}
+		}, new Response.ErrorListener() {
+			@Override
+			public void onErrorResponse(VolleyError error) {
+				error.printStackTrace();
+				Log.e(TAG, "Error: " + error.getMessage());
+				lsnr.OnServerResponse(false, null, error, null);
+			}
+		}) {
+//			@Override
+//			protected Map<String, String> getParams() {
+//				return super.getParams();
+//			}
+
+			@Override
+			public Map<String, String> getHeaders() throws AuthFailureError {
+				Map<String, String> params = new HashMap<String, String>();
+				params.put("User-Id", mUserId);
+				params.put("Api-Token", mToken);
+				return params;
+			}
+
+			@Override
+			protected Map<String, DataPart> getByteData() {
+				Map<String, DataPart> params = new HashMap<>();
+				// file name could found file base or direct access from real path
+				// for now just get bitmap data from ImageView
+				params.put("file", new DataPart("file.jpg", fileData, "image/jpeg"));
+
+				return params;
+			}
+		};
+
+
+
+		queue.add(multipartRequest);
+
+
+
+
+
+
+
+	}
 
 
 
@@ -172,6 +235,7 @@ public class WochatApi {
 		RequestQueue queue = Volley.newRequestQueue(mContext);
 		JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
 			(method, url, jsonObject, new Response.Listener<JSONObject>() {
+
 
 				@Override
 				public void onResponse(JSONObject response) {
@@ -199,7 +263,20 @@ public class WochatApi {
 					lsnr.OnServerResponse(false, null, error, null);
 
 				}
-			});
+
+			}) {
+			@Override
+			public Map<String, String> getHeaders() throws AuthFailureError {
+				if ((mUserId != null) && (mToken != null)) {
+					Map<String, String> params = new HashMap<String, String>();
+					params.put("User-Id", mUserId);
+					params.put("Api-Token", mToken);
+					return params;
+				}
+				else
+					return super.getHeaders();
+			}
+		};
 
 		// Access the RequestQueue through your singleton class.
 		queue.add(jsonObjectRequest);

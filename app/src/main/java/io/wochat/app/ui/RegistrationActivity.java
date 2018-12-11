@@ -3,37 +3,29 @@ package io.wochat.app.ui;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
-import android.os.Parcelable;
+import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.FileProvider;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
-import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatTextView;
-import android.support.v7.widget.CardView;
-import android.system.ErrnoException;
 import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
 import android.text.Html;
@@ -54,28 +46,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.hbb20.CCPCountry;
 import com.hbb20.CountryCodePicker;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import io.wochat.app.R;
+import io.wochat.app.WCRepository;
 import io.wochat.app.logic.SMSReceiver;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.TextViewLinkMovementMethod;
-import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.RegistrationViewModel;
 
 public class RegistrationActivity extends PermissionActivity {
@@ -106,11 +92,12 @@ public class RegistrationActivity extends PermissionActivity {
 	private ImageButton mPicCameraIB;
 	private ImageButton mPicGalleryIB;
 	private ImageView mPicProfileIV;
-	private CardView mPicCardView;
+	//private CardView mPicCardView;
 	private ImageView mPicFlagIV;
 	private AppCompatEditText mPicUserNameET;
 	private AppCompatButton mPicFinishBtn;
 	private TextView mPicPhoneNumTV;
+	private byte[] mProfilePicByte;
 
 	@Override
 	protected String[] getPermissions() {
@@ -125,11 +112,7 @@ public class RegistrationActivity extends PermissionActivity {
 		String token = FirebaseInstanceId.getInstance().getToken();
 		Log.e(TAG, "token: " + token);
 
-
 		mRegViewModel = ViewModelProviders.of(this).get(RegistrationViewModel.class);
-
-
-
 
 		mPager = (ViewPager) findViewById(R.id.view_pager);
 		mPagerAdapter = new RegistrationPagerAdapter(this);
@@ -167,7 +150,7 @@ public class RegistrationActivity extends PermissionActivity {
 //		if (mRegViewModel.hasUserRegistrationData())
 //			mPager.setCurrentItem(PagerModel.ENTER_PIC.ordinal());
 //		else
-		mPager.setCurrentItem(PagerModel.ENTER_PHONE.ordinal());
+		//mPager.setCurrentItem(PagerModel.ENTER_PHONE.ordinal());
 		//setTitle(mPagerAdapter.getPageTitle(0));
 
 
@@ -185,7 +168,38 @@ public class RegistrationActivity extends PermissionActivity {
 	}
 
 	private void init() {
-		Toast.makeText(this, "permission ok", Toast.LENGTH_LONG).show();
+		//Toast.makeText(this, "permission ok", Toast.LENGTH_LONG).show();
+
+//		MutableLiveData<StateData<WCRepository.UserRegistrationState>> state = mRegViewModel.getUserRegistrationState();
+//		state.observe(this, new Observer<StateData<WCRepository.UserRegistrationState>>() {
+//			@Override
+//			public void onChanged(@Nullable StateData<WCRepository.UserRegistrationState> userRegistrationStateStateData) {
+//				Log.e(TAG, "UserRegistrationState: " + userRegistrationStateStateData.getData().toString());
+//			}
+//		});
+
+		LiveData<RegistrationViewModel.RegistrationPhase> userRegistrationPhase = mRegViewModel.getUserRegistrationPhase();
+		userRegistrationPhase.observe(this, new Observer<RegistrationViewModel.RegistrationPhase>() {
+			@Override
+			public void onChanged(@Nullable RegistrationViewModel.RegistrationPhase registrationPhase) {
+				switch (registrationPhase){
+					case reg_phase_1_phone_num:
+						mPager.setCurrentItem(PagerModel.ENTER_PHONE.ordinal(), true);
+						break;
+					case reg_phase_2_sms_code:
+						mPager.setCurrentItem(PagerModel.ENTER_SMS_CODE.ordinal(), true);
+						break;
+					case reg_phase_3_pic:
+						mPager.setCurrentItem(PagerModel.ENTER_PIC.ordinal(), true);
+						break;
+					case reg_phase_4_finish:
+						Toast.makeText(RegistrationActivity.this, "FINISH REGISTRATION", Toast.LENGTH_LONG).show();
+						break;
+					default:
+						break;
+				}
+			}
+		});
 
 		MutableLiveData<StateData<String>> userRegistrationResult = mRegViewModel.getUserRegistrationResult();
 		userRegistrationResult.observe(this, new Observer<StateData<String>>() {
@@ -196,7 +210,7 @@ public class RegistrationActivity extends PermissionActivity {
 					mProgressDialog = null;
 				}
 				if (stringStateData.isSuccess()){
-					mPager.setCurrentItem(PagerModel.ENTER_SMS_CODE.ordinal(), true);
+					//mPager.setCurrentItem(PagerModel.ENTER_SMS_CODE.ordinal(), true);
 				}
 				else if (stringStateData.isErrorComm()){
 					Toast.makeText(RegistrationActivity.this, "result error: " + stringStateData.getErrorCom(), Toast.LENGTH_SHORT).show();
@@ -209,22 +223,6 @@ public class RegistrationActivity extends PermissionActivity {
 		});
 
 
-//		userRegistrationResult.observe(this, new Observer<String>() {
-//			@Override
-//			public void onChanged(@Nullable String result) {
-//				if (mProgressDialog != null) {
-//					mProgressDialog.dismiss();
-//					mProgressDialog = null;
-//				}
-//				if (result == null) {
-//					mPager.setCurrentItem(PagerModel.ENTER_SMS_CODE.ordinal(), true);
-//					Toast.makeText(RegistrationActivity.this, "result ok", Toast.LENGTH_SHORT).show();
-//				}
-//				else {
-//					Toast.makeText(RegistrationActivity.this, "result error: " + result, Toast.LENGTH_SHORT).show();
-//				}
-//			}
-//		});
 
 
 		MutableLiveData<StateData<String>> userVerificationResult = mRegViewModel.getUserVerificationResult();
@@ -236,8 +234,8 @@ public class RegistrationActivity extends PermissionActivity {
 					mProgressDialog = null;
 				}
 				if (stringStateData.isSuccess()){
-					Toast.makeText(RegistrationActivity.this, "result ok: token: " + stringStateData.getData(), Toast.LENGTH_SHORT).show();
-					mPager.setCurrentItem(PagerModel.ENTER_PIC.ordinal(), true);
+					//Toast.makeText(RegistrationActivity.this, "result ok: token: " + stringStateData.getData(), Toast.LENGTH_SHORT).show();
+					//mPager.setCurrentItem(PagerModel.ENTER_PIC.ordinal(), true);
 				}
 				else if (stringStateData.isErrorLogic()){
 					if (stringStateData.getErrorLogic().equals("invalid code")){
@@ -249,6 +247,28 @@ public class RegistrationActivity extends PermissionActivity {
 				}
 				else {
 					mCodeCodeNumET.setError(getString(R.string.error_sms_code_verification_general_error));
+				}
+			}
+		});
+
+
+		MutableLiveData<StateData<String>> userFinishRegistrationResult = mRegViewModel.getUserFinishRegistrationResult();
+		userFinishRegistrationResult.observe(this, new Observer<StateData<String>>() {
+			@Override
+			public void onChanged(@Nullable StateData<String> stringStateData) {
+				if (mProgressDialog != null) {
+					mProgressDialog.dismiss();
+					mProgressDialog = null;
+				}
+				if (stringStateData.isSuccess()){
+					Log.e(TAG, "userFinishRegistrationResult ok : Data: " + stringStateData.getData());
+					//Toast.makeText(RegistrationActivity.this, "FinishRegistration ok", Toast.LENGTH_SHORT).show();
+				}
+				else if (stringStateData.isErrorLogic()){
+					Toast.makeText(RegistrationActivity.this, "FinishRegistration ErrorLogic", Toast.LENGTH_SHORT).show();
+				}
+				else {
+					Toast.makeText(RegistrationActivity.this, "FinishRegistration Error", Toast.LENGTH_SHORT).show();
 				}
 			}
 		});
@@ -487,12 +507,11 @@ public class RegistrationActivity extends PermissionActivity {
 		mPicCameraIB = (ImageButton) layout.findViewById(R.id.reg_pic_camera_ib);
 		mPicGalleryIB = (ImageButton) layout.findViewById(R.id.reg_pic_gallery_ib);
 		mPicProfileIV = (ImageView) layout.findViewById(R.id.reg_pic_profile_iv);
-		mPicCardView = (CardView) layout.findViewById(R.id.reg_pic_card_view);
+		//mPicCardView = (CardView) layout.findViewById(R.id.reg_pic_card_view);
 		mPicFlagIV = (ImageView) layout.findViewById(R.id.reg_pic_flag_iv);
 		mPicUserNameET = (AppCompatEditText) layout.findViewById(R.id.reg_pic_username_et);
 		mPicPhoneNumTV = (TextView) layout.findViewById(R.id.reg_pic_phone_num_tv);
 		mPicFinishBtn = (AppCompatButton) layout.findViewById(R.id.reg_pic_finish_btn);
-		mPicFinishBtn.setEnabled(false);
 
 		mPicFlagIV.setImageDrawable(getResources().getDrawable(mCountryCodePicker.getSelectedCountry().getFlagID()));
 
@@ -549,7 +568,20 @@ public class RegistrationActivity extends PermissionActivity {
 	private View.OnClickListener mPicFinishBtnClick = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
+			String userName = mPicUserNameET.getText().toString().trim();
+			if (userName.equals("")){
+				mPicUserNameET.setError(getString(R.string.error_reg_pic_enter_name));
+				return;
+			}
+			else {
+				mProgressDialog = ProgressDialog.show(RegistrationActivity.this,
+					null,
+					getString(R.string.reg_pic_progress_body),
+					true,
+					false);
 
+				mRegViewModel.userFinishRegistration(mProfilePicByte, userName);
+			}
 		}
 	};
 
@@ -684,18 +716,20 @@ public class RegistrationActivity extends PermissionActivity {
 			int height = imageBitmap.getHeight();
 			String newPath = null;
 
-			File outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-			FileOutputStream out = null;
+//			File outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+//			FileOutputStream out = null;
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
 			File outputFile = null;
 
-			try {
-				outputFile = File.createTempFile("image", ".png", outputDir);
-				newPath = outputFile.getAbsolutePath();
-				out = new FileOutputStream(newPath);
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+//			try {
+//				outputFile = File.createTempFile("image", ".png", outputDir);
+//				newPath = outputFile.getAbsolutePath();
+//				out = new FileOutputStream(newPath);
+//
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
 
 
 			if (width > 1300){
@@ -707,8 +741,12 @@ public class RegistrationActivity extends PermissionActivity {
 
 			}
 
-			imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, out);
+			//imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, out);
+			imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
 			mPicProfileIV.setImageBitmap(imageBitmap);
+			mProfilePicByte = byteArrayOutputStream.toByteArray();
+
+
 
 		} catch (Exception e) {
 			e.printStackTrace();

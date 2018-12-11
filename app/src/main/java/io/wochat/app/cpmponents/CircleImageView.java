@@ -2,6 +2,7 @@ package io.wochat.app.cpmponents;
 
 /*
  * Copyright 2014 - 2018 Henning Dodenhof
+ *  https://github.com/hdodenhof/CircleImageView
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

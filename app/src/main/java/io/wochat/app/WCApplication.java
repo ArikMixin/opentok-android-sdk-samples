@@ -16,8 +16,8 @@ public class WCApplication extends Application {
 	}
 
 	public WCDatabase getDatabase() {
-		return null;
-		//return WCDatabase.getInstance(this, mAppExecutors);
+		//return null;
+		return WCDatabase.getInstance(this, mAppExecutors);
 	}
 
 	public WCRepository getRepository() {

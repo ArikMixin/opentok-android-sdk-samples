@@ -8,11 +8,11 @@ public class WCSharedPreferences {
 
 
 	private static WCSharedPreferences mInstance;
-	public static WCSharedPreferences getInstance(Application application) {
+	public static WCSharedPreferences getInstance(Context context) {
 		if (mInstance == null) {
 			synchronized (WCSharedPreferences.class) {
 				if (mInstance == null) {
-					mInstance = new WCSharedPreferences(application);
+					mInstance = new WCSharedPreferences(context);
 				}
 			}
 		}
@@ -21,8 +21,8 @@ public class WCSharedPreferences {
 
 
 
-	public WCSharedPreferences(Application application) {
-		mSharedPreferences = application.getSharedPreferences("GLOBAL", Context.MODE_PRIVATE);
+	public WCSharedPreferences(Context context) {
+		mSharedPreferences = context.getSharedPreferences("GLOBAL", Context.MODE_PRIVATE);
 	}
 
 	private final SharedPreferences mSharedPreferences;
@@ -41,6 +41,10 @@ public class WCSharedPreferences {
 
 	public String getUserId(){
 		return mSharedPreferences.getString("USER_ID", null);
+	}
+
+	public String getToken(){
+		return mSharedPreferences.getString("TOKEN", null);
 	}
 
 	public void saveUserCountryCode(String userCountryCode) {

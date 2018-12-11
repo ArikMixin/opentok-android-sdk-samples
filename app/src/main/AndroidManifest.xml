@@ -34,8 +34,9 @@
         </activity>
         <activity
             android:name=".ui.RegistrationActivity"
-            android:theme="@style/NoActionBarAppTheme">
+            android:theme="@style/NoActionBarAppTheme"
             android:screenOrientation="portrait">
+
         </activity>
 
 
@@ -45,7 +46,8 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".ui.TempActivity">
+        <activity android:name=".ui.TempActivity"
+                  android:screenOrientation="portrait">
         </activity>
 
         <provider
