@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import io.wochat.app.db.entity.Word;
 
 /**
  * Generates data to pre-populate the database
@@ -39,21 +38,21 @@ public class DataGenerator {
     private static final String[] COMMENTS = new String[]{
             "Comment 1", "Comment 2", "Comment 3", "Comment 4", "Comment 5", "Comment 6"};
 
-    public static List<Word> generateProducts() {
-        List<Word> words = new ArrayList<>(FIRST.length * SECOND.length);
-        Random rnd = new Random();
-        for (int i = 0; i < FIRST.length; i++) {
-            for (int j = 0; j < SECOND.length; j++) {
-                Word word = new Word("ddddd");
+//    public static List<Word> generateProducts() {
+//        List<Word> words = new ArrayList<>(FIRST.length * SECOND.length);
+//        Random rnd = new Random();
+//        for (int i = 0; i < FIRST.length; i++) {
+//            for (int j = 0; j < SECOND.length; j++) {
+//                Word word = new Word("ddddd");
 //                word.setName(FIRST[i] + " " + SECOND[j]);
 //                product.setDescription(product.getName() + " " + DESCRIPTION[j]);
 //                product.setPrice(rnd.nextInt(240));
 //                product.setId(FIRST.length * i + j + 1);
-                words.add(word);
-            }
-        }
-        return words;
-    }
+//                words.add(word);
+//            }
+//        }
+//        return words;
+//    }
 
 
 }

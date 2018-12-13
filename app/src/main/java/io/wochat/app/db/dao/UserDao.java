@@ -24,7 +24,7 @@ import android.arch.persistence.room.Query;
 import java.util.List;
 
 import io.wochat.app.db.entity.User;
-import io.wochat.app.db.entity.Word;
+
 
 /**
  * The Room Magic is in this file, where you map a Java method call to an SQL query.

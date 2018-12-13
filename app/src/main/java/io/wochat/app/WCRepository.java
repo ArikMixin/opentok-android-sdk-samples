@@ -17,9 +17,7 @@ import io.wochat.app.com.WochatApi;
 import io.wochat.app.db.WCDatabase;
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.dao.UserDao;
-import io.wochat.app.db.dao.WordDao;
 import io.wochat.app.db.entity.User;
-import io.wochat.app.db.entity.Word;
 import io.wochat.app.model.StateData;
 
 /**
@@ -46,8 +44,6 @@ public class WCRepository {
 	private MutableLiveData<StateData<String>> mUserConfirmRegistrationResult;
 
 
-	private WordDao mWordDao;
-    private LiveData<List<Word>> mAllWords;
 
 	private UserDao mUserDao;
 	private LiveData<List<User>> mAllUsers;
@@ -282,11 +278,7 @@ public class WCRepository {
 		return mSharedPreferences.hasUserRegistrationData();
 	}
 
-    // Room executes all queries on a separate thread.
-    // Observed LiveData will notify the observer when the data has changed.
-    public LiveData<List<Word>> getAllWords() {
-    	return mAllWords;
-    }
+
 
 	public LiveData<List<User>> getAllUsers() {
 		return mAllUsers;
@@ -297,37 +289,13 @@ public class WCRepository {
 	}
 
 
-    // You must call this on a non-UI thread or your app will crash.
-    // Like this, Room ensures that you're not doing any long running operations on the main
-    // thread, blocking the UI.
-    public void insert(Word word) {
-        //new WCRepository.insertWordAsyncTask(mDatabase.wordDao()).execute(word);
-    }
+
 
     public void insert(User user) {
 		new InsertUserAsyncTask(mDatabase.userDao()).execute(user);
 	}
 
-//	public void getUser(GetUserListener getUserListener){
-//		new GetUserAsyncTask(mDatabase.userDao(), getUserListener).execute();
-//	}
 
-
-
-	private static class insertWordAsyncTask extends AsyncTask<Word, Void, Void> {
-
-        private WordDao mAsyncTaskDao;
-
-		insertWordAsyncTask(WordDao dao) {
-            mAsyncTaskDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(final Word... params) {
-            mAsyncTaskDao.insert(params[0]);
-            return null;
-        }
-    }
 
 	private static class InsertUserAsyncTask extends AsyncTask<User, Void, Void> {
 
@@ -341,36 +309,10 @@ public class WCRepository {
 		protected Void doInBackground(final User... params) {
 			mAsyncTaskDao.deleteAll();
 			mAsyncTaskDao.insert(params[0]);
-			//User user = mAsyncTaskDao.getFirstUser();
-			//User[] lst = mAsyncTaskDao.getAllUsers();
 			return null;
 		}
 	}
 
-	public interface GetUserListener {
-		void onGetUser(User user);
-	}
 
-//	private static class GetUserAsyncTask extends AsyncTask<User, Void, User> {
-//
-//		private final GetUserListener mGetUserListener;
-//		private final UserDao mAsyncTaskDao;
-//
-//		public GetUserAsyncTask(UserDao dao, GetUserListener listener) {
-//			mAsyncTaskDao = dao;
-//			mGetUserListener = listener;
-//		}
-//
-//		@Override
-//		protected User doInBackground(final User... params) {
-//			User user = mAsyncTaskDao.getFirstUser();
-//			return user;
-//		}
-//
-//		@Override
-//		protected void onPostExecute(User user) {
-//			mGetUserListener.onGetUser(user);
-//		}
-//	}
 
 }
