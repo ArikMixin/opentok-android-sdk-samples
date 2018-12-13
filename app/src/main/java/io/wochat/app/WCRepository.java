@@ -51,6 +51,7 @@ public class WCRepository {
 
 	private UserDao mUserDao;
 	private LiveData<List<User>> mAllUsers;
+	private LiveData<User> mSelfUser;
 
     private static WCRepository mInstance;
 
@@ -91,13 +92,15 @@ public class WCRepository {
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
 //        WordRoomDatabase db = WordRoomDatabase.getDatabase(application);
 //        mWordDao = db.wordDao();
-//        mAllWords = mWordDao.getAlphabetizedWords();
+        //mAllWords = mWordDao.getAlphabetizedWords();
+		mUserDao = mDatabase.userDao();
+		mSelfUser = mUserDao.getFirstUser();
     }
 
 
 
 	public void userRegistration(String userTrimmedPhone, String userCountryCode) {
-		mSharedPreferences.saveUserCountryCode(userCountryCode);
+		mSharedPreferences.saveUserPhoneNumAndCountryCode(userTrimmedPhone, userCountryCode);
 		mWochatApi.userRegistration(userCountryCode, userTrimmedPhone, new WochatApi.OnServerResponseListener() {
 
 			@Override
@@ -157,51 +160,21 @@ public class WCRepository {
 				else if (errorComm != null)
 					mUserVerificationResult.setValue(new StateData<String>().errorComm(errorComm));
 
-//				resultListener.onApiResult(isSuccess);
 			}
 		});
 	}
 
-	/*public void userVerification(String code, final APIResultListener resultListener) {
-    	String userId = mSharedPreferences.getUserId();
-		mWochatApi.userVerification(userId, code, new WochatApi.OnServerResponseListener() {
-			@Override
-			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
-				Log.e(TAG, "OnServerResponse userVerification - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
-				String token = null;
-				String refreshToken = null;
-				String xmppPwd = null;
-				if (isSuccess) {
-					try {
-						token = response.getString("token");
-						refreshToken = response.getString("refresh_token");
-						xmppPwd = response.getString("xmpp_pwd");
-						mSharedPreferences.saveUserRegistrationData(token, refreshToken, xmppPwd);
-						mWochatApi.setToken(token);
-						Log.e(TAG, "OnServerResponse userVerification token: " + token + ", refresh_token: " + refreshToken + ", xmpp_pwd: " + xmppPwd);
-						//mSharedPreferences.saveUserId(userId);
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-					mUserVerificationResult.setValue(new StateData<String>().success(token));
-				}
-				else if (errorLogic != null)
-					mUserVerificationResult.setValue(new StateData<String>().errorLogic(errorLogic));
 
-				else if (errorComm != null)
-					mUserVerificationResult.setValue(new StateData<String>().errorComm(errorComm));
-
-				resultListener.onApiResult(isSuccess);
-			}
-		});
-	}*/
 
 	public void userFinishRegistration(byte[] profilePicBytes, String userName){
-		userUploadProfilePic(profilePicBytes, userName);
+		if (profilePicBytes == null)
+			userConfirmRegistration(null, userName);
+		else
+    		userUploadProfilePic(profilePicBytes, userName);
 	}
 
 	private void userUploadProfilePic(byte[] bytes, final String userName) {
-
+		mSharedPreferences.saveUserProfileImages(bytes);
 		mWochatApi.dataUploadFile(bytes, new WochatApi.OnServerResponseListener() {
 			@Override
 			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
@@ -210,6 +183,7 @@ public class WCRepository {
 					try {
 						String imageUrl = response.getString("url");
 						String thumbUrl = response.getString("thumb_url");
+						mSharedPreferences.saveUserProfileImagesUrls(imageUrl, thumbUrl);
 						userConfirmRegistration(imageUrl, userName);
 						mUserRegistrationState.setValue(new StateData<UserRegistrationState>().success(UserRegistrationState.user_upload_profile_pic_ok));
 					} catch (JSONException e) {
@@ -237,10 +211,7 @@ public class WCRepository {
 					try {
 						Gson gson = new Gson();
 						User user = gson.fromJson(response.toString(), User.class);
-						//mDatabase.userDao().insert(user);
 						insert(user);
-
-
 						Log.e(TAG, "user: " + user.toString());
 						/**
 						 * "user_id": "972541234567",
@@ -321,6 +292,11 @@ public class WCRepository {
 		return mAllUsers;
 	}
 
+	public LiveData<User> getSelfUser() {
+		return mSelfUser;
+	}
+
+
     // You must call this on a non-UI thread or your app will crash.
     // Like this, Room ensures that you're not doing any long running operations on the main
     // thread, blocking the UI.
@@ -331,6 +307,10 @@ public class WCRepository {
     public void insert(User user) {
 		new InsertUserAsyncTask(mDatabase.userDao()).execute(user);
 	}
+
+//	public void getUser(GetUserListener getUserListener){
+//		new GetUserAsyncTask(mDatabase.userDao(), getUserListener).execute();
+//	}
 
 
 
@@ -361,11 +341,36 @@ public class WCRepository {
 		protected Void doInBackground(final User... params) {
 			mAsyncTaskDao.deleteAll();
 			mAsyncTaskDao.insert(params[0]);
-			User[] lst = mAsyncTaskDao.getAllUsers();
-//			LiveData<List<User>> ldl = mAsyncTaskDao.getUsers();
-//			List<User> users = ldl.getValue();
-
+			//User user = mAsyncTaskDao.getFirstUser();
+			//User[] lst = mAsyncTaskDao.getAllUsers();
 			return null;
 		}
 	}
+
+	public interface GetUserListener {
+		void onGetUser(User user);
+	}
+
+//	private static class GetUserAsyncTask extends AsyncTask<User, Void, User> {
+//
+//		private final GetUserListener mGetUserListener;
+//		private final UserDao mAsyncTaskDao;
+//
+//		public GetUserAsyncTask(UserDao dao, GetUserListener listener) {
+//			mAsyncTaskDao = dao;
+//			mGetUserListener = listener;
+//		}
+//
+//		@Override
+//		protected User doInBackground(final User... params) {
+//			User user = mAsyncTaskDao.getFirstUser();
+//			return user;
+//		}
+//
+//		@Override
+//		protected void onPostExecute(User user) {
+//			mGetUserListener.onGetUser(user);
+//		}
+//	}
+
 }

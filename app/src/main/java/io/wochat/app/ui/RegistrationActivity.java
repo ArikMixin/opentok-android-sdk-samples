@@ -23,6 +23,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatTextView;
@@ -75,10 +76,8 @@ public class RegistrationActivity extends PermissionActivity {
 
 	private static final int REQUEST_SELECT_PHOTO = 100;
 	private static final int REQUEST_TAKE_PHOTO = 101;
-	private static final int REQUEST_CROP = 102;
 
 	private String[] PERMISSIONS = {
-		//Manifest.permission.READ_SMS
 		Manifest.permission.RECEIVE_SMS
 	};
 	private String mUserTrimmedPhone;
@@ -102,6 +101,7 @@ public class RegistrationActivity extends PermissionActivity {
 	protected String[] getPermissions() {
 		return PERMISSIONS;
 	}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -273,8 +273,6 @@ public class RegistrationActivity extends PermissionActivity {
 				}
 			}
 		});
-
-
 
 	}
 

@@ -125,7 +125,10 @@ public class WochatApi {
 		JSONObject jsonObject = new JSONObject();
 		try {
 			jsonObject.put("user_name", userName);
-			jsonObject.put("profile_pic_url", profilePicURL);
+
+			if (profilePicURL != null)
+				jsonObject.put("profile_pic_url", profilePicURL);
+
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}

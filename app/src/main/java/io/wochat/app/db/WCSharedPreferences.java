@@ -4,7 +4,21 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import io.wochat.app.utils.Utils;
+
 public class WCSharedPreferences {
+
+	private static final String SMS_CODE = "SMS_CODE";
+	private static final String USER_ID = "USER_ID";
+	private static final String USER_COUNTRY_CODE = "USER_COUNTRY_CODE";
+	private static final String USER_PHONE_NUM = "USER_PHONE_NUM";
+	private static final String TOKEN = "TOKEN";
+	private static final String REFRESH_TOKEN = "REFRESH_TOKEN";
+	private static final String XMPP_PWD = "XMPP_PWD";
+	private static final String GLOBAL_SP = "GLOBAL";
+	private static final String USER_PROFILE_PIC_URL = "USER_PROFILE_PIC_URL";
+	private static final String USER_PROFILE_THUMB_URL = "USER_PROFILE_THUMB_URL";
+	private static final String USER_PROFILE_PIC = "USER_PROFILE_PIC";
 
 
 	private static WCSharedPreferences mInstance;
@@ -22,50 +36,75 @@ public class WCSharedPreferences {
 
 
 	public WCSharedPreferences(Context context) {
-		mSharedPreferences = context.getSharedPreferences("GLOBAL", Context.MODE_PRIVATE);
+		mSharedPreferences = context.getSharedPreferences(GLOBAL_SP, Context.MODE_PRIVATE);
 	}
 
 	private final SharedPreferences mSharedPreferences;
 
 	public void saveSMSCode(String code){
-		mSharedPreferences.edit().putString("SMS_CODE", code).commit();
+		mSharedPreferences.edit().putString(SMS_CODE, code).commit();
 	}
 
 	public String getSMSCode(){
-		return mSharedPreferences.getString("SMS_CODE", null);
+		return mSharedPreferences.getString(SMS_CODE, null);
 	}
 
 	public void saveUserId(String userId) {
-		mSharedPreferences.edit().putString("USER_ID", userId).commit();
+		mSharedPreferences.edit().putString(USER_ID, userId).commit();
 	}
 
 	public String getUserId(){
-		return mSharedPreferences.getString("USER_ID", null);
+		return mSharedPreferences.getString(USER_ID, null);
 	}
 
 	public String getToken(){
-		return mSharedPreferences.getString("TOKEN", null);
+		return mSharedPreferences.getString(TOKEN, null);
 	}
 
-	public void saveUserCountryCode(String userCountryCode) {
-		mSharedPreferences.edit().putString("USER_COUNTRY_CODE", userCountryCode).commit();
+	public void saveUserPhoneNumAndCountryCode(String phoneNum, String userCountryCode) {
+		mSharedPreferences.edit().
+			putString(USER_COUNTRY_CODE, userCountryCode).
+			putString(USER_PHONE_NUM, phoneNum).
+			commit();
 	}
 
 	public String getUserCountryCode(){
-		return mSharedPreferences.getString("USER_COUNTRY_CODE", null);
+		return mSharedPreferences.getString(USER_COUNTRY_CODE, null);
 	}
 
+	public String getUserPhoneNum(){
+		return mSharedPreferences.getString(USER_PHONE_NUM, null);
+	}
 
 	public void saveUserRegistrationData(String token, String refreshToken, String xmppPwd) {
 		mSharedPreferences.edit().
-			putString("TOKEN", token).
-			putString("REFRESH_TOKEN", refreshToken).
-			putString("XMPP_PWD", xmppPwd).
+			putString(TOKEN, token).
+			putString(REFRESH_TOKEN, refreshToken).
+			putString(XMPP_PWD, xmppPwd).
 			commit();
 	}
 
 	public boolean hasUserRegistrationData(){
-		return mSharedPreferences.contains("TOKEN");
+		return mSharedPreferences.contains(TOKEN);
 	}
 
+	public void saveUserProfileImagesUrls(String imageUrl, String thumbUrl) {
+		mSharedPreferences.edit().
+			putString(USER_PROFILE_PIC_URL, imageUrl).
+			putString(USER_PROFILE_THUMB_URL, thumbUrl).
+			commit();
+	}
+
+
+	public void saveUserProfileImages(byte[] bytes) {
+		String encodedString = Utils.byteArrayImageToString(bytes);
+		mSharedPreferences.edit().
+			putString(USER_PROFILE_PIC, encodedString).
+			commit();
+	}
+
+	public byte[] getUserProfileImages() {
+		String encodedString = mSharedPreferences.getString(USER_PROFILE_PIC, null);
+		return Utils.stringToByteArrayImage(encodedString);
+	}
 }

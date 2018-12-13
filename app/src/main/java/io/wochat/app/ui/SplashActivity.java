@@ -1,5 +1,6 @@
 package io.wochat.app.ui;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
@@ -18,6 +19,8 @@ import android.widget.TextView;
 
 import io.wochat.app.R;
 import io.wochat.app.utils.TextViewLinkMovementMethod;
+import io.wochat.app.viewmodel.RegistrationViewModel;
+import io.wochat.app.viewmodel.UserViewModel;
 
 public class SplashActivity extends PermissionActivity {
 
@@ -29,6 +32,7 @@ public class SplashActivity extends PermissionActivity {
 		android.Manifest.permission.READ_CONTACTS,
 		android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
 	};
+	private UserViewModel mUserViewModel;
 
 	@Override
 	protected String[] getPermissions() {
@@ -41,6 +45,8 @@ public class SplashActivity extends PermissionActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_splash);
 		boolean hasPermissions = hasPermissions();
+
+		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
 
 		LinearLayout bottomLL = (LinearLayout) findViewById(R.id.bottom_ll);
 		bottomLL.setVisibility(hasPermissions? View.INVISIBLE : View.VISIBLE);
@@ -95,7 +101,29 @@ public class SplashActivity extends PermissionActivity {
 
 
 	private void goOn(){
+		checkRegistrationUser();
+	}
+
+	private void checkRegistrationUser() {
+		mUserViewModel.getSelfUser().observe(this, user -> {
+			if (user == null){
+				startRegistrationActivity();
+			}
+			else {
+				startMainActivity();
+			}
+		});
+	}
+
+	private void startRegistrationActivity(){
 		Intent intent = new Intent(SplashActivity.this, RegistrationActivity.class);
+		startActivity(intent);
+		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
+		finish();
+	}
+
+	private void startMainActivity(){
+		Intent intent = new Intent(SplashActivity.this, MainActivity.class);
 		startActivity(intent);
 		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 		finish();

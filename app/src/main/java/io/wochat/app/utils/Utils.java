@@ -11,6 +11,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -113,5 +114,22 @@ public class Utils {
 			e.printStackTrace();
 		}
 
+	}
+
+
+	public static String byteArrayImageToString(byte[] byteArray){
+		if (byteArray == null)
+			return null;
+
+		String encodedString = Base64.encodeToString(byteArray, Base64.DEFAULT);
+		return encodedString;
+	}
+
+	public static byte[] stringToByteArrayImage(String encodedString){
+		if (encodedString == null)
+			return null;
+
+		byte[] byteArray = Base64.decode(encodedString, Base64.DEFAULT);
+		return byteArray;
 	}
 }
