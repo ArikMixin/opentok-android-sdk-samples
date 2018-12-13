@@ -25,4 +25,7 @@
     <string name="error_sms_code_verification_invalid_code">wrong code</string>
     <string name="error_sms_code_verification_general_error">error, please try again</string>
     <string name="error_reg_pic_enter_name">Enter your name here.</string>
+    <string name="msg_error_title">Error</string>
+    <string name="msg_error_general_body">An error occurred, please try again later</string>
+    <string name="msg_error_comm_body">Communication error occurred, please try again later</string>
 </resources>

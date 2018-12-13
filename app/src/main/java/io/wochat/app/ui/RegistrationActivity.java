@@ -92,7 +92,6 @@ public class RegistrationActivity extends PermissionActivity {
 	private ImageButton mPicCameraIB;
 	private ImageButton mPicGalleryIB;
 	private ImageView mPicProfileIV;
-	//private CardView mPicCardView;
 	private ImageView mPicFlagIV;
 	private AppCompatEditText mPicUserNameET;
 	private AppCompatButton mPicFinishBtn;
@@ -193,7 +192,9 @@ public class RegistrationActivity extends PermissionActivity {
 						mPager.setCurrentItem(PagerModel.ENTER_PIC.ordinal(), true);
 						break;
 					case reg_phase_4_finish:
-						Toast.makeText(RegistrationActivity.this, "FINISH REGISTRATION", Toast.LENGTH_LONG).show();
+						Intent intent = new Intent(RegistrationActivity.this, MainActivity.class);
+						startActivity(intent);
+						RegistrationActivity.this.finish();
 						break;
 					default:
 						break;
@@ -210,13 +211,13 @@ public class RegistrationActivity extends PermissionActivity {
 					mProgressDialog = null;
 				}
 				if (stringStateData.isSuccess()){
-					//mPager.setCurrentItem(PagerModel.ENTER_SMS_CODE.ordinal(), true);
+					// do nothing here just error handling
 				}
 				else if (stringStateData.isErrorComm()){
-					Toast.makeText(RegistrationActivity.this, "result error: " + stringStateData.getErrorCom(), Toast.LENGTH_SHORT).show();
+					showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_comm_body));
 				}
 				else if (stringStateData.isErrorLogic()){
-					Toast.makeText(RegistrationActivity.this, "result error: " + stringStateData.getErrorLogic(), Toast.LENGTH_SHORT).show();
+					showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_general_body));
 				}
 
 			}
@@ -242,11 +243,11 @@ public class RegistrationActivity extends PermissionActivity {
 						mCodeCodeNumET.setError(getString(R.string.error_sms_code_verification_invalid_code));
 					}
 					else {
-						mCodeCodeNumET.setError("error logic unknown");
+						showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_general_body));
 					}
 				}
-				else {
-					mCodeCodeNumET.setError(getString(R.string.error_sms_code_verification_general_error));
+				else if (stringStateData.isErrorComm()){
+					showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_comm_body));
 				}
 			}
 		});
@@ -262,13 +263,13 @@ public class RegistrationActivity extends PermissionActivity {
 				}
 				if (stringStateData.isSuccess()){
 					Log.e(TAG, "userFinishRegistrationResult ok : Data: " + stringStateData.getData());
-					//Toast.makeText(RegistrationActivity.this, "FinishRegistration ok", Toast.LENGTH_SHORT).show();
+
 				}
 				else if (stringStateData.isErrorLogic()){
-					Toast.makeText(RegistrationActivity.this, "FinishRegistration ErrorLogic", Toast.LENGTH_SHORT).show();
+					showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_general_body));
 				}
-				else {
-					Toast.makeText(RegistrationActivity.this, "FinishRegistration Error", Toast.LENGTH_SHORT).show();
+				else if (stringStateData.isErrorComm()){
+					showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_comm_body));
 				}
 			}
 		});
@@ -516,6 +517,7 @@ public class RegistrationActivity extends PermissionActivity {
 		mPicFlagIV.setImageDrawable(getResources().getDrawable(mCountryCodePicker.getSelectedCountry().getFlagID()));
 
 		mPicFinishBtn.setOnClickListener(mPicFinishBtnClick);
+
 		mPicUserNameET.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -755,6 +757,19 @@ public class RegistrationActivity extends PermissionActivity {
 
 
 
+
+	private void showUserErrorMessage(String title, String body){
+		new AlertDialog.Builder(RegistrationActivity.this)
+			.setTitle(title)
+			.setMessage(body)
+			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			})
+			.show();
+	}
 
 
 

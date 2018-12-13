@@ -9,6 +9,8 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import java.util.Date;
+
 @Entity(tableName = "user_table")
 public class User {
 
@@ -37,9 +39,9 @@ public class User {
     @Expose
     private String profilePicUrl;
 
-//    @SerializedName("location")
-//    @Expose
-//    private Location location;
+    @SerializedName("location")
+    @Expose
+    private Location location;
 
     @SerializedName("gender")
     @Expose
@@ -119,13 +121,13 @@ public class User {
         this.profilePicUrl = profilePicUrl;
     }
 
-//    public Location getLocation() {
-//        return location;
-//    }
-//
-//    public void setLocation(Location location) {
-//        this.location = location;
-//    }
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
 
     public String getGender() {
         return gender;
@@ -185,7 +187,6 @@ public class User {
 
     @Override
     public String toString() {
-        //return new ToStringBuilder(this).append("userId", userId).append("userName", userName).append("status", status).append("countryCode", countryCode).append("language", language).append("profilePicUrl", profilePicUrl).append("location", location).append("gender", gender).append("birthdate", birthdate).append("lastUpdateDate", lastUpdateDate).append("discoverable", discoverable).append("os", os).append("languageLocale", languageLocale).append("appVersion", appVersion).toString();
 		return new ToStringBuilder(this).
 			append("userId", userId).
 			append("userName", userName).
@@ -193,7 +194,7 @@ public class User {
 			append("countryCode", countryCode).
 			append("language", language).
 			append("profilePicUrl", profilePicUrl).
-			//append("location", location).
+			append("location", location).
 			append("gender", gender).
 			append("birthdate", birthdate).
 			append("lastUpdateDate", lastUpdateDate).

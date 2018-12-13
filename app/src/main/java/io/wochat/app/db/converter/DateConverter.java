@@ -18,44 +18,17 @@ package io.wochat.app.db.converter;
 
 import android.arch.persistence.room.TypeConverter;
 
-
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-
 import java.util.Date;
 
-import io.wochat.app.db.entity.Location;
 
-public class LocationConverter {
-
+public class DateConverter {
     @TypeConverter
-    public static Location toLocation(String locationString) {
-        if (locationString == null)
-            return null;
-        else {
-			try {
-				Gson gson = new Gson();
-				return gson.fromJson(locationString, Location.class);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
+    public static Date toDate(Long timestamp) {
+        return timestamp == null ? null : new Date(timestamp);
     }
 
     @TypeConverter
-    public static String toLocationString(Location location) {
-        if (location == null)
-            return null;
-        else {
-			try {
-				Gson gson = new Gson();
-				return gson.toJson(location);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
+    public static Long toTimestamp(Date date) {
+        return date == null ? null : date.getTime();
     }
-
 }

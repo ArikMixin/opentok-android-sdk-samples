@@ -17,4 +17,19 @@
     <style name="ButtonAppTheme" parent="android:Widget.Material.Button">
         <item name="android:background">@color/app_blue</item>
     </style>
+
+
+    <style name="CustomDialogTheme" parent="@android:style/Theme.Dialog">
+        <item name="android:bottomBright">@color/whitee</item>
+        <item name="android:bottomDark">@color/whitee</item>
+        <item name="android:bottomMedium">@color/whitee</item>
+        <item name="android:centerBright">@color/whitee</item>
+        <item name="android:centerDark">@color/whitee</item>
+        <item name="android:centerMedium">@color/whitee</item>
+        <item name="android:fullBright">@color/aqua</item>
+        <item name="android:fullDark">@color/aqua</item>
+        <item name="android:topBright">@color/blue</item>
+        <item name="android:topDark">@color/blue</item>
+    </style>
+
 </resources>

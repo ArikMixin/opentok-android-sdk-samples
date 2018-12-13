@@ -28,16 +28,15 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
-//import com.example.android.persistence.db.entity.ProductFtsEntity;
-
 import io.wochat.app.AppExecutors;
+import io.wochat.app.db.converter.DateConverter;
 import io.wochat.app.db.converter.LocationConverter;
 import io.wochat.app.db.dao.UserDao;
-import io.wochat.app.db.dao.WordDao;
 import io.wochat.app.db.entity.User;
 
-@Database(entities = {User.class }, version = 2)
-@TypeConverters({LocationConverter.class})
+
+@Database(entities = {User.class}, version = 2)
+@TypeConverters({LocationConverter.class, DateConverter.class})
 public abstract class WCDatabase extends RoomDatabase {
 
 	private static WCDatabase sInstance;
@@ -77,7 +76,7 @@ public abstract class WCDatabase extends RoomDatabase {
 					super.onCreate(db);
 					executors.diskIO().execute(() -> {
 						// Add a delay to simulate a long-running operation
-						addDelay();
+						//addDelay();
 						// Generate the data for pre-population
 						WCDatabase database = WCDatabase.getInstance(appContext, executors);
 						//List<ProductEntity> products = DataGenerator.generateProducts();
