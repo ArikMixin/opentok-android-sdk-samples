@@ -16,7 +16,7 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <io.wochat.app.cpmponents.CircleImageView
+            <io.wochat.app.components.CircleImageView
                 android:layout_width="200dp"
                 android:layout_height="200dp"
                 android:layout_gravity="center"
@@ -75,7 +75,7 @@
                 android:textColor="@color/black50"/>
 
 
-            <io.wochat.app.cpmponents.CircleImageView
+            <io.wochat.app.components.CircleImageView
                 android:id="@+id/reg_pic_flag_iv"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"

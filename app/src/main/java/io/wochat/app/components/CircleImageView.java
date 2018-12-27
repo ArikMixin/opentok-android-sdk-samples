@@ -1,4 +1,4 @@
-package io.wochat.app.cpmponents;
+package io.wochat.app.components;
 
 /*
  * Copyright 2014 - 2018 Henning Dodenhof

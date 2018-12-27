@@ -1,9 +1,6 @@
 package io.wochat.app.ui;
 
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabItem;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -15,22 +12,19 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.ImageSpan;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.rahimlis.badgedtablayout.BadgedTabLayout;
+//import com.rahimlis.badgedtablayout.BadgedTabLayout;
+import io.wochat.app.components.BadgedTabLayout;
 
 import io.wochat.app.R;
+
 
 public class MainActivity3 extends AppCompatActivity {
 
@@ -66,10 +60,16 @@ public class MainActivity3 extends AppCompatActivity {
 
 
 		//https://github.com/rahimlis/badgedtablayout
-		TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+		//TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+
+		BadgedTabLayout tabLayout = (BadgedTabLayout) findViewById(R.id.tabs);
+		tabLayout.setupWithViewPager(mViewPager);
+		tabLayout.setBadgeText(1,"1");
+
+
 //		BadgedTabLayout tabLayout = (BadgedTabLayout) findViewById(R.id.tabs);
 //		tabLayout.setBadgeText(0,"2");
-		tabLayout.setupWithViewPager(mViewPager);
+//		tabLayout.setupWithViewPager(mViewPager);
 
 		mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 		tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
@@ -81,12 +81,7 @@ public class MainActivity3 extends AppCompatActivity {
 		int wantedTabIndex = 0;
 
 
-//		tabItem.setCustomView(null);
-//		TextView tv = new TextView(this);
-//		tv.setGravity(Gravity.CENTER);
-//		tv.setTextColor(Color.WHITE);
-//		tv.setText("dsfgsdf");
-//		tabItem.setCustomView(tv);
+
 
 
 
@@ -167,8 +162,7 @@ public class MainActivity3 extends AppCompatActivity {
 
 		private String tabTitles[] = new String[] {
 			getString(R.string.tab_text_1),
-			getString(R.string.tab_text_2),
-			getString(R.string.tab_text_3)};
+			getString(R.string.tab_text_2)};
 
 		public SectionsPagerAdapter(FragmentManager fm) {
 			super(fm);
@@ -183,22 +177,14 @@ public class MainActivity3 extends AppCompatActivity {
 
 		@Override
 		public int getCount() {
-			// Show 3 total pages.
-			return 3;
+			return tabTitles.length;
 		}
 
 		@Nullable
 		@Override
 		public CharSequence getPageTitle(int position) {
 			return tabTitles[position];
-//			return super.getPageTitle(position);
-//			Drawable image = getResources().getDrawable(R.drawable.flag_angola);
-//			image.setBounds(0, 0, image.getIntrinsicWidth(), image.getIntrinsicHeight());
-//			// Replace blank spaces with image icon
-//			SpannableString sb = new SpannableString("   " + tabTitles[position]);
-//			ImageSpan imageSpan = new ImageSpan(image, ImageSpan.ALIGN_BASELINE);
-//			sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//			return sb;
+
 		}
 
 
