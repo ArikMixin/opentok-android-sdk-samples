@@ -1,7 +1,6 @@
 package io.wochat.app.com;
 
 import android.content.Context;
-import android.os.Build;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
@@ -18,12 +17,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 import io.wochat.app.BuildConfig;
-import io.wochat.app.db.WCSharedPreferences;
 
 public class WochatApi {
 
@@ -35,26 +34,33 @@ public class WochatApi {
 	String mToken = null;
 
 
+
 	public interface OnServerResponseListener{
 		void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response);
 	}
 
 	private static WochatApi mInstance;
 
-	public static WochatApi getInstance(Context context) {
+	public static WochatApi getInstance(Context context, String userId, String token) {
 		if (mInstance == null) {
 			synchronized (WochatApi.class) {
 				if (mInstance == null) {
-					mInstance = new WochatApi(context);
+					mInstance = new WochatApi(context, userId, token);
+				}
+				else {
+					mInstance.setUserId(userId);
+					mInstance.setToken(token);
 				}
 			}
 		}
 		return mInstance;
 	}
 
-	private WochatApi(Context context){
+	private WochatApi(Context context, String userId, String token){
 		super();
 		mContext = context.getApplicationContext();
+		mUserId = userId;
+		mToken = token;
 	}
 
 	public void setUserId(String userId) {
@@ -146,14 +152,33 @@ public class WochatApi {
 		Log.e(TAG, "API userGetContacts - contactIdList count: " + contactIdArray.length);
 
 		JSONObject jsonObject = new JSONObject();
-
+		JSONArray jsonArray = new JSONArray(Arrays.asList(contactIdArray));
 		try {
-			jsonObject.put("contact_ids", contactIdArray);
+			jsonObject.put("contact_ids", jsonArray);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 
 		String url = BASE_URL + "user/contacts_list/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+
+
+	}
+
+	public void userGetStatus(String[] contactIdArray, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API userGetContacts - contactIdList count: " + contactIdArray.length);
+
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray(Arrays.asList(contactIdArray));
+		try {
+			jsonObject.put("user_ids", jsonArray);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "user/status_list/";
 
 		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
 
@@ -196,10 +221,7 @@ public class WochatApi {
 				lsnr.OnServerResponse(false, null, error, null);
 			}
 		}) {
-//			@Override
-//			protected Map<String, String> getParams() {
-//				return super.getParams();
-//			}
+
 
 			@Override
 			public Map<String, String> getHeaders() throws AuthFailureError {

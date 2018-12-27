@@ -3,27 +3,40 @@ package io.wochat.app;
 import android.app.Application;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.content.ContentResolver;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 import io.wochat.app.com.WochatApi;
 import io.wochat.app.db.WCDatabase;
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.dao.UserDao;
+import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.StateData;
+import io.wochat.app.utils.ContactsUtil;
+import io.wochat.app.utils.Utils;
 
 /**
  * Repository handling the work with products and comments.
  */
 public class WCRepository {
+
+
+	private Map<String, ContactLocal> mLocalContact;
+	private Object mLocalContactSyncObject = new Object();
+
 	public enum UserRegistrationState {
 		user_reg_ok,
 		user_sms_verification_ok,
@@ -36,6 +49,8 @@ public class WCRepository {
 	private final WCDatabase mDatabase;
 	private final WCSharedPreferences mSharedPreferences;
 	private final WochatApi mWochatApi;
+	private final ContentResolver mContentResolver;
+	private final String mLocaleCountry;
 
 	private MutableLiveData<StateData<UserRegistrationState>> mUserRegistrationState;
 	private MutableLiveData<StateData<String>> mUserRegistrationResult;
@@ -79,7 +94,12 @@ public class WCRepository {
 
     	mDatabase = database;
 		mSharedPreferences = WCSharedPreferences.getInstance(application);
-		mWochatApi = WochatApi.getInstance(application);
+		String userId = mSharedPreferences.getUserId();
+		String token = mSharedPreferences.getToken();
+		mWochatApi = WochatApi.getInstance(application, userId, token);
+		mContentResolver = application.getContentResolver();
+		mLocaleCountry = Utils.getLocaleCountry(application);
+
 
 		mUserRegistrationState = new MutableLiveData<>();
 		mUserRegistrationResult = new MutableLiveData<>();
@@ -91,6 +111,7 @@ public class WCRepository {
         //mAllWords = mWordDao.getAlphabetizedWords();
 		mUserDao = mDatabase.userDao();
 		mSelfUser = mUserDao.getFirstUser();
+
     }
 
 
@@ -144,6 +165,9 @@ public class WCRepository {
 						mWochatApi.setToken(token);
 						Log.e(TAG, "OnServerResponse userVerification token: " + token + ", refresh_token: " + refreshToken + ", xmpp_pwd: " + xmppPwd);
 						//mSharedPreferences.saveUserId(userId);
+
+						initSyncContactsWithServer();
+
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -313,6 +337,183 @@ public class WCRepository {
 		}
 	}
 
+	private void updateContactsWithLocals(Contact[] contacts, Map<String, ContactLocal> localContacts){
+
+    	for (int i=0; i<contacts.length; i++){
+			String id = contacts[i].getUserId();
+			ContactLocal local = localContacts.get(id);
+    		contacts[i].setContactLocal(local);
+		}
+
+//		ContactLocal[] contactLocalArray = localContacts.values().toArray(new ContactLocal[0]);
+//		new UpdateContactsWithLocalsAsyncTask(mDatabase).execute(contactLocalArray);
+	}
+
+//	private static class UpdateContactsWithLocalsAsyncTask extends AsyncTask<ContactLocal[], Void, Void> {
+//
+//		private WCDatabase mDatabase;
+//
+//		UpdateContactsWithLocalsAsyncTask(WCDatabase database) {
+//			mDatabase = database;
+//		}
+//
+//		@Override
+//		protected Void doInBackground(final ContactLocal[]... params) {
+//
+//			WCDatabase.updateContactsWithLocals(mDatabase, params[0]);
+//			return null;
+//		}
+//	}
+
+
+	public void insert(Contact[] contacts) {
+		new InsertContactsAsyncTask(mDatabase).execute(contacts);
+	}
+
+	private static class InsertContactsAsyncTask extends AsyncTask<Contact[], Void, Void> {
+
+		private WCDatabase mDatabase;
+
+		InsertContactsAsyncTask(WCDatabase database) {
+			mDatabase = database;
+		}
+
+		@Override
+		protected Void doInBackground(final Contact[]... params) {
+
+			WCDatabase.insertContacts(mDatabase, params[0]);
+			return null;
+		}
+	}
+
+	public void insert(ContactLocal[] contactsLocals) {
+		new InsertContactsLocalsAsyncTask(mDatabase).execute(contactsLocals);
+	}
+
+	private static class InsertContactsLocalsAsyncTask extends AsyncTask<ContactLocal[], Void, Void> {
+
+		private WCDatabase mDatabase;
+
+		InsertContactsLocalsAsyncTask(WCDatabase database) {
+			mDatabase = database;
+		}
+
+		@Override
+		protected Void doInBackground(final ContactLocal[]... params) {
+			WCDatabase.insertContactsLocal(mDatabase, params[0]);
+			return null;
+		}
+	}
+
+
+//	private static class InsertContactsLocalsAsyncTask extends AsyncTask<ContactLocal[], Void, Void> {
+//
+//		private ContactLocalDao mAsyncTaskDao;
+//
+//		InsertContactsLocalsAsyncTask(ContactLocalDao dao) {
+//			mAsyncTaskDao = dao;
+//		}
+//
+//		@Override
+//		protected Void doInBackground(final ContactLocal[]... params) {
+//			mAsyncTaskDao.insert(params[0]);
+//			return null;
+//		}
+//	}
+
+
+
+
+
+	public void retrieveLocalContacts(){
+
+		RetrieveLocalContactsAsyncTask asyncTask = new RetrieveLocalContactsAsyncTask();
+		asyncTask.execute();
+
+	}
+
+	private void initSyncContactsWithServer() {
+    	Log.e(TAG, "initSyncContactsWithServer called");
+		synchronized(mLocalContactSyncObject){
+			if (mLocalContact != null) {
+				syncContactsWithServer(mLocalContact);
+			}
+			else {
+				Log.e(TAG, "initSyncContactsWithServer, Local Contact empty, wait 10 sec...");
+				new Handler().postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						initSyncContactsWithServer();
+					}
+				}, 10000);
+			}
+		}
+
+
+	}
+
+
+	public void syncContactsWithServer(Map<String, ContactLocal> localContacts){
+		Log.e(TAG, "syncContactsWithServer called");
+		String[] contactArray = new String[localContacts.size()];
+		int i=0;
+
+		for(String contact : localContacts.keySet()){
+			contactArray[i++] = contact;
+		}
+		mWochatApi.userGetContacts(contactArray, new WochatApi.OnServerResponseListener() {
+			@Override
+			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+				if (isSuccess) {
+					JSONArray jsonContactArray = null;
+					try {
+						jsonContactArray = response.getJSONArray("contacts");
+						Contact[] contacts = new Contact[jsonContactArray.length()];
+						int j = 0;
+						for (int i = 0; i < jsonContactArray.length(); i++) {
+							JSONObject jsonContactObj = jsonContactArray.getJSONObject(i);
+							Gson gson = new Gson();
+							Contact contact = gson.fromJson(jsonContactObj.toString(), Contact.class);
+							contacts[j++] = contact;
+						}
+
+						synchronized(mLocalContactSyncObject) {
+							updateContactsWithLocals(contacts, mLocalContact);
+							insert(contacts);
+						}
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+
+			}
+		});
+
+	}
+
+
+	private class RetrieveLocalContactsAsyncTask extends AsyncTask<Void, Void, Map<String, ContactLocal>> {
+
+
+		@Override
+		protected Map<String, ContactLocal> doInBackground(final Void... params) {
+			ContactsUtil contactsUtil = new ContactsUtil();
+			Map<String, ContactLocal> map = contactsUtil.readContacts(mContentResolver, mLocaleCountry);
+			return map;
+		}
+
+		@Override
+		protected void onPostExecute(Map<String, ContactLocal> localContacts) {
+			ContactLocal[] contactLocalArray = localContacts.values().toArray(new ContactLocal[0]);
+			insert(contactLocalArray);
+
+			synchronized(mLocalContactSyncObject) {
+				mLocalContact = localContacts;
+			}
+
+		}
+	}
 
 
 }

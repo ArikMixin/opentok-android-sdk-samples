@@ -28,14 +28,20 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
+import java.util.Map;
+
 import io.wochat.app.AppExecutors;
 import io.wochat.app.db.converter.DateConverter;
 import io.wochat.app.db.converter.LocationConverter;
+import io.wochat.app.db.dao.ContactDao;
+import io.wochat.app.db.dao.ContactLocalDao;
 import io.wochat.app.db.dao.UserDao;
+import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.User;
 
 
-@Database(entities = {User.class}, version = 2)
+@Database(entities = {User.class, Contact.class, ContactLocal.class}, version = 2)
 @TypeConverters({LocationConverter.class, DateConverter.class})
 public abstract class WCDatabase extends RoomDatabase {
 
@@ -44,7 +50,10 @@ public abstract class WCDatabase extends RoomDatabase {
 	@VisibleForTesting
 	public static final String DATABASE_NAME = "wochat-db";
 
+
 	public abstract UserDao userDao();
+	public abstract ContactDao contactDao();
+	public abstract ContactLocalDao contactLocalDao();
 	//public abstract WordDao wordDao();
 
 
@@ -104,18 +113,31 @@ public abstract class WCDatabase extends RoomDatabase {
 		mIsDatabaseCreated.postValue(true);
 	}
 
-//	private static void insertData(final AppDatabase database, final List<ProductEntity> products,
-//								   final List<CommentEntity> comments) {
-//		database.runInTransaction(() -> {
-//			database.productDao().insertAll(products);
-//			database.commentDao().insertAll(comments);
-//		});
-//	}
-	private static void insertUser(final WCDatabase database, final User user) {
+	public static void insertUser(final WCDatabase database, final User user) {
 		database.runInTransaction(() -> {
 			database.userDao().insert(user);
 		});
 	}
+
+	public static void insertContacts(final WCDatabase database, final Contact[] contacts) {
+		database.runInTransaction(() -> {
+			database.contactDao().insert(contacts);
+		});
+	}
+
+	public static void insertContactsLocal(final WCDatabase database, final ContactLocal[] contactsLocals) {
+		database.runInTransaction(() -> {
+			database.contactLocalDao().insert(contactsLocals);
+		});
+	}
+
+//	public static void updateContactsWithLocals(WCDatabase database, ContactLocal[] contactLocals) {
+//		database.runInTransaction(() -> {
+//			database.contactDao().updateWithLocalInfo();
+//		});
+//
+//	}
+
 
 	private static void addDelay() {
 		try {

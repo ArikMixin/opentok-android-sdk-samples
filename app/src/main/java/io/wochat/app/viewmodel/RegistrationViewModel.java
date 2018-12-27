@@ -51,6 +51,8 @@ public class RegistrationViewModel extends AndroidViewModel {
 		mUserVerificationResult = mRepository.getUserVerificationResult();
 		mUserRegistrationResult = mRepository.getUserRegistrationResult();
 
+		mRepository.retrieveLocalContacts();
+
 //		mUserRegistrationPhase = Transformations.switchMap(mUserState, new Function<StateData<WCRepository.UserRegistrationState>, LiveData<RegistrationPhase>>() {
 //			@Override
 //			public LiveData<RegistrationPhase> apply(StateData<WCRepository.UserRegistrationState> input) {

@@ -10,7 +10,9 @@ import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.v4.content.ContextCompat;
+import android.telephony.TelephonyManager;
 import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
@@ -131,5 +133,18 @@ public class Utils {
 
 		byte[] byteArray = Base64.decode(encodedString, Base64.DEFAULT);
 		return byteArray;
+	}
+
+	public static String getLocaleCountry(Context context){
+		TelephonyManager tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+		String countryCodeValue = tm.getNetworkCountryIso();
+		if ((countryCodeValue != null) && (!countryCodeValue.equals("")))
+			return countryCodeValue.toUpperCase();
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			return context.getResources().getConfiguration().getLocales().get(0).getCountry();
+		} else {
+			return context.getResources().getConfiguration().locale.getCountry();
+		}
 	}
 }
