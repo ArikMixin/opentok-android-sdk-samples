@@ -90,4 +90,9 @@
     <color name="blue">#0000FF</color>
     <color name="navy">#000080</color>
 
+    <color name="badge_selected">#ffffff</color>
+    <color name="badge_not_selected">#E0E0E0</color>
+
+
+
 </resources>

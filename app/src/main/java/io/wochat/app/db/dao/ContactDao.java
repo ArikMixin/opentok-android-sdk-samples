@@ -26,6 +26,7 @@ import android.arch.persistence.room.Update;
 import java.util.List;
 
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.ContactInvitation;
 import io.wochat.app.db.entity.ContactLocal;
 
 
@@ -45,8 +46,11 @@ public interface ContactDao {
     // Always holds/caches latest version of data. Notifies its active observers when the
     // data has changed. Since we are getting all the contents of the database,
     // we are notified whenever any of the database contents have changed.
-    @Query("SELECT * from contact_table ORDER BY user_id ASC")
+    @Query("SELECT * from contact_table ORDER BY id ASC")
 	LiveData<List<Contact>> getContact();
+
+	@Query("SELECT * from contact_table ORDER BY has_server_data DESC, cntct_local_display_name ASC")
+	LiveData<List<Contact>> getContacts();
 
 	@Query("SELECT * FROM contact_table")
 	public Contact[] getAllContacts();
@@ -54,6 +58,8 @@ public interface ContactDao {
 	@Query("SELECT * FROM contact_table LIMIT 1")
 	LiveData<Contact> getFirstContact();
 
+	@Query("SELECT * FROM contact_table WHERE id =:id")
+	LiveData<Contact> getContact(String id);
     // We do not need a conflict strategy, because the word is our primary key, and you cannot
     // add two items with the same primary key to the database. If the table has more than one
     // column, you can use @Insert(onConflict = OnConflictStrategy.REPLACE) to update a row.
@@ -73,11 +79,21 @@ public interface ContactDao {
 		"cntct_local_os_id = :oSId , " +
 		"cntct_local_phone_num_stripped = :phoneNumStripped ," +
 		"cntct_local_phone_num_iso = :phoneNumIso " +
-		"WHERE user_id =:phoneNumStripped")
+		"WHERE id =:phoneNumStripped")
 	void updateWithLocalInfo(String phoneNumStripped, String phoneNumIso, String displayName, String oSId);
 
 
 	@Update
 	void update(ContactLocal[] contactLocals);
+
+
+	@Insert(onConflict = OnConflictStrategy.REPLACE)
+	void insert(ContactInvitation contactInvitation);
+
+	@Query("SELECT * FROM contact_invitation_table")
+	public ContactInvitation[] getAllContactInvitations();
+
+	@Query("SELECT * from contact_invitation_table")
+	LiveData<List<ContactInvitation>> getContactInvitations();
 
 }

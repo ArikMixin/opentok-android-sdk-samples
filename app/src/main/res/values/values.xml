@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="BadgedTabLayout"><attr format="color" name="badgeTextColor"/><attr format="dimension" name="badgeTextSize"/><attr format="color" name="badgeSelectedTextColor"/><attr format="color" name="badgeBackgroundColor"/><attr format="color" name="badgeSelectedBackgroundColor"/><attr format="dimension" name="tabTextSize"/></declare-styleable>
+    <declare-styleable name="BadgedTabLayout">
+        <attr format="color" name="badgeTextColor"/>
+        <attr format="dimension" name="badgeTextSize"/>
+        <attr format="color" name="badgeSelectedTextColor"/>
+        <attr format="color" name="badgeBackgroundColor"/>
+        <attr format="color" name="badgeSelectedBackgroundColor"/>
+        <attr format="dimension" name="tabTextSize"/>
+    </declare-styleable>
+
     <dimen name="badge_text_size">11sp</dimen>
+
     <dimen name="tab_text_max_width">60dp</dimen>
 </resources>

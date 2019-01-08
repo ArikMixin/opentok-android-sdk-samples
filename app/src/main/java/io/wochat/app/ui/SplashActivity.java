@@ -4,9 +4,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.Spannable;
@@ -19,7 +17,6 @@ import android.widget.TextView;
 
 import io.wochat.app.R;
 import io.wochat.app.utils.TextViewLinkMovementMethod;
-import io.wochat.app.viewmodel.RegistrationViewModel;
 import io.wochat.app.viewmodel.UserViewModel;
 
 public class SplashActivity extends PermissionActivity {
@@ -123,7 +120,7 @@ public class SplashActivity extends PermissionActivity {
 	}
 
 	private void startMainActivity(){
-		Intent intent = new Intent(SplashActivity.this, MainActivity3.class);
+		Intent intent = new Intent(SplashActivity.this, MainActivity.class);
 		startActivity(intent);
 		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 		finish();

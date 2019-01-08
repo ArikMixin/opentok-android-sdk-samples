@@ -6,6 +6,7 @@ import android.arch.lifecycle.MutableLiveData;
 import android.content.ContentResolver;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -14,15 +15,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.wochat.app.com.WochatApi;
 import io.wochat.app.db.WCDatabase;
 import io.wochat.app.db.WCSharedPreferences;
+import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.UserDao;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.ContactInvitation;
 import io.wochat.app.db.entity.ContactLocal;
+import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
@@ -61,6 +66,7 @@ public class WCRepository {
 
 
 	private UserDao mUserDao;
+	private ContactDao mContactDao;
 	private LiveData<List<User>> mAllUsers;
 	private LiveData<User> mSelfUser;
 
@@ -110,6 +116,7 @@ public class WCRepository {
 //        mWordDao = db.wordDao();
         //mAllWords = mWordDao.getAlphabetizedWords();
 		mUserDao = mDatabase.userDao();
+		mContactDao = mDatabase.contactDao();
 		mSelfUser = mUserDao.getFirstUser();
 
     }
@@ -337,10 +344,34 @@ public class WCRepository {
 		}
 	}
 
+	public LiveData<List<Contact>> getAllContacts() {
+		return mContactDao.getContacts();
+	}
+
+	public LiveData<Contact> getContact(String id) {
+		return mContactDao.getContact(id);
+	}
+private Contact[] updateContactsWithLocals(Map<String, ContactServer> contactServers, Map<String, ContactLocal> localContacts){
+		Contact[] contacts = new Contact[localContacts.size()];
+		int i=0;
+		for (ContactLocal contactLocal: localContacts.values()) {
+			String id = contactLocal.getPhoneNumStripped();
+			ContactServer contactServer = contactServers.get(id);
+			Contact contact = new Contact();
+			contact.setId(id);
+			contact.setContactLocal(contactLocal);
+			contact.setContactServer(contactServer);
+			contact.setHasServerData(contactServer != null);
+			contacts[i++] = contact;
+		}
+
+		return contacts;
+	}
+	
 	private void updateContactsWithLocals(Contact[] contacts, Map<String, ContactLocal> localContacts){
 
     	for (int i=0; i<contacts.length; i++){
-			String id = contacts[i].getUserId();
+			String id = contacts[i].getId();
 			ContactLocal local = localContacts.get(id);
     		contacts[i].setContactLocal(local);
 		}
@@ -423,7 +454,16 @@ public class WCRepository {
 
 
 
-
+	public void syncContactsLocalAndServer(){
+		mLocalContact = null;
+		retrieveLocalContacts();
+		new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				initSyncContactsWithServer();
+			}
+		}, 20000);
+	}
 
 	public void retrieveLocalContacts(){
 
@@ -468,17 +508,17 @@ public class WCRepository {
 					JSONArray jsonContactArray = null;
 					try {
 						jsonContactArray = response.getJSONArray("contacts");
-						Contact[] contacts = new Contact[jsonContactArray.length()];
+						Map<String, ContactServer> contactServersMap = new HashMap<>();
 						int j = 0;
 						for (int i = 0; i < jsonContactArray.length(); i++) {
 							JSONObject jsonContactObj = jsonContactArray.getJSONObject(i);
 							Gson gson = new Gson();
-							Contact contact = gson.fromJson(jsonContactObj.toString(), Contact.class);
-							contacts[j++] = contact;
+							ContactServer contactServer = gson.fromJson(jsonContactObj.toString(), ContactServer.class);
+							contactServersMap.put(contactServer.getUserId(), contactServer);
 						}
 
 						synchronized(mLocalContactSyncObject) {
-							updateContactsWithLocals(contacts, mLocalContact);
+							Contact[] contacts = updateContactsWithLocals(contactServersMap, mLocalContact);
 							insert(contacts);
 						}
 
@@ -515,5 +555,29 @@ public class WCRepository {
 		}
 	}
 
+	public LiveData<List<ContactInvitation>> getContactInvitations() {
+		return mContactDao.getContactInvitations();
+	}
 
+	public void updateInvited(String contactId) {
+		new updateInvitedAsyncTask(mDatabase).execute(contactId);
+	}
+
+
+
+	private static class updateInvitedAsyncTask extends AsyncTask<String, Void, Void> {
+
+		private WCDatabase mDatabase;
+
+		updateInvitedAsyncTask(WCDatabase database) {
+			mDatabase = database;
+		}
+
+		@Override
+		protected Void doInBackground(final String... params) {
+			ContactInvitation ci = new ContactInvitation(params[0]);
+			WCDatabase.insertContactInvitation(mDatabase, ci);
+			return null;
+		}
+	}
 }

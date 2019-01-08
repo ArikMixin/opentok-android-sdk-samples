@@ -7,15 +7,18 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
@@ -147,4 +150,38 @@ public class Utils {
 			return context.getResources().getConfiguration().locale.getCountry();
 		}
 	}
+   public static void setEditTextUnderlineColor(final EditText editText, final int focusedColor, final int unfocusedColor) {
+		editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				if (hasFocus) {
+					editText.getBackground().setColorFilter(focusedColor, PorterDuff.Mode.SRC_ATOP);
+					return;
+				}
+				editText.getBackground().setColorFilter(unfocusedColor, PorterDuff.Mode.SRC_ATOP);
+			}
+		});
+
+		editText.getBackground().setColorFilter(unfocusedColor, PorterDuff.Mode.SRC_ATOP);
+	}
+
+	public static void sendSMS(Context context, String contactNum, String message){
+
+
+		//https://stackoverflow.com/questions/9798657/send-sms-via-intent
+		//https://stackoverflow.com/questions/4967448/show-compose-sms-view-in-android
+
+		Uri uri = Uri.parse("smsto: +" + contactNum);
+		Intent intent = new Intent(Intent.ACTION_SENDTO, uri);
+		intent.putExtra("sms_body", message);
+		context.startActivity(intent);
+
+
+//		Intent smsIntent = new Intent(android.content.Intent.ACTION_VIEW);
+//		smsIntent.setType("vnd.android-dir/mms-sms");
+//		smsIntent.putExtra("address","your desired phoneNumber");
+//		smsIntent.putExtra("sms_body","your desired message");
+//		startActivity(smsIntent);
+	}
+
 }

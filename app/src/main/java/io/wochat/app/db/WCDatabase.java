@@ -37,11 +37,12 @@ import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ContactLocalDao;
 import io.wochat.app.db.dao.UserDao;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.ContactInvitation;
 import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.User;
 
 
-@Database(entities = {User.class, Contact.class, ContactLocal.class}, version = 2)
+@Database(entities = {User.class, Contact.class, ContactLocal.class, ContactInvitation.class}, version = 2)
 @TypeConverters({LocationConverter.class, DateConverter.class})
 public abstract class WCDatabase extends RoomDatabase {
 
@@ -96,7 +97,7 @@ public abstract class WCDatabase extends RoomDatabase {
 					});
 				}
 			})
-			.addMigrations(MIGRATION_1_2)
+			.addMigrations(MIGRATION_1_2, MIGRATION_2_3)
 			.build();
 	}
 
@@ -154,11 +155,25 @@ public abstract class WCDatabase extends RoomDatabase {
 
 		@Override
 		public void migrate(@NonNull SupportSQLiteDatabase database) {
-			database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS `productsFts` USING FTS4("
-				+ "`name` TEXT, `description` TEXT, content=`products`)");
-			database.execSQL("INSERT INTO productsFts (`rowid`, `name`, `description`) "
-				+ "SELECT `id`, `name`, `description` FROM products");
+//			database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS `productsFts` USING FTS4("
+//				+ "`name` TEXT, `description` TEXT, content=`products`)");
+//			database.execSQL("INSERT INTO productsFts (`rowid`, `name`, `description`) "
+//				+ "SELECT `id`, `name`, `description` FROM products");
 
 		}
 	};
+
+	private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+
+		@Override
+		public void migrate(@NonNull SupportSQLiteDatabase database) {
+		}
+	};
+
+
+	public static void insertContactInvitation(final WCDatabase database, final ContactInvitation contactInvitation) {
+		database.runInTransaction(() -> {
+			database.contactDao().insert(contactInvitation);
+		});
+	}
 }

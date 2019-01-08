@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Parcelable;
 import android.provider.MediaStore;
@@ -84,6 +86,14 @@ public class ImagePickerUtil {
 			isCamera = action != null && action.equals(MediaStore.ACTION_IMAGE_CAPTURE);
 		}
 		return isCamera ? getCaptureImageOutputUri(context) : data.getData();
+	}
+
+
+	public static Bitmap rotateImage(Bitmap source, float angle) {
+		Matrix matrix = new Matrix();
+		matrix.postRotate(angle);
+		return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(),
+			matrix, true);
 	}
 
 }

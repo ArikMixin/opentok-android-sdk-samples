@@ -23,7 +23,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatTextView;
@@ -44,7 +43,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.hbb20.CountryCodePicker;
@@ -58,7 +56,6 @@ import java.io.InputStream;
 import java.util.Locale;
 
 import io.wochat.app.R;
-import io.wochat.app.WCRepository;
 import io.wochat.app.logic.SMSReceiver;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ImagePickerUtil;

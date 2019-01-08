@@ -5,7 +5,7 @@
                                              xmlns:tools="http://schemas.android.com/tools"
                                              android:layout_width="match_parent"
                                              android:layout_height="match_parent"
-                                             tools:context=".ui.MainActivity3$PlaceholderFragment">
+                                             tools:context=".ui.MainActivity$PlaceholderFragment">
 
     <TextView
         android:id="@+id/section_label"

@@ -1,16 +1,19 @@
 package io.wochat.app.utils;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
-//import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,5 +75,38 @@ public class ContactsUtil {
 
 		return contactMap;
 
+	}
+
+	public static Uri getThumbPhoto(Context context, long contactId){
+		try {
+			Uri contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
+			Uri photoUri = Uri.withAppendedPath(contactUri, ContactsContract.Contacts.Photo.CONTENT_DIRECTORY);
+			return photoUri;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static InputStream openPhoto(Context context, long contactId) {
+		Uri contactUri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
+		Uri photoUri = Uri.withAppendedPath(contactUri, ContactsContract.Contacts.Photo.CONTENT_DIRECTORY);
+		Cursor cursor = context.getContentResolver().query(photoUri,
+			new String[] {ContactsContract.Contacts.Photo.PHOTO}, null, null, null);
+		if (cursor == null) {
+			return null;
+		}
+		try {
+			if (cursor.moveToFirst()) {
+				byte[] data = cursor.getBlob(0);
+				if (data != null) {
+					return new ByteArrayInputStream(data);
+					//return BitmapFactory.decodeStream(new ByteArrayInputStream(data));
+				}
+			}
+		} finally {
+			cursor.close();
+		}
+		return null;
 	}
 }

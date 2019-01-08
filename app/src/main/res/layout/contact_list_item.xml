@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/whitee"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingBottom="15dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="15dp">
+
+    <io.wochat.app.components.CircleImageView
+        android:id="@+id/contact_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/new_contact"/>
+
+    <TextView
+        android:id="@+id/contact_name_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_weight="1"
+        android:gravity="left|center_vertical"
+        android:text="kjhklh"
+        android:textColor="@color/black"
+        android:textSize="15sp"/>
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/invite_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="Invite"
+            android:visibility="visible"/>
+
+        <Button
+            android:id="@+id/sent_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:enabled="false"
+            android:text="Sent"
+            android:visibility="gone"/>
+
+
+    </FrameLayout>
+
+</LinearLayout>
