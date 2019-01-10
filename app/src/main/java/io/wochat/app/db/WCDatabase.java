@@ -37,12 +37,12 @@ import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ContactLocalDao;
 import io.wochat.app.db.dao.UserDao;
 import io.wochat.app.db.entity.Contact;
-import io.wochat.app.db.entity.ContactInvitation;
+//import io.wochat.app.db.entity.ContactInvitation;
 import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.User;
 
 
-@Database(entities = {User.class, Contact.class, ContactLocal.class, ContactInvitation.class}, version = 2)
+@Database(entities = {User.class, Contact.class, ContactLocal.class}, version = 2)
 @TypeConverters({LocationConverter.class, DateConverter.class})
 public abstract class WCDatabase extends RoomDatabase {
 
@@ -171,9 +171,9 @@ public abstract class WCDatabase extends RoomDatabase {
 	};
 
 
-	public static void insertContactInvitation(final WCDatabase database, final ContactInvitation contactInvitation) {
-		database.runInTransaction(() -> {
-			database.contactDao().insert(contactInvitation);
-		});
-	}
+//	public static void insertContactInvitation(final WCDatabase database, final ContactInvitation contactInvitation) {
+//		database.runInTransaction(() -> {
+//			database.contactDao().insert(contactInvitation);
+//		});
+//	}
 }

@@ -3,6 +3,7 @@ package io.wochat.app.viewmodel;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
 import io.wochat.app.WCApplication;
 import io.wochat.app.WCRepository;
 import io.wochat.app.db.entity.Contact;
-import io.wochat.app.db.entity.ContactInvitation;
+//import io.wochat.app.db.entity.ContactInvitation;
 
 public class ContactViewModel extends AndroidViewModel {
 
@@ -30,17 +31,27 @@ public class ContactViewModel extends AndroidViewModel {
 		return mRepository.getAllContacts();
 	}
 
-	public LiveData<List<ContactInvitation>> getContactInvitations() {
-		return mRepository.getContactInvitations();
+	public LiveData<List<Contact>> getServerContacts() {
+		return mRepository.getServerContacts();
 	}
+
+	public MutableLiveData<Boolean> getIsDuringRefreshContacts() {
+		return mRepository.getIsDuringRefreshContacts();
+	}
+
+
+
+//	public LiveData<List<ContactInvitation>> getContactInvitations() {
+//		return mRepository.getContactInvitations();
+//	}
 
 	public void sycContacts(){
 		mRepository.syncContactsLocalAndServer();
 	}
 
 
-	public void updateInvited(String contactId){
-		mRepository.updateInvited(contactId);
-	}
+//	public void updateInvited(String contactId){
+//		mRepository.updateInvited(contactId);
+//	}
 
 }

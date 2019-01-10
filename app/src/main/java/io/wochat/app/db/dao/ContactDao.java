@@ -26,7 +26,7 @@ import android.arch.persistence.room.Update;
 import java.util.List;
 
 import io.wochat.app.db.entity.Contact;
-import io.wochat.app.db.entity.ContactInvitation;
+//import io.wochat.app.db.entity.ContactInvitation;
 import io.wochat.app.db.entity.ContactLocal;
 
 
@@ -51,6 +51,10 @@ public interface ContactDao {
 
 	@Query("SELECT * from contact_table ORDER BY has_server_data DESC, cntct_local_display_name ASC")
 	LiveData<List<Contact>> getContacts();
+
+	@Query("SELECT * from contact_table WHERE has_server_data=1 ORDER BY cntct_local_display_name ASC ")
+	LiveData<List<Contact>> getServerContacts();
+
 
 	@Query("SELECT * FROM contact_table")
 	public Contact[] getAllContacts();
@@ -87,13 +91,13 @@ public interface ContactDao {
 	void update(ContactLocal[] contactLocals);
 
 
-	@Insert(onConflict = OnConflictStrategy.REPLACE)
-	void insert(ContactInvitation contactInvitation);
+//	@Insert(onConflict = OnConflictStrategy.REPLACE)
+//	void insert(ContactInvitation contactInvitation);
 
-	@Query("SELECT * FROM contact_invitation_table")
-	public ContactInvitation[] getAllContactInvitations();
-
-	@Query("SELECT * from contact_invitation_table")
-	LiveData<List<ContactInvitation>> getContactInvitations();
+//	@Query("SELECT * FROM contact_invitation_table")
+//	public ContactInvitation[] getAllContactInvitations();
+//
+//	@Query("SELECT * from contact_invitation_table")
+//	LiveData<List<ContactInvitation>> getContactInvitations();
 
 }

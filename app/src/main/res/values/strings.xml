@@ -34,5 +34,11 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="tab_text_1">Chats</string>
     <string name="tab_text_2">Calls</string>
+    <string name="msg_invite_friend_body">Download WoChat! The first universal language chat! https://app.appsflyer.com/io.wochat.app?pid=invitefriends.</string>
+    <string name="msg_invite_friend_title">Download WoChat!</string>
+    <string name="refresh_contacts_progress_body">Refreshing…</string>
+    <string name="chat_title">Chats</string>
+    <string name="calls_title">Calls</string>
+    <string name="camera_title">Camera</string>
 
 </resources>

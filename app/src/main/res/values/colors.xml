@@ -93,6 +93,10 @@
     <color name="badge_selected">#ffffff</color>
     <color name="badge_not_selected">#E0E0E0</color>
 
+    <color name="contact_status">#797c86</color>
+    <color name="contact_name">@color/black</color>
+
+
 
 
 </resources>

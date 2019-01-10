@@ -36,15 +36,7 @@
             android:orientation="horizontal"
             android:background="@color/app_blue">
 
-            <ImageButton
-                android:id="@+id/camera_ib"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:background="@color/app_blue"
-                android:src="@drawable/ic_action_camera"/>
+
 
 
             <io.wochat.app.components.BadgedTabLayout
@@ -56,11 +48,13 @@
                 app:tabSelectedTextColor="@color/whitee"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:tabGravity="center"
+                app:tabMode="scrollable"
                 app:badgeBackgroundColor="@color/whitee">
 
                 <android.support.design.widget.TabItem
                     android:id="@+id/tabItem1"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/tab_text_1"/>
 
@@ -90,6 +84,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@drawable/new_chat"/>
+        app:srcCompat="@drawable/new_call"/>
 
 </android.support.design.widget.CoordinatorLayout>

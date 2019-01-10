@@ -7,15 +7,16 @@ import android.widget.TextView;
 
 
 import io.wochat.app.R;
+import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.components.CircleImageView;
 
 public class ContactListViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
 	private final ItemClickListener mItemClickListener;
-	final Button mInviteBtn;
-	final Button mSentBtn;
 	final TextView mContactNameTV;
-	final CircleImageView mContactPicIV;
+	final TextView mContactStatusTV;
+	//final CircleImageView mContactPicIV;
+	final CircleFlagImageView mContactPicFlagCFIV;
 
 	public interface ItemClickListener {
 		void onItemClick(View view, int position);
@@ -23,9 +24,9 @@ public class ContactListViewHolder extends RecyclerView.ViewHolder implements Vi
 	public ContactListViewHolder(View itemView, ItemClickListener itemClickListener) {
 		super(itemView);
 		mContactNameTV = itemView.findViewById(R.id.contact_name_tv);
-		mContactPicIV = (CircleImageView)itemView.findViewById(R.id.contact_iv);
-		mInviteBtn = (Button)itemView.findViewById(R.id.invite_btn);
-		mSentBtn = (Button)itemView.findViewById(R.id.sent_btn);
+		mContactStatusTV = itemView.findViewById(R.id.contact_status_tv);
+
+		mContactPicFlagCFIV = (CircleFlagImageView)itemView.findViewById(R.id.contact_cfiv);
 		mItemClickListener = itemClickListener;
 		itemView.setOnClickListener(this);
 	}

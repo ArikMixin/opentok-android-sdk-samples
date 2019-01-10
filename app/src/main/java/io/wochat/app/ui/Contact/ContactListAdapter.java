@@ -26,12 +26,14 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 	private static final int TYPE_HEADER_NEW_CONTACT = 1;
 	private static final int TYPE_HEADER_NEW_GROUP = 2;
 	private static final int TYPE_MEMBER = 3;
+	private final boolean mHasNewGroupHeader;
+	private final int mNumHeaders;
 
 	private List<Contact> mContactList;
 	private List<Contact> mContactListFiltered;
 	private LayoutInflater mInflater;
 	private ContactSelectListener mContactSelectListener;
-	private Map<String, Boolean> mContactInvitationMap;
+	//private Map<String, Boolean> mContactInvitationMap;
 
 	public void setContactSelectListener(ContactSelectListener contactSelectListener) {
 		mContactSelectListener = contactSelectListener;
@@ -42,12 +44,14 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 		void onContactSelected(Contact contact);
 		void onNewContactSelected();
 		void onNewGroupSelected();
-		void onInvitePressed(String contactId);
+		//void onInvitePressed(String contactId);
 	}
 
 
-	public ContactListAdapter(Context context){
+	public ContactListAdapter(Context context, boolean hasNewGroupHeader){
 		this.mInflater = LayoutInflater.from(context);
+		this.mHasNewGroupHeader = hasNewGroupHeader;
+		mNumHeaders = mHasNewGroupHeader? 2 : 1;
 	}
 
 
@@ -97,58 +101,22 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 	public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
 		if (holder.getItemViewType() == TYPE_MEMBER) {
 			ContactListViewHolder theHolder = (ContactListViewHolder) holder;
-			Contact contact = mContactListFiltered.get(position-2);
+			Contact contact = mContactListFiltered.get(position-mNumHeaders);
 			theHolder.mContactNameTV.setText(contact.getContactLocal().getDisplayName());
-			Uri uri = ContactsUtil.getThumbPhoto(mInflater.getContext(), Long.valueOf(contact.getContactLocal().getOSId()));
-			if (contact.hasServerData()){
-				theHolder.mInviteBtn.setVisibility(View.GONE);
-				theHolder.mSentBtn.setVisibility(View.GONE);
-				String picUrl = contact.getContactServer().getProfilePicUrl();
-
-				if((picUrl != null)&& (!picUrl.trim().equals(""))){
-					Picasso.get().
-						load(picUrl).
-						resize(160,160).
-						placeholder(R.drawable.new_contact).
-						centerCrop().
-						into(theHolder.mContactPicIV);
-				}
-				else {
-					if (uri == null)
-						Picasso.get().load(R.drawable.new_contact).into(theHolder.mContactPicIV);
-					else
-						Picasso.get().load(uri).error(R.drawable.new_contact).placeholder(R.drawable.new_contact).resize(160,160).centerCrop().into(theHolder.mContactPicIV);
-				}
-			}
-			else if (isInvitationSent(contact.getId())){
-				theHolder.mInviteBtn.setVisibility(View.GONE);
-				theHolder.mSentBtn.setVisibility(View.VISIBLE);
-
-				if (uri == null)
-					Picasso.get().load(R.drawable.new_contact).into(theHolder.mContactPicIV);
-				else
-					Picasso.get().load(uri).error(R.drawable.new_contact).placeholder(R.drawable.new_contact).resize(160,160).centerCrop().into(theHolder.mContactPicIV);
+			String status = contact.getContactServer().getStatus();
+			if ((status == null) || (status.trim().equals(""))) {
+				theHolder.mContactStatusTV.setVisibility(View.GONE);
 			}
 			else {
-				theHolder.mInviteBtn.setVisibility(View.VISIBLE);
-				theHolder.mSentBtn.setVisibility(View.GONE);
-
-				if (uri == null)
-					Picasso.get().load(R.drawable.new_contact).into(theHolder.mContactPicIV);
-				else
-					Picasso.get().load(uri).error(R.drawable.new_contact).placeholder(R.drawable.new_contact).resize(160,160).centerCrop().into(theHolder.mContactPicIV);
-
+				theHolder.mContactStatusTV.setVisibility(View.VISIBLE);
+				theHolder.mContactStatusTV.setText(contact.getContactServer().getStatus().trim());
+			}
+			//Uri uri = ContactsUtil.getThumbPhoto(mInflater.getContext(), Long.valueOf(contact.getContactLocal().getOSId()));
+			if (contact.hasServerData()){
+				String picUrl = contact.getContactServer().getProfilePicUrl();
+				theHolder.mContactPicFlagCFIV.setContact(contact);
 			}
 
-			theHolder.mInviteBtn.setTag(contact.getId());
-			theHolder.mInviteBtn.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					if (mContactSelectListener != null) {
-						mContactSelectListener.onInvitePressed((String) v.getTag());
-					}
-				}
-			});
 
 		}
 //		else if (holder.getItemViewType() == TYPE_HEADER_NEW_CONTACT) {
@@ -168,7 +136,8 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 	public int getItemCount() {
 
 		//return (mContactListWithHeaders == null)? 0 : mContactListWithHeaders.size();
-		return (mContactListFiltered== null)? 2 : mContactListFiltered.size()+2;
+
+		return (mContactListFiltered== null)? mNumHeaders : mContactListFiltered.size()+mNumHeaders;
 	}
 
 
@@ -192,14 +161,14 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 	}
 
 
-	public void setContactsInvitation(Map<String,Boolean> contactInvitationMap) {
-		mContactInvitationMap = contactInvitationMap;
-		notifyDataSetChanged();
-	}
-
-	private boolean isInvitationSent(String contactId){
-		return ((mContactInvitationMap != null) && (mContactInvitationMap.containsKey(contactId)));
-	}
+//	public void setContactsInvitation(Map<String,Boolean> contactInvitationMap) {
+//		mContactInvitationMap = contactInvitationMap;
+//		notifyDataSetChanged();
+//	}
+//
+//	private boolean isInvitationSent(String contactId){
+//		return ((mContactInvitationMap != null) && (mContactInvitationMap.containsKey(contactId)));
+//	}
 
 
 
@@ -208,7 +177,7 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 		int viewType;
 		if (position == 0)
 			viewType = TYPE_HEADER_NEW_CONTACT;
-		else if (position == 1)
+		else if ((position == 1) && mHasNewGroupHeader)
 			viewType = TYPE_HEADER_NEW_GROUP;
 		else
 			viewType = TYPE_MEMBER;
