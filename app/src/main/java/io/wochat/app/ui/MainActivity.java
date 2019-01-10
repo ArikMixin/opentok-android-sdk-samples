@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
 	private VelocityTracker mVelocityTracker = null;
 	private Boolean mInOpen = false;
 	private FloatingActionButton mFab;
+	private int mLastSelectioPage;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +84,10 @@ public class MainActivity extends AppCompatActivity {
 
 		mViewPager = (ViewPager) findViewById(R.id.container);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
-		int currentItem = 1;
+
+		int currentItem = TAB_POSITION_CHAT;
+
+		mLastSelectioPage = currentItem;
 		mViewPager.setCurrentItem(currentItem);
 		getSupportActionBar().setTitle(mFragmentsTitles[currentItem]);
 
@@ -123,12 +127,15 @@ public class MainActivity extends AppCompatActivity {
 
 			@Override
 			public void onPageSelected(int position) {
+
 				getSupportActionBar().setTitle(mFragmentsTitles[position]);
 				if (position == TAB_POSITION_CHAT) {
+					mLastSelectioPage = position;
 					mFab.setVisibility(View.VISIBLE);
 					mFab.setImageResource(R.drawable.new_chat);
 				}
 				else if (position == TAB_POSITION_CALL) {
+					mLastSelectioPage = position;
 					mFab.setVisibility(View.VISIBLE);
 					mFab.setImageResource(R.drawable.new_call);
 				}
@@ -138,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 					new Handler(getMainLooper()).postDelayed(new Runnable() {
 						@Override
 						public void run() {
-							mViewPager.setCurrentItem(TAB_POSITION_CHAT);
+							mViewPager.setCurrentItem(mLastSelectioPage);
 						}
 					}, 1000);
 				}
