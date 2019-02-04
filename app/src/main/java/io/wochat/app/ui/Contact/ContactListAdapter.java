@@ -65,7 +65,7 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 				@Override
 				public void onItemClick(View view, int position) {
 					if (mContactSelectListener != null) {
-						mContactSelectListener.onContactSelected(mContactListFiltered.get(position));
+						mContactSelectListener.onContactSelected(mContactListFiltered.get(position-mNumHeaders));
 					}
 				}
 			});
@@ -227,7 +227,7 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 
 						// name match condition. this might differ depending on your requirement
 						// here we are looking for name or phone number match
-						if (contact.getContactLocal().getDisplayName().toLowerCase().contains(charString.toLowerCase()) || contact.getContactLocal().getDisplayName().toLowerCase().contains(constraint)) {
+						if (contact.getDisplayName().toLowerCase().contains(charString.toLowerCase()) || contact.getDisplayName().toLowerCase().contains(constraint)) {
 							filteredList.add(contact);
 						}
 					}

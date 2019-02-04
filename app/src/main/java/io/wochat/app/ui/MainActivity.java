@@ -1,42 +1,42 @@
 package io.wochat.app.ui;
 
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.view.MotionEventCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewGroup;
-
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-//import com.rahimlis.badgedtablayout.BadgedTabLayout;
-import io.wochat.app.components.BadgedTabLayout;
-
 import io.wochat.app.R;
+import io.wochat.app.WCService;
+import io.wochat.app.components.BadgedTabLayout;
+import io.wochat.app.db.WCSharedPreferences;
+import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
+import io.wochat.app.ui.Messages.ConversationActivity;
+import io.wochat.app.ui.RecentChats.RecentChatsFragment;
 import io.wochat.app.viewmodel.ContactViewModel;
+
 
 
 public class MainActivity extends AppCompatActivity {
@@ -52,25 +52,19 @@ public class MainActivity extends AppCompatActivity {
 
 
 	private static final String TAG = "MainActivity";
-	/**
-	 * The {@link android.support.v4.view.PagerAdapter} that will provide
-	 * fragments for each of the sections. We use a
-	 * {@link FragmentPagerAdapter} derivative, which will keep every
-	 * loaded fragment in memory. If this becomes too memory intensive, it
-	 * may be best to switch to a
-	 * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-	 */
+	private static final int CONTACT_SELECTOR_REQUEST_CODE = 1;
+	static final int REQUEST_IMAGE_CAPTURE = 2;
 	private SectionsPagerAdapter mSectionsPagerAdapter;
 
-	/**
-	 * The {@link ViewPager} that will host the section contents.
-	 */
 	private ViewPager mViewPager;
 
 	private VelocityTracker mVelocityTracker = null;
 	private Boolean mInOpen = false;
 	private FloatingActionButton mFab;
 	private int mLastSelectioPage;
+	private boolean mBound;
+	private WCService mService;
+	private String mSelfUserId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -82,10 +76,12 @@ public class MainActivity extends AppCompatActivity {
 
 		mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
-		mViewPager = (ViewPager) findViewById(R.id.container);
+		mViewPager = (ViewPager) findViewById(R.id.container_vp);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
 
 		int currentItem = TAB_POSITION_CHAT;
+
+		mSelfUserId = WCSharedPreferences.getInstance(this).getUserId();
 
 		mLastSelectioPage = currentItem;
 		mViewPager.setCurrentItem(currentItem);
@@ -159,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 		mFab = (FloatingActionButton) findViewById(R.id.fab);
+		mFab.setImageResource(R.drawable.new_chat);
 		mFab.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -171,9 +168,10 @@ public class MainActivity extends AppCompatActivity {
 					intent.putExtra("CALL", true);
 					intent.putExtra("CHAT", false);
 				}
-				startActivityForResult(intent, 1);
+				startActivityForResult(intent, CONTACT_SELECTOR_REQUEST_CODE);
 			}
 		});
+
 
 
 
@@ -187,14 +185,70 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+@Override
+	protected void onStart() {
+		super.onStart();
+		Log.e(TAG, "onStart, call bindService WCService");
+		Intent intent = new Intent(this, WCService.class);
+		bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+
+	}
+
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		unbindService(mServiceConnection);
+		mBound = false;
+	}
+
+	private ServiceConnection mServiceConnection = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName componentName, IBinder service) {
+			Log.e(TAG, "ServiceConnection: onServiceConnected");
+			WCService.WCBinder binder = (WCService.WCBinder) service;
+			mService = binder.getService();
+			mBound = true;
+
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName componentName) {
+			Log.e(TAG, "ServiceConnection: onServiceDisconnected");
+
+			mService = null;
+			mBound = false;
+		}
+	};
+
+
 	public static class PlaceholderFragment extends Fragment {
+		/**
+		 * The fragment argument representing the section number for this
+		 * fragment.
+		 */
+		private static final String ARG_SECTION_NUMBER = "section_number";
 
 		public PlaceholderFragment() {
 		}
 
-
-		public static Fragment newInstance() {
+		/**
+		 * Returns a new instance of this fragment for the given section
+		 * number.
+		 */
+		public static Fragment newInstance(int sectionNumber) {
+			if (sectionNumber == TAB_POSITION_CHAT){
+				RecentChatsFragment recentChatsFragment = new RecentChatsFragment();
+				return recentChatsFragment;
+			}
+			else if (sectionNumber == TAB_POSITION_CALL){
+				RecentCallsFragment recentCallsFragment = new RecentCallsFragment();
+				return recentCallsFragment;
+			}
 			PlaceholderFragment fragment = new PlaceholderFragment();
+			Bundle args = new Bundle();
+			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+			fragment.setArguments(args);
 			return fragment;
 		}
 
@@ -202,25 +256,46 @@ public class MainActivity extends AppCompatActivity {
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
 								 Bundle savedInstanceState) {
 			View rootView = inflater.inflate(R.layout.fragment_main_activity3, container, false);
+			TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+			textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
 			return rootView;
 		}
 	}
-
-
-
-	public Fragment newFragmentInstance(int position) {
-		if (position == TAB_POSITION_CHAT){
-			RecentChatsFragment recentChatsFragment = new RecentChatsFragment();
-			return recentChatsFragment;
-		}
-		else if (position == TAB_POSITION_CALL){
-			RecentCallsFragment recentCallsFragment = new RecentCallsFragment();
-			return recentCallsFragment;
-		}
-		else {
-			return PlaceholderFragment.newInstance();
-		}
-	}
+	
+//	public static class PlaceholderFragment extends Fragment {
+//
+//		public PlaceholderFragment() {
+//		}
+//
+//
+//		public static Fragment newInstance() {
+//			PlaceholderFragment fragment = new PlaceholderFragment();
+//			return fragment;
+//		}
+//
+//		@Override
+//		public View onCreateView(LayoutInflater inflater, ViewGroup container,
+//								 Bundle savedInstanceState) {
+//			View rootView = inflater.inflate(R.layout.fragment_main_activity3, container, false);
+//			return rootView;
+//		}
+//	}
+//
+//
+//
+//	public Fragment newFragmentInstance(int position) {
+//		if (position == TAB_POSITION_CHAT){
+//			RecentChatsFragment recentChatsFragment = new RecentChatsFragment();
+//			return recentChatsFragment;
+//		}
+//		else if (position == TAB_POSITION_CALL){
+//			RecentCallsFragment recentCallsFragment = new RecentCallsFragment();
+//			return recentCallsFragment;
+//		}
+//		else {
+//			return PlaceholderFragment.newInstance();
+//		}
+//	}
 
 
 	public class SectionsPagerAdapter extends FragmentPagerAdapter {
@@ -237,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
 
 		@Override
 		public Fragment getItem(int position) {
-			return newFragmentInstance(position );
+			return PlaceholderFragment.newInstance(position);
 		}
 
 		@Override
@@ -278,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 
-	static final int REQUEST_IMAGE_CAPTURE = 1;
+
 
 	private void dispatchTakePictureIntent() {
 		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -289,10 +364,29 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-			Bundle extras = data.getExtras();
-			Bitmap imageBitmap = (Bitmap) extras.get("data");
-			//mImageView.setImageBitmap(imageBitmap);
+		if (requestCode == REQUEST_IMAGE_CAPTURE){
+			if (resultCode == RESULT_OK) {
+				Bundle extras = data.getExtras();
+				Bitmap imageBitmap = (Bitmap) extras.get("data");
+				//mImageView.setImageBitmap(imageBitmap);
+			}
+		}
+		else if (requestCode == CONTACT_SELECTOR_REQUEST_CODE){
+			if (resultCode == RESULT_OK){
+				String id = data.getStringExtra(Consts.INTENT_PARTICIPANT_ID);
+				String name = data.getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
+				String pic = data.getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
+				String conversationId = Conversation.getConversationId(id, mSelfUserId);
+
+				Intent intent = new Intent(this, ConversationActivity.class);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, id);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, name);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, pic);
+				intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
+				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+				startActivity(intent);
+
+			}
 		}
 	}
 

@@ -17,7 +17,7 @@ import io.wochat.app.R;
 
 public class RecentCallsFragment extends Fragment {
 
-	private RecentChatsViewModel mViewModel;
+	//private RecentChatsViewModel mViewModel;
 
 	public static RecentCallsFragment newInstance() {
 		return new RecentCallsFragment();
@@ -39,7 +39,7 @@ public class RecentCallsFragment extends Fragment {
 	@Override
 	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
-		mViewModel = ViewModelProviders.of(this).get(RecentChatsViewModel.class);
+		//mViewModel = ViewModelProviders.of(this).get(RecentChatsViewModel.class);
 		// TODO: Use the ViewModel
 	}
 

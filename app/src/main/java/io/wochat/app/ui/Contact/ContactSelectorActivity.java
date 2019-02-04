@@ -28,6 +28,7 @@ import java.util.Map;
 import io.wochat.app.R;
 import io.wochat.app.db.entity.Contact;
 //import io.wochat.app.db.entity.ContactInvitation;
+import io.wochat.app.ui.Consts;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ContactViewModel;
 import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller;
@@ -41,8 +42,8 @@ public class ContactSelectorActivity extends AppCompatActivity implements Contac
 	private ContactListAdapter mAdapter;
 	private SearchView searchView;
 
-	public static final String INTENT_CONTACT_ID = "CONTACT_ID";
-	public static final String INTENT_CONTACT_NAME = "CONTACT_NAME";
+//	public static final String INTENT_CONTACT_ID = "CONTACT_ID";
+//	public static final String INTENT_CONTACT_NAME = "CONTACT_NAME";
 	private ContactViewModel mCntactViewModel;
 	private Map<String, Boolean> mContactInvitationMap;
 	private ProgressBar mProgressBar;
@@ -143,8 +144,9 @@ public class ContactSelectorActivity extends AppCompatActivity implements Contac
 	private void returnContactResult(Contact contact) {
 		if (contact != null) {
 			Intent resultIntent = new Intent();
-			resultIntent.putExtra(INTENT_CONTACT_ID, contact.getId());
-			resultIntent.putExtra(INTENT_CONTACT_NAME, contact.getContactLocal().getDisplayName());
+			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_ID, contact.getId());
+			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getDisplayName());
+			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
 			setResult(RESULT_OK, resultIntent);
 		}
 		else

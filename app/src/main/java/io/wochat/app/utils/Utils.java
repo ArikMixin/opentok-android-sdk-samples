@@ -1,5 +1,6 @@
 package io.wochat.app.utils;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
@@ -17,11 +19,18 @@ import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+import com.stfalcon.chatkit.utils.DateFormatter;
+
 import java.io.ByteArrayOutputStream;
+import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.R;
@@ -185,6 +194,32 @@ public class Utils {
 	}
 
 
+	public static void showImage(Context context, String imageUrl) {
+		final Dialog builder = new Dialog(context);
+		//builder.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		builder.getWindow().setBackgroundDrawable(
+			new ColorDrawable(android.graphics.Color.TRANSPARENT));
+
+
+		ImageView imageView = new ImageView(context);
+		imageView.setOnClickListener(v -> {
+			builder.dismiss();
+		});
+		Picasso.get().load(imageUrl).into(imageView);
+		RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+			ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.MATCH_PARENT);
+		lp.bottomMargin = 400;
+		lp.topMargin = 400;
+		lp.rightMargin = 100;
+		lp.leftMargin = 100;
+
+		builder.addContentView(imageView, lp);
+		builder.setCanceledOnTouchOutside(true);
+		builder.show();
+	}
+
+
 
 	public static int dp2px(Context ctx, float dp) {
 		final float scale = ctx.getResources().getDisplayMetrics().density;
@@ -207,6 +242,26 @@ public class Utils {
 
 	public static int booleanToVisibilityInvisible(boolean isVisible){
 		return isVisible? View.VISIBLE : View.INVISIBLE;
+	}
+
+
+
+	public static String dateFormatter(Context context, Date date) {
+		if (com.stfalcon.chatkit.utils.DateFormatter.isToday(date)) {
+			return com.stfalcon.chatkit.utils.DateFormatter.format(date, com.stfalcon.chatkit.utils.DateFormatter.Template.TIME);
+		}
+		else if (com.stfalcon.chatkit.utils.DateFormatter.isYesterday(date)) {
+			return context.getString(R.string.date_header_yesterday);
+		}
+		else if(com.stfalcon.chatkit.utils.DateFormatter.isPastWeek(date)){
+			return com.stfalcon.chatkit.utils.DateFormatter.format(date, DateFormatter.Template.STRING_DAY_OF_WEEK);
+		}
+		else if (com.stfalcon.chatkit.utils.DateFormatter.isCurrentYear(date)) {
+			return com.stfalcon.chatkit.utils.DateFormatter.format(date, com.stfalcon.chatkit.utils.DateFormatter.Template.STRING_DAY_MONTH);
+		}
+		else {
+			return com.stfalcon.chatkit.utils.DateFormatter.format(date, DateFormatter.Template.STRING_DAY_MONTH_YEAR);
+		}
 	}
 
 }

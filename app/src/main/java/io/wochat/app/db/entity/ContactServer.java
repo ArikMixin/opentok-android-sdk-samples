@@ -16,10 +16,10 @@ public class ContactServer {
 
     @PrimaryKey
     @NonNull
-    @ColumnInfo(name = "user_id")
+    @ColumnInfo(name = "contact_server_id")
     @SerializedName("user_id")
     @Expose
-    private String userId;
+    private String contactServerId;
 //------------------------------------
 
     @SerializedName("user_name")
@@ -104,12 +104,20 @@ public class ContactServer {
 
 //------------------------------------
 
+    public String getContactServerId() {
+        return contactServerId;
+    }
+
+    public void setContactServerId(String id) {
+        this.contactServerId = id;
+    }
+
     public String getUserId() {
-        return userId;
+        return contactServerId;
     }
 
     public void setUserId(String userId) {
-        this.userId = userId;
+        this.contactServerId = userId;
     }
 
     public String getUserName() {
@@ -228,7 +236,7 @@ public class ContactServer {
 	@Override
     public String toString() {
         return new ToStringBuilder(this).
-            append("userId", userId).
+            append("userId", contactServerId).
             append("userName", userName).
             append("status", status).
             append("countryCode", countryCode).

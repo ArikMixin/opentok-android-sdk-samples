@@ -23,11 +23,16 @@ import io.wochat.app.com.WochatApi;
 import io.wochat.app.db.WCDatabase;
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.dao.ContactDao;
+import io.wochat.app.db.dao.ConversationDao;
+import io.wochat.app.db.dao.MessageDao;
 import io.wochat.app.db.dao.UserDao;
+import io.wochat.app.db.entity.Ack;
 import io.wochat.app.db.entity.Contact;
-//import io.wochat.app.db.entity.ContactInvitation;
 import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.ContactServer;
+import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.ConversationAndItsMessages;
+import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
@@ -38,9 +43,13 @@ import io.wochat.app.utils.Utils;
  */
 public class WCRepository {
 
+	public interface OnSaveMessageToDBListener{
+		void OnSaved(boolean success, Message savedMessage);
+	}
 
-	private Map<String, ContactLocal> mLocalContact;
-	private Object mLocalContactSyncObject = new Object();
+	public interface OnMarkMessagesAsReadListener{
+		void OnAffectedMessages(List<Message> messageList);
+	}
 
 
 	public enum UserRegistrationState {
@@ -51,7 +60,7 @@ public class WCRepository {
 	}
 
 	private static final String TAG = "WCRepository";
-
+	private final AppExecutors mAppExecutors;
 	private final WCDatabase mDatabase;
 	private final WCSharedPreferences mSharedPreferences;
 	private final WochatApi mWochatApi;
@@ -64,11 +73,15 @@ public class WCRepository {
 	private MutableLiveData<StateData<String>> mUploadProfilePicResult;
 	private MutableLiveData<StateData<String>> mUserConfirmRegistrationResult;
 	private MutableLiveData<Boolean> mIsDuringRefreshContacts;
-
+	private MutableLiveData<List<Message>> mMarkAsReadAffectedMessages;
+	private Map<String, ContactLocal> mLocalContact;
+	private Object mLocalContactSyncObject = new Object();
 
 
 	private UserDao mUserDao;
 	private ContactDao mContactDao;
+	private ConversationDao mConversationDao;
+	private MessageDao mMessageDao;
 	private LiveData<List<User>> mAllUsers;
 	private LiveData<User> mSelfUser;
 
@@ -81,11 +94,11 @@ public class WCRepository {
 
 
 
-    public static WCRepository getInstance(Application application, final WCDatabase database) {
+    public static WCRepository getInstance(Application application, final WCDatabase database, AppExecutors appExecutors) {
         if (mInstance == null) {
             synchronized (WCRepository.class) {
                 if (mInstance == null) {
-					mInstance = new WCRepository(application, database);
+					mInstance = new WCRepository(application, database, appExecutors);
                 }
             }
         }
@@ -98,9 +111,10 @@ public class WCRepository {
     // dependency. This adds complexity and much more code, and this sample is not about testing.
     // See the BasicSample in the android-architecture-components repository at
     // https://github.com/googlesamples
-    public WCRepository(Application application, final WCDatabase database) {
-
+    public WCRepository(Application application, final WCDatabase database, AppExecutors appExecutors) {
+		Log.e(TAG, "WCRepository constructor");
     	mDatabase = database;
+    	mAppExecutors = appExecutors;
 		mSharedPreferences = WCSharedPreferences.getInstance(application);
 		String userId = mSharedPreferences.getUserId();
 		String token = mSharedPreferences.getToken();
@@ -116,11 +130,14 @@ public class WCRepository {
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
 		mIsDuringRefreshContacts = new MutableLiveData<>();
 		mIsDuringRefreshContacts.setValue(false);
+		mMarkAsReadAffectedMessages = new MutableLiveData<>();
 //        WordRoomDatabase db = WordRoomDatabase.getDatabase(application);
 //        mWordDao = db.wordDao();
         //mAllWords = mWordDao.getAlphabetizedWords();
 		mUserDao = mDatabase.userDao();
 		mContactDao = mDatabase.contactDao();
+		mConversationDao = mDatabase.conversationDao();
+		mMessageDao = mDatabase.messageDao();
 		mSelfUser = mUserDao.getFirstUser();
 
     }
@@ -242,7 +259,16 @@ public class WCRepository {
 					try {
 						Gson gson = new Gson();
 						User user = gson.fromJson(response.toString(), User.class);
-						insert(user);
+
+						ContactServer contactServer = gson.fromJson(response.toString(), ContactServer.class);
+						Contact contact = new Contact();
+						contact.setContactId(contactServer.getUserId());
+						contact.setContactLocal(new ContactLocal());
+						contact.setContactServer(contactServer);
+						contact.setHasServerData(true);
+						insert(user, contact);
+
+
 						Log.e(TAG, "user: " + user.toString());
 						/**
 						 * "user_id": "972541234567",
@@ -327,9 +353,19 @@ public class WCRepository {
 
 
     public void insert(User user) {
-		new InsertUserAsyncTask(mDatabase.userDao()).execute(user);
+		mAppExecutors.diskIO().execute(() -> {
+			mDatabase.userDao().deleteAll();
+			mDatabase.userDao().insert(user);
+		});
 	}
 
+	public void insert(User user, Contact contact) {
+		mAppExecutors.diskIO().execute(() -> {
+			mDatabase.userDao().deleteAll();
+			mDatabase.userDao().insert(user);
+			mDatabase.contactDao().insert(contact);
+		});
+	}
 
 
 	private static class InsertUserAsyncTask extends AsyncTask<User, Void, Void> {
@@ -364,7 +400,7 @@ public class WCRepository {
 
 
 	public LiveData<Contact> getContact(String id) {
-		return mContactDao.getContact(id);
+		return mContactDao.getContactLD(id);
 	}
 
 
@@ -375,7 +411,7 @@ public class WCRepository {
 			String id = contactLocal.getPhoneNumStripped();
 			ContactServer contactServer = contactServers.get(id);
 			Contact contact = new Contact();
-			contact.setId(id);
+			contact.setContactId(id);
 			contact.setContactLocal(contactLocal);
 			contact.setContactServer(contactServer);
 			contact.setHasServerData(contactServer != null);
@@ -412,6 +448,17 @@ public class WCRepository {
 //			return null;
 //		}
 //	}
+
+
+	public void insertContactAndUpdateConversationContactData(Contact contact) {
+		mAppExecutors.diskIO().execute(() -> {
+			mDatabase.runInTransaction(() -> {
+				mContactDao.insert(contact);
+				mConversationDao.updateConversationWithContactData(contact.getId(), contact.getName(), contact.getAvatar());
+			});
+		});
+
+	}
 
 
 	public void insert(Contact[] contacts) {
@@ -489,9 +536,10 @@ public class WCRepository {
 	}
 
 	public void retrieveLocalContacts(){
-
+		Log.e(TAG, "retrieveLocalContacts");
 		RetrieveLocalContactsAsyncTask asyncTask = new RetrieveLocalContactsAsyncTask();
-		asyncTask.execute();
+		asyncTask.executeOnExecutor(mAppExecutors.diskIO());
+		//asyncTask.execute();
 
 	}
 
@@ -585,6 +633,181 @@ public class WCRepository {
 //		return mContactDao.getContactInvitations();
 //	}
 //
+
+public ConversationAndItsMessages getConversationAndMessagesSorted(String conversationId){
+		ConversationAndItsMessages caim = new ConversationAndItsMessages();
+		caim.setConversation(mConversationDao.getConversation(conversationId));
+		caim.setMessages(mMessageDao.getMessagesForConversation(conversationId));
+		return caim;
+	}
+
+	public LiveData<List<Message>> getMessagesLD(String conversationId){
+		return mMessageDao.getMessagesForConversationLD(conversationId);
+	}
+
+	public LiveData<Conversation> getConversationLD(String conversationId){
+		return mConversationDao.getConversationLD(conversationId);
+	}
+
+	public LiveData<List<Conversation>> getConversationListLD(){
+		return mConversationDao.getConversationListLD();
+	}
+
+	public Conversation getConversation(String conversationId){
+		return mConversationDao.getConversation(conversationId);
+	}
+
+
+	public boolean hasConversation(String conversationId){
+    	return mConversationDao.hasConversation(conversationId);
+	}
+
+	public void addNewConversation(Conversation conversation){
+		mAppExecutors.diskIO().execute(() -> mConversationDao.insert(conversation));
+	}
+
+	public LiveData<List<Message>> getUnreadMessagesConversation(String conversationId) {
+		return mMessageDao.getUnreadMessagesConversationLD(conversationId);
+	}
+
+	public void markAllMessagesAsRead(String conversationId){
+		mAppExecutors.diskIO().execute(() -> {
+			try {
+				Log.e(TAG, "markAllMessagesAsRead, conversationId: " + conversationId);
+				mMessageDao.markAllMessagesAsRead(conversationId);
+				mConversationDao.markAllMessagesAsRead(conversationId);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+	}
+
+	public boolean handleIncomingMessage(Message message, final OnSaveMessageToDBListener listener) {
+    	if (message == null)
+    		return false;
+    	mAppExecutors.diskIO().execute(() -> {
+			boolean res = true;
+			message.setParticipantId(message.getSenderId());
+			switch (message.getMessageType()){
+				case Message.MSG_TYPE_TEXT:
+					message.setAckStatus(Ack.ACK_STATUS_RECEIVED);
+					res = handleIncomingMessageText(message);
+					listener.OnSaved(res, message);
+					break;
+				case Message.MSG_TYPE_ACKNOWLEDGMENT:
+					res = handleAcknowledgmentMessage(message);
+					break;
+				case Message.MSG_TYPE_TYPING_SIGNAL:
+					break;
+				case Message.MSG_TYPE_IMAGE:
+					break;
+				case Message.MSG_TYPE_GIF:
+					break;
+			}
+
+
+		});
+    	return true;
+	}
+
+	private boolean handleAcknowledgmentMessage(Message message) {
+		List<Ack> ackList = message.getAckList();
+		mDatabase.runInTransaction(() -> {
+			for (Ack ack : ackList) {
+				switch (ack.getAckStatus()) {
+					case Ack.ACK_STATUS_SENT:
+						mMessageDao.updateAckStatusToSent(ack.getOriginalMessageId());
+						break;
+					case Ack.ACK_STATUS_RECEIVED:
+						mMessageDao.updateAckStatusToReceived(ack.getOriginalMessageId());
+						break;
+					case Ack.ACK_STATUS_READ:
+						mMessageDao.updateAckStatusToRead(ack.getOriginalMessageId());
+						break;
+				}
+			}
+		});
+		return true;
+	}
+
+	private boolean handleIncomingMessageText(Message message){
+    	boolean res;
+		try {
+			String conversationId = message.getConversationId();
+			if(mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
+				res = insertMessageAndUpdateConversation(message);
+			}
+			else {
+				String participantId = message.getSenderId();
+				String selfId = mSharedPreferences.getUserId();
+				if(mContactDao.hasContact(participantId)){  // has contact, no conversation
+					Contact contact = mContactDao.getContact(participantId);
+					Conversation conversation = new Conversation(participantId, selfId);
+					conversation.setParticipantName(contact.getName());
+					conversation.setParticipantProfilePicUrl(contact.getAvatar());
+					mConversationDao.insert(conversation);
+					res = insertMessageAndUpdateConversation(message);
+				}
+				else { // no contact, no conversation
+					Contact contact = new Contact(participantId);
+					mContactDao.insert(contact);
+					getContactFromServer(participantId);
+					Conversation conversation = new Conversation(participantId, selfId);
+					mConversationDao.insert(conversation);
+					res = insertMessageAndUpdateConversation(message);
+				}
+			}
+			return res;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	private void getContactFromServer(String participantId) {
+    	String[] contactArray = new String[1];
+		contactArray[0] = participantId;
+		mWochatApi.userGetContacts(contactArray, (isSuccess, errorLogic, errorComm, response) -> {
+			if (isSuccess) {
+				JSONArray jsonContactArray = null;
+				try {
+					jsonContactArray = response.getJSONArray("contacts");
+					if (jsonContactArray.length() > 0) {
+						JSONObject jsonContactObj = jsonContactArray.getJSONObject(0);
+						Gson gson = new Gson();
+						ContactServer contactServer = gson.fromJson(jsonContactObj.toString(), ContactServer.class);
+						Contact contact = new Contact(contactServer);
+						insertContactAndUpdateConversationContactData(contact);
+					}
+
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+	}
+
+	private boolean insertMessageAndUpdateConversation(Message message){
+		try {
+			mMessageDao.insert(message);
+			int unreadMessagesCount = mMessageDao.getUnreadMessagesCountConversation(message.getConversationId());
+			mConversationDao.updateIncoming(
+				message.getConversationId(),
+				message.getMessageId(),
+				message.getTimestamp(),
+				message.getMessageText(),
+				message.getSenderId(),
+				message.getAckStatus(),
+				unreadMessagesCount);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+
 //	public void updateInvited(String contactId) {
 //		new updateInvitedAsyncTask(mDatabase).execute(contactId);
 //	}
@@ -606,4 +829,29 @@ public class WCRepository {
 //			return null;
 //		}
 //	}
+public void updateAckStatusToSent(String messageId){
+    	mAppExecutors.diskIO().execute(new Runnable() {
+			@Override
+			public void run() {
+				mMessageDao.updateAckStatusToSent(messageId);
+			}
+		});
+
+	}
+
+	public void addNewOutgoingMessage(Message message) {
+		mAppExecutors.diskIO().execute(new Runnable() {
+			@Override
+			public void run() {
+				mMessageDao.insert(message);
+				mConversationDao.updateOutgoing(
+					message.getConversationId(),
+					message.getMessageId(),
+					message.getTimestamp(),
+					message.getMessageText(),
+					message.getSenderId(),
+					message.getAckStatus());
+			}
+		});
+	}
 }

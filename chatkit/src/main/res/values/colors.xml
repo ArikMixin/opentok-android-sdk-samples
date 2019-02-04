@@ -1,0 +1,54 @@
+<resources>
+    <color name="white">#ffffff</color>
+    <color name="white_two">#efefef</color>
+    <color name="white_three">#ebebeb</color>
+    <color name="white_four">#e0e0e0</color>
+    <color name="white_five">#dadada</color>
+    <color name="blue">#031cd7</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="gray">#333333</color>
+    <color name="dark_gray">#282a2b</color>
+    <color name="dark_grey_two">#191a1b</color>
+    <color name="warm_grey">#7f7f7f</color>
+    <color name="warm_grey_two">#9c9c9c</color>
+    <color name="warm_grey_three">#8b8b8b</color>
+    <color name="warm_grey_four">#979797</color>
+    <color name="dark_mint">#51c05c</color>
+    <color name="cornflower_blue_two">#4f62d7</color>
+    <color name="cornflower_blue_two_24">#3d4f62d7</color>
+    <color name="cornflower_blue_two_dark">#475bd4</color>
+    <color name="cornflower_blue_light_40">#64bec5f7</color>
+    <color name="app_orange">#ff631d</color>
+    <color name="dialog_divider">@color/white_three</color>
+    <color name="dialog_title_text">@color/dark_gray</color>
+    <color name="dialog_message_text">@color/warm_grey</color>
+    <color name="dialog_date_text">@color/warm_grey_two</color>
+    <color name="dialog_unread_text">@color/white</color>
+    <color name="dialog_unread_bubble">@color/dark_mint</color>
+    <color name="send_layout_back">#bac2d5</color>
+
+
+    <color name="black90">#F2000000</color>
+    <color name="black80">#CC000000</color>
+    <color name="black70">#B3000000</color>
+    <color name="black60">#99000000</color>
+    <color name="black50">#80000000</color>
+    <color name="black40">#66000000</color>
+    <color name="black30">#4D000000</color>
+    <color name="black20">#33000000</color>
+    <color name="black10">#1A000000</color>
+    <color name="black00">#00000000</color>
+
+    <color name="white90">#F2FFFFFF</color>
+    <color name="white80">#CCFFFFFF</color>
+    <color name="white70">#B3FFFFFF</color>
+    <color name="white60">#99FFFFFF</color>
+    <color name="white50">#80FFFFFF</color>
+    <color name="white40">#66FFFFFF</color>
+    <color name="white30">#4DFFFFFF</color>
+    <color name="white20">#33FFFFFF</color>
+    <color name="white10">#1AFFFFFF</color>
+    <color name="white00">#00FFFFFF</color>
+
+</resources>

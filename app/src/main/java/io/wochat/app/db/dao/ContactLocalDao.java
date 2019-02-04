@@ -60,7 +60,7 @@ public interface ContactLocalDao {
     void insert(ContactLocal contactLocal);
 
 
-	@Insert(onConflict = OnConflictStrategy.REPLACE)
+	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	void insert(ContactLocal[] contactLocals);
 
 

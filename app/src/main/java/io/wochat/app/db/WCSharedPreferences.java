@@ -22,6 +22,7 @@ public class WCSharedPreferences {
 
 
 	private static WCSharedPreferences mInstance;
+	private String mUserId;
 	public static WCSharedPreferences getInstance(Context context) {
 		if (mInstance == null) {
 			synchronized (WCSharedPreferences.class) {
@@ -54,7 +55,10 @@ public class WCSharedPreferences {
 	}
 
 	public String getUserId(){
-		return mSharedPreferences.getString(USER_ID, null);
+		if (mUserId == null) // cashing
+			mUserId = mSharedPreferences.getString(USER_ID, null);
+
+		return mUserId;
 	}
 
 	public String getToken(){
@@ -74,6 +78,10 @@ public class WCSharedPreferences {
 
 	public String getUserPhoneNum(){
 		return mSharedPreferences.getString(USER_PHONE_NUM, null);
+	}
+
+	public String getXMPPPassword(){
+		return mSharedPreferences.getString(XMPP_PWD, null);
 	}
 
 	public void saveUserRegistrationData(String token, String refreshToken, String xmppPwd) {

@@ -46,8 +46,6 @@ public interface ContactDao {
     // Always holds/caches latest version of data. Notifies its active observers when the
     // data has changed. Since we are getting all the contents of the database,
     // we are notified whenever any of the database contents have changed.
-    @Query("SELECT * from contact_table ORDER BY id ASC")
-	LiveData<List<Contact>> getContact();
 
 	@Query("SELECT * from contact_table ORDER BY has_server_data DESC, cntct_local_display_name ASC")
 	LiveData<List<Contact>> getContacts();
@@ -62,35 +60,42 @@ public interface ContactDao {
 	@Query("SELECT * FROM contact_table LIMIT 1")
 	LiveData<Contact> getFirstContact();
 
-	@Query("SELECT * FROM contact_table WHERE id =:id")
-	LiveData<Contact> getContact(String id);
-    // We do not need a conflict strategy, because the word is our primary key, and you cannot
-    // add two items with the same primary key to the database. If the table has more than one
-    // column, you can use @Insert(onConflict = OnConflictStrategy.REPLACE) to update a row.
-	@Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(Contact contact);
+	@Query("SELECT * FROM contact_table WHERE contact_id =:id")
+	LiveData<Contact> getContactLD(String id);
 
 
-	@Insert(onConflict = OnConflictStrategy.REPLACE)
-	void insert(Contact[] contact);
+	@Query("SELECT EXISTS(SELECT * FROM contact_table WHERE contact_id =:id LIMIT 1)")
+	public boolean hasContact(String id);
 
+	@Query("SELECT * FROM contact_table WHERE contact_id =:id")
+	Contact getContact(String id);
+	
 
 	@Query("DELETE FROM contact_table")
     void deleteAll();
 
-	@Query("UPDATE contact_table SET  " +
-		"cntct_local_display_name = :displayName , " +
-		"cntct_local_os_id = :oSId , " +
-		"cntct_local_phone_num_stripped = :phoneNumStripped ," +
-		"cntct_local_phone_num_iso = :phoneNumIso " +
-		"WHERE id =:phoneNumStripped")
-	void updateWithLocalInfo(String phoneNumStripped, String phoneNumIso, String displayName, String oSId);
+//	@Query("UPDATE contact_table SET  " +
+//		"cntct_local_display_name = :displayName , " +
+//		"cntct_local_os_id = :oSId , " +
+//		"cntct_local_phone_num_stripped = :phoneNumStripped ," +
+//		"cntct_local_phone_num_iso = :phoneNumIso " +
+//		"WHERE id =:phoneNumStripped")
+//	void updateWithLocalInfo(String phoneNumStripped, String phoneNumIso, String displayName, String oSId);
 
 
 	@Update
 	void update(ContactLocal[] contactLocals);
 
 
+
+	@Insert(onConflict = OnConflictStrategy.IGNORE)
+	void insert(Contact[] contact);
+
+	@Insert(onConflict = OnConflictStrategy.IGNORE)
+	void insert(Contact contact);
+
+	@Update(onConflict = OnConflictStrategy.IGNORE)
+	void update(Contact[] contact);
 //	@Insert(onConflict = OnConflictStrategy.REPLACE)
 //	void insert(ContactInvitation contactInvitation);
 

@@ -96,7 +96,23 @@
     <color name="contact_status">#797c86</color>
     <color name="contact_name">@color/black</color>
 
+    <color name="app_gray_1">#F2F4F8</color>
+    <color name="font_gray_1">#BAC2D5</color>
 
 
+      <!--from style guide -->
+    <color name="dodger_blue">#43a1ff</color>
+    <color name="cloudy_blue">#ced4e2</color>
+    <color name="country_list_header_back">#f2f4f8</color>
+
+    <color name="chat_empty_text">#bac2d5</color>
+    <color name="gray_light">#e8e8e8</color>
+    <color name="green_dark">#2da346</color>
+    <color name="gray_dark">#858585</color>
+    <color name="gray_dark_transparent">#ae858585</color>
+    <color name="transparent">#00000000</color>
+    <color name="send_layout_back">#bac2d5</color>
+    <color name="outcoming_bubble">#e2f3fd</color>
+    <color name="incoming_bubble">#f7f7f9</color>
 
 </resources>

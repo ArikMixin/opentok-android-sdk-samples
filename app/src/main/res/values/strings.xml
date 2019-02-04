@@ -40,5 +40,8 @@
     <string name="chat_title">Chats</string>
     <string name="calls_title">Calls</string>
     <string name="camera_title">Camera</string>
+    <string name="hint_enter_a_message">Type a message...</string>
+    <string name="date_header_today">Today</string>
+    <string name="date_header_yesterday">Yesterday</string>
 
 </resources>

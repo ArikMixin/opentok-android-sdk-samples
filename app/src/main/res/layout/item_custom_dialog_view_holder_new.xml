@@ -1,0 +1,126 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:id="@id/dialogRootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <android.support.constraint.ConstraintLayout
+        android:id="@id/dialogContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="15dp">
+
+
+        <io.wochat.app.components.CircleImageView
+            android:id="@id/dialogAvatar"
+            android:layout_width="@dimen/dialog_avatar_width"
+            android:layout_height="@dimen/dialog_avatar_height"
+            android:layout_marginStart="20dp"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@id/dialogName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:ellipsize="end"
+            android:fontFamily="@string/font_fontFamily_medium"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:maxWidth="250dp"
+            android:text="Natasha Gamble Natasha Gamble Natasha Gamble Natasha Gamble"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            android:lineSpacingExtra="5sp"
+            app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+
+        <ImageView
+            android:id="@+id/dialogCocheIV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="0dp"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/coche_seen"
+            app:layout_constraintBottom_toBottomOf="@+id/dialogLastMessage"
+            app:layout_constraintEnd_toStartOf="@+id/dialogLastMessage"
+            app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
+            app:layout_constraintTop_toTopOf="@+id/dialogLastMessage"/>
+
+        <TextView
+            android:id="@id/dialogLastMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:ellipsize="end"
+            android:gravity="top"
+            android:maxLines="1"
+            android:maxWidth="250dp"
+            android:text="Hi how are you my friend Hi how are you my friend Hi how are you my friend"
+            android:textColor="@color/font_gray_1"
+            android:textSize="13sp"
+            android:lineSpacingExtra="5sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/dialogCocheIV"/>
+
+
+        <TextView
+            android:id="@id/dialogDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="yesterday"
+            android:textColor="@color/black"
+            android:textSize="10sp"
+            app:layout_constraintBottom_toBottomOf="@+id/dialogName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/dialogName"/>
+
+
+        <TextView
+            android:id="@id/dialogUnreadBubble"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_below="@id/dialogDate"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/bubble_circle"
+            android:ellipsize="end"
+            android:fontFamily="@string/font_fontFamily_medium"
+            android:gravity="center"
+            android:lines="1"
+            android:text="+9"
+            android:textColor="@color/app_orange"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@+id/dialogLastMessage"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/dialogLastMessage"/>
+
+
+
+
+    </android.support.constraint.ConstraintLayout>
+
+
+    <FrameLayout
+        android:id="@id/dialogDividerContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="15dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <View
+            android:id="@id/dialogDivider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/dialog_divider"/>
+
+    </FrameLayout>
+
+</LinearLayout>
