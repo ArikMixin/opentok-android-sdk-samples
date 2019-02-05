@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,6 +21,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
@@ -41,8 +44,10 @@ import java.util.List;
 
 import io.wochat.app.R;
 import io.wochat.app.WCService;
+import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.components.CircleImageView;
 import io.wochat.app.db.entity.Ack;
+import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.fixtures.MessagesFixtures;
@@ -70,7 +75,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	private Date pointerDateUpperList;
 	private Date pointerDateBottomList;
 	private ImageButton mScrollToEndIB;
-	private CircleImageView mContactAvatarCIV;
+	private CircleFlagImageView mContactAvatarCIV;
 	private TextView mContactNameTV;
 	private MessageInput mMessageInput;
 	private ConversationViewModel mConversationViewModel;
@@ -83,6 +88,8 @@ public class ConversationActivity extends AppCompatActivity implements
 	private WCService mService;
 	private boolean mBound;
 	private Conversation mConversation;
+	//private Contact mParticipantContactObj;
+	private String mParticipantLang;
 
 
 	@Override
@@ -125,8 +132,11 @@ public class ConversationActivity extends AppCompatActivity implements
 
 		mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
 		mParticipantName = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
+		mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
 		mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
 		mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+//		String participantContactString = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
+//		mParticipantContactObj = Contact.fromJson(participantContactString);
 		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 
 		mContactNameTV = (TextView) findViewById(R.id.contact_name_tv);
@@ -135,8 +145,9 @@ public class ConversationActivity extends AppCompatActivity implements
 			Toast.makeText(ConversationActivity.this, "open profile for " + mParticipantName, Toast.LENGTH_SHORT).show();
 		});
 
-		mContactAvatarCIV = (CircleImageView) findViewById(R.id.contact_avatar_civ);
-		mImageLoader.loadImage(mContactAvatarCIV, mParticipantPic, null);
+		mContactAvatarCIV = (CircleFlagImageView) findViewById(R.id.contact_avatar_civ);
+		mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang);
+		//mImageLoader.loadImage(mContactAvatarCIV.get, mParticipantPic, null);
 		mContactAvatarCIV.setOnClickListener(v -> {
 			Utils.showImage(ConversationActivity.this, mParticipantPic);
 		});
@@ -160,6 +171,7 @@ public class ConversationActivity extends AppCompatActivity implements
 			mParticipantId,
 			mParticipantPic,
 			mParticipantName,
+			mParticipantLang,
 			mSelfId,
 			conversationAndItsMessages -> {
 				mConversation = conversationAndItsMessages.getConversation();
@@ -257,6 +269,19 @@ public class ConversationActivity extends AppCompatActivity implements
 		return super.onOptionsItemSelected(item);
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.menu_conversation, menu);
+		Drawable d0 = menu.getItem(0).getIcon(); // change 0 with 1,2 ...
+		Drawable d1 = menu.getItem(1).getIcon();
+		d0.mutate();
+		d1.mutate();
+		d0.setColorFilter(getResources().getColor(R.color.white), PorterDuff.Mode.SRC_IN);
+		d1.setColorFilter(getResources().getColor(R.color.white), PorterDuff.Mode.SRC_IN);
+		return true;
+	}
+
 
 
 
@@ -277,7 +302,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		String msgText = input.toString();
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText);
 		mConversationViewModel.addNewOutcomingMessage(message);
-		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.mic));
+		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mService.sendMessage(message);
 		return true;
 
@@ -325,7 +350,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	public void onStartTyping() {
 		String theText = mMessageInput.getInputEditText().getText().toString();
 		if (!theText.equals("")) {
-			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.send_icon));
+			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_send_light));
 		}
 	}
 
@@ -333,7 +358,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	public void onStopTyping() {
 		String theText = mMessageInput.getInputEditText().getText().toString();
 		if (theText.equals("")) {
-			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.mic));
+			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		}
 
 	}

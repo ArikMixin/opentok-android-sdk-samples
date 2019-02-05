@@ -146,7 +146,9 @@ public class ContactSelectorActivity extends AppCompatActivity implements Contac
 			Intent resultIntent = new Intent();
 			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_ID, contact.getId());
 			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getDisplayName());
+			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
 			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
+			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contact.toJson());
 			setResult(RESULT_OK, resultIntent);
 		}
 		else

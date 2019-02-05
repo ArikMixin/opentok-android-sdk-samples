@@ -70,6 +70,12 @@ public class Conversation implements IDialog{
 	private String participantName;
 
 	/***************************************************/
+	@SerializedName("participant_language")
+	@ColumnInfo(name = "participant_language")
+	@Expose
+	private String participantLanguage;
+
+	/***************************************************/
 
 	@SerializedName("last_message_id")
 	@ColumnInfo(name = "last_message_id")
@@ -201,6 +207,14 @@ public class Conversation implements IDialog{
 		this.participantProfilePicUrl = participantProfilePicUrl;
 	}
 
+	public String getParticipantLanguage() {
+		return participantLanguage;
+	}
+
+	public void setParticipantLanguage(String participantLanguage) {
+		this.participantLanguage = participantLanguage;
+	}
+
 	public String getParticipantName() {
 		return participantName;
 	}
@@ -208,6 +222,9 @@ public class Conversation implements IDialog{
 	public void setParticipantName(String participantName) {
 		this.participantName = participantName;
 	}
+
+
+
 
 	@Override
 	public String getId() {

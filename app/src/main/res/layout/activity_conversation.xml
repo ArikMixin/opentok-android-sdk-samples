@@ -14,6 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/appbar_padding_top"
+        android:paddingBottom="@dimen/appbar_padding_bottom"
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <android.support.v7.widget.Toolbar
@@ -35,20 +36,48 @@
                 >
 
                 <io.wochat.app.components.CircleImageView
-                    android:id="@+id/contact_avatar_civ"
+                    android:id="@+id/contact_avatar_old_civ"
                     android:layout_width="38dp"
                     android:layout_height="38dp"
+                    android:visibility="gone"
                     android:src="@mipmap/ic_launcher"/>
 
-                <TextView
-                    android:id="@+id/contact_name_tv"
+                <io.wochat.app.components.CircleFlagImageView
+                    android:id="@+id/contact_avatar_civ"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@mipmap/a_nd_logo_white">
+
+                </io.wochat.app.components.CircleFlagImageView>
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:text="Alexanne barber"
-                    android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-                    android:textColor="@color/white"
-                    android:textStyle="normal"/>
+                    android:orientation="vertical"
+                    android:gravity="center_vertical"
+                    android:layout_marginLeft="10dp">
+
+                    <TextView
+                        android:id="@+id/contact_name_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Alexanne barber"
+                        android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                        android:textColor="@color/white"
+                        android:textStyle="normal"/>
+
+                    <TextView
+                        android:id="@+id/contact_title_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Everytime , anytime!"
+                        android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                        android:textColor="@color/white50"
+                        android:textSize="10sp"
+                        android:textStyle="normal"/>
+
+
+                </LinearLayout>
 
 
             </LinearLayout>
@@ -108,60 +137,54 @@
         </LinearLayout>
 
 
-
-
-
-
-
-
-
         <com.stfalcon.chatkit.messages.MessageInput
             android:id="@+id/input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="10dp"
-            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="0dp"
+            android:layout_marginEnd="0dp"
 
-            android:layout_marginRight="5dp"
-            android:layout_marginStart="5dp"
+            android:layout_marginRight="0dp"
+            android:layout_marginStart="0dp"
             android:layout_marginTop="0dp"
 
 
+            android:paddingBottom="0dp"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp"
             android:paddingTop="1dp"
-            android:paddingRight="10dp"
-            android:paddingLeft="10dp"
-            android:paddingBottom="1dp"
             app:attachmentButtonBackground="?attr/selectableItemBackgroundBorderless"
             app:attachmentButtonDefaultIconColor="@color/green"
             app:attachmentButtonDefaultIconPressedColor="@color/green_dark"
             app:attachmentButtonHeight="27dp"
 
-            app:attachmentButtonIcon="@drawable/attach"
+            app:attachmentButtonIcon="@drawable/msg_in_attachment_dark"
             app:attachmentButtonWidth="27dp"
             app:cameraButtonBackground="?attr/selectableItemBackgroundBorderless"
             app:cameraButtonDefaultIconColor="@color/green"
             app:cameraButtonDefaultIconPressedColor="@color/green_dark"
             app:cameraButtonHeight="27dp"
 
-            app:cameraButtonIcon="@drawable/camera"
+            app:cameraButtonIcon="@drawable/msg_in_camera_dark"
             app:cameraButtonWidth="27dp"
-            app:imojiButtonBackground="?attr/selectableItemBackgroundBorderless"
-            app:imojiButtonDefaultIconColor="@color/green"
-            app:imojiButtonDefaultIconPressedColor="@color/green_dark"
-            app:imojiButtonHeight="27dp"
-            app:imojiButtonIcon="@drawable/smiley"
-            app:imojiButtonWidth="27dp"
-            app:inputButtonBackground="@color/transparent"
+
+            app:magicButtonIcon="@drawable/msg_in_timer_dark"
+            app:locationButtonIcon="@drawable/msg_in_location_dark"
+            app:videoButtonIcon="@drawable/msg_in_video_dark"
+
+            app:inputButtonBackground="@drawable/msg_in_send_back"
             app:inputButtonDefaultIconColor="@color/white"
             app:inputButtonDefaultIconDisabledColor="@color/white60"
-            app:inputButtonIcon="@drawable/mic"
+            app:inputButtonIcon="@drawable/msg_in_mic_light"
             app:inputButtonMargin="15dp"
             app:inputHint="@string/hint_enter_a_message"
             app:inputMaxLines="5"
             app:showAttachmentButton="true"
             app:showCameraButton="true"
-            app:showImojiButton="true"/>
+            app:showLocationButton="true"
+            app:showVideoButton="true"
+            app:showMagicButton="true"/>
 
 
         <ImageButton

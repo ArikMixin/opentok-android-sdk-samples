@@ -533,10 +533,13 @@ public class DialogsListAdapter<DIALOG extends IDialog>
             tvLastMessage = (TextView) itemView.findViewById(R.id.dialogLastMessage);
             tvBubble = (TextView) itemView.findViewById(R.id.dialogUnreadBubble);
             //ivLastMessageUser = (ImageView) itemView.findViewById(R.id.dialogLastMessageUserAvatar);
-            ivAvatar = (ImageView) itemView.findViewById(R.id.dialogAvatar);
+
             dividerContainer = (ViewGroup) itemView.findViewById(R.id.dialogDividerContainer);
             divider = itemView.findViewById(R.id.dialogDivider);
 
+            try {
+                ivAvatar = (ImageView) itemView.findViewById(R.id.dialogAvatar);
+            } catch (Exception e) {}
         }
 
         private void applyStyle() {
@@ -657,7 +660,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
             }
 
             //Set Dialog avatar
-            if (imageLoader != null) {
+            if ((imageLoader != null)&&(ivAvatar!= null)) {
                 imageLoader.loadImage(ivAvatar, dialog.getDialogPhoto(), null);
             }
 

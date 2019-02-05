@@ -6,6 +6,7 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.stfalcon.chatkit.commons.models.IContact;
@@ -122,6 +123,13 @@ public class Contact implements IContact {
 		return getDisplayName();
 	}
 
+	public String getLanguage() {
+		if ((contactServer != null)&& (contactServer.getLanguage() != null) && (!contactServer.getLanguage().equals("")))
+			return contactServer.getLanguage();
+		else
+			return null;
+	}
+
 	@Override
 	public String getAvatar() {
 		if ((contactServer != null)&& (contactServer.getProfilePicUrl() != null) && (!contactServer.getProfilePicUrl().equals("")))
@@ -141,6 +149,17 @@ public class Contact implements IContact {
 			return contactLocal.getDisplayName();
 		else
 			return contactServer.getUserName();
+	}
+
+
+	public String toJson(){
+		Gson gson = new Gson();
+		return gson.toJson(this);
+	}
+
+	public static Contact fromJson(String json){
+		Gson gson = new Gson();
+		return gson.fromJson(json, Contact.class);
 	}
 
 }

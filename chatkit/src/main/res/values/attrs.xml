@@ -44,18 +44,13 @@
         <attr name="cameraButtonHeight" format="dimension|reference"/>
 
 
-        <attr name="imojiButtonIcon" format="reference"/>
-        <attr name="showImojiButton" format="boolean"/>
-        <attr name="imojiButtonBackground" format="reference"/>
-        <attr name="imojiButtonDefaultBgColor" format="color|reference"/>
-        <attr name="imojiButtonDefaultBgPressedColor" format="color|reference"/>
-        <attr name="imojiButtonDefaultBgDisabledColor" format="color|reference"/>
-        <attr name="imojiButtonDefaultIconColor" format="color|reference"/>
-        <attr name="imojiButtonDefaultIconPressedColor" format="color|reference"/>
-        <attr name="imojiButtonDefaultIconDisabledColor" format="color|reference"/>
-        <attr name="imojiButtonMargin" format="dimension|reference"/>
-        <attr name="imojiButtonWidth" format="dimension|reference"/>
-        <attr name="imojiButtonHeight" format="dimension|reference"/>
+        <attr name="videoButtonIcon" format="reference"/>
+        <attr name="locationButtonIcon" format="reference"/>
+        <attr name="magicButtonIcon" format="reference"/>
+
+        <attr name="showVideoButton" format="boolean"/>
+        <attr name="showLocationButton" format="boolean"/>
+        <attr name="showMagicButton" format="boolean"/>
 
 
         <attr name="inputMaxLines" format="integer"/>
@@ -249,6 +244,15 @@
         <attr name="dialogItemBackground" format="color|reference"/>
         <attr name="dialogUnreadItemBackground" format="color|reference"/>
 
+    </declare-styleable>
+
+    <declare-styleable name="CircleImageView">
+        <attr name="civ_border_width" format="dimension" />
+        <attr name="civ_border_color" format="color" />
+        <attr name="civ_border_overlay" format="boolean" />
+        <!-- {@deprecated Use civ_circlebackground_color instead.} -->
+        <attr name="civ_fill_color" format="color" />
+        <attr name="civ_circle_background_color" format="color" />
     </declare-styleable>
 
 </resources>

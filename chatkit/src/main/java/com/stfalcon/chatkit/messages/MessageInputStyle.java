@@ -70,21 +70,14 @@ class MessageInputStyle extends Style {
 	private int cameraButtonMargin;
 
 	/*********************************************/
-	private boolean showImojiButton;
+	private boolean showVideoButton;
+	private boolean showLocationButton;
+	private boolean showMagicButton;
 
-	private int imojiButtonBackground;
-	private int imojiButtonDefaultBgColor;
-	private int imojiButtonDefaultBgPressedColor;
-	private int imojiButtonDefaultBgDisabledColor;
+	private int videoButtonIcon;
+	private int locationButtonIcon;
+	private int magicButtonIcon;
 
-	private int imojiButtonIcon;
-	private int imojiButtonDefaultIconColor;
-	private int imojiButtonDefaultIconPressedColor;
-	private int imojiButtonDefaultIconDisabledColor;
-
-	private int imojiButtonWidth;
-	private int imojiButtonHeight;
-	private int imojiButtonMargin;
 	/*********************************************/
 
 
@@ -173,27 +166,14 @@ class MessageInputStyle extends Style {
 		style.cameraButtonMargin = typedArray.getDimensionPixelSize(R.styleable.MessageInput_cameraButtonMargin, style.getDimension(R.dimen.input_button_margin));
 /****************************************************************************/
 
-		style.showImojiButton = typedArray.getBoolean(R.styleable.MessageInput_showImojiButton, false);
+		style.showVideoButton = typedArray.getBoolean(R.styleable.MessageInput_showVideoButton, false);
+		style.showLocationButton = typedArray.getBoolean(R.styleable.MessageInput_showLocationButton, false);
+		style.showMagicButton = typedArray.getBoolean(R.styleable.MessageInput_showMagicButton, false);
 
-		style.imojiButtonBackground = typedArray.getResourceId(R.styleable.MessageInput_imojiButtonBackground, -1);
-		style.imojiButtonDefaultBgColor = typedArray.getColor(R.styleable.MessageInput_imojiButtonDefaultBgColor,
-			style.getColor(R.color.white_four));
-		style.imojiButtonDefaultBgPressedColor = typedArray.getColor(R.styleable.MessageInput_imojiButtonDefaultBgPressedColor,
-			style.getColor(R.color.white_five));
-		style.imojiButtonDefaultBgDisabledColor = typedArray.getColor(R.styleable.MessageInput_imojiButtonDefaultBgDisabledColor,
-			style.getColor(R.color.transparent));
 
-		style.imojiButtonIcon = typedArray.getResourceId(R.styleable.MessageInput_imojiButtonIcon, -1);
-		style.imojiButtonDefaultIconColor = typedArray.getColor(R.styleable.MessageInput_imojiButtonDefaultIconColor,
-			style.getColor(R.color.cornflower_blue_two));
-		style.imojiButtonDefaultIconPressedColor = typedArray.getColor(R.styleable.MessageInput_imojiButtonDefaultIconPressedColor,
-			style.getColor(R.color.cornflower_blue_two_dark));
-		style.imojiButtonDefaultIconDisabledColor = typedArray.getColor(R.styleable.MessageInput_imojiButtonDefaultIconDisabledColor,
-			style.getColor(R.color.cornflower_blue_light_40));
-
-		style.imojiButtonWidth = typedArray.getDimensionPixelSize(R.styleable.MessageInput_imojiButtonWidth, style.getDimension(R.dimen.input_button_width));
-		style.imojiButtonHeight = typedArray.getDimensionPixelSize(R.styleable.MessageInput_imojiButtonHeight, style.getDimension(R.dimen.input_button_height));
-		style.imojiButtonMargin = typedArray.getDimensionPixelSize(R.styleable.MessageInput_imojiButtonMargin, style.getDimension(R.dimen.input_button_margin));
+		style.videoButtonIcon = typedArray.getResourceId(R.styleable.MessageInput_videoButtonIcon, -1);
+		style.locationButtonIcon = typedArray.getResourceId(R.styleable.MessageInput_locationButtonIcon, -1);
+		style.magicButtonIcon = typedArray.getResourceId(R.styleable.MessageInput_magicButtonIcon, -1);
 /****************************************************************************/
 
 
@@ -334,41 +314,27 @@ class MessageInputStyle extends Style {
 	}
 
 
-	protected boolean showImojiButton() {
-		return showImojiButton;
+	protected boolean showVideoButton() {
+		return showVideoButton;
 	}
-
-	protected Drawable getImojiButtonBackground() {
-		if (imojiButtonBackground == -1) {
-			return getSelector(imojiButtonDefaultBgColor, imojiButtonDefaultBgPressedColor,
-				imojiButtonDefaultBgDisabledColor, R.drawable.mask);
-		} else {
-			return getDrawable(imojiButtonBackground);
-		}
+	protected boolean showLocationButton() {
+		return showLocationButton;
 	}
-
-	protected Drawable getImojiButtonIcon() {
-		if (imojiButtonIcon == -1) {
-			return getSelector(imojiButtonDefaultIconColor, imojiButtonDefaultIconPressedColor,
-				imojiButtonDefaultIconDisabledColor, R.drawable.ic_add_attachment);
-		} else {
-			return getDrawable(imojiButtonIcon);
-		}
-	}
-
-	protected int getImojiButtonWidth() {
-		return imojiButtonWidth;
-	}
-
-	protected int getImojiButtonHeight() {
-		return imojiButtonHeight;
-	}
-
-	protected int getImojiButtonMargin() {
-		return imojiButtonMargin;
+	protected boolean showMagicButton() {
+		return showMagicButton;
 	}
 
 
+
+	protected Drawable getMagicButtonIcon() {
+		return getDrawable(magicButtonIcon);
+	}
+	protected Drawable getLocationButtonIcon() {
+		return getDrawable(locationButtonIcon);
+	}
+	protected Drawable getVideoButtonIcon() {
+		return getDrawable(videoButtonIcon);
+	}
 
     protected Drawable getInputButtonBackground() {
         if (inputButtonBackground == -1) {

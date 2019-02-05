@@ -375,13 +375,17 @@ public class MainActivity extends AppCompatActivity {
 			if (resultCode == RESULT_OK){
 				String id = data.getStringExtra(Consts.INTENT_PARTICIPANT_ID);
 				String name = data.getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
+				String lang = data.getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
 				String pic = data.getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
+				String contactString = data.getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
 				String conversationId = Conversation.getConversationId(id, mSelfUserId);
 
 				Intent intent = new Intent(this, ConversationActivity.class);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, id);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, name);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, lang);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, pic);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contactString);
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 				startActivity(intent);

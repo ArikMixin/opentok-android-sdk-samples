@@ -46,8 +46,11 @@ public class MessageInput extends RelativeLayout
     protected ImageButton messageSendButton;
     protected ImageButton attachmentButton;
     protected ImageButton cameraButton;
-	protected ImageButton imojiButton;
-	protected Space sendButtonSpace, attachmentButtonSpace;
+    protected ImageButton locationButton;
+    protected ImageButton videoButton;
+    protected ImageButton magicButton;
+	protected Space sendButtonSpace;
+    //protected Space attachmentButtonSpace;
 
     private CharSequence input;
     private InputListener inputListener;
@@ -201,8 +204,8 @@ public class MessageInput extends RelativeLayout
         this.attachmentButton.getLayoutParams().width = style.getAttachmentButtonWidth();
         this.attachmentButton.getLayoutParams().height = style.getAttachmentButtonHeight();
         ViewCompat.setBackground(this.attachmentButton, style.getAttachmentButtonBackground());
-		this.attachmentButtonSpace.setVisibility(style.showAttachmentButton() ? VISIBLE : GONE);
-		this.attachmentButtonSpace.getLayoutParams().width = style.getAttachmentButtonMargin();
+		//this.attachmentButtonSpace.setVisibility(style.showAttachmentButton() ? VISIBLE : GONE);
+		//this.attachmentButtonSpace.getLayoutParams().width = style.getAttachmentButtonMargin();
 
 		this.cameraButton.setVisibility(style.showCameraButton() ? VISIBLE : GONE);
 		this.cameraButton.setImageDrawable(style.getCameraButtonIcon());
@@ -210,11 +213,14 @@ public class MessageInput extends RelativeLayout
 		this.cameraButton.getLayoutParams().height = style.getCameraButtonHeight();
 		ViewCompat.setBackground(this.cameraButton, style.getCameraButtonBackground());
 
-		this.imojiButton.setVisibility(style.showImojiButton() ? VISIBLE : GONE);
-		this.imojiButton.setImageDrawable(style.getImojiButtonIcon());
-		this.imojiButton.getLayoutParams().width = style.getImojiButtonWidth();
-		this.imojiButton.getLayoutParams().height = style.getImojiButtonHeight();
-		ViewCompat.setBackground(this.imojiButton, style.getImojiButtonBackground());
+        this.magicButton.setVisibility(style.showMagicButton() ? VISIBLE : GONE);
+        this.locationButton.setVisibility(style.showLocationButton() ? VISIBLE : GONE);
+        this.videoButton.setVisibility(style.showVideoButton() ? VISIBLE : GONE);
+
+		this.magicButton.setImageDrawable(style.getMagicButtonIcon());
+        this.locationButton.setImageDrawable(style.getLocationButtonIcon());
+        this.videoButton.setImageDrawable(style.getVideoButtonIcon());
+
 
 
         this.messageSendButton.setImageDrawable(style.getInputButtonIcon());
@@ -244,9 +250,11 @@ public class MessageInput extends RelativeLayout
         messageSendButton = (ImageButton) findViewById(R.id.messageSendButton);
         attachmentButton = (ImageButton) findViewById(R.id.attachmentButton);
         cameraButton = (ImageButton) findViewById(R.id.cameraButton);
-		imojiButton = (ImageButton) findViewById(R.id.imojiButton);
+		locationButton = (ImageButton) findViewById(R.id.locationButton);
+        videoButton = (ImageButton) findViewById(R.id.videoButton);
+        magicButton = (ImageButton) findViewById(R.id.magicButton);
         sendButtonSpace = (Space) findViewById(R.id.sendButtonSpace);
-        attachmentButtonSpace = (Space) findViewById(R.id.attachmentButtonSpace);
+        //attachmentButtonSpace = (Space) findViewById(R.id.attachmentButtonSpace);
 
         messageSendButton.setOnClickListener(this);
         attachmentButton.setOnClickListener(this);

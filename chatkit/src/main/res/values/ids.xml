@@ -11,7 +11,9 @@
     <!-- MESSAGE INPUT -->
     <item name="attachmentButton" type="id" />
     <item name="cameraButton" type="id" />
-    <item name="imojiButton" type="id" />
+    <item name="locationButton" type="id" />
+    <item name="videoButton" type="id" />
+    <item name="magicButton" type="id" />
 
     <item name="messageSendButton" type="id" />
     <item name="attachmentButtonSpace" type="id" />

@@ -50,10 +50,11 @@ public class ConversationViewModel extends AndroidViewModel {
 										   String participantId,
 										   String participantProfilePicUrl,
 										   String participantName,
+										   String participantLang,
 										   String selfId,
 										   final ConversationAndItsMessagesListener lsnr){
 		ConversationAndItsMessagesAsyncTask asyncTask = new ConversationAndItsMessagesAsyncTask(lsnr);
-		asyncTask.execute(conversationId, participantId, participantProfilePicUrl, participantName, selfId);
+		asyncTask.execute(conversationId, participantId, participantProfilePicUrl, participantName, participantLang, selfId);
 		//asyncTask.executeOnExecutor(mAppExecutors.diskIO(), conversationId, participantId, participantProfilePicUrl, participantName, selfId);
 	}
 
@@ -149,7 +150,8 @@ public class ConversationViewModel extends AndroidViewModel {
 			String participantId = params[1];
 			String participantProfilePicUrl = params[2];
 			String participantName = params[3];
-			String selfId = params[4];
+			String participantLang = params[4];
+			String selfId = params[5];
 			boolean hasConversation = mRepository.hasConversation(conversationId);
 			if (hasConversation) {
 				ConversationAndItsMessages caim = mRepository.getConversationAndMessagesSorted(params[0]);
@@ -159,6 +161,7 @@ public class ConversationViewModel extends AndroidViewModel {
 				Conversation conversation = new Conversation(participantId, selfId);
 				conversation.setParticipantProfilePicUrl(participantProfilePicUrl);
 				conversation.setParticipantName(participantName);
+				conversation.setParticipantLanguage(participantLang);
 				mRepository.addNewConversation(conversation);
 				ConversationAndItsMessages caim = new ConversationAndItsMessages();
 				caim.setConversation(conversation);

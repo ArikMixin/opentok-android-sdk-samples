@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 
 import io.wochat.app.R;
+import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.db.entity.Ack;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.utils.Utils;
@@ -19,18 +20,22 @@ public class CustomDialogViewHolder
         extends DialogsListAdapter.DialogViewHolder<Conversation> {
 
     private final ImageView mCocheIV;
+	private final CircleFlagImageView mAvatarcfiv;
 
-    //private View onlineIndicator;
+	//private View onlineIndicator;
 
     public CustomDialogViewHolder(View itemView) {
         super(itemView);
         //onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
         mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
+		mAvatarcfiv = (CircleFlagImageView) itemView.findViewById(R.id.dialogAvatar);
     }
 
     @Override
     public void onBind(Conversation conversation) {
         super.onBind(conversation);
+
+        mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(), conversation.getParticipantLanguage());
 
         if (conversation.getLastMessageAckStatus()!= null) {
 			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());

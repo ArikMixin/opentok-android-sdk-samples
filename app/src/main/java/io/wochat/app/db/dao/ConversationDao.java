@@ -33,9 +33,10 @@ public interface ConversationDao {
 
 	@Query("UPDATE conversation_table SET  " +
 		"participant_name = :contactName , " +
+		"participant_language = :contactLanguage , " +
 		"participant_profile_pic_url = :profilePic " +
 		"WHERE participant_id =:contactId")
-	public void updateConversationWithContactData(String contactId, String contactName, String profilePic);
+	public void updateConversationWithContactData(String contactId, String contactName, String contactLanguage, String profilePic);
 
 
 

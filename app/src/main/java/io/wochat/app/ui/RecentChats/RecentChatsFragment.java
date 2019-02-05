@@ -24,6 +24,7 @@ import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.commons.models.IDialog;
 import com.stfalcon.chatkit.dialogs.DialogsList;
+
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 import com.stfalcon.chatkit.utils.DateFormatter;
 
@@ -190,13 +191,17 @@ public class RecentChatsFragment extends Fragment  implements
 			if (resultCode == AppCompatActivity.RESULT_OK){
 				String id = data.getStringExtra(Consts.INTENT_PARTICIPANT_ID);
 				String name = data.getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
+				String lang = data.getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
 				String pic = data.getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
+				String contactString = data.getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
 				String conversationId = Conversation.getConversationId(id, mSelfUserId);
 
 				Intent intent = new Intent(getContext(), ConversationActivity.class);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, id);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, name);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, lang);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, pic);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contactString);
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 				startActivity(intent);
@@ -210,6 +215,7 @@ public class RecentChatsFragment extends Fragment  implements
 		Intent intent = new Intent(getContext(), ConversationActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
 		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
 		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);

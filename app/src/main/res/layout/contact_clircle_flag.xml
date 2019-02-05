@@ -7,8 +7,8 @@
 
     <io.wochat.app.components.CircleImageView
         android:id="@+id/contact_pic_civ"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:src="@drawable/ic_empty_contact_1"/>
 
     <io.wochat.app.components.CircleImageView
@@ -16,6 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
+        android:layout_marginLeft="10dp"
         android:src="@drawable/flag_united_kingdom"
         app:civ_border_color="@color/whitee"
         app:civ_border_width="2dp"/>

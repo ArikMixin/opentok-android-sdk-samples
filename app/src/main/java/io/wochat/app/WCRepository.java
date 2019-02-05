@@ -454,7 +454,7 @@ public class WCRepository {
 		mAppExecutors.diskIO().execute(() -> {
 			mDatabase.runInTransaction(() -> {
 				mContactDao.insert(contact);
-				mConversationDao.updateConversationWithContactData(contact.getId(), contact.getName(), contact.getAvatar());
+				mConversationDao.updateConversationWithContactData(contact.getId(), contact.getName(), contact.getLanguage(), contact.getAvatar());
 			});
 		});
 
@@ -744,6 +744,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 					Contact contact = mContactDao.getContact(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					conversation.setParticipantName(contact.getName());
+					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
 					res = insertMessageAndUpdateConversation(message);
