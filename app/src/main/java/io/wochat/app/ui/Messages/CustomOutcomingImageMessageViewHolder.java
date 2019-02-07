@@ -8,7 +8,6 @@ import android.widget.ImageView;
 import com.stfalcon.chatkit.messages.MessageHolders;
 
 import io.wochat.app.R;
-import io.wochat.app.db.entity.Ack;
 import io.wochat.app.db.entity.Message;
 
 
@@ -31,16 +30,16 @@ public class CustomOutcomingImageMessageViewHolder
 
         time.setText(time.getText());
         switch (message.getStatus()){
-            case Ack.ACK_STATUS_PENDING:
+            case Message.ACK_STATUS_PENDING:
                 mCocheIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.coche_pending));
                 break;
-            case Ack.ACK_STATUS_SENT:
+            case Message.ACK_STATUS_SENT:
                 mCocheIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.coche_sent));
                 break;
-            case Ack.ACK_STATUS_RECEIVED:
+            case Message.ACK_STATUS_RECEIVED:
                 mCocheIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.coche_arrived));
                 break;
-            case Ack.ACK_STATUS_READ:
+            case Message.ACK_STATUS_READ:
                 mCocheIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.coche_seen));
                 break;
             default:

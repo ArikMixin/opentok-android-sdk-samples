@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.R;
+import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.UnreadMessagesConversation;
 import io.wochat.app.ui.Consts;
@@ -59,6 +60,7 @@ public class RecentChatsFragment extends Fragment  implements
 	private ConversationViewModel mConversationViewModel;
 	private List<Conversation> mConversation;
 	private List<UnreadMessagesConversation> mUnreadMessagesConversation;
+	private String mSelfUserLang;
 
 	public static RecentChatsFragment newInstance() {
 		return new RecentChatsFragment();
@@ -73,13 +75,19 @@ public class RecentChatsFragment extends Fragment  implements
 
 		setHasOptionsMenu(true);
 
-		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
-		mUserViewModel.getSelfUser().observe(this, user -> {
-			if (user != null)
-				mSelfUserId = user.getUserId();
-			else
-				mSelfUserId = null;
-		});
+
+		mSelfUserId = WCSharedPreferences.getInstance(getContext()).getUserId();
+		mSelfUserLang = WCSharedPreferences.getInstance(getContext()).getUserLang();
+
+
+//		mSelfUserId = share
+//		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
+//		mUserViewModel.getSelfUser().observe(this, user -> {
+//			if (user != null)
+//				mSelfUserId = user.getUserId();
+//			else
+//				mSelfUserId = null;
+//		});
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mConversationViewModel.getConversationListLD().observe(this, conversations -> {
@@ -204,6 +212,7 @@ public class RecentChatsFragment extends Fragment  implements
 				intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contactString);
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 				startActivity(intent);
 
 			}
@@ -219,6 +228,7 @@ public class RecentChatsFragment extends Fragment  implements
 		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
 		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
 		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 		startActivity(intent);
 	}
 

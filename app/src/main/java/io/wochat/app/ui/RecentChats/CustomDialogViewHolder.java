@@ -8,8 +8,8 @@ import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 
 import io.wochat.app.R;
 import io.wochat.app.components.CircleFlagImageView;
-import io.wochat.app.db.entity.Ack;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.Message;
 import io.wochat.app.utils.Utils;
 
 
@@ -39,25 +39,25 @@ public class CustomDialogViewHolder
 
         if (conversation.getLastMessageAckStatus()!= null) {
 			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());
-			mCocheIV.setVisibility(Utils.booleanToVisibilityGone(isIncoming));
+			mCocheIV.setVisibility(Utils.booleanToVisibilityInvisible(isIncoming));
 			switch (conversation.getLastMessageAckStatus()) {
-				case Ack.ACK_STATUS_PENDING:
+				case Message.ACK_STATUS_PENDING:
 					imageLoader.loadImage(mCocheIV, R.drawable.coche_pending);
 					break;
-				case Ack.ACK_STATUS_READ:
+				case Message.ACK_STATUS_READ:
 					imageLoader.loadImage(mCocheIV, R.drawable.coche_seen);
 					break;
-				case Ack.ACK_STATUS_RECEIVED:
+				case Message.ACK_STATUS_RECEIVED:
 					imageLoader.loadImage(mCocheIV, R.drawable.coche_arrived);
 					break;
-				case Ack.ACK_STATUS_SENT:
+				case Message.ACK_STATUS_SENT:
 					imageLoader.loadImage(mCocheIV, R.drawable.coche_sent);
 					break;
 
 			}
 		}
 		else
-			mCocheIV.setVisibility(View.GONE);
+			mCocheIV.setVisibility(View.INVISIBLE);
 
 
 //        if (conversationComplete.getConversation().isGroup()) {

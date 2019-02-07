@@ -19,7 +19,8 @@
     <color name="cornflower_blue_two_24">#3d4f62d7</color>
     <color name="cornflower_blue_two_dark">#475bd4</color>
     <color name="cornflower_blue_light_40">#64bec5f7</color>
-    <color name="app_orange">#ff631d</color>
+
+    <color name="app_blue">#4c8aed</color>
     <color name="dialog_divider">@color/white_three</color>
     <color name="dialog_title_text">@color/dark_gray</color>
     <color name="dialog_message_text">@color/warm_grey</color>

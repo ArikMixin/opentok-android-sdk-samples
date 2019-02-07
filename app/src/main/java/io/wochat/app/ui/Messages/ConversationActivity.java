@@ -1,9 +1,11 @@
 package io.wochat.app.ui.Messages;
 
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
@@ -45,9 +47,6 @@ import java.util.List;
 import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleFlagImageView;
-import io.wochat.app.components.CircleImageView;
-import io.wochat.app.db.entity.Ack;
-import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.fixtures.MessagesFixtures;
@@ -90,6 +89,10 @@ public class ConversationActivity extends AppCompatActivity implements
 	private Conversation mConversation;
 	//private Contact mParticipantContactObj;
 	private String mParticipantLang;
+	private String mSelfLang;
+	private TypingSignalBR mTypingSignalBR;
+	private TextView mContactDetailsTV;
+	private Handler mClearTypingHandler;
 
 
 	@Override
@@ -138,8 +141,11 @@ public class ConversationActivity extends AppCompatActivity implements
 //		String participantContactString = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
 //		mParticipantContactObj = Contact.fromJson(participantContactString);
 		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
+		mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
 
 		mContactNameTV = (TextView) findViewById(R.id.contact_name_tv);
+		mContactDetailsTV = (TextView) findViewById(R.id.contact_details_tv);
+		mContactDetailsTV.setText("");
 		mContactNameTV.setText(mParticipantName);
 		mContactNameTV.setOnClickListener(v -> {
 			Toast.makeText(ConversationActivity.this, "open profile for " + mParticipantName, Toast.LENGTH_SHORT).show();
@@ -180,6 +186,8 @@ public class ConversationActivity extends AppCompatActivity implements
 		});
 
 
+
+		mTypingSignalBR = new TypingSignalBR();
 
 
 
@@ -300,7 +308,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	@Override
 	public boolean onSubmit(CharSequence input) {
 		String msgText = input.toString();
-		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText);
+		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
 		mConversationViewModel.addNewOutcomingMessage(message);
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mService.sendMessage(message);
@@ -352,6 +360,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		if (!theText.equals("")) {
 			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_send_light));
 		}
+		mService.sendTypingSignal(mParticipantId, mConversationId, true);
 	}
 
 	@Override
@@ -360,7 +369,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		if (theText.equals("")) {
 			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		}
-
+		mService.sendTypingSignal(mParticipantId, mConversationId, false);
 	}
 
 
@@ -500,7 +509,7 @@ public class ConversationActivity extends AppCompatActivity implements
 			observe(this, messageList -> {
 				Log.e(TAG, "getMarkAsReadAffectedMessages change: " + messageList==null?"null":""+messageList.size());
 				if ((mService != null)&&(messageList != null)&&(!messageList.isEmpty())){
-					mService.sendAckStatusForIncomingMessages(messageList, Ack.ACK_STATUS_READ);
+					mService.sendAckStatusForIncomingMessages(messageList, Message.ACK_STATUS_READ);
 					mConversationViewModel.markAllMessagesAsRead(mConversationId);
 				}
 
@@ -526,5 +535,59 @@ public class ConversationActivity extends AppCompatActivity implements
 				new int[]{selectedColor, pressedColor, normalColor}
 			));
 		return drawable;
+	}
+
+	private class TypingSignalBR extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if(intent.getAction().equals(WCService.TYPING_SIGNAL_ACTION)) {
+				String conversationId = intent.getStringExtra(WCService.CONVERSATION_ID_EXTRA);
+				if ((conversationId != null)&&(conversationId.equals(mConversationId))){
+					boolean isTyping = intent.getBooleanExtra(WCService.IS_TYPING_EXTRA, false);
+					displayUITypingSignal(isTyping);
+				}
+			}
+		}
+	}
+
+	private Runnable mClearTypingRunnable = new Runnable() {
+		@Override
+		public void run() {
+			mContactDetailsTV.setText("");
+		}
+	};
+
+
+
+	private void displayUITypingSignal(boolean isTyping) {
+
+		if (isTyping){
+			mContactDetailsTV.setText("Typing...");
+			mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
+		}
+		else {
+			mContactDetailsTV.setText("");
+			mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
+		}
+	}
+
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		unregisterReceiver(mTypingSignalBR);
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		mClearTypingHandler = new Handler(getMainLooper());
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(WCService.TYPING_SIGNAL_ACTION);
+		try {
+			registerReceiver(mTypingSignalBR, filter);
+		} catch (Exception e) {}
+
 	}
 }

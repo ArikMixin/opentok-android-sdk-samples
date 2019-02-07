@@ -11,8 +11,8 @@
 
     <dimen name="message_bubble_corners_radius">15dp</dimen>
 
-    <dimen name="dialog_avatar_width">45dp</dimen>
-    <dimen name="dialog_avatar_height">45dp</dimen>
+    <dimen name="dialog_avatar_width">55dp</dimen>
+    <dimen name="dialog_avatar_height">55dp</dimen>
     <dimen name="dialog_last_message_avatar_width">24dp</dimen>
     <dimen name="dialog_last_message_avatar_height">24dp</dimen>
     <dimen name="dialog_title_text_size">15sp</dimen>

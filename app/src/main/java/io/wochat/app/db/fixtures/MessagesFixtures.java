@@ -19,13 +19,13 @@ public final class MessagesFixtures extends FixturesData {
     }
 
     public static Message getImageMessage() {
-        Message message = new Message(getRandomId(), getContact(), null);
+        Message message = new Message(getRandomId(), getContact(), null, "EN");
         message.setImage(new Message.Image(getRandomImage()));
         return message;
     }
 
     public static Message getVoiceMessage() {
-        Message message = new Message(getRandomId(), getContact(), null);
+        Message message = new Message(getRandomId(), getContact(), null, "EN");
         message.setVoice(new Message.Voice("http://example.com", rnd.nextInt(200) + 30));
         return message;
     }
@@ -35,7 +35,7 @@ public final class MessagesFixtures extends FixturesData {
     }
 
     public static Message getTextMessage(String text) {
-        return new Message(getRandomId(), getContact(), text);
+        return new Message(getRandomId(), getContact(), text, "EN");
     }
 
     public static ArrayList<Message> getMessages(String selfId, Date startDate) {

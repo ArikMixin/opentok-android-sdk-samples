@@ -62,6 +62,10 @@ public interface MessageDao {
 		"(ack_status <> 'READ') AND (sender = participant_id) GROUP BY conversation_id")
 	LiveData<List<UnreadMessagesConversation>> getUnreadMessagesConversation();
 
+	@Query("SELECT COUNT(*) FROM message_table WHERE " +
+		"(ack_status <> 'READ') AND (sender = participant_id) GROUP BY conversation_id")
+	LiveData<Integer> getUnreadMessageCount();
+
 
 	@Query("UPDATE message_table SET  ack_status = 'READ' WHERE " +
 		"(conversation_id =:conversationId) AND" +

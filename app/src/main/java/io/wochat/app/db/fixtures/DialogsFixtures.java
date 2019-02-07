@@ -72,6 +72,7 @@ public final class DialogsFixtures extends FixturesData {
                 getRandomId(),
                 getContact(),
                 getRandomMessage(),
+                "EN",
                 date.getTime());
     }
 }

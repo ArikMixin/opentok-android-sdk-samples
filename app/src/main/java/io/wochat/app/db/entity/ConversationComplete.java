@@ -26,7 +26,7 @@ public class ConversationComplete implements IDialog {
 	int mUnreadMessagesCount=5;
 
 	String mLastMessageId;
-	@Ack.ACK_STATUS String mLastMessageAckStatus;
+	@Message.ACK_STATUS String mLastMessageAckStatus;
 	String mContactProfilePicUrl;
 	String mContactName;
 
@@ -122,11 +122,11 @@ public class ConversationComplete implements IDialog {
 		mLastMessageTimestamp = lastMessageTimestamp;
 	}
 
-	public @Ack.ACK_STATUS String getLastMessageAckStatus() {
+	public @Message.ACK_STATUS	String getLastMessageAckStatus() {
 		return mLastMessageAckStatus;
 	}
 
-	public void setLastMessageAckStatus(@Ack.ACK_STATUS String lastMessageAckStatus) {
+	public void setLastMessageAckStatus(@Message.ACK_STATUS String lastMessageAckStatus) {
 		mLastMessageAckStatus = lastMessageAckStatus;
 	}
 

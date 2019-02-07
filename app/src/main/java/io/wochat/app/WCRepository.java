@@ -26,7 +26,6 @@ import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ConversationDao;
 import io.wochat.app.db.dao.MessageDao;
 import io.wochat.app.db.dao.UserDao;
-import io.wochat.app.db.entity.Ack;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.ContactServer;
@@ -259,6 +258,7 @@ public class WCRepository {
 					try {
 						Gson gson = new Gson();
 						User user = gson.fromJson(response.toString(), User.class);
+						mSharedPreferences.saveUserLanguage(user.getLanguage());
 
 						ContactServer contactServer = gson.fromJson(response.toString(), ContactServer.class);
 						Contact contact = new Contact();
@@ -670,6 +670,11 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 		return mMessageDao.getUnreadMessagesConversationLD(conversationId);
 	}
 
+	public LiveData<Integer> getUnreadConversationNum(){
+		return mConversationDao.getUnreadConversationCount();
+	}
+
+
 	public void markAllMessagesAsRead(String conversationId){
 		mAppExecutors.diskIO().execute(() -> {
 			try {
@@ -685,12 +690,16 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 	public boolean handleIncomingMessage(Message message, final OnSaveMessageToDBListener listener) {
     	if (message == null)
     		return false;
+
     	mAppExecutors.diskIO().execute(() -> {
 			boolean res = true;
 			message.setParticipantId(message.getSenderId());
+			message.setRecipients(new String[]{mSharedPreferences.getUserId()});
+			String convId = Conversation.getConversationId(message.getSenderId(), message.getRecipients()[0]);
+			message.setConversationId(convId);
 			switch (message.getMessageType()){
 				case Message.MSG_TYPE_TEXT:
-					message.setAckStatus(Ack.ACK_STATUS_RECEIVED);
+					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
 					res = handleIncomingMessageText(message);
 					listener.OnSaved(res, message);
 					break;
@@ -711,20 +720,17 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 	}
 
 	private boolean handleAcknowledgmentMessage(Message message) {
-		List<Ack> ackList = message.getAckList();
 		mDatabase.runInTransaction(() -> {
-			for (Ack ack : ackList) {
-				switch (ack.getAckStatus()) {
-					case Ack.ACK_STATUS_SENT:
-						mMessageDao.updateAckStatusToSent(ack.getOriginalMessageId());
-						break;
-					case Ack.ACK_STATUS_RECEIVED:
-						mMessageDao.updateAckStatusToReceived(ack.getOriginalMessageId());
-						break;
-					case Ack.ACK_STATUS_READ:
-						mMessageDao.updateAckStatusToRead(ack.getOriginalMessageId());
-						break;
-				}
+			switch (message.getAckStatus()) {
+				case Message.ACK_STATUS_SENT:
+					mMessageDao.updateAckStatusToSent(message.getOriginalMessageId());
+					break;
+				case Message.ACK_STATUS_RECEIVED:
+					mMessageDao.updateAckStatusToReceived(message.getOriginalMessageId());
+					break;
+				case Message.ACK_STATUS_READ:
+					mMessageDao.updateAckStatusToRead(message.getOriginalMessageId());
+					break;
 			}
 		});
 		return true;

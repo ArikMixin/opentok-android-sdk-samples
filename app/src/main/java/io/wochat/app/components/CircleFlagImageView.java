@@ -63,6 +63,8 @@ public class CircleFlagImageView extends LinearLayout {
 		else {
 			Picasso.get().
 				load(R.drawable.ic_empty_contact_1).
+				resize(imageSizeDp,imageSizeDp).
+				centerCrop().
 				into(mContactPicCIV);
 		}
 

@@ -7,23 +7,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.wochat.app.db.WCSharedPreferences;
-import io.wochat.app.db.entity.Ack;
 import io.wochat.app.db.entity.Message;
 
 
 public class WCService extends Service implements XMPPProvider.OnChatMessageListener {
 	private static final String TAG = "WCService";
+	public static final String TYPING_SIGNAL_ACTION = "TYPING_SIGNAL_ACTION";
+	public static final String CONVERSATION_ID_EXTRA = "CONVERSATION_ID_EXTRA";
+	public static final String IS_TYPING_EXTRA = "IS_TYPING_EXTRA";
 	private final IBinder mBinder = new WCBinder();
 	private XMPPProvider mXMPPProvider;
 	private WCRepository mRepository;
@@ -50,20 +49,32 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 	@Override
-	public void onNewIncomingMessage(String msg) {
-		Message message = Message.fromJson(msg);
-		boolean res = mRepository.handleIncomingMessage(message, new WCRepository.OnSaveMessageToDBListener() {
-			@Override
-			public void OnSaved(boolean success, Message savedMessage) {
-				sendAckStatusForIncomingMessage(savedMessage, Ack.ACK_STATUS_RECEIVED);
+	public void onNewIncomingMessage(String msg, String conversationId) {
+		try {
+			Message message = Message.fromJson(msg);
+
+			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
+				broadcastTypingSignal(conversationId, message.isTyping());
+				return;
 			}
-		});
+
+			boolean res = mRepository.handleIncomingMessage(message, new WCRepository.OnSaveMessageToDBListener() {
+				@Override
+				public void OnSaved(boolean success, Message savedMessage) {
+					sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
+				}
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
 
+
+
 	@Override
-	public void onNewOutgoingMessage(String msg) {
+	public void onNewOutgoingMessage(String msg, String conversationId) {
 		Message message = Message.fromJson(msg);
 		mRepository.updateAckStatusToSent(message.getMessageId());
 	}
@@ -87,7 +98,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			IntentFilter filter = new IntentFilter();
 			filter.addAction(ApplicationObserver.APP_OBSERVER_ACTION);
 			try {
-				registerReceiver(new AppObserverBR(), filter);
+				registerReceiver(mAppObserverBR, filter);
 			} catch (Exception e) {
 				//e.printStackTrace();
 			}
@@ -131,32 +142,33 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 
 	public void sendMessage(Message message){
-		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId());
+		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
 	}
 
-	private void sendAckStatusForIncomingMessage(Message message, @Ack.ACK_STATUS String ackStatus) {
-		Message msg = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(), "");
+	private void sendAckStatusForIncomingMessage(Message message, @Message.ACK_STATUS String ackStatus) {
+		Message msg = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(), "", "EN");
 		msg.setMessageType(Message.MSG_TYPE_ACKNOWLEDGMENT);
-		List<Ack> aks = new ArrayList<>();
-		Ack ack = new Ack(ackStatus, message.getMessageId());
-		aks.add(ack);
-		msg.setAckList(aks);
-		mXMPPProvider.sendStringMessage(msg.toJson(), msg.getParticipantId());
+		msg.setAckStatus(ackStatus);
+		msg.setOriginalMessageId(message.getMessageId());
+		mXMPPProvider.sendStringMessage(msg.toJson(), msg.getParticipantId(), message.getConversationId());
 	}
+
+	public void sendTypingSignal(String participantId, String conversationId, boolean isTyping) {
+		Message msg = new Message(participantId, mSelfUserId, conversationId, "", "EN");
+		msg.setMessageType(Message.MSG_TYPE_TYPING_SIGNAL);
+		msg.setIsTyping(isTyping);
+		mXMPPProvider.sendStringMessage(msg.toJson(), participantId, conversationId);
+	}
+
+
 
 	public void sendAckStatusForIncomingMessages(List<Message> messages, String ackStatus) {
 		if ((messages == null)||(messages.isEmpty()))
 			return;
 
-		List<Ack> aks = new ArrayList<>();
-		Message msg = new Message(messages.get(0).getSenderId(), mSelfUserId, messages.get(0).getConversationId(), "");
-		msg.setMessageType(Message.MSG_TYPE_ACKNOWLEDGMENT);
 		for (Message message : messages) {
-			Ack ack = new Ack(ackStatus, message.getMessageId());
-			aks.add(ack);
+			sendAckStatusForIncomingMessage(message, ackStatus);
 		}
-		msg.setAckList(aks);
-		mXMPPProvider.sendStringMessage(msg.toJson(), msg.getParticipantId());
 	}
 
 
@@ -190,6 +202,15 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				}
 			}
 		}
+	}
+
+
+	private void broadcastTypingSignal(String conversationId, boolean isTyping) {
+		Intent intent = new Intent();
+		intent.setAction(TYPING_SIGNAL_ACTION);
+		intent.putExtra(CONVERSATION_ID_EXTRA, conversationId);
+		intent.putExtra(IS_TYPING_EXTRA, isTyping);
+		sendBroadcast(intent);
 	}
 
 }

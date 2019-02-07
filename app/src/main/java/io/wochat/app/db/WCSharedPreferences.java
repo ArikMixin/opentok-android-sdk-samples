@@ -10,6 +10,7 @@ public class WCSharedPreferences {
 
 	private static final String SMS_CODE = "SMS_CODE";
 	private static final String USER_ID = "USER_ID";
+	private static final String USER_LANG = "USER_LANG";
 	private static final String USER_COUNTRY_CODE = "USER_COUNTRY_CODE";
 	private static final String USER_PHONE_NUM = "USER_PHONE_NUM";
 	private static final String TOKEN = "TOKEN";
@@ -23,6 +24,8 @@ public class WCSharedPreferences {
 
 	private static WCSharedPreferences mInstance;
 	private String mUserId;
+	private String mUserLang;
+
 	public static WCSharedPreferences getInstance(Context context) {
 		if (mInstance == null) {
 			synchronized (WCSharedPreferences.class) {
@@ -51,7 +54,20 @@ public class WCSharedPreferences {
 	}
 
 	public void saveUserId(String userId) {
+		mUserId = userId;
 		mSharedPreferences.edit().putString(USER_ID, userId).commit();
+	}
+
+	public void saveUserLanguage(String language) {
+		mUserLang = language;
+		mSharedPreferences.edit().putString(USER_LANG, language).commit();
+	}
+
+	public String getUserLang(){
+		if (mUserLang == null) // cashing
+			mUserLang = mSharedPreferences.getString(USER_LANG, "EN");
+
+		return mUserLang;
 	}
 
 	public String getUserId(){
@@ -115,4 +131,5 @@ public class WCSharedPreferences {
 		String encodedString = mSharedPreferences.getString(USER_PROFILE_PIC, null);
 		return Utils.stringToByteArrayImage(encodedString);
 	}
+
 }

@@ -36,7 +36,7 @@ import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.RecentChats.RecentChatsFragment;
 import io.wochat.app.viewmodel.ContactViewModel;
-
+import io.wochat.app.viewmodel.ConversationViewModel;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -65,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
 	private boolean mBound;
 	private WCService mService;
 	private String mSelfUserId;
+	private String mSelfUserLang;
+	private ConversationViewModel mConversationViewModel;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
 		int currentItem = TAB_POSITION_CHAT;
 
 		mSelfUserId = WCSharedPreferences.getInstance(this).getUserId();
+		mSelfUserLang = WCSharedPreferences.getInstance(this).getUserLang();
 
 		mLastSelectioPage = currentItem;
 		mViewPager.setCurrentItem(currentItem);
@@ -91,7 +94,8 @@ public class MainActivity extends AppCompatActivity {
 
 		BadgedTabLayout tabLayout = (BadgedTabLayout) findViewById(R.id.tabs);
 		tabLayout.setupWithViewPager(mViewPager);
-		tabLayout.setBadgeText(1,"10");
+		//tabLayout.setBadgeText(1,"10");
+		tabLayout.setBadgeText(1,null);
 		tabLayout.setIcon(0, R.drawable.ic_action_camera);
 
 
@@ -179,6 +183,16 @@ public class MainActivity extends AppCompatActivity {
 
 		ContactViewModel contactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
 		contactViewModel.sycContacts();
+
+
+		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
+		mConversationViewModel.getUnreadConversationNum().observe(this, num -> {
+			if ((num != null)&& (num > 0))
+				tabLayout.setBadgeText(1,num + "");
+			else
+				tabLayout.setBadgeText(1,null);
+		});
+
 
 	}
 
@@ -388,6 +402,7 @@ public class MainActivity extends AppCompatActivity {
 				intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contactString);
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 				startActivity(intent);
 
 			}

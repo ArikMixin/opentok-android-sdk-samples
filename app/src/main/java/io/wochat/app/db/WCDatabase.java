@@ -33,6 +33,7 @@ import java.util.Map;
 import io.wochat.app.AppExecutors;
 import io.wochat.app.db.converter.DateConverter;
 import io.wochat.app.db.converter.LocationConverter;
+import io.wochat.app.db.converter.StringArrayConverter;
 import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ContactLocalDao;
 import io.wochat.app.db.dao.ConversationDao;
@@ -46,7 +47,7 @@ import io.wochat.app.db.entity.User;
 
 
 @Database(entities = {User.class, Contact.class, ContactLocal.class, Conversation.class, Message.class}, version = 2)
-@TypeConverters({LocationConverter.class, DateConverter.class})
+@TypeConverters({LocationConverter.class, DateConverter.class, StringArrayConverter.class})
 public abstract class WCDatabase extends RoomDatabase {
 
 	private static WCDatabase sInstance;

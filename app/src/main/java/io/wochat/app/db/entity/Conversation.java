@@ -100,7 +100,7 @@ public class Conversation implements IDialog{
 	@SerializedName("last_message_ack_status")
 	@ColumnInfo(name = "last_message_ack_status")
 	@Expose
-	@Ack.ACK_STATUS String mLastMessageAckStatus;
+	@Message.ACK_STATUS String mLastMessageAckStatus;
 	/***************************************************/
 
 	@SerializedName("num_of_unread_messages")
@@ -243,7 +243,7 @@ public class Conversation implements IDialog{
 
 	@Override
 	public Date getLastMessageCreatedDate() {
-		return new Date(lastMessageTimeStamp);
+		return new Date(lastMessageTimeStamp*1000);
 	}
 
 	public String getLastMessageText() {

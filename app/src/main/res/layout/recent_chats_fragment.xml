@@ -43,7 +43,7 @@
         app:dialogAvatarWidth="43dp"
         app:dialogTitleTextStyle="normal"
         app:dialogUnreadBubbleBackgroundColor="@color/white"
-        app:dialogUnreadBubbleTextColor="@color/app_orange"
+        app:dialogUnreadBubbleTextColor="@color/app_blue"
         app:dialogItemBackground="@color/white"
         app:dialogUnreadItemBackground="@color/white"
         app:dialogUnreadTitleTextStyle="normal"

@@ -89,6 +89,10 @@ public interface ConversationDao {
 
 
 
+	@Query("SELECT COUNT(*) FROM conversation_table WHERE " +
+		"num_of_unread_messages > 0")
+	LiveData<Integer> getUnreadConversationCount();
+
 	//numOfUnreadMessages
 
 

@@ -52,8 +52,8 @@ class XMPPProvider {
 	private OnChatMessageListener mOnChatMessageListener;
 
 	public interface OnChatMessageListener {
-		void onNewIncomingMessage(String msg);
-		void onNewOutgoingMessage(String msg);
+		void onNewIncomingMessage(String msg, String conversationId);
+		void onNewOutgoingMessage(String msg, String conversationId);
 	}
 
 	public void setOnChatMessageListener(OnChatMessageListener listener) {
@@ -243,17 +243,17 @@ class XMPPProvider {
 	private IncomingChatMessageListener mIncomingChatMessageListener = new IncomingChatMessageListener() {
 		@Override
 		public void newIncomingMessage(EntityBareJid from, Message message, Chat chat) {
-			Log.e(TAG, "newIncomingMessage: from: " + from + " , message body: " + message.getBody().toString());
+			Log.e(TAG, "newIncomingMessage: from: " + from + " , message body: " + message.getBody()+ " , convId: " + message.getThread());
 			if (message != null)
-				mOnChatMessageListener.onNewIncomingMessage(message.getBody());
+				mOnChatMessageListener.onNewIncomingMessage(message.getBody(), message.getThread());
 		}
 	};
 	private OutgoingChatMessageListener mOutgoingChatMessageListener =  new OutgoingChatMessageListener() {
 		@Override
 		public void newOutgoingMessage(EntityBareJid to, Message message, Chat chat) {
-			Log.e(TAG, "newOutgoingMessage: to: " + to + " , message: " + message.getBody());
+			Log.e(TAG, "newOutgoingMessage: to: " + to + " , message: " + message.getBody() + " , convId: " + message.getThread());
 			if (message != null)
-				mOnChatMessageListener.onNewOutgoingMessage(message.getBody());
+				mOnChatMessageListener.onNewOutgoingMessage(message.getBody(), message.getThread());
 		}
 	};
 
@@ -282,7 +282,7 @@ class XMPPProvider {
 
 
 
-	public void sendStringMessage(String theMessage, String participantId){
+	public void sendStringMessage(String theMessage, String participantId, String conversationId){
 		mExecutors.networkIO().execute(new Runnable() {
 			@Override
 			public void run() {
@@ -293,7 +293,12 @@ class XMPPProvider {
 						if (mConnection.isAuthenticated()) {
 							jid = JidCreate.entityBareFrom(participantId + "@" + XMPP_DOMAIN);
 							Chat chat = mChatManager.chatWith(jid);
-							chat.send(theMessage);
+							Message message = new Message(jid);
+							message.setBody(theMessage);
+							message.setType(Message.Type.chat);
+							message.setThread(conversationId);
+							chat.send(message);
+							//chat.send(theMessage);
 						}
 					}
 					else {
