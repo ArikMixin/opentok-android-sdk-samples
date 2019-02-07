@@ -102,7 +102,7 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 		if (holder.getItemViewType() == TYPE_MEMBER) {
 			ContactListViewHolder theHolder = (ContactListViewHolder) holder;
 			Contact contact = mContactListFiltered.get(position-mNumHeaders);
-			theHolder.mContactNameTV.setText(contact.getContactLocal().getDisplayName());
+			theHolder.mContactNameTV.setText(contact.getDisplayName());
 			String status = contact.getContactServer().getStatus();
 			if ((status == null) || (status.trim().equals(""))) {
 				theHolder.mContactStatusTV.setVisibility(View.GONE);

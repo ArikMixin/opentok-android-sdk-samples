@@ -154,6 +154,12 @@ public class RecentChatsFragment extends Fragment  implements
 			public void loadImage(ImageView imageView, int resourceId) {
 				Picasso.get().load(resourceId).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
 			}
+
+			@Override
+			public void loadImageNoPlaceholder(ImageView imageView, int resourceId) {
+				Picasso.get().load(resourceId).into(imageView);
+			}
+
 		};
 		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
 		mEmptyFrameCL.setVisibility(View.INVISIBLE);

@@ -76,7 +76,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	@Override
 	public void onNewOutgoingMessage(String msg, String conversationId) {
 		Message message = Message.fromJson(msg);
-		mRepository.updateAckStatusToSent(message.getMessageId());
+		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
+			mRepository.updateAckStatusToSent(message);
+		}
 	}
 
 
@@ -135,7 +137,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	@Override
 	public void onDestroy() {
-		mXMPPProvider.disconnectAsync();
+		if (mXMPPProvider != null)
+			mXMPPProvider.disconnectAsync();
 		super.onDestroy();
 	}
 

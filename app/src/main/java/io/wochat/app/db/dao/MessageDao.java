@@ -6,7 +6,9 @@ import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
+import android.arch.persistence.room.Update;
 
 
 import java.util.List;
@@ -28,14 +30,14 @@ public interface MessageDao {
 	@Query("SELECT * FROM message_table WHERE participant_id =:participantId ORDER BY timestamp DESC")
 	LiveData<List<Message>> getMessagesForParticipantLD(String participantId);
 
-	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId ORDER BY timestamp DESC")
+	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp DESC")
 	LiveData<List<Message>> getMessagesForConversationLD(String conversationId);
 
 
-	@Query("SELECT * FROM message_table WHERE participant_id =:participantId ORDER BY timestamp DESC")
+	@Query("SELECT * FROM message_table WHERE participant_id =:participantId AND should_be_displayed = 1 ORDER BY timestamp DESC")
 	List<Message> getMessagesForParticipant(String participantId);
 
-	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId ORDER BY timestamp DESC")
+	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp DESC")
 	List<Message> getMessagesForConversation(String conversationId);
 
 
@@ -94,6 +96,10 @@ public interface MessageDao {
 
 	@Insert
     void insert(Message message);
+
+	@Update(onConflict = OnConflictStrategy.IGNORE)
+	void update(Message message);
+
 
 //	@Delete
 //    void delete(Message message);

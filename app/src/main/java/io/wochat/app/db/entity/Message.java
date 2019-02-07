@@ -54,6 +54,7 @@ public class Message implements IMessage,
     public static final String ACK_STATUS_RECEIVED = "RECEIVED";
     public static final String ACK_STATUS_READ = "READ";
 
+
 	@StringDef({
 		ACK_STATUS_PENDING,
 		ACK_STATUS_SENT,
@@ -171,6 +172,13 @@ public class Message implements IMessage,
 	@ColumnInfo(name = "message_text")
 	@Expose
     private String messageText;
+
+
+	/**********************************************/
+	@SerializedName("should_be_displayed")
+	@ColumnInfo(name = "should_be_displayed")
+	@Expose
+	private boolean shouldBeDisplayed;
 
 
 	/**********************************************/
@@ -307,7 +315,10 @@ public class Message implements IMessage,
 
     @Override
     public String getText() {
-        return messageText;
+		if ((translatedText != null)&& (!translatedText.equals("")))
+			return translatedText;
+		else
+        	return messageText;
     }
 
     @Override
@@ -581,6 +592,22 @@ public class Message implements IMessage,
 		this.forceTranslatedCountry = forceTranslatedCountry;
 	}
 
+	public void hideMessageForTranslation(){
+		shouldBeDisplayed = false;
+	}
+
+	public void displayMessageAfterTranslation(){
+		shouldBeDisplayed = true;
+	}
+
+
+	public boolean isShouldBeDisplayed() {
+		return shouldBeDisplayed;
+	}
+
+	public void setShouldBeDisplayed(boolean shouldBeDisplayed) {
+		this.shouldBeDisplayed = shouldBeDisplayed;
+	}
 
 
 //	@Override

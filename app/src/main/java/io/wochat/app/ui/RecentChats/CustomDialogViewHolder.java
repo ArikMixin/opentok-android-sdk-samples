@@ -39,19 +39,19 @@ public class CustomDialogViewHolder
 
         if (conversation.getLastMessageAckStatus()!= null) {
 			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());
-			mCocheIV.setVisibility(Utils.booleanToVisibilityInvisible(isIncoming));
+			mCocheIV.setVisibility(Utils.booleanToVisibilityInvisible(!isIncoming));
 			switch (conversation.getLastMessageAckStatus()) {
 				case Message.ACK_STATUS_PENDING:
-					imageLoader.loadImage(mCocheIV, R.drawable.coche_pending);
+					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_pending);
 					break;
 				case Message.ACK_STATUS_READ:
-					imageLoader.loadImage(mCocheIV, R.drawable.coche_seen);
+					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_seen);
 					break;
 				case Message.ACK_STATUS_RECEIVED:
-					imageLoader.loadImage(mCocheIV, R.drawable.coche_arrived);
+					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_arrived);
 					break;
 				case Message.ACK_STATUS_SENT:
-					imageLoader.loadImage(mCocheIV, R.drawable.coche_sent);
+					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_sent);
 					break;
 
 			}

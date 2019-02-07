@@ -169,7 +169,7 @@
             app:cameraButtonIcon="@drawable/msg_in_camera_dark"
             app:cameraButtonWidth="27dp"
 
-            app:magicButtonIcon="@drawable/msg_in_timer_dark"
+            app:magicButtonIcon="@drawable/flag_israel"
             app:locationButtonIcon="@drawable/msg_in_location_dark"
             app:videoButtonIcon="@drawable/msg_in_video_dark"
 

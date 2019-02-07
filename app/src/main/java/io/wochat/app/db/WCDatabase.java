@@ -125,11 +125,16 @@ public abstract class WCDatabase extends RoomDatabase {
 		});
 	}
 
-	public static void insertContacts(final WCDatabase database, final Contact[] contacts) {
+	public static void insertContacts(final WCDatabase database, final Contact[] contacts, String selfId) {
 		database.runInTransaction(() -> {
-			//database.contactDao().ha
-			database.contactDao().insert(contacts);
-			database.contactDao().update(contacts);
+			try {
+				database.contactDao().insert(contacts);
+				database.contactDao().update(contacts);
+				database.contactDao().deleteContactLocal(selfId);
+				database.contactDao().deleteContact(selfId);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		});
 	}
 

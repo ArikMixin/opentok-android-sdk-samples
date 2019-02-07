@@ -18,6 +18,7 @@ package io.wochat.app.db.dao;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
@@ -96,6 +97,14 @@ public interface ContactDao {
 
 	@Update(onConflict = OnConflictStrategy.IGNORE)
 	void update(Contact[] contact);
+
+	@Query("DELETE FROM contact_table WHERE contact_id =:id")
+	void deleteContact(String id);
+
+	@Query("DELETE FROM contact_local_table WHERE phone_num_stripped =:id")
+	void deleteContactLocal(String id);
+
+
 //	@Insert(onConflict = OnConflictStrategy.REPLACE)
 //	void insert(ContactInvitation contactInvitation);
 

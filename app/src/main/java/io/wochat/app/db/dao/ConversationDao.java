@@ -76,6 +76,14 @@ public interface ConversationDao {
 						int numOfUnreadMessages);
 
 
+
+	@Query("UPDATE conversation_table SET  " +
+		"last_message_text = :lastMessageText " +
+		"WHERE conversation_id =:conversationId")
+	void updateIncomingText(String conversationId,
+							String lastMessageText);
+
+
 //	@Query("UPDATE conversation_table SET " +
 //		"num_of_unread_messages = :numOfUnreadMessages " +
 //		"WHERE conversation_id =:conversationId")
@@ -156,5 +164,8 @@ public interface ConversationDao {
 		"ORDER BY last_message_timestamp DESC")
 	public LiveData<List<Conversation>> getConversationListLD();
 
-
+	@Query("UPDATE conversation_table SET  " +
+		"last_message_ack_status = :ackStatus " +
+		"WHERE conversation_id =:conversationId AND last_message_id =:messageId")
+	void updateLastMessageAck(String conversationId, String messageId, String ackStatus);
 }

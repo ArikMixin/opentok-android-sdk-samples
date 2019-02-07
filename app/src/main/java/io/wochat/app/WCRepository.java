@@ -476,7 +476,7 @@ public class WCRepository {
 		@Override
 		protected Void doInBackground(final Contact[]... params) {
 
-			WCDatabase.insertContacts(mDatabase, params[0]);
+			WCDatabase.insertContacts(mDatabase, params[0], mSharedPreferences.getUserId());
 			return null;
 		}
 
@@ -547,7 +547,7 @@ public class WCRepository {
     	Log.e(TAG, "initSyncContactsWithServer called");
 		synchronized(mLocalContactSyncObject){
 			if (mLocalContact != null) {
-				syncContactsWithServer(mLocalContact);
+				syncContactsWithServer();
 			}
 			else {
 				Log.e(TAG, "initSyncContactsWithServer, Local Contact empty, wait 10 sec...");
@@ -564,12 +564,17 @@ public class WCRepository {
 	}
 
 
-	public void syncContactsWithServer(Map<String, ContactLocal> localContacts){
+	public void syncContactsWithServer(){
 		Log.e(TAG, "syncContactsWithServer called");
-		String[] contactArray = new String[localContacts.size()];
+
+		String self = mSharedPreferences.getUserId();
+		if (self != null)
+			mLocalContact.remove(self);
+
+		String[] contactArray = new String[mLocalContact.size()];
 		int i=0;
 
-		for(String contact : localContacts.keySet()){
+		for(String contact : mLocalContact.keySet()){
 			contactArray[i++] = contact;
 		}
 		mWochatApi.userGetContacts(contactArray, new WochatApi.OnServerResponseListener() {
@@ -614,6 +619,10 @@ public class WCRepository {
 		protected Map<String, ContactLocal> doInBackground(final Void... params) {
 			ContactsUtil contactsUtil = new ContactsUtil();
 			Map<String, ContactLocal> map = contactsUtil.readContacts(mContentResolver, mLocaleCountry);
+			String self = mSharedPreferences.getUserId();
+			if(self != null){
+				map.remove(self);
+			}
 			return map;
 		}
 
@@ -724,13 +733,17 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 			switch (message.getAckStatus()) {
 				case Message.ACK_STATUS_SENT:
 					mMessageDao.updateAckStatusToSent(message.getOriginalMessageId());
+					mConversationDao.updateLastMessageAck(message.getConversationId(), message.getOriginalMessageId(), message.getAckStatus());
 					break;
 				case Message.ACK_STATUS_RECEIVED:
 					mMessageDao.updateAckStatusToReceived(message.getOriginalMessageId());
+					mConversationDao.updateLastMessageAck(message.getConversationId(), message.getOriginalMessageId(), message.getAckStatus());
 					break;
 				case Message.ACK_STATUS_READ:
 					mMessageDao.updateAckStatusToRead(message.getOriginalMessageId());
+					mConversationDao.updateLastMessageAck(message.getConversationId(), message.getOriginalMessageId(), message.getAckStatus());
 					break;
+
 			}
 		});
 		return true;
@@ -738,10 +751,13 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 
 	private boolean handleIncomingMessageText(Message message){
     	boolean res;
-		try {
+		String selfLang = mSharedPreferences.getUserLang();
+		boolean needTranslation = (!message.getMessageLanguage().equals(selfLang));
+
+			try {
 			String conversationId = message.getConversationId();
 			if(mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
-				res = insertMessageAndUpdateConversation(message);
+				res = insertMessageAndUpdateConversation(message, needTranslation);
 			}
 			else {
 				String participantId = message.getSenderId();
@@ -753,7 +769,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
-					res = insertMessageAndUpdateConversation(message);
+					res = insertMessageAndUpdateConversation(message,needTranslation);
 				}
 				else { // no contact, no conversation
 					Contact contact = new Contact(participantId);
@@ -761,14 +777,44 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 					getContactFromServer(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					mConversationDao.insert(conversation);
-					res = insertMessageAndUpdateConversation(message);
+					res = insertMessageAndUpdateConversation(message, needTranslation);
 				}
 			}
+
+			if (needTranslation) {
+				mWochatApi.translate(message.getMessageId(), message.getMessageLanguage(), selfLang, message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+					if ((isSuccess)&& (response != null)) {
+						Log.e(TAG, "translate res: " + response.toString());
+						try {
+							String translatedText = response.getString("message");
+							message.setTranslatedText(translatedText);
+							message.setTranslatedLanguage(selfLang);
+							message.displayMessageAfterTranslation();
+							updateMessage(message);
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+
+					}
+					else
+						Log.e(TAG, "translate res: error");
+				});
+			}
+
 			return res;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	private void updateMessage(Message message) {
+    	mAppExecutors.diskIO().execute(() -> {
+			mMessageDao.update(message);
+			mConversationDao.updateIncomingText(message.getConversationId(), message.getText());
+		});
+
 	}
 
 	private void getContactFromServer(String participantId) {
@@ -795,15 +841,19 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 
 	}
 
-	private boolean insertMessageAndUpdateConversation(Message message){
+	private boolean insertMessageAndUpdateConversation(Message message, boolean needTranslation){
 		try {
+			message.setShouldBeDisplayed(!needTranslation);
+
+			String messageText = needTranslation? "": message.getMessageText();
+
 			mMessageDao.insert(message);
 			int unreadMessagesCount = mMessageDao.getUnreadMessagesCountConversation(message.getConversationId());
 			mConversationDao.updateIncoming(
 				message.getConversationId(),
 				message.getMessageId(),
 				message.getTimestamp(),
-				message.getMessageText(),
+				messageText,
 				message.getSenderId(),
 				message.getAckStatus(),
 				unreadMessagesCount);
@@ -836,11 +886,12 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 //			return null;
 //		}
 //	}
-public void updateAckStatusToSent(String messageId){
+public void updateAckStatusToSent(Message message){
     	mAppExecutors.diskIO().execute(new Runnable() {
 			@Override
 			public void run() {
-				mMessageDao.updateAckStatusToSent(messageId);
+				mMessageDao.updateAckStatusToSent(message.getMessageId());
+				mConversationDao.updateLastMessageAck(message.getConversationId(), message.getMessageId(), Message.ACK_STATUS_SENT);
 			}
 		});
 
@@ -850,6 +901,7 @@ public void updateAckStatusToSent(String messageId){
 		mAppExecutors.diskIO().execute(new Runnable() {
 			@Override
 			public void run() {
+				message.setShouldBeDisplayed(true);
 				mMessageDao.insert(message);
 				mConversationDao.updateOutgoing(
 					message.getConversationId(),

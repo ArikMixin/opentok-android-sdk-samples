@@ -47,7 +47,7 @@ public class CircleFlagImageView extends LinearLayout {
 	}
 
 	public void setInfo(String picUrl, String language){
-		@DrawableRes int flagDrawable = getCountryFlagDrawableFromLang(language);
+		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(language);
 
 		int imageSizeDp = Utils.dp2px(getContext(), 50);
 		int flagSizeDp = Utils.dp2px(getContext(), 20);
@@ -83,68 +83,5 @@ public class CircleFlagImageView extends LinearLayout {
 		setInfo(picUrl, language);
 	}
 
-	private @DrawableRes int getCountryFlagDrawableFromLang(String language) {
-		switch (language){
-			case "IW":
-			case "HE":
-				return R.drawable.flag_israel;
 
-			case "DE":
-				return R.drawable.flag_germany;
-			case "EN":
-				return R.drawable.flag_united_states_of_america;
-			case "HI":
-				return R.drawable.flag_india;
-			case "JA":
-				return R.drawable.flag_japan;
-			case "KO":
-				return R.drawable.flag_south_korea;
-			case "IT":
-				return R.drawable.flag_italy;
-			case "RU":
-				return R.drawable.flag_russian_federation;
-			case "HU":
-				return R.drawable.flag_hungary;
-			case "FR":
-				return R.drawable.flag_france;
-			case "ES":
-				return R.drawable.flag_spain;
-			case "RO":
-				return R.drawable.flag_romania;
-			case "AR":
-				return R.drawable.flag_saudi_arabia;
-			case "CS":
-				return R.drawable.flag_czech_republic;
-			case "DA":
-				return R.drawable.flag_denmark;
-			case "EL":
-				return R.drawable.flag_greece;
-			case "FI":
-				return R.drawable.flag_finland;
-			case "ID":
-				return R.drawable.flag_indonesia;
-			case "NB":
-				return R.drawable.flag_norway;
-			case "NL":
-				return R.drawable.flag_netherlands;
-			case "PL":
-				return R.drawable.flag_poland;
-			case "PT":
-				return R.drawable.flag_portugal;
-			case "SK":
-				return R.drawable.flag_slovakia;
-			case "SV":
-				return R.drawable.flag_sweden;
-			case "TH":
-				return R.drawable.flag_thailand;
-			case "TR":
-				return R.drawable.flag_turkey;
-			case "ZH":
-				return R.drawable.flag_china;
-
-			default:
-				return R.drawable.flag_united_states_of_america;
-		}
-
-	}
 }

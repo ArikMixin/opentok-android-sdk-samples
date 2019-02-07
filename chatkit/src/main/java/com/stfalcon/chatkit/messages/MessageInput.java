@@ -32,6 +32,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.stfalcon.chatkit.R;
+import com.stfalcon.chatkit.utils.CircleImageView;
 
 import java.lang.reflect.Field;
 
@@ -48,7 +49,7 @@ public class MessageInput extends RelativeLayout
     protected ImageButton cameraButton;
     protected ImageButton locationButton;
     protected ImageButton videoButton;
-    protected ImageButton magicButton;
+    protected CircleImageView magicButton;
 	protected Space sendButtonSpace;
     //protected Space attachmentButtonSpace;
 
@@ -243,6 +244,12 @@ public class MessageInput extends RelativeLayout
         this.delayTypingStatusMillis = style.getDelayTypingStatus();
     }
 
+
+    public void setMagicButtonDrawable(Drawable drawable) {
+        this.magicButton.setImageDrawable(drawable);
+    }
+
+
     private void init(Context context) {
         inflate(context, R.layout.view_message_input, this);
 
@@ -252,7 +259,7 @@ public class MessageInput extends RelativeLayout
         cameraButton = (ImageButton) findViewById(R.id.cameraButton);
 		locationButton = (ImageButton) findViewById(R.id.locationButton);
         videoButton = (ImageButton) findViewById(R.id.videoButton);
-        magicButton = (ImageButton) findViewById(R.id.magicButton);
+        magicButton = (CircleImageView) findViewById(R.id.magicButton);
         sendButtonSpace = (Space) findViewById(R.id.sendButtonSpace);
         //attachmentButtonSpace = (Space) findViewById(R.id.attachmentButtonSpace);
 

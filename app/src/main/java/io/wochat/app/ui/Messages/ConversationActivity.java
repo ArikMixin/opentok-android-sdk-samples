@@ -111,6 +111,11 @@ public class ConversationActivity extends AppCompatActivity implements
 			public void loadImage(ImageView imageView, int resourceId) {
 				Picasso.get().load(resourceId).into(imageView);
 			}
+
+			@Override
+			public void loadImageNoPlaceholder(ImageView imageView, int resourceId) {
+				Picasso.get().load(resourceId).into(imageView);
+			}
 		};
 
 		setContentView(R.layout.activity_conversation);
@@ -166,6 +171,8 @@ public class ConversationActivity extends AppCompatActivity implements
 		mMessageInput.setTypingListener(this);
 		mMessageInput.setInputListener(this);
 		mMessageInput.setAttachmentsListener(this);
+		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(mSelfLang);
+		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 

@@ -59,14 +59,19 @@ public class WCSharedPreferences {
 	}
 
 	public void saveUserLanguage(String language) {
-		mUserLang = language;
+		if (language.equals("IW"))
+			mUserLang = "HE";
+		else
+			mUserLang = language;
+
 		mSharedPreferences.edit().putString(USER_LANG, language).commit();
 	}
 
 	public String getUserLang(){
 		if (mUserLang == null) // cashing
 			mUserLang = mSharedPreferences.getString(USER_LANG, "EN");
-
+		if (mUserLang.equals("IW"))
+			mUserLang = "HE";
 		return mUserLang;
 	}
 

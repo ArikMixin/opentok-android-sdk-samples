@@ -1,6 +1,7 @@
 package io.wochat.app.com;
 
 import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
@@ -19,6 +20,7 @@ import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
@@ -146,6 +148,22 @@ public class WochatApi {
 
 	}
 
+	public void translate(String messageId, String fromLanguage , String toLanguage , String text, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API translate fromLanguage: " + fromLanguage + ", toLanguage: " + toLanguage + " , text: " + text + " , messageId: " + messageId);
+
+
+		String url = BASE_URL + "/translate/";
+
+		HashMap<String, String> params = new HashMap<>();
+		params.put("id", messageId);
+		params.put("from_language", fromLanguage);
+		params.put("to_language", toLanguage);
+		params.put("text", Uri.encode(text));
+
+		sendGetAndHandleResult(url, params, lsnr);
+	}
+
 
 	public void userGetContacts(String[] contactIdArray, final OnServerResponseListener lsnr) {
 
@@ -242,16 +260,85 @@ public class WochatApi {
 			}
 		};
 
-
-
 		queue.add(multipartRequest);
 
+	}
 
 
+	private void sendGetAndHandleResult(String url, HashMap<String, String> params, final OnServerResponseListener lsnr){
+		HashMap<String, String> mParams = params;
+		RequestQueue queue = Volley.newRequestQueue(mContext);
+
+		if(mParams != null) {
+			StringBuilder stringBuilder = new StringBuilder(url);
+			Iterator<Map.Entry<String, String>> iterator = mParams.entrySet().iterator();
+			int i = 1;
+			while (iterator.hasNext()) {
+				Map.Entry<String, String> entry = iterator.next();
+				if (i == 1) {
+					stringBuilder.append("?" + entry.getKey() + "=" + entry.getValue());
+				} else {
+					stringBuilder.append("&" + entry.getKey() + "=" + entry.getValue());
+				}
+				iterator.remove(); // avoids a ConcurrentModificationException
+				i++;
+			}
+
+			url = stringBuilder.toString();
+		}
+
+		JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+			(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+
+				@Override
+				public void onResponse(JSONObject response) {
+					Log.e(TAG, "Response: " + response.toString());
+					JSONObject data = null;
+					if (response != null) {
+						try {
+							boolean result = response.getBoolean("success");
+							String error = response.getString("error");
+							if (result)
+								data = response.getJSONObject("data");
+							lsnr.OnServerResponse(result, error, null, data);
+						} catch (JSONException e) {
+							e.printStackTrace();
+							lsnr.OnServerResponse(false, null, e, null);
+						}
+
+					}
+				}
+			}, new Response.ErrorListener() {
+
+				@Override
+				public void onErrorResponse(VolleyError error) {
+					Log.e(TAG, "Error: " + error.getMessage());
+					lsnr.OnServerResponse(false, null, error, null);
+
+				}
+
+			}) {
+			@Override
+			public Map<String, String> getHeaders() throws AuthFailureError {
+				if ((mUserId != null) && (mToken != null)) {
+					Map<String, String> params = new HashMap<String, String>();
+					params.put("User-Id", mUserId);
+					params.put("Api-Token", mToken);
+					return params;
+				}
+				else
+					return super.getHeaders();
+			}
 
 
+			@Override
+			protected Map<String, String> getParams() throws AuthFailureError {
+				return mParams;
+			}
+		};
 
-
+		// Access the RequestQueue through your singleton class.
+		queue.add(jsonObjectRequest);
 	}
 
 
