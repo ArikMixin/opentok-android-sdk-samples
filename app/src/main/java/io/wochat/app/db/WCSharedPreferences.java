@@ -40,7 +40,7 @@ public class WCSharedPreferences {
 
 
 	public WCSharedPreferences(Context context) {
-		mSharedPreferences = context.getSharedPreferences(GLOBAL_SP, Context.MODE_PRIVATE);
+		mSharedPreferences = context.getApplicationContext().getSharedPreferences(GLOBAL_SP, Context.MODE_PRIVATE);
 	}
 
 	private final SharedPreferences mSharedPreferences;

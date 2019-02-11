@@ -5,21 +5,36 @@ import android.util.Log;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackConfiguration;
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.chat2.OutgoingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.roster.AbstractPresenceEventListener;
+import org.jivesoftware.smack.roster.AbstractRosterListener;
+import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
+import org.jivesoftware.smack.roster.RosterGroup;
+import org.jivesoftware.smack.roster.SubscribeListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smackx.iqlast.LastActivityManager;
+import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.FullJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.net.InetAddress;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 class XMPPProvider {
 
@@ -27,7 +42,8 @@ class XMPPProvider {
 	private static final String TAG = "XMPPProvider";
 
 	private static final String XMPP_DOMAIN = "ejabberd-dev.wochat.io";
-	private static final String XMPP_RESOURCE = "ejabberd-dev.wochat.io";
+	//private static final String XMPP_DOMAIN = "ejabberd.wochat.io";
+	private static final String XMPP_RESOURCE = "android";
 	private static final int XMPP_PORT = 5222;
 
 //	private static final String XMPP_DOMAIN = "ejabberd.wochat.io";
@@ -47,13 +63,16 @@ class XMPPProvider {
 	private String mUsername;
 	private String mPassword;
 	private String mUserJID;
-	private String mUserJIDAndroid;
+	//private String mUserJIDAndroid;
 	private ChatManager mChatManager;
 	private OnChatMessageListener mOnChatMessageListener;
+	private LastActivityManager mLastActivityManager;
 
 	public interface OnChatMessageListener {
 		void onNewIncomingMessage(String msg, String conversationId);
 		void onNewOutgoingMessage(String msg, String conversationId);
+		void onConnectionChange(boolean connected, boolean authenticated);
+		void onPresenceChanged(boolean isAvailable, Date lastLogin, String contactId);
 	}
 
 	public void setOnChatMessageListener(OnChatMessageListener listener) {
@@ -105,6 +124,11 @@ class XMPPProvider {
 		mChatManager.addIncomingListener(mIncomingChatMessageListener);
 		mChatManager.addOutgoingListener(mOutgoingChatMessageListener);
 
+//		mLastActivityManager = LastActivityManager.getInstanceFor(mConnection);
+//		mLastActivityManager.enable();
+		//mLastActivityManager.getLastActivity().lastActivity getIdleTime()
+
+
 		boolean res = connectAndLogin();
 		Log.e(TAG, "connectAndLogin result: " + res);
 
@@ -132,11 +156,40 @@ class XMPPProvider {
 		});
 	}
 
+	private void sendSelfPresence(){
+		Roster roster = Roster.getInstanceFor(mConnection);
+		roster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
+		roster.addRosterListener(mRosterListener);
+
+		BareJid jid = null;
+		try {
+			jid = JidCreate.bareFrom(mUserJID);
+			RosterEntry entry = roster.getEntry(jid);
+			if (entry == null) {
+				roster.createEntry(jid, mUsername, null);
+				Log.e(TAG, "sendSelfPresence self entry was created");
+			}
+
+			Presence presence = new Presence(Presence.Type.available);
+			presence.setStatus("Online!");
+			presence.setPriority(1);
+
+			mConnection.sendStanza(presence);
+			Log.e(TAG, "sendSelfPresence");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+
+	}
+
 	private boolean connectAndLogin(){
 		Log.e(TAG, "connectAndLogin called");
 		try {
 			if (mConnection.isConnected()) {
 				if (mConnection.isAuthenticated()){
+					sendSelfPresence();
 					return true; // all is ok
 				}
 				else { // not log in
@@ -144,14 +197,75 @@ class XMPPProvider {
 					mConnection.login(mUsername, mPassword, Resourcepart.from(XMPP_RESOURCE));
 
 					if (mConnection.isAuthenticated()) {
-	//					Roster roster = Roster.getInstanceFor(mConnection);
-	//					roster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
-	//					roster.createEntry(userJID, loginUser, null);
-						Presence presence = new Presence(Presence.Type.available);
-						presence.setStatus("Online!");
-						presence.setPriority(1);
-						Log.e(TAG, "sendStanza called");
-						mConnection.sendStanza(presence);
+						sendSelfPresence();
+//						Roster roster = Roster.getInstanceFor(mConnection);
+//						roster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
+//						//EntityBareJid jid = JidCreate.entityBareFrom(mUserJID);
+//						BareJid jid = JidCreate.bareFrom(mUserJID);
+//						roster.createEntry(jid, mUsername, null);
+
+//						roster.addPresenceEventListener(new AbstractPresenceEventListener() {
+//							@Override
+//							public void presenceAvailable(FullJid address, Presence presence) {
+//								Log.e(TAG, "presenceAvailable address: " + address + " , presence: " + presence);
+//							}
+//
+//							@Override
+//							public void presenceUnavailable(FullJid address, Presence presence) {
+//								Log.e(TAG, "presenceUnavailable address: " + address + " , presence: " + presence);
+//							}
+//
+//							@Override
+//							public void presenceError(Jid address, Presence presence) {
+//								Log.e(TAG, "presenceError address: " + address + " , presence: " + presence);
+//							}
+//
+//							@Override
+//							public void presenceSubscribed(BareJid address, Presence presence) {
+//								Log.e(TAG, "presenceSubscribed address: " + address + " , presence: " + presence);
+//							}
+//
+//							@Override
+//							public void presenceUnsubscribed(BareJid address, Presence presence) {
+//								Log.e(TAG, "presenceUnsubscribed address: " + address + " , presence: " + presence);
+//							}
+//						});
+//
+//						roster.addSubscribeListener(new SubscribeListener() {
+//							@Override
+//							public SubscribeAnswer processSubscribe(Jid from, Presence presence) {
+//								Log.e(TAG, "processSubscribe from: " + from + " , presence: " + presence);
+//								return SubscribeAnswer.Approve;
+//							}
+//						});
+
+//						roster.addRosterListener(new AbstractRosterListener() {
+//							@Override
+//							public void entriesAdded(Collection<Jid> addresses) {
+//								Log.e(TAG, "entriesAdded addresses: " + addresses );
+//							}
+//
+//							@Override
+//							public void entriesUpdated(Collection<Jid> addresses) {
+//								Log.e(TAG, "entriesUpdated addresses: " + addresses );
+//							}
+//
+//							@Override
+//							public void entriesDeleted(Collection<Jid> addresses) {
+//								Log.e(TAG, "entriesDeleted addresses: " + addresses );
+//							}
+//
+//							@Override
+//							public void presenceChanged(Presence presence) {
+//								Log.e(TAG, "presenceChanged presence: " + presence );
+//							}
+//						});
+
+//						Presence presence = new Presence(Presence.Type.available);
+//						presence.setStatus("Online!");
+//						presence.setPriority(1);
+//						Log.e(TAG, "sendStanza called");
+//						mConnection.sendStanza(presence);
 						return true;
 					}
 					else
@@ -165,11 +279,12 @@ class XMPPProvider {
 					Log.e(TAG, "login called");
 					mConnection.login(mUsername, mPassword, Resourcepart.from(XMPP_RESOURCE));
 					if (mConnection.isAuthenticated()) {
-						Presence presence = new Presence(Presence.Type.available);
-						presence.setStatus("Online!");
-						presence.setPriority(1);
-						Log.e(TAG, "sendStanza called");
-						mConnection.sendStanza(presence);
+						sendSelfPresence();
+//						Presence presence = new Presence(Presence.Type.available);
+//						presence.setStatus("Online!");
+//						presence.setPriority(1);
+//						Log.e(TAG, "sendStanza called");
+//						mConnection.sendStanza(presence);
 						return true;
 					}
 					else
@@ -185,14 +300,103 @@ class XMPPProvider {
 		}
 	}
 
+	public void unSubscribeContact(String contactId){
+		Log.e(TAG, "unSubscribeContact: " + contactId);
+		Roster roster = Roster.getInstanceFor(mConnection);
+		try {
+			BareJid bare = JidCreate.bareFrom(getUserJid(contactId));
+			RosterEntry entry = roster.getEntry(bare);
+			if (entry == null) {
+				Log.e(TAG, "unSubscribeContact Entry not exists " + contactId);
+			}
+			else {
+				roster.removeEntry(entry);
+				Log.e(TAG, "unSubscribeContact removeEntry: " + contactId);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
+	public void subscribeContact(String contactId, String name){
+		Log.e(TAG, "subscribeContact: " + contactId);
+		Roster roster = Roster.getInstanceFor(mConnection);
+
+		try {
+			BareJid bare = JidCreate.bareFrom(getUserJid(contactId));
+			RosterEntry entry = roster.getEntry(bare);
+			if (entry == null) {
+				roster.createEntry(bare, name, null);
+				Log.e(TAG, "subscribeContact Entry created: " + contactId);
+			}
+			else {
+				Log.e(TAG, "subscribeContact Entry exists: " + entry.toString());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+//		mExecutors.networkIO().execute(new Runnable() {
+//			@Override
+//			public void run() {
+//			}
+//		});
+
+	}
+
+//	public void subscribeContacts(List<String> contacts){
+//		for (String contactId: contacts){
+//			subscribeContact(contactId);
+//		}
+//	}
+
+	public void getAllPresence(){
+		Log.e(TAG, "getAllPresence");
+		Roster roster = Roster.getInstanceFor(mConnection);
+		Collection<RosterEntry> entries = roster.getEntries();
+		for (RosterEntry rosterEntry : entries) {
+			Presence presence = roster.getPresence(rosterEntry.getJid());
+			Log.e(TAG, presence.getFrom() + " presence:" + presence);
+		}
+	}
+
+	public void getPresence(String contactId){
+		Roster roster = Roster.getInstanceFor(mConnection);
+		try {
+			Presence res = roster.getPresence(JidCreate.bareFrom(getUserJid(contactId)));
+			Log.e(TAG, "getPresence for: " + contactId + " , res: " + res);
+			Log.e(TAG, "getPresence for: " + contactId + " , getStatus: " + res.getStatus());
+
+		} catch (XmppStringprepException e) {
+			e.printStackTrace();
+			Log.e(TAG, "getPresence error res for: " + contactId);
+		}
+
+//		mExecutors.networkIO().execute(new Runnable() {
+//			@Override
+//			public void run() {
+//
+//			}
+//		});
+
+
+	}
+
+
+	private String getUserJid(String userId){
+		return userId + "@" + XMPP_DOMAIN;
+	}
+
+//	private String getUserJidAndroid(String userId){
+//		return userId + "@" + XMPP_DOMAIN + "/" + XMPP_RESOURCE;
+//	}
 
 	public void initAsync(String username, String password){
 		Log.e(TAG, "initAsync called");
 		mUsername = username;
 		mPassword = password;
-		mUserJID = username + "@" + XMPP_DOMAIN;
-		mUserJIDAndroid = mUserJID + "/android";
+		mUserJID = getUserJid(username);
+		//mUserJIDAndroid = getUserJidAndroid(username);
 
 		mExecutors.networkIO().execute(new Runnable() {
 			@Override
@@ -262,24 +466,36 @@ class XMPPProvider {
 		@Override
 		public void connected(XMPPConnection connection) {
 			Log.e(TAG, "ConnectionListener connected: " + connection.toString());
+			mOnChatMessageListener.onConnectionChange(true, false);
 		}
 
 		@Override
 		public void authenticated(XMPPConnection connection, boolean resumed) {
 			Log.e(TAG, "ConnectionListener authenticated: resumed: " + resumed + " , connection: " + connection.toString());
+			mOnChatMessageListener.onConnectionChange(true, true);
 		}
 
 		@Override
 		public void connectionClosed() {
 			Log.e(TAG, "ConnectionListener connectionClosed");
+			mOnChatMessageListener.onConnectionChange(false, false);
 		}
 
 		@Override
 		public void connectionClosedOnError(Exception e) {
 			Log.e(TAG, "ConnectionListener connectionClosedOnError: " + e.getMessage());
+			mOnChatMessageListener.onConnectionChange(false, false);
 		}
 	};
 
+
+	private AbstractRosterListener mRosterListener = new AbstractRosterListener() {
+		@Override
+		public void presenceChanged(Presence presence) {
+			Log.e(TAG, "presenceChanged from: " + presence.getFrom().getLocalpartOrNull() + " , type: " + presence.getType());
+			mOnChatMessageListener.onPresenceChanged(presence.getType() == Presence.Type.available, null, presence.getFrom().getLocalpartOrNull().toString());
+		}
+	};
 
 
 	public void sendStringMessage(String theMessage, String participantId, String conversationId){

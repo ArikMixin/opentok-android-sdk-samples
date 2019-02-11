@@ -93,6 +93,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	private TypingSignalBR mTypingSignalBR;
 	private TextView mContactDetailsTV;
 	private Handler mClearTypingHandler;
+	private boolean mIsOnline;
 
 
 	@Override
@@ -500,6 +501,8 @@ public class ConversationActivity extends AppCompatActivity implements
 			mService = binder.getService();
 			mBound = true;
 			initMarkAsReadMessagesHandling();
+			//mService.subscribe(mParticipantId);
+			mService.getPresence(mParticipantId);
 		}
 
 		@Override
@@ -555,13 +558,30 @@ public class ConversationActivity extends AppCompatActivity implements
 					displayUITypingSignal(isTyping);
 				}
 			}
+			else if(intent.getAction().equals(WCService.PRESSENCE_ACTION)) {
+				String contactId = intent.getStringExtra(WCService.PRESSENCE_CONTACT_ID_EXTRA);
+				long lastLogin = intent.getLongExtra(WCService.PRESSENCE_LAST_LOGIN_EXTRA, 0);
+				boolean isAvailiable = intent.getBooleanExtra(WCService.PRESSENCE_IS_AVAILIABLE_EXTRA, false);
+				if (contactId.equals(mParticipantId)){
+					mIsOnline = isAvailiable;
+					if (isAvailiable)
+						mContactDetailsTV.setText("Online");
+					else
+						mContactDetailsTV.setText("");
+				}
+
+
+			}
 		}
 	}
 
 	private Runnable mClearTypingRunnable = new Runnable() {
 		@Override
 		public void run() {
-			mContactDetailsTV.setText("");
+			if (mIsOnline)
+				mContactDetailsTV.setText("Online");
+			else
+				mContactDetailsTV.setText("");
 		}
 	};
 
@@ -574,7 +594,10 @@ public class ConversationActivity extends AppCompatActivity implements
 			mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
 		}
 		else {
-			mContactDetailsTV.setText("");
+			if (mIsOnline)
+				mContactDetailsTV.setText("Online");
+			else
+				mContactDetailsTV.setText("");
 			mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
 		}
 	}
@@ -592,6 +615,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		mClearTypingHandler = new Handler(getMainLooper());
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WCService.TYPING_SIGNAL_ACTION);
+		filter.addAction(WCService.PRESSENCE_ACTION);
 		try {
 			registerReceiver(mTypingSignalBR, filter);
 		} catch (Exception e) {}

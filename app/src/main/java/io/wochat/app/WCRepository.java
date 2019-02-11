@@ -476,7 +476,7 @@ public class WCRepository {
 		@Override
 		protected Void doInBackground(final Contact[]... params) {
 
-			WCDatabase.insertContacts(mDatabase, params[0], mSharedPreferences.getUserId());
+			WCDatabase.insertContacts(mDatabase, params[0]);
 			return null;
 		}
 
@@ -567,10 +567,6 @@ public class WCRepository {
 	public void syncContactsWithServer(){
 		Log.e(TAG, "syncContactsWithServer called");
 
-		String self = mSharedPreferences.getUserId();
-		if (self != null)
-			mLocalContact.remove(self);
-
 		String[] contactArray = new String[mLocalContact.size()];
 		int i=0;
 
@@ -619,10 +615,6 @@ public class WCRepository {
 		protected Map<String, ContactLocal> doInBackground(final Void... params) {
 			ContactsUtil contactsUtil = new ContactsUtil();
 			Map<String, ContactLocal> map = contactsUtil.readContacts(mContentResolver, mLocaleCountry);
-			String self = mSharedPreferences.getUserId();
-			if(self != null){
-				map.remove(self);
-			}
 			return map;
 		}
 
@@ -664,6 +656,10 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 
 	public Conversation getConversation(String conversationId){
 		return mConversationDao.getConversation(conversationId);
+	}
+
+	public List<Conversation> getAllConversations(){
+		return mConversationDao.getAllConversations();
 	}
 
 
@@ -901,15 +897,20 @@ public void updateAckStatusToSent(Message message){
 		mAppExecutors.diskIO().execute(new Runnable() {
 			@Override
 			public void run() {
-				message.setShouldBeDisplayed(true);
-				mMessageDao.insert(message);
-				mConversationDao.updateOutgoing(
-					message.getConversationId(),
-					message.getMessageId(),
-					message.getTimestamp(),
-					message.getMessageText(),
-					message.getSenderId(),
-					message.getAckStatus());
+				try {
+					message.setShouldBeDisplayed(true);
+					mMessageDao.insert(message);
+					mConversationDao.updateOutgoing(
+						message.getConversationId(),
+						message.getMessageId(),
+						message.getTimestamp(),
+						message.getMessageText(),
+						message.getSenderId(),
+						message.getAckStatus());
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e(TAG, "error: message: " + message.toString());
+				}
 			}
 		});
 	}

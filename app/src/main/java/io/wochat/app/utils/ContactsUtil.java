@@ -45,7 +45,7 @@ public class ContactsUtil {
 						null,
 						ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
 						new String[]{id}, null);
-					Log.i(TAG, "----   Name: " + name);
+					//Log.i(TAG, "----   Name: " + name);
 					while (pCur.moveToNext()) {
 						String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
 						PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
@@ -56,7 +56,7 @@ public class ContactsUtil {
 							Phonenumber.PhoneNumber ph = phoneUtil.parse(phoneNo, localeCountry);
 							niceFormattedPhone = phoneUtil.format(ph, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
 							striptFormatNumber = niceFormattedPhone.replaceAll("\\D+", "");
-							Log.i(TAG, "Name: " + name + " , Phone Number: " + niceFormattedPhone);
+							//Log.i(TAG, "Name: " + name + " , Phone Number: " + niceFormattedPhone);
 							contactMap.put(striptFormatNumber, new ContactLocal(id, name, niceFormattedPhone, striptFormatNumber));
 						} catch (NumberParseException e) {
 							System.err.println("NumberParseException was thrown: " + e.toString());
@@ -71,7 +71,7 @@ public class ContactsUtil {
 		if(cursor!=null)
 			cursor.close();
 
-		Log.e(TAG, "sum: " + sum);
+		Log.e(TAG, "contactMap: " + contactMap.size());
 
 		return contactMap;
 

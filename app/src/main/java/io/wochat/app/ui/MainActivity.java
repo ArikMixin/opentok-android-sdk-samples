@@ -409,6 +409,10 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
+	public WCService getService(){
+		return mService;
+	}
+
 
 //	private class MYTabLayoutOnPageChangeListener extends TabLayout.TabLayoutOnPageChangeListener{
 //

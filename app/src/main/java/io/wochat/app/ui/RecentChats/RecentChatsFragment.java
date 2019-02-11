@@ -3,8 +3,11 @@ package io.wochat.app.ui.RecentChats;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -33,11 +36,13 @@ import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.R;
+import io.wochat.app.WCService;
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.UnreadMessagesConversation;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
+import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ConversationViewModel;
@@ -99,6 +104,7 @@ public class RecentChatsFragment extends Fragment  implements
 					Log.e("AAA", "conversations: " + cc.toString());
 				}
 				initAdapter();
+
 			}
 			else {
 				Log.e("AAA", "conversations: null");
@@ -264,4 +270,32 @@ public class RecentChatsFragment extends Fragment  implements
 
 		dialogsList.setAdapter(dialogsAdapter);
 	}
+
+
+
+
+//	@Override
+//	public void onResume() {
+//		super.onResume();
+//		new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//			@Override
+//			public void run() {
+//				WCService service = ((MainActivity) getActivity()).getService();
+//				if (service != null) {
+//					//service.unSubscribeContact(mSelfUserId);
+//					service.subscribe(mConversation);
+//				}
+//			}
+//		}, 500);
+//
+//
+//		new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//			@Override
+//			public void run() {
+//				WCService service = ((MainActivity) getActivity()).getService();
+//				if (service != null)
+//					service.getAllPresence();
+//			}
+//		}, 3000);
+//	}
 }

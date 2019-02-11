@@ -11,17 +11,27 @@ import android.os.IBinder;
 import android.util.Log;
 
 
+import org.jivesoftware.smack.packet.Presence;
 
+import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.db.WCSharedPreferences;
+import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 
 
 public class WCService extends Service implements XMPPProvider.OnChatMessageListener {
 	private static final String TAG = "WCService";
+
 	public static final String TYPING_SIGNAL_ACTION = "TYPING_SIGNAL_ACTION";
 	public static final String CONVERSATION_ID_EXTRA = "CONVERSATION_ID_EXTRA";
+
+	public static final String PRESSENCE_ACTION = "PRESSENCE_ACTION";
+	public static final String PRESSENCE_IS_AVAILIABLE_EXTRA = "PRESSENCE_IS_AVAILIABLE_EXTRA";
+	public static final String PRESSENCE_LAST_LOGIN_EXTRA = "PRESSENCE_LAST_LOGIN_EXTRA";
+	public static final String PRESSENCE_CONTACT_ID_EXTRA = "PRESSENCE_CONTACT_ID_EXTRA";
+
 	public static final String IS_TYPING_EXTRA = "IS_TYPING_EXTRA";
 	private final IBinder mBinder = new WCBinder();
 	private XMPPProvider mXMPPProvider;
@@ -81,6 +91,31 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		}
 	}
 
+	@Override
+	public void onConnectionChange(boolean connected, boolean authenticated) {
+		if(connected && authenticated) {
+			final AppExecutors appExec = ((WCApplication) getApplication()).getAppExecutors();
+			((WCApplication) getApplication()).getAppExecutors().diskIO().execute(() -> {
+				List<Conversation> convList = mRepository.getAllConversations();
+				appExec.networkIO().execute(() -> {
+					subscribe(convList);
+				});
+
+			});
+		}
+	}
+
+	@Override
+	public void onPresenceChanged(boolean isAvailable, Date lastLogin, String contactId) {
+		broadcastPresenceChange(isAvailable, lastLogin, contactId);
+	}
+
+	public void subscribe(List<Conversation> conversations) {
+		for(Conversation conversation : conversations){
+			subscribe(conversation.getParticipantId(), conversation.getParticipantName());
+		}
+	}
+
 
 	public class WCBinder extends Binder {
 		public WCService getService() {
@@ -132,6 +167,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		mXMPPProvider.initAsync(mSelfUserId, pass);
 
 
+
+
+
 	}
 
 
@@ -142,6 +180,21 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		super.onDestroy();
 	}
 
+	public void unSubscribeContact(String contactId){
+		mXMPPProvider.unSubscribeContact(contactId);
+	}
+
+	public void subscribe(String contactId, String name){
+		mXMPPProvider.subscribeContact(contactId, name);
+	}
+
+	public void getPresence(String contactId){
+		mXMPPProvider.getPresence(contactId);
+	}
+
+	public void getAllPresence(){
+		mXMPPProvider.getAllPresence();
+	}
 
 
 	public void sendMessage(Message message){
@@ -215,5 +268,15 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		intent.putExtra(IS_TYPING_EXTRA, isTyping);
 		sendBroadcast(intent);
 	}
+
+	private void broadcastPresenceChange(boolean isAvailiable, Date lastLogin, String contactId) {
+		Intent intent = new Intent();
+		intent.setAction(PRESSENCE_ACTION);
+		intent.putExtra(PRESSENCE_IS_AVAILIABLE_EXTRA, isAvailiable);
+		intent.putExtra(PRESSENCE_LAST_LOGIN_EXTRA, 0);
+		intent.putExtra(PRESSENCE_CONTACT_ID_EXTRA, contactId);
+		sendBroadcast(intent);
+	}
+
 
 }
