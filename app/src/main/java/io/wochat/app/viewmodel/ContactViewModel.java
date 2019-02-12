@@ -31,8 +31,8 @@ public class ContactViewModel extends AndroidViewModel {
 		return mRepository.getAllContacts();
 	}
 
-	public LiveData<List<Contact>> getServerContacts() {
-		return mRepository.getServerContacts();
+	public LiveData<List<Contact>> getServerContactsWithoutSelf() {
+		return mRepository.getServerContactsWithoutSelf();
 	}
 
 	public MutableLiveData<Boolean> getIsDuringRefreshContacts() {

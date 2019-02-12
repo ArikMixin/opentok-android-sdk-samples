@@ -38,6 +38,7 @@ import com.stfalcon.chatkit.messages.MessageHolders;
 import com.stfalcon.chatkit.messages.MessageInput;
 import com.stfalcon.chatkit.messages.MessagesList;
 import com.stfalcon.chatkit.messages.MessagesListAdapter;
+//import com.stfalcon.chatkit.utils.DateFormatter;
 import com.stfalcon.chatkit.utils.DateFormatter;
 
 import java.util.ArrayList;
@@ -94,6 +95,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	private TextView mContactDetailsTV;
 	private Handler mClearTypingHandler;
 	private boolean mIsOnline;
+	private long mLastOnlineTime;
 
 
 	@Override
@@ -501,8 +503,10 @@ public class ConversationActivity extends AppCompatActivity implements
 			mService = binder.getService();
 			mBound = true;
 			initMarkAsReadMessagesHandling();
+			mService.getLastOnline(mParticipantId);
+
 			//mService.subscribe(mParticipantId);
-			mService.getPresence(mParticipantId);
+			//mService.getPresence(mParticipantId);
 		}
 
 		@Override
@@ -560,17 +564,30 @@ public class ConversationActivity extends AppCompatActivity implements
 			}
 			else if(intent.getAction().equals(WCService.PRESSENCE_ACTION)) {
 				String contactId = intent.getStringExtra(WCService.PRESSENCE_CONTACT_ID_EXTRA);
-				long lastLogin = intent.getLongExtra(WCService.PRESSENCE_LAST_LOGIN_EXTRA, 0);
-				boolean isAvailiable = intent.getBooleanExtra(WCService.PRESSENCE_IS_AVAILIABLE_EXTRA, false);
+				boolean isAvailiable = intent.getBooleanExtra(WCService.PRESSENCE_IS_AVAILABLE_EXTRA, false);
 				if (contactId.equals(mParticipantId)){
 					mIsOnline = isAvailiable;
-					if (isAvailiable)
-						mContactDetailsTV.setText("Online");
-					else
-						mContactDetailsTV.setText("");
+					if (mIsOnline)
+						mContactDetailsTV.setText(R.string.online);
+					else {
+						mService.getLastOnline(mParticipantId);
+						mContactDetailsTV.setText(getDisplayOnlineDateTime());
+					}
 				}
+			}
+			else if(intent.getAction().equals(WCService.LAST_ONLINE_ACTION)) {
+				String contactId = intent.getStringExtra(WCService.LAST_ONLINE_CONTACT_ID_EXTRA);
+				long time = intent.getLongExtra(WCService.LAST_ONLINE_TIME_EXTRA, 0);
+				boolean isOnline = intent.getBooleanExtra(WCService.LAST_ONLINE_IS_AVAILABLE_EXTRA, false);
 
-
+				if (mParticipantId.equals(contactId)){
+					mIsOnline = isOnline;
+					mLastOnlineTime = time;
+					if (mIsOnline)
+						mContactDetailsTV.setText(R.string.online);
+					else
+						mContactDetailsTV.setText(getDisplayOnlineDateTime());
+				}
 			}
 		}
 	}
@@ -579,11 +596,33 @@ public class ConversationActivity extends AppCompatActivity implements
 		@Override
 		public void run() {
 			if (mIsOnline)
-				mContactDetailsTV.setText("Online");
+				mContactDetailsTV.setText(R.string.online);
 			else
-				mContactDetailsTV.setText("");
+				mContactDetailsTV.setText(getDisplayOnlineDateTime());
 		}
 	};
+
+
+	private String getDisplayOnlineDateTime(){
+		if (mLastOnlineTime > 0) {
+			Date lastOnlineDate = new Date(mLastOnlineTime);
+			if (DateFormatter.isToday(lastOnlineDate)){
+				return getString(R.string.last_seen_today) + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
+			}
+			else if (DateFormatter.isYesterday(lastOnlineDate)){
+				return getString(R.string.last_seen_yesterday) + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
+			}
+			else if (DateFormatter.isPastWeek(lastOnlineDate)){
+				return getString(R.string.last_seen_past_week) + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_OF_WEEK_TIME);
+			}
+			else {
+				return getString(R.string.last_seen_past) + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_MONTH);
+			}
+		}
+		else
+			return "";
+	}
+
 
 
 
@@ -597,7 +636,7 @@ public class ConversationActivity extends AppCompatActivity implements
 			if (mIsOnline)
 				mContactDetailsTV.setText("Online");
 			else
-				mContactDetailsTV.setText("");
+				mContactDetailsTV.setText(getDisplayOnlineDateTime());
 			mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
 		}
 	}
@@ -616,6 +655,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WCService.TYPING_SIGNAL_ACTION);
 		filter.addAction(WCService.PRESSENCE_ACTION);
+		filter.addAction(WCService.LAST_ONLINE_ACTION);
 		try {
 			registerReceiver(mTypingSignalBR, filter);
 		} catch (Exception e) {}

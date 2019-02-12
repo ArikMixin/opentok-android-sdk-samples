@@ -129,9 +129,10 @@ public final class DateFormatter {
 //        STRING_DAY_MONTH_YEAR("d MMMM yyyy"),
 //        STRING_DAY_MONTH("d MMMM"),
         STRING_DAY_MONTH_YEAR("d/MM/yy"),
-        STRING_DAY_MONTH("d/MM/yy"),
+        STRING_DAY_MONTH("d/MM"),
         STRING_DAY_OF_WEEK("EEEE"),
-        TIME("HH:mm");
+        TIME("HH:mm"),
+        STRING_DAY_OF_WEEK_TIME("EEEE HH:mm");
 
         private String template;
 

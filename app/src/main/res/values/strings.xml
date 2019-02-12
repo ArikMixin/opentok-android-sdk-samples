@@ -43,5 +43,10 @@
     <string name="hint_enter_a_message">Type a message...</string>
     <string name="date_header_today">Today</string>
     <string name="date_header_yesterday">Yesterday</string>
+    <string name="last_seen_today">last seen today at</string>
+    <string name="last_seen_yesterday">last seen yesterday at</string>
+    <string name="last_seen_past_week">last seen</string>
+    <string name="last_seen_past">last seen</string>
+    <string name="online">Online</string>
 
 </resources>

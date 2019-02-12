@@ -1,20 +1,5 @@
-/*******************************************************************************
- * Copyright 2016 stfalcon.com
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
 
-package com.hitshot.hitshot.utils;
+package io.wochat.app.utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -94,6 +79,15 @@ public final class DateFormatter {
         yesterday.add(Calendar.DAY_OF_MONTH, -1);
         return isSameDay(date, yesterday.getTime());
     }
+
+    public static boolean isPastWeek(Date date) {
+        long now = Calendar.getInstance().getTimeInMillis();
+        long sixDays = 6*24*60*60*1000;
+        long inDate = date.getTime();
+        return inDate>(now-sixDays);
+    }
+
+
 
     public static boolean isCurrentYear(Date date) {
         return isSameYear(date, Calendar.getInstance().getTime());

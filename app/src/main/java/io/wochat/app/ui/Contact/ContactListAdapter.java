@@ -155,6 +155,7 @@ public class ContactListAdapter extends RecyclerView.Adapter  implements Filtera
 
 	public void setContacts(List<Contact> contacts) {
 		mContactList = contacts;
+
 		//mContactList = addAlphabetsHeaders(contacts);
 		mContactListFiltered = mContactList;
 		notifyDataSetChanged();

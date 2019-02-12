@@ -23,6 +23,7 @@ import org.jivesoftware.smack.roster.SubscribeListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.iqlast.LastActivityManager;
+import org.jivesoftware.smackx.iqlast.packet.LastActivity;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.FullJid;
@@ -72,7 +73,7 @@ class XMPPProvider {
 		void onNewIncomingMessage(String msg, String conversationId);
 		void onNewOutgoingMessage(String msg, String conversationId);
 		void onConnectionChange(boolean connected, boolean authenticated);
-		void onPresenceChanged(boolean isAvailable, Date lastLogin, String contactId);
+		void onPresenceChanged(boolean isAvailable, String contactId);
 	}
 
 	public void setOnChatMessageListener(OnChatMessageListener listener) {
@@ -105,8 +106,6 @@ class XMPPProvider {
 		try {
 			builder = XMPPTCPConnectionConfiguration.builder().
 				setSecurityMode(ConnectionConfiguration.SecurityMode.disabled).
-				//setUsernameAndPassword(mUserJIDAndroid, mPassword).
-				//setResource(XMPP_RESOURCE).
 				setXmppDomain(XMPP_DOMAIN).
 				setHostAddress(InetAddress.getByName(XMPP_DOMAIN)).
 				setPort(XMPP_PORT);
@@ -124,9 +123,9 @@ class XMPPProvider {
 		mChatManager.addIncomingListener(mIncomingChatMessageListener);
 		mChatManager.addOutgoingListener(mOutgoingChatMessageListener);
 
-//		mLastActivityManager = LastActivityManager.getInstanceFor(mConnection);
-//		mLastActivityManager.enable();
-		//mLastActivityManager.getLastActivity().lastActivity getIdleTime()
+		mLastActivityManager = LastActivityManager.getInstanceFor(mConnection);
+		mLastActivityManager.enable();
+
 
 
 		boolean res = connectAndLogin();
@@ -332,23 +331,16 @@ class XMPPProvider {
 			else {
 				Log.e(TAG, "subscribeContact Entry exists: " + entry.toString());
 			}
+
+			LastActivity lastAct = mLastActivityManager.getLastActivity(bare);
+			long time = System.currentTimeMillis() - lastAct.getIdleTime()*1000;
+			Log.e(TAG, "subscribeContact LastActivity: " + (new Date(time).toString()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-//		mExecutors.networkIO().execute(new Runnable() {
-//			@Override
-//			public void run() {
-//			}
-//		});
-
 	}
 
-//	public void subscribeContacts(List<String> contacts){
-//		for (String contactId: contacts){
-//			subscribeContact(contactId);
-//		}
-//	}
 
 	public void getAllPresence(){
 		Log.e(TAG, "getAllPresence");
@@ -356,20 +348,20 @@ class XMPPProvider {
 		Collection<RosterEntry> entries = roster.getEntries();
 		for (RosterEntry rosterEntry : entries) {
 			Presence presence = roster.getPresence(rosterEntry.getJid());
-			Log.e(TAG, presence.getFrom() + " presence:" + presence);
+			Log.e(TAG, "getAllPresence from:" + presence.getFrom() + ",  presence:" + presence);
 		}
 	}
 
-	public void getPresence(String contactId){
+	public boolean getPresence(String contactId){
 		Roster roster = Roster.getInstanceFor(mConnection);
 		try {
-			Presence res = roster.getPresence(JidCreate.bareFrom(getUserJid(contactId)));
-			Log.e(TAG, "getPresence for: " + contactId + " , res: " + res);
-			Log.e(TAG, "getPresence for: " + contactId + " , getStatus: " + res.getStatus());
-
+			Presence presence = roster.getPresence(JidCreate.bareFrom(getUserJid(contactId)));
+			Log.e(TAG, "getPresence for: " + contactId + " , res: " + presence);
+			return presence.isAvailable();
 		} catch (XmppStringprepException e) {
 			e.printStackTrace();
 			Log.e(TAG, "getPresence error res for: " + contactId);
+			return false;
 		}
 
 //		mExecutors.networkIO().execute(new Runnable() {
@@ -488,12 +480,27 @@ class XMPPProvider {
 		}
 	};
 
+	public long getLastOnline(String contactId){
+		try {
+			BareJid bare = JidCreate.bareFrom(getUserJid(contactId));
+			LastActivity lastAct = mLastActivityManager.getLastActivity(bare);
+			long idlTime = lastAct.getIdleTime() * 1000;
+			long now = System.currentTimeMillis();
+			long lastOnline = now - idlTime;
+			Log.e(TAG, "getLastOnline for contactId " + contactId + " : " + new Date(lastOnline));
+			return lastOnline;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
 
 	private AbstractRosterListener mRosterListener = new AbstractRosterListener() {
 		@Override
 		public void presenceChanged(Presence presence) {
 			Log.e(TAG, "presenceChanged from: " + presence.getFrom().getLocalpartOrNull() + " , type: " + presence.getType());
-			mOnChatMessageListener.onPresenceChanged(presence.getType() == Presence.Type.available, null, presence.getFrom().getLocalpartOrNull().toString());
+			mOnChatMessageListener.onPresenceChanged(presence.getType() == Presence.Type.available, presence.getFrom().getLocalpartOrNull().toString());
 		}
 	};
 

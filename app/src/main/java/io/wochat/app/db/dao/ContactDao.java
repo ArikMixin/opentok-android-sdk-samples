@@ -54,6 +54,8 @@ public interface ContactDao {
 	@Query("SELECT * from contact_table WHERE has_server_data=1 ORDER BY cntct_local_display_name ASC ")
 	LiveData<List<Contact>> getServerContacts();
 
+	@Query("SELECT * from contact_table WHERE has_server_data=1 AND contact_id <> :self ORDER BY cntct_local_display_name ASC ")
+	LiveData<List<Contact>> getServerContactsWithoutSelf(String self);
 
 	@Query("SELECT * FROM contact_table")
 	public Contact[] getAllContacts();

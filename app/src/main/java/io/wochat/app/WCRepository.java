@@ -388,8 +388,8 @@ public class WCRepository {
 		return mContactDao.getContacts();
 	}
 
-	public LiveData<List<Contact>> getServerContacts() {
-		return mContactDao.getServerContacts();
+	public LiveData<List<Contact>> getServerContactsWithoutSelf() {
+		return mContactDao.getServerContactsWithoutSelf(mSharedPreferences.getUserId());
 	}
 
 	public MutableLiveData<Boolean> getIsDuringRefreshContacts() {

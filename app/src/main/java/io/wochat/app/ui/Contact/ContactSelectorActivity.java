@@ -89,7 +89,7 @@ public class ContactSelectorActivity extends AppCompatActivity implements Contac
 //		mCntactViewModel.getAllContacts().observe(this, contacts -> {
 //			mAdapter.setContacts(contacts);
 //		});
-		mCntactViewModel.getServerContacts().observe(this, contacts -> {
+		mCntactViewModel.getServerContactsWithoutSelf().observe(this, contacts -> {
 			mAdapter.setContacts(contacts);
 		});
 

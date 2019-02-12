@@ -28,9 +28,13 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public static final String CONVERSATION_ID_EXTRA = "CONVERSATION_ID_EXTRA";
 
 	public static final String PRESSENCE_ACTION = "PRESSENCE_ACTION";
-	public static final String PRESSENCE_IS_AVAILIABLE_EXTRA = "PRESSENCE_IS_AVAILIABLE_EXTRA";
-	public static final String PRESSENCE_LAST_LOGIN_EXTRA = "PRESSENCE_LAST_LOGIN_EXTRA";
+	public static final String PRESSENCE_IS_AVAILABLE_EXTRA = "PRESSENCE_IS_AVAILABLE_EXTRA";
 	public static final String PRESSENCE_CONTACT_ID_EXTRA = "PRESSENCE_CONTACT_ID_EXTRA";
+
+	public static final String LAST_ONLINE_ACTION = "LAST_ONLINE_ACTION";
+	public static final String LAST_ONLINE_TIME_EXTRA = "LAST_ONLINE_TIME_EXTRA";
+	public static final String LAST_ONLINE_IS_AVAILABLE_EXTRA = "LAST_ONLINE_IS_AVAILABLE_EXTRA";
+	public static final String LAST_ONLINE_CONTACT_ID_EXTRA = "LAST_ONLINE_CONTACT_ID_EXTRA";
 
 	public static final String IS_TYPING_EXTRA = "IS_TYPING_EXTRA";
 	private final IBinder mBinder = new WCBinder();
@@ -38,6 +42,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	private WCRepository mRepository;
 	private String mSelfUserId;
 	private AppObserverBR mAppObserverBR;
+	private AppExecutors mAppExecutors;
 //	private WCDatabase mDatabase;
 //	private ConversationDao mConversationDao;
 //	private MessageDao mMessageDao;
@@ -94,10 +99,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	@Override
 	public void onConnectionChange(boolean connected, boolean authenticated) {
 		if(connected && authenticated) {
-			final AppExecutors appExec = ((WCApplication) getApplication()).getAppExecutors();
 			((WCApplication) getApplication()).getAppExecutors().diskIO().execute(() -> {
 				List<Conversation> convList = mRepository.getAllConversations();
-				appExec.networkIO().execute(() -> {
+				mAppExecutors.networkIO().execute(() -> {
 					subscribe(convList);
 				});
 
@@ -106,8 +110,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 	@Override
-	public void onPresenceChanged(boolean isAvailable, Date lastLogin, String contactId) {
-		broadcastPresenceChange(isAvailable, lastLogin, contactId);
+	public void onPresenceChanged(boolean isAvailable, String contactId) {
+		broadcastPresenceChange(isAvailable, contactId);
 	}
 
 	public void subscribe(List<Conversation> conversations) {
@@ -129,6 +133,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void onCreate() {
 		super.onCreate();
 		Log.e(TAG, "WC Service onCreate");
+		mAppExecutors = ((WCApplication) getApplication()).getAppExecutors();
 		init();
 		if (mAppObserverBR == null) {
 			mAppObserverBR = new AppObserverBR();
@@ -190,6 +195,16 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	public void getPresence(String contactId){
 		mXMPPProvider.getPresence(contactId);
+	}
+
+
+	public void getLastOnline(String contactId){
+		mAppExecutors.networkIO().execute(() -> {
+			long time = mXMPPProvider.getLastOnline(contactId);
+			boolean isPresence = mXMPPProvider.getPresence(contactId);
+			getPresence(contactId);
+			broadcastLastOnline(contactId, isPresence, time);
+		});
 	}
 
 	public void getAllPresence(){
@@ -269,14 +284,23 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		sendBroadcast(intent);
 	}
 
-	private void broadcastPresenceChange(boolean isAvailiable, Date lastLogin, String contactId) {
+	private void broadcastPresenceChange(boolean isAvailiable, String contactId) {
 		Intent intent = new Intent();
 		intent.setAction(PRESSENCE_ACTION);
-		intent.putExtra(PRESSENCE_IS_AVAILIABLE_EXTRA, isAvailiable);
-		intent.putExtra(PRESSENCE_LAST_LOGIN_EXTRA, 0);
+		intent.putExtra(PRESSENCE_IS_AVAILABLE_EXTRA, isAvailiable);
 		intent.putExtra(PRESSENCE_CONTACT_ID_EXTRA, contactId);
 		sendBroadcast(intent);
 	}
 
+	private void broadcastLastOnline(String contactId, boolean isPresence, long lastOnlineTime) {
+		mAppExecutors.mainThread().execute(() -> {
+			Intent intent = new Intent();
+			intent.setAction(LAST_ONLINE_ACTION);
+			intent.putExtra(LAST_ONLINE_TIME_EXTRA, lastOnlineTime);
+			intent.putExtra(LAST_ONLINE_IS_AVAILABLE_EXTRA, isPresence);
+			intent.putExtra(LAST_ONLINE_CONTACT_ID_EXTRA, contactId);
+			sendBroadcast(intent);
+		});
+	}
 
 }
