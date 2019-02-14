@@ -91,8 +91,17 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	@Override
 	public void onNewOutgoingMessage(String msg, String conversationId) {
 		Message message = Message.fromJson(msg);
-		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
-			mRepository.updateAckStatusToSent(message);
+		switch (message.getMessageType()){
+			case Message.MSG_TYPE_TEXT:
+			case Message.MSG_TYPE_IMAGE:
+			case Message.MSG_TYPE_AUDIO:
+			case Message.MSG_TYPE_GIF:
+			case Message.MSG_TYPE_VIDEO:
+			case Message.MSG_TYPE_LOCATION:
+				mRepository.updateAckStatusToSent(message);
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -107,6 +116,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			});
 		}
+	}
+
+	public boolean isXmppConnected(){
+		return (mXMPPProvider != null)&& (mXMPPProvider.isConnectedAndAuthenticated());
 	}
 
 	@Override

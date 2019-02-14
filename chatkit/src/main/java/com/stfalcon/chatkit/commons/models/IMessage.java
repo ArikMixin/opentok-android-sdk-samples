@@ -30,6 +30,7 @@ public interface IMessage {
      */
     String getId();
 
+
     /**
      * Returns message text
      *
@@ -56,4 +57,5 @@ public interface IMessage {
      * @return the message creation date
      */
     Date getCreatedAt();
+
 }

@@ -183,6 +183,10 @@ class XMPPProvider {
 
 	}
 
+	public boolean isConnectedAndAuthenticated(){
+		return (mConnection != null) && mConnection.isConnected() && mConnection.isAuthenticated();
+	}
+
 	private boolean connectAndLogin(){
 		Log.e(TAG, "connectAndLogin called");
 		try {

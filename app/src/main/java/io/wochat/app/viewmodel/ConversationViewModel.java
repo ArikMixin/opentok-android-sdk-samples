@@ -18,13 +18,16 @@ import io.wochat.app.WCApplication;
 import io.wochat.app.WCRepository;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
+import io.wochat.app.db.entity.ImageInfo;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.model.StateData;
 
 public class ConversationViewModel extends AndroidViewModel {
 
 	private static final String TAG = "ConversationViewModel";
 	private final WCRepository mRepository;
 	private final AppExecutors mAppExecutors;
+
 
 	public interface ConversationListener{
 		void onConversationResult(Conversation conversation);
@@ -43,6 +46,7 @@ public class ConversationViewModel extends AndroidViewModel {
 		mAppExecutors = ((WCApplication) application).getAppExecutors();
 
 
+
 	}
 
 
@@ -58,27 +62,20 @@ public class ConversationViewModel extends AndroidViewModel {
 		//asyncTask.executeOnExecutor(mAppExecutors.diskIO(), conversationId, participantId, participantProfilePicUrl, participantName, selfId);
 	}
 
-//	public void getConversation(String conversationId, final ConversationListener listener){
-//		GetConversationAsyncTask task = new GetConversationAsyncTask(listener);
-//		task.execute(conversationId);
-//	}
+
 
 
 	public LiveData<List<Message>> getMessagesLD(String conversationId){
 		return mRepository.getMessagesLD(conversationId);
 	}
 
-//	public LiveData<Conversation> getConversationLD(String conversationId){
-//		return mRepository.getConversationLD(conversationId);
-//	}
+
 
 	public LiveData<List<Conversation>> getConversationListLD(){
 		return mRepository.getConversationListLD();
 	}
 
-//	public MutableLiveData<List<Message>> getMarkAsReadAffectedMessages(){
-//		return mRepository.getMarkAsReadAffectedMessages();
-//	}
+
 
 	public LiveData<List<Message>> getUnreadMessagesConversation(String conversationId){
 		return mRepository.getUnreadMessagesConversation(conversationId);
@@ -90,28 +87,9 @@ public class ConversationViewModel extends AndroidViewModel {
 	}
 
 
-
-//	public LiveData<ConversationComplete> getConversationCompleteLD(String conversationId){
-//		return mRepository.getConversationCompleteLD(conversationId);
-//	}
-//
-//	public LiveData<List<ConversationComplete>> getConversationCompleteListLD(){
-//		return mRepository.getConversationCompleteListLD();
-//	}
-//
-//
-//	public MediatorLiveData getMediatorConversationLiveData(){
-//		return mRepository.getMediatorConversationLiveData();
-//	}
-
-//	public void hasConversation(String conversationId, HasConversationListener listener){
-//		HasConversationAsyncTask asyncTask = new HasConversationAsyncTask(listener);
-//		asyncTask.execute(conversationId);
-//	}
-
-//	public void addNewConversation(Conversation conversation){
-//		mRepository.addNewConversation(conversation);
-//	}
+	public LiveData<Message> getMessage(String messageId){
+		return mRepository.getMessage(messageId);
+	}
 
 	public void addNewOutcomingMessage(Message message){
 		mRepository.addNewOutgoingMessage(message);
@@ -123,25 +101,6 @@ public class ConversationViewModel extends AndroidViewModel {
 	}
 
 
-//	private class GetConversationAsyncTask extends AsyncTask<String, Void, Conversation> {
-//
-//		private ConversationListener mConversationListener;
-//
-//		GetConversationAsyncTask(ConversationListener lsnr) {
-//			mConversationListener = lsnr;
-//		}
-//
-//		@Override
-//		protected Conversation doInBackground(String... params) {
-//			Conversation conversation = mRepository.getConversation(params[0]);
-//			return conversation;
-//		}
-//
-//		@Override
-//		protected void onPostExecute(Conversation conversation) {
-//			mConversationListener.onConversationResult(conversation);
-//		}
-//	}
 
 
 	private class ConversationAndItsMessagesAsyncTask extends AsyncTask<String, Void, ConversationAndItsMessages> {
@@ -184,24 +143,12 @@ public class ConversationViewModel extends AndroidViewModel {
 		}
 	}
 
-//	private class HasConversationAsyncTask extends AsyncTask<String, Void, Boolean> {
-//
-//		private HasConversationListener mListener;
-//
-//		HasConversationAsyncTask(HasConversationListener lsnr) {
-//			mListener = lsnr;
-//		}
-//
-//		@Override
-//		protected Boolean doInBackground(String... params) {
-//			Boolean b = mRepository.hasConversation(params[0]);
-//			return b;
-//		}
-//
-//		@Override
-//		protected void onPostExecute(Boolean hasConversation) {
-//			mListener.onHasConversationResult(hasConversation);
-//		}
+
+//	public void uploadImage(String messageId, byte[] bytes){
+//		mRepository.uploadImage(messageId, bytes);
+//	}
+//	public MutableLiveData<StateData<ImageInfo>> getUploadImageResult() {
+//		return mRepository.getUploadImageResult();
 //	}
 
 

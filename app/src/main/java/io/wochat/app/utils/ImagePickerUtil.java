@@ -1,17 +1,22 @@
 package io.wochat.app.utils;
 
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Parcelable;
 import android.provider.MediaStore;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,6 +91,49 @@ public class ImagePickerUtil {
 			isCamera = action != null && action.equals(MediaStore.ACTION_IMAGE_CAPTURE);
 		}
 		return isCamera ? getCaptureImageOutputUri(context) : data.getData();
+	}
+
+	public static byte[] getImageBytes(ContentResolver contentResolver, Uri uri){
+		try {
+			InputStream imageStream;
+			Bitmap imageBitmap = null;
+			try {
+				imageStream = contentResolver.openInputStream(uri);
+				imageBitmap = BitmapFactory.decodeStream(imageStream);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+
+			int width = imageBitmap.getWidth();
+			int height = imageBitmap.getHeight();
+
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+			File outputFile = null;
+
+			if (width > 1300){
+				int newWidth, newHeight;
+				newWidth = 1300;
+				newHeight = 1300 * height / width;
+
+				imageBitmap = Bitmap.createScaledBitmap(imageBitmap, newWidth, newHeight, false);
+
+			}
+
+			//imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, out);
+			imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
+			byte[] picByte = byteArrayOutputStream.toByteArray();
+			return picByte;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+
+	public static byte[] getImageBytes(Context context, Uri uri){
+		return getImageBytes(context.getContentResolver(), uri);
 	}
 
 

@@ -644,7 +644,7 @@ public class MessageHolders {
     @SuppressWarnings("unchecked")
     private short getContentViewType(IMessage message) {
         if (message instanceof MessageContentType.Image
-                && ((MessageContentType.Image) message).getImageUrl() != null) {
+                && ((MessageContentType.Image) message).getImageForDisplay() != null) {
             return VIEW_TYPE_IMAGE_MESSAGE;
         }
 
@@ -881,7 +881,8 @@ public class MessageHolders {
         public void onBind(MESSAGE message) {
             super.onBind(message);
             if (image != null && imageLoader != null) {
-                imageLoader.loadImage(image, message.getImageUrl(), getPayloadForImageLoader(message));
+                int placeholder = 0;
+                imageLoader.loadImageCenter(image, message.getImageForDisplay(), 0,getPayloadForImageLoader(message));
             }
 
             if (imageOverlay != null) {
@@ -918,10 +919,10 @@ public class MessageHolders {
 
             if (image instanceof RoundedImageView) {
                 ((RoundedImageView) image).setCorners(
+                        0,
                         R.dimen.message_bubble_corners_radius,
                         R.dimen.message_bubble_corners_radius,
-                        R.dimen.message_bubble_corners_radius,
-                        0
+						R.dimen.message_bubble_corners_radius
                 );
             }
         }
@@ -951,7 +952,7 @@ public class MessageHolders {
         public void onBind(MESSAGE message) {
             super.onBind(message);
             if (image != null && imageLoader != null) {
-                imageLoader.loadImage(image, message.getImageUrl(), getPayloadForImageLoader(message));
+                imageLoader.loadImageCenter(image, message.getImageForDisplay(), 0, getPayloadForImageLoader(message));
             }
 
             if (imageOverlay != null) {
@@ -988,9 +989,9 @@ public class MessageHolders {
 
             if (image instanceof RoundedImageView) {
                 ((RoundedImageView) image).setCorners(
-                        R.dimen.message_bubble_corners_radius,
-                        R.dimen.message_bubble_corners_radius,
+						R.dimen.message_bubble_corners_radius,
                         0,
+                        R.dimen.message_bubble_corners_radius,
                         R.dimen.message_bubble_corners_radius
                 );
             }

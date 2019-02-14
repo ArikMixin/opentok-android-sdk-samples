@@ -198,8 +198,8 @@ public class Utils {
 	public static void showImage(Context context, String imageUrl) {
 		final Dialog builder = new Dialog(context);
 		//builder.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		builder.getWindow().setBackgroundDrawable(
-			new ColorDrawable(android.graphics.Color.TRANSPARENT));
+		//builder.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+		builder.getWindow().setBackgroundDrawable(new ColorDrawable(context.getResources().getColor(R.color.black50)));
 
 
 		ImageView imageView = new ImageView(context);

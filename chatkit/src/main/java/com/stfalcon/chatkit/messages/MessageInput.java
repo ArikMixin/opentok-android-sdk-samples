@@ -56,6 +56,7 @@ public class MessageInput extends RelativeLayout
     private CharSequence input;
     private InputListener inputListener;
     private AttachmentsListener attachmentsListener;
+    private ButtonClickListener mButtonClickListener;
     private boolean isTyping;
     private TypingListener typingListener;
     private int delayTypingStatusMillis;
@@ -103,6 +104,16 @@ public class MessageInput extends RelativeLayout
         this.attachmentsListener = attachmentsListener;
     }
 
+    public ButtonClickListener getButtonClickListener() {
+        return mButtonClickListener;
+    }
+
+    public void setButtonClickListener(ButtonClickListener buttonClickListener) {
+        mButtonClickListener = buttonClickListener;
+    }
+
+
+
     /**
      * Returns EditText for messages input
      *
@@ -131,9 +142,10 @@ public class MessageInput extends RelativeLayout
             }
             removeCallbacks(typingTimerRunnable);
             post(typingTimerRunnable);
-        } else if (id == R.id.attachmentButton) {
-            onAddAttachments();
+        } else {
+            onButtonClick(id);
         }
+
     }
 
     /**
@@ -187,6 +199,11 @@ public class MessageInput extends RelativeLayout
         if (attachmentsListener != null) attachmentsListener.onAddAttachments();
     }
 
+    private void onButtonClick(int id) {
+        if (mButtonClickListener != null) mButtonClickListener.onClick(id);
+    }
+
+
     private void init(Context context, AttributeSet attrs) {
         init(context);
         MessageInputStyle style = MessageInputStyle.parse(context, attrs);
@@ -219,6 +236,8 @@ public class MessageInput extends RelativeLayout
         this.videoButton.setVisibility(style.showVideoButton() ? VISIBLE : GONE);
 
 		this.magicButton.setImageDrawable(style.getMagicButtonIcon());
+        this.magicButton.getLayoutParams().width = style.getCameraButtonWidth();
+        this.magicButton.getLayoutParams().height = style.getCameraButtonHeight();
         this.locationButton.setImageDrawable(style.getLocationButtonIcon());
         this.videoButton.setImageDrawable(style.getVideoButtonIcon());
 
@@ -265,7 +284,12 @@ public class MessageInput extends RelativeLayout
 
         messageSendButton.setOnClickListener(this);
         attachmentButton.setOnClickListener(this);
-        messageInput.addTextChangedListener(this);
+		magicButton.setOnClickListener(this);
+		videoButton.setOnClickListener(this);
+		locationButton.setOnClickListener(this);
+		cameraButton.setOnClickListener(this);
+
+		messageInput.addTextChangedListener(this);
         messageInput.setText("");
         messageInput.setOnFocusChangeListener(this);
     }
@@ -323,6 +347,16 @@ public class MessageInput extends RelativeLayout
          */
         void onAddAttachments();
     }
+
+
+    public interface ButtonClickListener {
+
+        /**
+         * Fires when user presses 'add' button.
+         */
+        void onClick(int buttonId);
+    }
+
 
     /**
      * Interface definition for a callback to be invoked when user typing

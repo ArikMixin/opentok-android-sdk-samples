@@ -6,7 +6,9 @@ import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
 
 import com.google.gson.Gson;
@@ -15,6 +17,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.commons.models.MessageContentType;
+
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -251,6 +254,11 @@ public class Message implements IMessage,
 	private String mediaThumbnailUrl;
 
 
+	/**********************************************/
+	@SerializedName("media_local_uri")
+	@ColumnInfo(name = "media_local_uri")
+	@Expose
+	private String mediaLocalUri;
 
 	/**********************************************/
 	@SerializedName("duration")
@@ -268,6 +276,13 @@ public class Message implements IMessage,
 	@Expose
 	@Ignore
 	private String originalMessageId;
+
+
+	/**********************************************/
+	@SerializedName("show_non_translated")
+	@Expose
+	@Ignore
+	private Boolean showNonTranslated;
 	/**********************************************/
 
 //	private Image image;
@@ -278,6 +293,7 @@ public class Message implements IMessage,
 
 	// for outgoing message
 	public Message(String participantId, String selfId, String conversationId, String messageText, String messageLang) {
+		this.showNonTranslated = null;
 		this.messageId = UUID.randomUUID().toString();
 		this.conversationId = conversationId;
 		this.participantId = participantId;
@@ -290,7 +306,41 @@ public class Message implements IMessage,
 		this.ackStatus = ACK_STATUS_PENDING;
 	}
 
+	// for outgoing Image message
+	public Message(String participantId, String selfId, String conversationId, String imageUrl, String thumbUrl, String messageLang) {
+		this.showNonTranslated = null;
+		this.messageId = UUID.randomUUID().toString();
+		this.conversationId = conversationId;
+		this.participantId = participantId;
+		this.recipients = new String[]{participantId};
+		this.senderId = selfId;
+		this.messageType = MSG_TYPE_IMAGE;
+		this.mediaUrl = imageUrl;
+		this.mediaThumbnailUrl = thumbUrl;
+		this.messageLanguage = messageLang;
+		this.timestamp = System.currentTimeMillis()/1000;
+		this.ackStatus = ACK_STATUS_PENDING;
+	}
+
+	public Message(String participantId, String selfId, String conversationId, Uri localUri, String messageLang) {
+		this.showNonTranslated = null;
+		this.messageId = UUID.randomUUID().toString();
+		this.conversationId = conversationId;
+		this.participantId = participantId;
+		this.recipients = new String[]{participantId};
+		this.senderId = selfId;
+		this.messageType = MSG_TYPE_IMAGE;
+		this.mediaUrl = "";
+		this.mediaThumbnailUrl = "";
+		this.mediaLocalUri = localUri.toString();
+		this.messageLanguage = messageLang;
+		this.timestamp = System.currentTimeMillis()/1000;
+		this.ackStatus = ACK_STATUS_PENDING;
+	}
+
+
 	public Message() {
+		showNonTranslated = null;
 	}
 
 	public Message(String id, Contact contact, String text, String messageLang) {
@@ -298,6 +348,7 @@ public class Message implements IMessage,
     }
 
     public Message(String id, Contact contact, String messageText, String messageLang, long timestamp) {
+		this.showNonTranslated = null;
         this.messageId = id;
         this.messageText = messageText;
 		this.messageLanguage = messageLang;
@@ -313,12 +364,27 @@ public class Message implements IMessage,
         return messageId;
     }
 
-    @Override
+	public boolean isImage() {
+		return messageType == MSG_TYPE_IMAGE;
+	}
+
+	@Override
     public String getText() {
-		if ((translatedText != null)&& (!translatedText.equals("")))
-			return translatedText;
-		else
-        	return messageText;
+		if (showNonTranslated == null){
+			if (isOutgoing())
+				showNonTranslated = true;
+			else
+				showNonTranslated = false;
+		}
+
+		if (showNonTranslated)
+			return messageText;
+		else {
+			if ((translatedText != null) && (!translatedText.equals("")))
+				return translatedText;
+			else
+				return messageText;
+		}
     }
 
     @Override
@@ -326,17 +392,38 @@ public class Message implements IMessage,
         return new Date(timestamp*1000);
     }
 
-    @Override
+
+	@Override
     public Contact getContact() {
         return this.contact;
     }
 
     @Override
-    public String getImageUrl() {
+    public String getImageURL() {
         return mediaUrl;
     }
 
-    public Voice getVoice() {
+	@Nullable
+	@Override
+	public String getImageForDisplay() {
+		if ((mediaThumbnailUrl != null)&& (!mediaThumbnailUrl.equals("")))
+			return mediaThumbnailUrl;
+		else
+			return mediaLocalUri;
+	}
+
+	@Nullable
+	@Override
+	public String getImageLocal() {
+		return mediaLocalUri;
+	}
+
+	public String getImageThumbURL() {
+		return mediaThumbnailUrl;
+	}
+
+
+	public Voice getVoice() {
         return voice;
     }
 
@@ -609,11 +696,23 @@ public class Message implements IMessage,
 		this.shouldBeDisplayed = shouldBeDisplayed;
 	}
 
+	public boolean isShowNonTranslated() {
+		return showNonTranslated;
+	}
 
-//	@Override
-//	public boolean isOutcoming() {
-//		return (!senderId.equals(participantId));
-//	}
+	public void setShowNonTranslated(boolean showNonTranslated) {
+		this.showNonTranslated = showNonTranslated;
+	}
+
+	public String getMediaLocalUri() {
+		return mediaLocalUri;
+	}
+
+	public void setMediaLocalUri(String mediaLocalUri) {
+		this.mediaLocalUri = mediaLocalUri;
+	}
+
+
 
 	public String toJson(){
 		Gson gson = new Gson();
@@ -630,6 +729,10 @@ public class Message implements IMessage,
 		}
 	}
 
+
+	private boolean isOutgoing(){
+		return (!participantId.equals(senderId));
+	}
 
 
 }

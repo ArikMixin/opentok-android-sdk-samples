@@ -4,6 +4,7 @@ import android.app.Application;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.ContentResolver;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
@@ -31,10 +32,12 @@ import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
+import io.wochat.app.db.entity.ImageInfo;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
+import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.Utils;
 
 /**
@@ -71,6 +74,7 @@ public class WCRepository {
 	private MutableLiveData<StateData<String>> mUserVerificationResult;
 	private MutableLiveData<StateData<String>> mUploadProfilePicResult;
 	private MutableLiveData<StateData<String>> mUserConfirmRegistrationResult;
+	private MutableLiveData<StateData<Message>> mUploadImageResult;
 	private MutableLiveData<Boolean> mIsDuringRefreshContacts;
 	private MutableLiveData<List<Message>> mMarkAsReadAffectedMessages;
 	private Map<String, ContactLocal> mLocalContact;
@@ -126,6 +130,7 @@ public class WCRepository {
 		mUserRegistrationResult = new MutableLiveData<>();
 		mUserVerificationResult = new MutableLiveData<>();
 		mUploadProfilePicResult = new MutableLiveData<>();
+		mUploadImageResult = new MutableLiveData<>();
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
 		mIsDuringRefreshContacts = new MutableLiveData<>();
 		mIsDuringRefreshContacts.setValue(false);
@@ -327,6 +332,10 @@ public class WCRepository {
 		return mUploadProfilePicResult;
 	}
 
+	public MutableLiveData<StateData<Message>> getUploadImageResult(){
+		return mUploadImageResult;
+	}
+
 	public MutableLiveData<StateData<String>> getUserConfirmRegistrationResult(){
 		return mUserConfirmRegistrationResult;
 	}
@@ -350,9 +359,40 @@ public class WCRepository {
 	}
 
 
+	public void uploadImage(Message message, byte[] bytes) {
+    	mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.dataUploadFile(bytes, new WochatApi.OnServerResponseListener() {
+				@Override
+				public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+					Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+					if (isSuccess) {
+						try {
+							String imageUrl = response.getString("url");
+							String imageThumbUrl = response.getString("thumb_url");
+							message.setMediaThumbnailUrl(imageThumbUrl);
+							message.setMediaUrl(imageUrl);
+							updateMessageOnly(message);
 
+							mUploadImageResult.setValue(new StateData<Message>().success(message));
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
 
-    public void insert(User user) {
+					}
+					else if (errorLogic != null) {
+						mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+					}
+
+					else if (errorComm != null) {
+						mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
+					}
+				}
+			});
+
+		});
+	}
+
+	public void insert(User user) {
 		mAppExecutors.diskIO().execute(() -> {
 			mDatabase.userDao().deleteAll();
 			mDatabase.userDao().insert(user);
@@ -714,6 +754,9 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 				case Message.MSG_TYPE_TYPING_SIGNAL:
 					break;
 				case Message.MSG_TYPE_IMAGE:
+					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
+					res = handleIncomingMessageImage(message);
+					listener.OnSaved(res, message);
 					break;
 				case Message.MSG_TYPE_GIF:
 					break;
@@ -778,24 +821,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 			}
 
 			if (needTranslation) {
-				mWochatApi.translate(message.getMessageId(), message.getMessageLanguage(), selfLang, message.getText(),
-					(isSuccess, errorLogic, errorComm, response) -> {
-					if ((isSuccess)&& (response != null)) {
-						Log.e(TAG, "translate res: " + response.toString());
-						try {
-							String translatedText = response.getString("message");
-							message.setTranslatedText(translatedText);
-							message.setTranslatedLanguage(selfLang);
-							message.displayMessageAfterTranslation();
-							updateMessage(message);
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-
-					}
-					else
-						Log.e(TAG, "translate res: error");
-				});
+				translate(message, true);
 			}
 
 			return res;
@@ -805,10 +831,109 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 		}
 	}
 
-	private void updateMessage(Message message) {
+	private void translate(Message message, boolean isIncoming){
+    	mAppExecutors.networkIO().execute(() -> {
+			String selfLang = mSharedPreferences.getUserLang();
+			String fromLanguage;
+			String toLanguage;
+			if (isIncoming){
+				fromLanguage = message.getMessageLanguage();
+				toLanguage = selfLang;
+			}
+			else {
+				fromLanguage = message.getMessageLanguage();
+				toLanguage = message.getTranslatedLanguage();
+			}
+
+			mWochatApi.translate(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
+				(isSuccess, errorLogic, errorComm, response) -> {
+					if ((isSuccess)&& (response != null)) {
+						Log.e(TAG, "translate res: " + response.toString());
+						try {
+							String translatedText = response.getString("message");
+							message.setTranslatedText(translatedText);
+							message.setTranslatedLanguage(selfLang);
+							message.displayMessageAfterTranslation();
+
+							if (isIncoming)
+								updateMessageAndConversation(message);
+							else
+								updateMessageTextOnly(message);
+
+
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+
+					}
+					else
+						Log.e(TAG, "translate res: error");
+				});
+		});
+
+	}
+
+
+	private boolean handleIncomingMessageImage(Message message){
+		boolean res;
+		String selfLang = mSharedPreferences.getUserLang();
+		//boolean needTranslation = (!message.getMessageLanguage().equals(selfLang));
+		boolean needTranslation = false;
+
+		try {
+			String conversationId = message.getConversationId();
+			if(mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
+				res = insertMessageAndUpdateConversation(message, needTranslation);
+			}
+			else {
+				String participantId = message.getSenderId();
+				String selfId = mSharedPreferences.getUserId();
+				if(mContactDao.hasContact(participantId)){  // has contact, no conversation
+					Contact contact = mContactDao.getContact(participantId);
+					Conversation conversation = new Conversation(participantId, selfId);
+					conversation.setParticipantName(contact.getName());
+					conversation.setParticipantLanguage(contact.getLanguage());
+					conversation.setParticipantProfilePicUrl(contact.getAvatar());
+					mConversationDao.insert(conversation);
+					res = insertMessageAndUpdateConversation(message,needTranslation);
+				}
+				else { // no contact, no conversation
+					Contact contact = new Contact(participantId);
+					mContactDao.insert(contact);
+					getContactFromServer(participantId);
+					Conversation conversation = new Conversation(participantId, selfId);
+					mConversationDao.insert(conversation);
+					res = insertMessageAndUpdateConversation(message, needTranslation);
+				}
+			}
+
+
+
+			return res;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	private void updateMessageAndConversation(Message message) {
     	mAppExecutors.diskIO().execute(() -> {
 			mMessageDao.update(message);
 			mConversationDao.updateIncomingText(message.getConversationId(), message.getText());
+		});
+
+	}
+
+	private void updateMessageTextOnly(Message message) {
+		mAppExecutors.diskIO().execute(() -> {
+			mMessageDao.updateMessageTranslatedText(message.getMessageId(), message.getTranslatedText());
+		});
+
+	}
+
+	private void updateMessageOnly(Message message) {
+		mAppExecutors.diskIO().execute(() -> {
+			mMessageDao.update(message);
 		});
 
 	}
@@ -883,34 +1008,55 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 //		}
 //	}
 public void updateAckStatusToSent(Message message){
-    	mAppExecutors.diskIO().execute(new Runnable() {
-			@Override
-			public void run() {
-				mMessageDao.updateAckStatusToSent(message.getMessageId());
-				mConversationDao.updateLastMessageAck(message.getConversationId(), message.getMessageId(), Message.ACK_STATUS_SENT);
-			}
+    	mAppExecutors.diskIO().execute(() -> {
+			mMessageDao.updateAckStatusToSent(message.getMessageId());
+			mConversationDao.updateLastMessageAck(message.getConversationId(), message.getMessageId(), Message.ACK_STATUS_SENT);
 		});
 
 	}
 
+	public LiveData<Message> getMessage(String messageId) {
+    	return mMessageDao.getMessage(messageId);
+	}
+
+
 	public void addNewOutgoingMessage(Message message) {
-		mAppExecutors.diskIO().execute(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					message.setShouldBeDisplayed(true);
-					mMessageDao.insert(message);
-					mConversationDao.updateOutgoing(
-						message.getConversationId(),
-						message.getMessageId(),
-						message.getTimestamp(),
-						message.getMessageText(),
-						message.getSenderId(),
-						message.getAckStatus());
-				} catch (Exception e) {
-					e.printStackTrace();
-					Log.e(TAG, "error: message: " + message.toString());
+    	Log.e(TAG, "addNewOutgoingMessage: " + message.getMessageType() + " , id: " + message.getId());
+		mAppExecutors.diskIO().execute(() -> {
+			try {
+				message.setShowNonTranslated(true);
+				message.setShouldBeDisplayed(true);
+				mMessageDao.insert(message);
+				mConversationDao.updateOutgoing(
+					message.getConversationId(),
+					message.getMessageId(),
+					message.getTimestamp(),
+					message.getMessageText(),
+					message.getSenderId(),
+					message.getAckStatus());
+
+				if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)){
+					String selfLang = mSharedPreferences.getUserLang();
+					boolean needTranslation = (!message.getTranslatedLanguage().equals(selfLang));
+					if (needTranslation)
+						translate(message, false);
+//					new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//						@Override
+//						public void run() {
+//							translate(message, false);
+//						}
+//					}, 1000);
+
+
 				}
+				if (message.getMediaLocalUri() != null) {
+					byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));
+					uploadImage(message, bytes);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				Log.e(TAG, "error: message: " + message.toString());
 			}
 		});
 	}

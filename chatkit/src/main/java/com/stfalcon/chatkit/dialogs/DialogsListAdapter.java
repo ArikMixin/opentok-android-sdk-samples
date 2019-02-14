@@ -661,7 +661,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
 
             //Set Dialog avatar
             if ((imageLoader != null)&&(ivAvatar!= null)) {
-                imageLoader.loadImage(ivAvatar, dialog.getDialogPhoto(), null);
+                imageLoader.loadImageWPlaceholder(ivAvatar, dialog.getDialogPhoto(), R.drawable.ic_new_contact_invert, null);
             }
 
             //Set Last message user avatar with check if there is last message

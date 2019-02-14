@@ -124,12 +124,13 @@
             app:outcomingTextColor="@color/black"
             app:outcomingTimeTextColor="@color/black"
             app:outcomingDefaultBubbleColor="@color/outcoming_bubble"
-            app:incomingDefaultBubbleColor="@color/incoming_bubble"/>
+            app:incomingDefaultBubbleColor="@color/incoming_bubble"
+             />
 
         <LinearLayout
             android:id="@+id/input_padder_ll"
             android:layout_width="match_parent"
-            android:layout_height="10dp"
+            android:layout_height="0dp"
             android:layout_above="@+id/input"
             android:background="@color/white"
             android:orientation="horizontal">
@@ -199,7 +200,11 @@
             android:src="@drawable/double_arrow"/>
 
 
-
+        <ImageView
+            android:id="@+id/preview_iv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/black80"/>
 
 
     </RelativeLayout>

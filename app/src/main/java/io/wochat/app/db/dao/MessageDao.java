@@ -40,6 +40,8 @@ public interface MessageDao {
 	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp DESC")
 	List<Message> getMessagesForConversation(String conversationId);
 
+	@Query("SELECT * FROM message_table WHERE message_id =:messageId")
+	LiveData<Message> getMessage(String messageId);
 
 	@Query("SELECT COUNT(message_id) FROM message_table WHERE " +
 		"(conversation_id =:conversationId) AND " +
@@ -100,7 +102,10 @@ public interface MessageDao {
 	@Update(onConflict = OnConflictStrategy.IGNORE)
 	void update(Message message);
 
+	@Query("UPDATE message_table " +
+		"SET  translated_text = :translatedText " +
+		"WHERE message_id =:messageId")
+	void updateMessageTranslatedText(String messageId, String translatedText);
 
-//	@Delete
-//    void delete(Message message);
+
 }

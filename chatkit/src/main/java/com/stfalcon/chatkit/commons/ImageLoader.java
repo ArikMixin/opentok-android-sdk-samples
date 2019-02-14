@@ -25,8 +25,9 @@ import android.widget.ImageView;
  */
 public interface ImageLoader {
 
-    void loadImage(ImageView imageView, @Nullable String url, @Nullable Object payload);
+    void loadImageWPlaceholder(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload);
     void loadImage(ImageView imageView, @DrawableRes int resourceId);
+    void loadImageCenter(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload);
     void loadImageNoPlaceholder(ImageView imageView, int resourceId);
 
 }

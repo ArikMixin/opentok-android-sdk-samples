@@ -1,5 +1,7 @@
 package io.wochat.app.ui.Messages;
 
+import android.app.Activity;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -8,14 +10,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -49,9 +54,11 @@ import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.ImageInfo;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.fixtures.MessagesFixtures;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ConversationViewModel;
 
@@ -61,14 +68,16 @@ public class ConversationActivity extends AppCompatActivity implements
 	MessagesListAdapter.OnMessageLongClickListener<Message>,
 	MessagesListAdapter.OnLoadMoreListener,
 	MessageInput.InputListener,
-	MessageInput.AttachmentsListener,
 	MessagesListAdapter.OnMessageViewLongClickListener<Message>,
 	MessagesListAdapter.OnMessageViewClickListener<Message>,
 	MessagesListAdapter.OnMessageClickListener<Message>,
 	MessagesListAdapter.OnBindViewHolder,
-	MessageInput.TypingListener, DateFormatter.Formatter {
+	MessageInput.TypingListener,
+	DateFormatter.Formatter,
+	MessageInput.ButtonClickListener {
 
 	private static final String TAG = "ConversationActivity";
+	private static final int REQUEST_SELECT_PHOTO = 1;
 	private MessagesList mMessagesListRV;
 	protected MessagesListAdapter<Message> mMessagesAdapter;
 	protected ImageLoader mImageLoader;
@@ -96,6 +105,8 @@ public class ConversationActivity extends AppCompatActivity implements
 	private Handler mClearTypingHandler;
 	private boolean mIsOnline;
 	private long mLastOnlineTime;
+	private ImageView mPreviewImagesIV;
+	private Uri mSelectedImageForDelayHandlingUri;
 
 
 	@Override
@@ -104,15 +115,24 @@ public class ConversationActivity extends AppCompatActivity implements
 
 		mImageLoader = new ImageLoader() {
 			@Override
-			public void loadImage(ImageView imageView, String url, Object payload) {
+			public void loadImageWPlaceholder(ImageView imageView, String url, int placeholderResourceId, Object payload) {
 				if ((url != null)&& (url.equals("")))
 					url = null;
-				Picasso.get().load(url).placeholder(R.drawable.ic_new_contact_invert).error(R.drawable.ic_new_contact_invert).into(imageView);
+				//Picasso.get().load(url).placeholder(R.drawable.ic_new_contact_invert).error(R.drawable.ic_new_contact_invert).into(imageView);
+				Picasso.get().load(url).placeholder(placeholderResourceId).error(placeholderResourceId).into(imageView);
 			}
 
 			@Override
 			public void loadImage(ImageView imageView, int resourceId) {
 				Picasso.get().load(resourceId).into(imageView);
+			}
+
+			@Override
+			public void loadImageCenter(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
+				if (placeholderResourceId != 0)
+					Picasso.get().load(url).placeholder(placeholderResourceId).into(imageView);
+				else
+					Picasso.get().load(url).into(imageView);
 			}
 
 			@Override
@@ -163,22 +183,39 @@ public class ConversationActivity extends AppCompatActivity implements
 		mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang);
 		//mImageLoader.loadImage(mContactAvatarCIV.get, mParticipantPic, null);
 		mContactAvatarCIV.setOnClickListener(v -> {
-			Utils.showImage(ConversationActivity.this, mParticipantPic);
+			//Utils.showImage(ConversationActivity.this, mParticipantPic);
+			mPreviewImagesIV.setVisibility(View.VISIBLE);
+			Picasso.get().load(mParticipantPic).into(mPreviewImagesIV);
+
 		});
 
 		mMessagesListRV = (MessagesList) findViewById(R.id.messagesList);
+
+		mPreviewImagesIV = (ImageView)findViewById(R.id.preview_iv);
+		mPreviewImagesIV.setOnClickListener(v -> {
+			mPreviewImagesIV.setVisibility(View.GONE);
+		});
+		mPreviewImagesIV.setVisibility(View.GONE);
 
 		initAdapter();
 
 		mMessageInput = (MessageInput) findViewById(R.id.input);
 		mMessageInput.setTypingListener(this);
 		mMessageInput.setInputListener(this);
-		mMessageInput.setAttachmentsListener(this);
-		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(mSelfLang);
+		mMessageInput.setButtonClickListener(this);
+		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
 		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 
+
+//		mConversationViewModel.getUploadImageResult().observe(this, imageInfoStateData -> {
+//			if(imageInfoStateData.isSuccess()){
+//				ImageInfo imageInfo = imageInfoStateData.getData();
+//				Log.e(TAG, "imageInfo: " + imageInfo.getImageUrl());
+//				submitImageMessage(imageInfo);
+//			}
+//		});
 
 
 
@@ -202,6 +239,7 @@ public class ConversationActivity extends AppCompatActivity implements
 
 
 	}
+
 
 
 	private void startListenToMessagesChanges() {
@@ -319,6 +357,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	public boolean onSubmit(CharSequence input) {
 		String msgText = input.toString();
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
+		message.setTranslatedLanguage(mParticipantLang);
 		mConversationViewModel.addNewOutcomingMessage(message);
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mService.sendMessage(message);
@@ -326,12 +365,25 @@ public class ConversationActivity extends AppCompatActivity implements
 
 	}
 
+
 	@Override
-	public void onAddAttachments() {
-		mMessagesAdapter.addToStart(MessagesFixtures.getImageMessage(), true);
+	public void onClick(int buttonId) {
+		Log.e(TAG, "onClick: " + buttonId);
+		switch (buttonId){
+			case R.id.attachmentButton:
+				selectImage();
+				break;
+		}
+		//mMessagesAdapter.addToStart(MessagesFixtures.getImageMessage(), true);
 	}
 
-
+	private void selectImage() {
+		Intent photoPickerIntent = new Intent(Intent.ACTION_PICK,
+		android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+		photoPickerIntent.setType("image/*");
+		photoPickerIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+		startActivityForResult(photoPickerIntent, REQUEST_SELECT_PHOTO);
+	}
 
 
 	@Override
@@ -347,6 +399,16 @@ public class ConversationActivity extends AppCompatActivity implements
 
 	@Override
 	public void onMessageClick(Message message) {
+		if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
+			message.setShowNonTranslated(!message.isShowNonTranslated());
+			mMessagesAdapter.update(message);
+		}
+		else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)){
+			mPreviewImagesIV.setVisibility(View.VISIBLE);
+			Picasso.get().load(message.getImageURL()).into(mPreviewImagesIV);
+
+			//Utils.showImage(ConversationActivity.this, message.getImageURL());
+		}
 
 	}
 
@@ -504,6 +566,34 @@ public class ConversationActivity extends AppCompatActivity implements
 			mBound = true;
 			initMarkAsReadMessagesHandling();
 			mService.getLastOnline(mParticipantId);
+			if (mSelectedImageForDelayHandlingUri != null) {
+				submitTempImageMessage(mSelectedImageForDelayHandlingUri);
+				mSelectedImageForDelayHandlingUri = null;
+			}
+
+//			if (mSelectedImageForDelayHandlingUri != null) {
+//				if ((mService != null)&&(mService.isXmppConnected())) {
+//					Log.e(TAG, "sending image to xmpp");
+//					submitTempImageMessage(mSelectedImageForDelayHandlingUri);
+//					mSelectedImageForDelayHandlingUri = null;
+//				}
+//				else {
+//					Log.e(TAG, "not sending image to xmpp - not connected, wait 500 ms");
+//
+//					new Handler(getMainLooper()).postDelayed(new Runnable() {
+//						@Override
+//						public void run() {
+//							if ((mService != null) && (mService.isXmppConnected())) {
+//								Log.e(TAG, "sending image to xmpp");
+//								submitTempImageMessage(mSelectedImageForDelayHandlingUri);
+//								mSelectedImageForDelayHandlingUri = null;
+//							} else {
+//								Log.e(TAG, "not sending image to xmpp - not connected!!!");
+//							}
+//						}
+//					}, 1000);
+//				}
+//			}
 
 			//mService.subscribe(mParticipantId);
 			//mService.getPresence(mParticipantId);
@@ -550,6 +640,7 @@ public class ConversationActivity extends AppCompatActivity implements
 			));
 		return drawable;
 	}
+
 
 	private class TypingSignalBR extends BroadcastReceiver {
 
@@ -607,16 +698,16 @@ public class ConversationActivity extends AppCompatActivity implements
 		if (mLastOnlineTime > 0) {
 			Date lastOnlineDate = new Date(mLastOnlineTime);
 			if (DateFormatter.isToday(lastOnlineDate)){
-				return getString(R.string.last_seen_today) + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
+				return getString(R.string.last_seen_today) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
 			}
 			else if (DateFormatter.isYesterday(lastOnlineDate)){
-				return getString(R.string.last_seen_yesterday) + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
+				return getString(R.string.last_seen_yesterday) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
 			}
 			else if (DateFormatter.isPastWeek(lastOnlineDate)){
-				return getString(R.string.last_seen_past_week) + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_OF_WEEK_TIME);
+				return getString(R.string.last_seen_past_week) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_OF_WEEK_TIME);
 			}
 			else {
-				return getString(R.string.last_seen_past) + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_MONTH);
+				return getString(R.string.last_seen_past) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_MONTH);
 			}
 		}
 		else
@@ -660,5 +751,79 @@ public class ConversationActivity extends AppCompatActivity implements
 			registerReceiver(mTypingSignalBR, filter);
 		} catch (Exception e) {}
 
+	}
+
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == REQUEST_SELECT_PHOTO) {
+			if (resultCode == Activity.RESULT_OK) {
+				Uri uri = ImagePickerUtil.getPickImageResultUri(this, data);
+				if ((mService != null)&& (mService.isXmppConnected())){
+					submitTempImageMessage(uri);
+				}
+				else {
+					mSelectedImageForDelayHandlingUri = uri;
+				}
+
+				Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
+
+			}
+		}
+	}
+
+//	private void updateImageMessage(ImageInfo imageInfo) {
+//		if (mService == null)
+//			return;
+//		Message message = new Message(mParticipantId, mSelfId, mConversationId, imageInfo.getImageUrl(), imageInfo.getThumbUrl(), mSelfLang);
+//		mConversationViewModel.addNewOutcomingMessage(message);
+//
+//	}
+
+
+	private Observer<Message> mMessageObserver = new Observer<Message>() {
+		@Override
+		public void onChanged(@Nullable Message message) {
+			if (message != null) {
+				if ((!message.getMediaUrl().equals(""))&&(message.getAckStatus().equals(Message.ACK_STATUS_PENDING))) { // need to upload - one time
+					//mConversationViewModel.getMessage(message.getMessageId()).removeObserver(mMessageObserver);
+					if ((mService != null) && (mService.isXmppConnected())) {
+						mService.sendMessage(message);
+					}
+					else {
+						new Handler(getMainLooper()).postDelayed(new Runnable() {
+							@Override
+							public void run() {
+								if ((mService != null) && (mService.isXmppConnected())) {
+									mService.sendMessage(message);
+								}
+							}
+						}, 1500);
+					}
+					//mMessagesAdapter.update(message);
+				}
+			}
+		}
+	};
+
+	private void submitTempImageMessage(Uri imageUri) {
+		Log.e(TAG, "submitTempImageMessage: " + imageUri);
+		if (mService == null) {
+			Log.e(TAG, "submitTempImageMessage mService is NULL - cancel");
+			return;
+		}
+
+		Message message = new Message(mParticipantId, mSelfId, mConversationId, imageUri, mSelfLang);
+		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
+		mConversationViewModel.addNewOutcomingMessage(message);
+	}
+
+
+	@Override
+	public void onBackPressed() {
+		if (mPreviewImagesIV.getVisibility() == View.VISIBLE)
+			mPreviewImagesIV.setVisibility(View.GONE);
+		else
+			super.onBackPressed();
 	}
 }

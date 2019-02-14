@@ -149,7 +149,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 		imageLoader = new ImageLoader() {
 			@Override
-			public void loadImage(ImageView imageView, String url, Object payload) {
+			public void loadImageWPlaceholder(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
 				if ((url != null)&& (url.equals("")))
 					url = null;
 				Picasso.get().load(url).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
@@ -159,6 +159,11 @@ public class RecentChatsFragment extends Fragment  implements
 			@Override
 			public void loadImage(ImageView imageView, int resourceId) {
 				Picasso.get().load(resourceId).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
+			}
+
+			@Override
+			public void loadImageCenter(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
+				Picasso.get().load(url).into(imageView);
 			}
 
 			@Override
