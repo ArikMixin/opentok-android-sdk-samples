@@ -403,14 +403,23 @@ public class Message implements IMessage,
         return mediaUrl;
     }
 
+
+	@Override
+	public boolean isLocal() {
+		//return !((mediaThumbnailUrl != null)&& (!mediaThumbnailUrl.equals("")));
+		return (mediaThumbnailUrl == null) ||(mediaThumbnailUrl.equals(""));
+	}
+
+
 	@Nullable
 	@Override
 	public String getImageForDisplay() {
-		if ((mediaThumbnailUrl != null)&& (!mediaThumbnailUrl.equals("")))
-			return mediaThumbnailUrl;
-		else
+		if (isLocal())
 			return mediaLocalUri;
+		else
+			return mediaThumbnailUrl;
 	}
+
 
 	@Nullable
 	@Override

@@ -34,9 +34,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.chrisbanes.photoview.PhotoView;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.messages.MessageHolders;
@@ -105,8 +108,9 @@ public class ConversationActivity extends AppCompatActivity implements
 	private Handler mClearTypingHandler;
 	private boolean mIsOnline;
 	private long mLastOnlineTime;
-	private ImageView mPreviewImagesIV;
+	private PhotoView mPreviewImagesIV;
 	private Uri mSelectedImageForDelayHandlingUri;
+	private ProgressBar mPreviewImagesPB;
 
 
 	@Override
@@ -123,8 +127,8 @@ public class ConversationActivity extends AppCompatActivity implements
 			}
 
 			@Override
-			public void loadImage(ImageView imageView, int resourceId) {
-				Picasso.get().load(resourceId).into(imageView);
+			public void loadImageCenterCrop(ImageView imageView, @Nullable String url, @Nullable Object payload) {
+				Picasso.get().load(url).resize(300,300).centerCrop().into(imageView);
 			}
 
 			@Override
@@ -185,17 +189,31 @@ public class ConversationActivity extends AppCompatActivity implements
 		mContactAvatarCIV.setOnClickListener(v -> {
 			//Utils.showImage(ConversationActivity.this, mParticipantPic);
 			mPreviewImagesIV.setVisibility(View.VISIBLE);
-			Picasso.get().load(mParticipantPic).into(mPreviewImagesIV);
+			mPreviewImagesPB.setVisibility(View.VISIBLE);
+			Picasso.get().load(mParticipantPic).into(mPreviewImagesIV, new Callback() {
+				@Override
+				public void onSuccess() {
+					mPreviewImagesPB.setVisibility(View.GONE);
+				}
+
+				@Override
+				public void onError(Exception e) {
+					mPreviewImagesPB.setVisibility(View.GONE);
+				}
+			});
 
 		});
 
 		mMessagesListRV = (MessagesList) findViewById(R.id.messagesList);
 
-		mPreviewImagesIV = (ImageView)findViewById(R.id.preview_iv);
+		mPreviewImagesIV = (PhotoView)findViewById(R.id.preview_iv);
+		mPreviewImagesPB = (ProgressBar)findViewById(R.id.preview_pb);
+		mPreviewImagesIV.setMaximumScale(5.0f);
 		mPreviewImagesIV.setOnClickListener(v -> {
 			mPreviewImagesIV.setVisibility(View.GONE);
 		});
 		mPreviewImagesIV.setVisibility(View.GONE);
+		mPreviewImagesPB.setVisibility(View.GONE);
 
 		initAdapter();
 
@@ -405,7 +423,18 @@ public class ConversationActivity extends AppCompatActivity implements
 		}
 		else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)){
 			mPreviewImagesIV.setVisibility(View.VISIBLE);
-			Picasso.get().load(message.getImageURL()).into(mPreviewImagesIV);
+			mPreviewImagesPB.setVisibility(View.VISIBLE);
+			Picasso.get().load(message.getImageURL()).into(mPreviewImagesIV, new Callback() {
+				@Override
+				public void onSuccess() {
+					mPreviewImagesPB.setVisibility(View.GONE);
+				}
+
+				@Override
+				public void onError(Exception e) {
+					mPreviewImagesPB.setVisibility(View.GONE);
+				}
+			});
 
 			//Utils.showImage(ConversationActivity.this, message.getImageURL());
 		}
@@ -821,8 +850,10 @@ public class ConversationActivity extends AppCompatActivity implements
 
 	@Override
 	public void onBackPressed() {
-		if (mPreviewImagesIV.getVisibility() == View.VISIBLE)
+		if (mPreviewImagesIV.getVisibility() == View.VISIBLE) {
 			mPreviewImagesIV.setVisibility(View.GONE);
+			mPreviewImagesPB.setVisibility(View.GONE);
+		}
 		else
 			super.onBackPressed();
 	}

@@ -39,6 +39,8 @@ public interface MessageContentType extends IMessage {
         @Nullable
         String getImageForDisplay();
 
+        boolean isLocal();
+
         @Nullable
         String getImageLocal();
 

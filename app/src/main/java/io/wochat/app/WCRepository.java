@@ -11,6 +11,8 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -371,9 +373,20 @@ public class WCRepository {
 							String imageThumbUrl = response.getString("thumb_url");
 							message.setMediaThumbnailUrl(imageThumbUrl);
 							message.setMediaUrl(imageUrl);
-							updateMessageOnly(message);
+							Picasso.get().load(imageThumbUrl).fetch(new Callback() { // pre load it
+								@Override
+								public void onSuccess() {
+									updateMessageOnly(message);
+									mUploadImageResult.setValue(new StateData<Message>().success(message));
+								}
 
-							mUploadImageResult.setValue(new StateData<Message>().success(message));
+								@Override
+								public void onError(Exception e) {
+									mUploadImageResult.setValue(new StateData<Message>().errorComm(e));
+								}
+							});
+//							updateMessageOnly(message);
+//							mUploadImageResult.setValue(new StateData<Message>().success(message));
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}

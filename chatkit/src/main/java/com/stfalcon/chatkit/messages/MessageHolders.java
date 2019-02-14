@@ -882,7 +882,7 @@ public class MessageHolders {
             super.onBind(message);
             if (image != null && imageLoader != null) {
                 int placeholder = 0;
-                imageLoader.loadImageCenter(image, message.getImageForDisplay(), 0,getPayloadForImageLoader(message));
+				imageLoader.loadImageCenter(image, message.getImageForDisplay(), 0,getPayloadForImageLoader(message));
             }
 
             if (imageOverlay != null) {
@@ -952,8 +952,12 @@ public class MessageHolders {
         public void onBind(MESSAGE message) {
             super.onBind(message);
             if (image != null && imageLoader != null) {
-                imageLoader.loadImageCenter(image, message.getImageForDisplay(), 0, getPayloadForImageLoader(message));
-            }
+				if (message.isLocal())
+					imageLoader.loadImageCenterCrop(image, message.getImageForDisplay(), getPayloadForImageLoader(message));
+				else
+					imageLoader.loadImageCenter(image, message.getImageForDisplay(), 0,getPayloadForImageLoader(message));
+
+			}
 
             if (imageOverlay != null) {
                 imageOverlay.setSelected(isSelected());

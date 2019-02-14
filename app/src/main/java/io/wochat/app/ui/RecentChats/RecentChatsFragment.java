@@ -157,8 +157,8 @@ public class RecentChatsFragment extends Fragment  implements
 			}
 
 			@Override
-			public void loadImage(ImageView imageView, int resourceId) {
-				Picasso.get().load(resourceId).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
+			public void loadImageCenterCrop(ImageView imageView, @Nullable String url, @Nullable Object payload) {
+				Picasso.get().load(url).resize(300,300).centerCrop().into(imageView);
 			}
 
 			@Override
