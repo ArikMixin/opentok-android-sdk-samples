@@ -118,16 +118,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@+id/input_padder_ll"
+
                 app:incomingAvatarHeight="0dp"
                 app:incomingAvatarWidth="0dp"
                 app:incomingImageTimeTextColor="@color/white"
                 app:incomingTextColor="@color/black"
                 app:incomingTimeTextColor="@color/black"
+                app:incomingDefaultBubbleColor="@color/incoming_bubble"
+                app:incomingDefaultBubblePressedColor="@color/incoming_bubble"
+                app:incomingDefaultBubbleSelectedColor="@color/incoming_bubble"
+
                 app:outcomingImageTimeTextColor="@color/white"
                 app:outcomingTextColor="@color/black"
                 app:outcomingTimeTextColor="@color/black"
                 app:outcomingDefaultBubbleColor="@color/outcoming_bubble"
-                app:incomingDefaultBubbleColor="@color/incoming_bubble"
+                app:outcomingDefaultBubblePressedColor="@color/outcoming_bubble"
+                app:outcomingDefaultBubbleSelectedColor="@color/outcoming_bubble"
                  />
 
             <LinearLayout

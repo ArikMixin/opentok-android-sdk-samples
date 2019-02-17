@@ -9,16 +9,21 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Parcelable;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ImagePickerUtil {
 
@@ -77,8 +82,17 @@ public class ImagePickerUtil {
 	public static Uri getCaptureImageOutputUri(Context context) {
 		Uri outputFileUri = null;
 		File getImage = context.getExternalCacheDir();
+		String mImageName;
 		if (getImage != null) {
-			outputFileUri = Uri.fromFile(new File(getImage.getPath(), "pickImageResult.jpeg"));
+
+
+			String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm_SSS", Locale.getDefault()).format(new Date());
+			File mediaFile;
+			mImageName = "PIC_" + timeStamp + ".jpg";
+			mediaFile = new File(getImage.getPath() + File.separator + mImageName);
+			outputFileUri = Uri.fromFile(mediaFile);
+//			return mediaFile;
+//			outputFileUri = Uri.fromFile(new File(getImage.getPath(), "pickImageResult.jpeg"));
 		}
 		return outputFileUri;
 	}
@@ -95,6 +109,22 @@ public class ImagePickerUtil {
 
 	public static byte[] getImageBytes(ContentResolver contentResolver, Uri uri){
 		try {
+
+
+			ExifInterface exif = new ExifInterface(uri.getPath());
+			int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+			Log.d("EXIF", "Exif: " + orientation);
+			Matrix matrix = new Matrix();
+			if (orientation == 6) {
+				matrix.postRotate(90);
+			} else if (orientation == 3) {
+				matrix.postRotate(180);
+			} else if (orientation == 8) {
+				matrix.postRotate(270);
+			}
+
+
+
 			InputStream imageStream;
 			Bitmap imageBitmap = null;
 			try {
@@ -117,8 +147,13 @@ public class ImagePickerUtil {
 				newHeight = 1300 * height / width;
 
 				imageBitmap = Bitmap.createScaledBitmap(imageBitmap, newWidth, newHeight, false);
+				imageBitmap = Bitmap.createBitmap(imageBitmap, 0, 0, newWidth, newHeight, matrix, true);
 
 			}
+
+
+
+
 
 			//imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, out);
 			imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);

@@ -17,6 +17,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.StrictMode;
+import android.provider.MediaStore;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
@@ -61,6 +63,7 @@ import io.wochat.app.db.entity.ImageInfo;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.fixtures.MessagesFixtures;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.RegistrationActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ConversationViewModel;
@@ -80,7 +83,9 @@ public class ConversationActivity extends AppCompatActivity implements
 	MessageInput.ButtonClickListener {
 
 	private static final String TAG = "ConversationActivity";
-	private static final int REQUEST_SELECT_PHOTO = 1;
+	private static final int REQUEST_SELECT_IMAGE = 1;
+	private static final int REQUEST_SELECT_CAMERA_PHOTO = 2;
+	private static final int REQUEST_SELECT_CAMERA_VIDEO = 3;
 	private MessagesList mMessagesListRV;
 	protected MessagesListAdapter<Message> mMessagesAdapter;
 	protected ImageLoader mImageLoader;
@@ -111,6 +116,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	private PhotoView mPreviewImagesIV;
 	private Uri mSelectedImageForDelayHandlingUri;
 	private ProgressBar mPreviewImagesPB;
+	private Uri mCameraPhotoFileUri;
 
 
 	@Override
@@ -391,6 +397,9 @@ public class ConversationActivity extends AppCompatActivity implements
 			case R.id.attachmentButton:
 				selectImage();
 				break;
+			case R.id.cameraButton:
+				selectPhotoCamera();
+				break;
 		}
 		//mMessagesAdapter.addToStart(MessagesFixtures.getImageMessage(), true);
 	}
@@ -400,7 +409,20 @@ public class ConversationActivity extends AppCompatActivity implements
 		android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 		photoPickerIntent.setType("image/*");
 		photoPickerIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-		startActivityForResult(photoPickerIntent, REQUEST_SELECT_PHOTO);
+		startActivityForResult(photoPickerIntent, REQUEST_SELECT_IMAGE);
+	}
+
+	private void selectPhotoCamera(){
+		StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+		StrictMode.setVmPolicy(builder.build());
+
+		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		mCameraPhotoFileUri = ImagePickerUtil.getCaptureImageOutputUri(this);
+		takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraPhotoFileUri);
+		takePictureIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+		if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+			startActivityForResult(takePictureIntent, REQUEST_SELECT_CAMERA_PHOTO);
+		}
 	}
 
 
@@ -785,7 +807,7 @@ public class ConversationActivity extends AppCompatActivity implements
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == REQUEST_SELECT_PHOTO) {
+		if (requestCode == REQUEST_SELECT_IMAGE) {
 			if (resultCode == Activity.RESULT_OK) {
 				Uri uri = ImagePickerUtil.getPickImageResultUri(this, data);
 				if ((mService != null)&& (mService.isXmppConnected())){
@@ -793,6 +815,19 @@ public class ConversationActivity extends AppCompatActivity implements
 				}
 				else {
 					mSelectedImageForDelayHandlingUri = uri;
+				}
+
+				Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
+
+			}
+		}
+		else if (requestCode == REQUEST_SELECT_CAMERA_PHOTO){
+			if (resultCode == Activity.RESULT_OK) {
+				if ((mService != null)&& (mService.isXmppConnected())){
+					submitTempImageMessage(mCameraPhotoFileUri);
+				}
+				else {
+					mSelectedImageForDelayHandlingUri = mCameraPhotoFileUri;
 				}
 
 				Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
