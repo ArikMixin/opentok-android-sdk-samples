@@ -28,6 +28,7 @@ public class SplashActivity extends PermissionActivity {
 	private String[] PERMISSIONS = {
 		android.Manifest.permission.READ_CONTACTS,
 		android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+		android.Manifest.permission.READ_EXTERNAL_STORAGE
 	};
 	private UserViewModel mUserViewModel;
 

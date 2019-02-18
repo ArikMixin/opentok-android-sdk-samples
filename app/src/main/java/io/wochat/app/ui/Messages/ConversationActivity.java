@@ -1,20 +1,26 @@
 package io.wochat.app.ui.Messages;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.StrictMode;
@@ -51,6 +57,8 @@ import com.stfalcon.chatkit.messages.MessagesListAdapter;
 //import com.stfalcon.chatkit.utils.DateFormatter;
 import com.stfalcon.chatkit.utils.DateFormatter;
 
+import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -66,6 +74,7 @@ import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.RegistrationActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.Utils;
+import io.wochat.app.utils.videocompression.MediaController;
 import io.wochat.app.viewmodel.ConversationViewModel;
 
 
@@ -117,6 +126,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	private Uri mSelectedImageForDelayHandlingUri;
 	private ProgressBar mPreviewImagesPB;
 	private Uri mCameraPhotoFileUri;
+	private ProgressDialog mProgressDialog;
 
 
 	@Override
@@ -400,6 +410,10 @@ public class ConversationActivity extends AppCompatActivity implements
 			case R.id.cameraButton:
 				selectPhotoCamera();
 				break;
+
+			case R.id.videoButton:
+				selectVideoCamera();
+				break;
 		}
 		//mMessagesAdapter.addToStart(MessagesFixtures.getImageMessage(), true);
 	}
@@ -426,6 +440,17 @@ public class ConversationActivity extends AppCompatActivity implements
 	}
 
 
+	private void selectVideoCamera(){
+		StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+		StrictMode.setVmPolicy(builder.build());
+
+		Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+		if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
+			startActivityForResult(takeVideoIntent, REQUEST_SELECT_CAMERA_VIDEO);
+		}
+	}
+
+
 	@Override
 	public void onMessageViewClick(View view, Message message) {
 
@@ -443,22 +468,24 @@ public class ConversationActivity extends AppCompatActivity implements
 			message.setShowNonTranslated(!message.isShowNonTranslated());
 			mMessagesAdapter.update(message);
 		}
-		else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)){
-			mPreviewImagesIV.setVisibility(View.VISIBLE);
-			mPreviewImagesPB.setVisibility(View.VISIBLE);
-			Picasso.get().load(message.getImageURL()).into(mPreviewImagesIV, new Callback() {
-				@Override
-				public void onSuccess() {
-					mPreviewImagesPB.setVisibility(View.GONE);
-				}
+		else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
+			if ((message.getImageURL() != null) && (!message.getImageURL().equals(""))) {
+				mPreviewImagesIV.setVisibility(View.VISIBLE);
+				mPreviewImagesPB.setVisibility(View.VISIBLE);
+				Picasso.get().load(message.getImageURL()).into(mPreviewImagesIV, new Callback() {
+					@Override
+					public void onSuccess() {
+						mPreviewImagesPB.setVisibility(View.GONE);
+					}
 
-				@Override
-				public void onError(Exception e) {
-					mPreviewImagesPB.setVisibility(View.GONE);
-				}
-			});
+					@Override
+					public void onError(Exception e) {
+						mPreviewImagesPB.setVisibility(View.GONE);
+					}
+				});
 
-			//Utils.showImage(ConversationActivity.this, message.getImageURL());
+				//Utils.showImage(ConversationActivity.this, message.getImageURL());
+			}
 		}
 
 	}
@@ -806,10 +833,10 @@ public class ConversationActivity extends AppCompatActivity implements
 
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		if (requestCode == REQUEST_SELECT_IMAGE) {
 			if (resultCode == Activity.RESULT_OK) {
-				Uri uri = ImagePickerUtil.getPickImageResultUri(this, data);
+				Uri uri = ImagePickerUtil.getPickImageResultUri(this, intent);
 				if ((mService != null)&& (mService.isXmppConnected())){
 					submitTempImageMessage(uri);
 				}
@@ -834,6 +861,26 @@ public class ConversationActivity extends AppCompatActivity implements
 
 			}
 		}
+		else if (requestCode == REQUEST_SELECT_CAMERA_VIDEO){
+			if (resultCode == Activity.RESULT_OK) {
+				Uri videoUri = intent.getData();
+				Log.e(TAG, "video: " + videoUri);
+				File f = getExternalCacheDir();
+				String videoPath = getFilePathFromContentUri(videoUri, getContentResolver());
+				Log.e(TAG, "video file: " + videoPath);
+
+				//File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + getPackageName() + "/media/videos");
+				if (f.mkdirs() || f.isDirectory()) {
+
+					Log.e(TAG, "before compression: " + videoPath);
+					new VideoCompressor().execute(videoPath);
+
+
+				}
+
+
+			}
+		}
 	}
 
 //	private void updateImageMessage(ImageInfo imageInfo) {
@@ -843,6 +890,65 @@ public class ConversationActivity extends AppCompatActivity implements
 //		mConversationViewModel.addNewOutcomingMessage(message);
 //
 //	}
+
+	private class VideoCompressor extends AsyncTask<String, Void, Boolean> {
+		@Override
+		protected void onPreExecute() {
+			showProgressDialog();
+		}
+
+		@Override
+		protected Boolean doInBackground(String... filePath) {
+			Log.e(TAG, "start video compression");
+			MediaController.cachDir = getExternalCacheDir().getPath();
+			boolean res = MediaController.getInstance().convertVideo(filePath[0]);
+			return res;
+		}
+
+		@Override
+		protected void onPostExecute(Boolean compressed) {
+			super.onPostExecute(compressed);
+			hideProgressDialog();
+			Log.e(TAG, "compression result: " + compressed);
+			if (compressed) {
+				String compressedVideo = MediaController.cachedFile.getPath();
+				Bitmap snapshotImage = MediaController.bitmapFrame;
+				File thumbFile = MediaController.thumbFile;
+				int duration = Integer.valueOf(MediaController.duration);
+
+				Log.e(TAG, "Compression successfully!");
+				Log.e(TAG, "Compressed File Path: " + compressedVideo);
+				Log.e(TAG, "video duration: " + duration);
+				Log.e(TAG, "bitmap: "+ snapshotImage);
+				Log.e(TAG, "thumb: "+ thumbFile.getPath());
+				mCameraPhotoFileUri = Uri.fromFile(thumbFile);
+
+				if ((mService != null)&& (mService.isXmppConnected())){
+					submitTempImageMessage(mCameraPhotoFileUri);
+				}
+				else {
+					mSelectedImageForDelayHandlingUri = mCameraPhotoFileUri;
+				}
+
+
+			}
+
+		}
+	}
+
+	private String getFilePathFromContentUri(Uri selectedVideoUri,
+											 ContentResolver contentResolver) {
+		String filePath;
+		String[] filePathColumn = {MediaStore.MediaColumns.DATA};
+
+		Cursor cursor = contentResolver.query(selectedVideoUri, filePathColumn, null, null, null);
+		cursor.moveToFirst();
+
+		int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+		filePath = cursor.getString(columnIndex);
+		cursor.close();
+		return filePath;
+	}
 
 
 	private Observer<Message> mMessageObserver = new Observer<Message>() {
@@ -892,4 +998,22 @@ public class ConversationActivity extends AppCompatActivity implements
 		else
 			super.onBackPressed();
 	}
+
+
+	private void showProgressDialog(){
+		mProgressDialog = ProgressDialog.show(ConversationActivity.this,
+			null,
+			"Processing",
+			true,
+			false);
+	}
+
+	private void hideProgressDialog(){
+		if (mProgressDialog != null) {
+			mProgressDialog.dismiss();
+			mProgressDialog = null;
+		}
+
+	}
+
 }

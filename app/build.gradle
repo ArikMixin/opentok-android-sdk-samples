@@ -73,5 +73,12 @@ dependencies {
     implementation "org.igniterealtime.smack:smack-extensions:4.3.0"
     implementation "android.arch.lifecycle:extensions:1.1.1"
     //implementation 'com.github.turing-tech:MaterialScrollBar:13.3.2'
+
+    implementation files('libs/aspectjrt-1.7.3.jar')
+    //implementation 'org.aspectj:aspectjrt:1.7.3'
+    //implementation group: 'org.aspectj', name: 'aspectjrt', version: '1.7.3'
+    implementation files('libs/isoparser-1.0.6.jar')
+    //implementation group: 'com.googlecode.mp4parser', name: 'isoparser', version: '1.0.6'
+
 }
 
