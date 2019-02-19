@@ -314,7 +314,13 @@ public class ConversationActivity extends AppCompatActivity implements
 				R.layout.item_custom_incoming_image_message)
 			.setOutcomingImageConfig(
 				CustomOutcomingImageMessageViewHolder.class,
-				R.layout.item_custom_outcoming_image_message);
+				R.layout.item_custom_outcoming_image_message)
+			.setIncomingVideoConfig(
+				CustomIncomingVideoMessageViewHolder.class,
+				R.layout.item_custom_incoming_video_message)
+			.setOutcomingVideoConfig(
+				CustomOutcomingVideoMessageViewHolder.class,
+				R.layout.item_custom_outcoming_video_message);
 
 		mMessagesAdapter = new MessagesListAdapter<>(mSelfId, holdersConfig, mImageLoader);
 		mMessagesAdapter.setOnMessageLongClickListener(this);
@@ -467,11 +473,11 @@ public class ConversationActivity extends AppCompatActivity implements
 
 	@Override
 	public void onMessageClick(Message message) {
-		if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
+		if (message.isText()) {
 			message.setShowNonTranslated(!message.isShowNonTranslated());
 			mMessagesAdapter.update(message);
 		}
-		else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
+		else if (message.isImage()) {
 			if ((message.getImageURL() != null) && (!message.getImageURL().equals(""))) {
 				mPreviewImagesIV.setVisibility(View.VISIBLE);
 				mPreviewImagesPB.setVisibility(View.VISIBLE);
@@ -489,6 +495,12 @@ public class ConversationActivity extends AppCompatActivity implements
 
 				//Utils.showImage(ConversationActivity.this, message.getImageURL());
 			}
+		}
+		else if (message.isVideo()){
+			Uri uri = Uri.parse(message.getMediaUrl());
+			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+			intent.setDataAndType(uri, "video/mp4");
+			startActivity(intent);
 		}
 
 	}

@@ -36,6 +36,7 @@ public class MessageHolders {
     private static final short VIEW_TYPE_DATE_HEADER = 130;
     private static final short VIEW_TYPE_TEXT_MESSAGE = 131;
     private static final short VIEW_TYPE_IMAGE_MESSAGE = 132;
+    private static final short VIEW_TYPE_VIDEO_MESSAGE = 133;
 
     private Class<? extends ViewHolder<Date>> dateHeaderHolder;
     private int dateHeaderLayout;
@@ -44,6 +45,8 @@ public class MessageHolders {
     private HolderConfig<IMessage> outcomingTextConfig;
     private HolderConfig<MessageContentType.Image> incomingImageConfig;
     private HolderConfig<MessageContentType.Image> outcomingImageConfig;
+    private HolderConfig<MessageContentType.Video> incomingVideoConfig;
+    private HolderConfig<MessageContentType.Video> outcomingVideoConfig;
 
     private List<ContentTypeConfig> customContentTypes = new ArrayList<>();
     private ContentChecker contentChecker;
@@ -56,6 +59,8 @@ public class MessageHolders {
         this.outcomingTextConfig = new HolderConfig<>(DefaultOutcomingTextMessageViewHolder.class, R.layout.item_outcoming_text_message);
         this.incomingImageConfig = new HolderConfig<>(DefaultIncomingImageMessageViewHolder.class, R.layout.item_incoming_image_message);
         this.outcomingImageConfig = new HolderConfig<>(DefaultOutcomingImageMessageViewHolder.class, R.layout.item_outcoming_image_message);
+		this.incomingVideoConfig = new HolderConfig<>(DefaultIncomingVideoMessageViewHolder.class, R.layout.item_incoming_image_message);
+		this.outcomingVideoConfig = new HolderConfig<>(DefaultOutcomingVideoMessageViewHolder.class, R.layout.item_outcoming_image_message);
     }
 
     /**
@@ -241,6 +246,14 @@ public class MessageHolders {
         return this;
     }
 
+	public MessageHolders setIncomingVideoConfig(
+		@NonNull Class<? extends BaseMessageViewHolder<? extends MessageContentType.Video>> holder,
+		@LayoutRes int layout) {
+		this.incomingVideoConfig.holder = holder;
+		this.incomingVideoConfig.layout = layout;
+		return this;
+	}
+
     /**
      * Sets both of custom view holder class and layout resource for incoming image message.
      *
@@ -259,6 +272,16 @@ public class MessageHolders {
         return this;
     }
 
+	public MessageHolders setIncomingVideoConfig(
+		@NonNull Class<? extends BaseMessageViewHolder<? extends MessageContentType.Video>> holder,
+		@LayoutRes int layout,
+		Object payload) {
+		this.incomingVideoConfig.holder = holder;
+		this.incomingVideoConfig.layout = layout;
+		this.incomingVideoConfig.payload = payload;
+		return this;
+	}
+
     /**
      * Sets custom view holder class for incoming image message.
      *
@@ -270,6 +293,12 @@ public class MessageHolders {
         this.incomingImageConfig.holder = holder;
         return this;
     }
+
+	public MessageHolders setIncomingVideoHolder(
+		@NonNull Class<? extends BaseMessageViewHolder<? extends MessageContentType.Video>> holder) {
+		this.incomingVideoConfig.holder = holder;
+		return this;
+	}
 
     /**
      * Sets custom view holder class for incoming image message.
@@ -286,6 +315,14 @@ public class MessageHolders {
         return this;
     }
 
+	public MessageHolders setIncomingVideoHolder(
+		@NonNull Class<? extends BaseMessageViewHolder<? extends MessageContentType.Video>> holder,
+		Object payload) {
+		this.incomingVideoConfig.holder = holder;
+		this.incomingVideoConfig.payload = payload;
+		return this;
+	}
+
     /**
      * Sets custom layout resource for incoming image message.
      *
@@ -296,6 +333,11 @@ public class MessageHolders {
         this.incomingImageConfig.layout = layout;
         return this;
     }
+
+	public MessageHolders setIncomingVideoLayout(@LayoutRes int layout) {
+		this.incomingVideoConfig.layout = layout;
+		return this;
+	}
 
     /**
      * Sets custom layout resource for incoming image message.
@@ -310,7 +352,14 @@ public class MessageHolders {
         return this;
     }
 
-    /**
+	public MessageHolders setIncomingVideoLayout(@LayoutRes int layout, Object payload) {
+		this.incomingVideoConfig.layout = layout;
+		this.incomingVideoConfig.payload = payload;
+		return this;
+	}
+
+
+	/**
      * Sets both of custom view holder class and layout resource for outcoming image message.
      *
      * @param holder holder class.
@@ -324,6 +373,14 @@ public class MessageHolders {
         this.outcomingImageConfig.layout = layout;
         return this;
     }
+
+	public MessageHolders setOutcomingVideoConfig(
+		@NonNull Class<? extends BaseMessageViewHolder<? extends MessageContentType.Video>> holder,
+		@LayoutRes int layout) {
+		this.outcomingVideoConfig.holder = holder;
+		this.outcomingVideoConfig.layout = layout;
+		return this;
+	}
 
     /**
      * Sets both of custom view holder class and layout resource for outcoming image message.
@@ -343,6 +400,16 @@ public class MessageHolders {
         return this;
     }
 
+	public MessageHolders setOutcomingVideoConfig(
+		@NonNull Class<? extends BaseMessageViewHolder<? extends MessageContentType.Video>> holder,
+		@LayoutRes int layout,
+		Object payload) {
+		this.outcomingVideoConfig.holder = holder;
+		this.outcomingVideoConfig.layout = layout;
+		this.outcomingVideoConfig.payload = payload;
+		return this;
+	}
+
     /**
      * Sets custom view holder class for outcoming image message.
      *
@@ -354,6 +421,12 @@ public class MessageHolders {
         this.outcomingImageConfig.holder = holder;
         return this;
     }
+
+	public MessageHolders setOutcomingVideoHolder(
+		@NonNull Class<? extends BaseMessageViewHolder<? extends MessageContentType.Video>> holder) {
+		this.outcomingVideoConfig.holder = holder;
+		return this;
+	}
 
     /**
      * Sets custom view holder class for outcoming image message.
@@ -370,6 +443,14 @@ public class MessageHolders {
         return this;
     }
 
+	public MessageHolders setOutcomingVideoHolder(
+		@NonNull Class<? extends BaseMessageViewHolder<? extends MessageContentType.Video>> holder,
+		Object payload) {
+		this.outcomingVideoConfig.holder = holder;
+		this.outcomingVideoConfig.payload = payload;
+		return this;
+	}
+
     /**
      * Sets custom layout resource for outcoming image message.
      *
@@ -380,6 +461,11 @@ public class MessageHolders {
         this.outcomingImageConfig.layout = layout;
         return this;
     }
+
+	public MessageHolders setOutcomingVideoLayout(@LayoutRes int layout) {
+		this.outcomingVideoConfig.layout = layout;
+		return this;
+	}
 
     /**
      * Sets custom layout resource for outcoming image message.
@@ -394,6 +480,11 @@ public class MessageHolders {
         return this;
     }
 
+    public MessageHolders setOutcomingVideoLayout(@LayoutRes int layout, Object payload) {
+		this.outcomingVideoConfig.layout = layout;
+		this.outcomingVideoConfig.payload = payload;
+		return this;
+	}
     /**
      * Sets both of custom view holder class and layout resource for date header.
      *
@@ -549,6 +640,10 @@ public class MessageHolders {
                 return getHolder(parent, incomingImageConfig, messagesListStyle);
             case -VIEW_TYPE_IMAGE_MESSAGE:
                 return getHolder(parent, outcomingImageConfig, messagesListStyle);
+			case VIEW_TYPE_VIDEO_MESSAGE:
+				return getHolder(parent, incomingVideoConfig, messagesListStyle);
+			case -VIEW_TYPE_VIDEO_MESSAGE:
+				return getHolder(parent, outcomingVideoConfig, messagesListStyle);
             default:
                 for (ContentTypeConfig typeConfig : customContentTypes) {
                     if (Math.abs(typeConfig.type) == Math.abs(viewType)) {
@@ -643,12 +738,20 @@ public class MessageHolders {
 
     @SuppressWarnings("unchecked")
     private short getContentViewType(IMessage message) {
-        if (message instanceof MessageContentType.Image
+        if (message.isImage() &&
+        	message instanceof MessageContentType.Image
                 && ((MessageContentType.Image) message).getImageForDisplay() != null) {
             return VIEW_TYPE_IMAGE_MESSAGE;
         }
 
-        // other default types will be here
+		if (message.isVideo() &&
+			message instanceof MessageContentType.Video
+			&& ((MessageContentType.Video) message).getThumbForDisplay() != null) {
+			return VIEW_TYPE_VIDEO_MESSAGE;
+		}
+
+
+		// other default types will be here
 
         if (message instanceof MessageContentType) {
             for (int i = 0; i < customContentTypes.size(); i++) {
@@ -1002,6 +1105,149 @@ public class MessageHolders {
         }
     }
 
+	public static class IncomingVideoMessageViewHolder<MESSAGE extends MessageContentType.Video>
+		extends BaseIncomingMessageViewHolder<MESSAGE> {
+
+		protected ImageView image;
+		protected View imageOverlay;
+
+		@Deprecated
+		public IncomingVideoMessageViewHolder(View itemView) {
+			super(itemView);
+			init(itemView);
+		}
+
+		public IncomingVideoMessageViewHolder(View itemView, Object payload) {
+			super(itemView, payload);
+			init(itemView);
+		}
+
+		@Override
+		public void onBind(MESSAGE message) {
+			super.onBind(message);
+			if (image != null && imageLoader != null) {
+				int placeholder = 0;
+				imageLoader.loadImageCenter(image, message.getThumbForDisplay(), 0,getPayloadForImageLoader(message));
+			}
+
+			if (imageOverlay != null) {
+				imageOverlay.setSelected(isSelected());
+			}
+		}
+
+		@Override
+		public final void applyStyle(MessagesListStyle style) {
+			super.applyStyle(style);
+			if (time != null) {
+				time.setTextColor(style.getIncomingImageTimeTextColor());
+				time.setTextSize(TypedValue.COMPLEX_UNIT_PX, style.getIncomingImageTimeTextSize());
+				time.setTypeface(time.getTypeface(), style.getIncomingImageTimeTextStyle());
+			}
+
+			if (imageOverlay != null) {
+				ViewCompat.setBackground(imageOverlay, style.getIncomingImageOverlayDrawable());
+			}
+		}
+
+		/**
+		 * Override this method to have ability to pass custom data in ImageLoader for loading image(not avatar).
+		 *
+		 * @param message Message with image
+		 */
+		protected Object getPayloadForImageLoader(MESSAGE message) {
+			return null;
+		}
+
+		private void init(View itemView) {
+			image = (ImageView) itemView.findViewById(R.id.image);
+			imageOverlay = itemView.findViewById(R.id.imageOverlay);
+
+			if (image instanceof RoundedImageView) {
+				((RoundedImageView) image).setCorners(
+					0,
+					R.dimen.message_bubble_corners_radius,
+					R.dimen.message_bubble_corners_radius,
+					R.dimen.message_bubble_corners_radius
+				);
+			}
+		}
+	}
+
+	/**
+	 * Default view holder implementation for outcoming image message
+	 */
+	public static class OutcomingVideoMessageViewHolder<MESSAGE extends MessageContentType.Video>
+		extends BaseOutcomingMessageViewHolder<MESSAGE> {
+
+		protected ImageView image;
+		protected View imageOverlay;
+
+		@Deprecated
+		public OutcomingVideoMessageViewHolder(View itemView) {
+			super(itemView);
+			init(itemView);
+		}
+
+		public OutcomingVideoMessageViewHolder(View itemView, Object payload) {
+			super(itemView, payload);
+			init(itemView);
+		}
+
+		@Override
+		public void onBind(MESSAGE message) {
+			super.onBind(message);
+			if (image != null && imageLoader != null) {
+				if (message.isLocal())
+					imageLoader.loadImageCenterCrop(image, message.getThumbForDisplay(), getPayloadForImageLoader(message));
+				else
+					imageLoader.loadImageCenter(image, message.getThumbForDisplay(), 0,getPayloadForImageLoader(message));
+
+			}
+
+			if (imageOverlay != null) {
+				imageOverlay.setSelected(isSelected());
+			}
+		}
+
+		@Override
+		public final void applyStyle(MessagesListStyle style) {
+			super.applyStyle(style);
+			if (time != null) {
+				time.setTextColor(style.getOutcomingImageTimeTextColor());
+				time.setTextSize(TypedValue.COMPLEX_UNIT_PX, style.getOutcomingImageTimeTextSize());
+				time.setTypeface(time.getTypeface(), style.getOutcomingImageTimeTextStyle());
+			}
+
+			if (imageOverlay != null) {
+				ViewCompat.setBackground(imageOverlay, style.getOutcomingImageOverlayDrawable());
+			}
+		}
+
+		/**
+		 * Override this method to have ability to pass custom data in ImageLoader for loading image(not avatar).
+		 *
+		 * @param message Message with image
+		 */
+		protected Object getPayloadForImageLoader(MESSAGE message) {
+			return null;
+		}
+
+		private void init(View itemView) {
+			image = (ImageView) itemView.findViewById(R.id.image);
+			imageOverlay = itemView.findViewById(R.id.imageOverlay);
+
+			if (image instanceof RoundedImageView) {
+				((RoundedImageView) image).setCorners(
+					R.dimen.message_bubble_corners_radius,
+					0,
+					R.dimen.message_bubble_corners_radius,
+					R.dimen.message_bubble_corners_radius
+				);
+			}
+		}
+	}
+
+
     /**
      * Default view holder implementation for date header
      */
@@ -1179,7 +1425,24 @@ public class MessageHolders {
         }
     }
 
-    private static class ContentTypeConfig<TYPE extends MessageContentType> {
+	private static class DefaultIncomingVideoMessageViewHolder
+		extends IncomingVideoMessageViewHolder<MessageContentType.Video> {
+
+		public DefaultIncomingVideoMessageViewHolder(View itemView) {
+			super(itemView, null);
+		}
+	}
+
+	private static class DefaultOutcomingVideoMessageViewHolder
+		extends OutcomingVideoMessageViewHolder<MessageContentType.Video> {
+
+		public DefaultOutcomingVideoMessageViewHolder(View itemView) {
+			super(itemView, null);
+		}
+	}
+
+
+	private static class ContentTypeConfig<TYPE extends MessageContentType> {
 
         private byte type;
         private HolderConfig<TYPE> incomingConfig;

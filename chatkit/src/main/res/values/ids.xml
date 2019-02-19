@@ -5,8 +5,10 @@
     <item name="messageText" type="id" />
     <item name="messageUserAvatar" type="id" />
     <item name="messageTime" type="id" />
+    <item name="videoDuration" type="id" />
     <item name="image" type="id" />
     <item name="imageOverlay" type="id" />
+    <item name="image_wrapper_fl" type="id" />
 
     <!-- MESSAGE INPUT -->
     <item name="attachmentButton" type="id" />

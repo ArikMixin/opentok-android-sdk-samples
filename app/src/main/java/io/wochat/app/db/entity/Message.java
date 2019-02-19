@@ -413,8 +413,19 @@ public class Message implements IMessage,
         return messageId;
     }
 
-	public boolean isImage() {
-		return messageType == MSG_TYPE_IMAGE;
+	@Override
+    public boolean isImage() {
+		return messageType.equals(MSG_TYPE_IMAGE);
+	}
+
+	@Override
+	public boolean isVideo() {
+		return messageType.equals(MSG_TYPE_VIDEO);
+	}
+
+	@Override
+	public boolean isText() {
+		return messageType.equals(MSG_TYPE_TEXT);
 	}
 
 	@Override

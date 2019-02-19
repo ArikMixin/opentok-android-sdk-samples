@@ -126,7 +126,7 @@ public class ImagePickerUtil {
 					matrix.postRotate(270);
 				}
 			} catch (IOException e) {
-				
+
 			}
 
 

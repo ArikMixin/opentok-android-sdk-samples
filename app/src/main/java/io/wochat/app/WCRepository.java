@@ -819,6 +819,11 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 					res = handleIncomingMessageImage(message);
 					listener.OnSaved(res, message);
 					break;
+				case Message.MSG_TYPE_VIDEO:
+					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
+					res = handleIncomingMessageImage(message);
+					listener.OnSaved(res, message);
+					break;
 				case Message.MSG_TYPE_GIF:
 					break;
 			}

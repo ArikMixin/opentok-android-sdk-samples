@@ -58,4 +58,9 @@ public interface IMessage {
      */
     Date getCreatedAt();
 
+    boolean isImage();
+    boolean isVideo();
+    boolean isText();
+
+
 }

@@ -488,11 +488,15 @@ class XMPPProvider {
 		try {
 			BareJid bare = JidCreate.bareFrom(getUserJid(contactId));
 			LastActivity lastAct = mLastActivityManager.getLastActivity(bare);
-			long idlTime = lastAct.getIdleTime() * 1000;
-			long now = System.currentTimeMillis();
-			long lastOnline = now - idlTime;
-			Log.e(TAG, "getLastOnline for contactId " + contactId + " : " + new Date(lastOnline));
-			return lastOnline;
+			if (lastAct != null) {
+				long idlTime = lastAct.getIdleTime() * 1000;
+				long now = System.currentTimeMillis();
+				long lastOnline = now - idlTime;
+				Log.e(TAG, "getLastOnline for contactId " + contactId + " : " + new Date(lastOnline));
+				return lastOnline;
+			}
+			else
+				return 0;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return 0;
