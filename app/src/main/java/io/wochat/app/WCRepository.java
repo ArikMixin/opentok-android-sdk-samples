@@ -8,8 +8,10 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Log;
 
+import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
@@ -18,6 +20,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -229,7 +233,7 @@ public class WCRepository {
 
 	private void userUploadProfilePic(byte[] bytes, final String userName) {
 		mSharedPreferences.saveUserProfileImages(bytes);
-		mWochatApi.dataUploadFile(bytes, new WochatApi.OnServerResponseListener() {
+		mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, new WochatApi.OnServerResponseListener() {
 			@Override
 			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
 				Log.e(TAG, "OnServerResponse userUploadProfilePic - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
@@ -360,10 +364,54 @@ public class WCRepository {
 		return mSelfUser;
 	}
 
+	public void uploadVideo(Message message, byte[] mediaFileBytes){
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.dataUploadFile(mediaFileBytes, mWochatApi.UPLOAD_MIME_TYPE_VIDEO, new WochatApi.OnServerResponseListener() {
+				@Override
+				public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+					Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+					if (isSuccess) {
+						try {
+							String mediaUrl = response.getString("url");
+							String mediaThumbUrl = response.getString("thumb_url");
+							message.setMediaThumbnailUrl(mediaThumbUrl);
+							message.setMediaUrl(mediaUrl);
+							Picasso.get().load(mediaThumbUrl).fetch(new Callback() { // pre load it
+								@Override
+								public void onSuccess() {
+									updateMessageOnly(message);
+									mUploadImageResult.setValue(new StateData<Message>().success(message));
+								}
+
+								@Override
+								public void onError(Exception e) {
+									mUploadImageResult.setValue(new StateData<Message>().errorComm(e));
+								}
+							});
+//							updateMessageOnly(message);
+//							mUploadImageResult.setValue(new StateData<Message>().success(message));
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+
+					}
+					else if (errorLogic != null) {
+						mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+					}
+
+					else if (errorComm != null) {
+						mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
+					}
+				}
+			});
+
+		});
+	}
+
 
 	public void uploadImage(Message message, byte[] bytes) {
     	mAppExecutors.networkIO().execute(() -> {
-			mWochatApi.dataUploadFile(bytes, new WochatApi.OnServerResponseListener() {
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, new WochatApi.OnServerResponseListener() {
 				@Override
 				public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
 					Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
@@ -1062,10 +1110,21 @@ public void updateAckStatusToSent(Message message){
 
 
 				}
-				if (message.getMediaLocalUri() != null) {
-					byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));
-					uploadImage(message, bytes);
+				else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
+					if (message.getMediaLocalUri() != null) {
+						byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));
+						uploadImage(message, bytes);
+					}
 				}
+				else if (message.getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
+
+					if (message.getMediaLocalUri() != null) {
+						File mediaFile = new File(new URI(message.getMediaLocalUri()));
+						byte[] mediaFileBytes = Files.toByteArray(mediaFile);
+						uploadVideo(message, mediaFileBytes);
+					}
+				}
+
 
 			} catch (Exception e) {
 				e.printStackTrace();

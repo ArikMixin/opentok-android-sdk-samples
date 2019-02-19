@@ -127,6 +127,9 @@ public class ConversationActivity extends AppCompatActivity implements
 	private ProgressBar mPreviewImagesPB;
 	private Uri mCameraPhotoFileUri;
 	private ProgressDialog mProgressDialog;
+	private File mCameraVideoMediaForDelayHandlingFile;
+	private File mCameraVideoThumbForDelayHandlingFile;
+	private int mCameraVideoDurationForDelayHandling;
 
 
 	@Override
@@ -648,33 +651,12 @@ public class ConversationActivity extends AppCompatActivity implements
 				submitTempImageMessage(mSelectedImageForDelayHandlingUri);
 				mSelectedImageForDelayHandlingUri = null;
 			}
-
-//			if (mSelectedImageForDelayHandlingUri != null) {
-//				if ((mService != null)&&(mService.isXmppConnected())) {
-//					Log.e(TAG, "sending image to xmpp");
-//					submitTempImageMessage(mSelectedImageForDelayHandlingUri);
-//					mSelectedImageForDelayHandlingUri = null;
-//				}
-//				else {
-//					Log.e(TAG, "not sending image to xmpp - not connected, wait 500 ms");
-//
-//					new Handler(getMainLooper()).postDelayed(new Runnable() {
-//						@Override
-//						public void run() {
-//							if ((mService != null) && (mService.isXmppConnected())) {
-//								Log.e(TAG, "sending image to xmpp");
-//								submitTempImageMessage(mSelectedImageForDelayHandlingUri);
-//								mSelectedImageForDelayHandlingUri = null;
-//							} else {
-//								Log.e(TAG, "not sending image to xmpp - not connected!!!");
-//							}
-//						}
-//					}, 1000);
-//				}
-//			}
-
-			//mService.subscribe(mParticipantId);
-			//mService.getPresence(mParticipantId);
+			if (mCameraVideoMediaForDelayHandlingFile != null) {
+				submitTempVideoMessage(mCameraVideoMediaForDelayHandlingFile, mCameraVideoThumbForDelayHandlingFile, mCameraVideoDurationForDelayHandling);
+				mCameraVideoMediaForDelayHandlingFile = null;
+				mCameraVideoThumbForDelayHandlingFile = null;
+				mCameraVideoDurationForDelayHandling = 0;
+			}
 		}
 
 		@Override
@@ -911,7 +893,7 @@ public class ConversationActivity extends AppCompatActivity implements
 			hideProgressDialog();
 			Log.e(TAG, "compression result: " + compressed);
 			if (compressed) {
-				String compressedVideo = MediaController.cachedFile.getPath();
+				File compressedVideo = MediaController.cachedFile;
 				Bitmap snapshotImage = MediaController.bitmapFrame;
 				File thumbFile = MediaController.thumbFile;
 				int duration = Integer.valueOf(MediaController.duration);
@@ -921,13 +903,15 @@ public class ConversationActivity extends AppCompatActivity implements
 				Log.e(TAG, "video duration: " + duration);
 				Log.e(TAG, "bitmap: "+ snapshotImage);
 				Log.e(TAG, "thumb: "+ thumbFile.getPath());
-				mCameraPhotoFileUri = Uri.fromFile(thumbFile);
 
 				if ((mService != null)&& (mService.isXmppConnected())){
-					submitTempImageMessage(mCameraPhotoFileUri);
+					submitTempVideoMessage(compressedVideo, thumbFile, duration);
 				}
 				else {
-					mSelectedImageForDelayHandlingUri = mCameraPhotoFileUri;
+					mCameraVideoMediaForDelayHandlingFile = compressedVideo;
+					mCameraVideoThumbForDelayHandlingFile = thumbFile;
+					mCameraVideoDurationForDelayHandling = duration;
+
 				}
 
 
@@ -983,10 +967,27 @@ public class ConversationActivity extends AppCompatActivity implements
 			return;
 		}
 
-		Message message = new Message(mParticipantId, mSelfId, mConversationId, imageUri, mSelfLang);
+		Message message = Message.CreateImageMessage(mParticipantId, mSelfId, mConversationId, imageUri, mSelfLang);
 		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
+
+	private void submitTempVideoMessage(File compressedVideoFile, File thumbFile, int duration) {
+
+		Uri compressedVideoUri = Uri.fromFile(compressedVideoFile);
+		Uri thumbUri = Uri.fromFile(thumbFile);
+
+		Log.e(TAG, "submitTempVideoMessage: " + compressedVideoFile);
+		if (mService == null) {
+			Log.e(TAG, "submitTempVideoMessage mService is NULL - cancel");
+			return;
+		}
+
+		Message message = Message.CreateVideoMessage(mParticipantId, mSelfId, mConversationId, compressedVideoUri, thumbUri, mSelfLang, duration);
+		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
+		mConversationViewModel.addNewOutcomingMessage(message);
+	}
+
 
 
 	@Override

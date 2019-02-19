@@ -41,7 +41,7 @@ dependencies {
     implementation "com.github.siyamed:android-shape-imageview:0.9.3"
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-
+    implementation 'com.google.guava:guava:27.0.1-android'
     //implementation 'com.hbb20:ccp:2.2.3' // CountryCodePicker
     implementation project(':ccp')
     implementation 'org.apache.commons:commons-lang3:3.6'

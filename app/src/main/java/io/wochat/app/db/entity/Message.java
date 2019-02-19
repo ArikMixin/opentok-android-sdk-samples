@@ -50,6 +50,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
 
 public class Message implements IMessage,
         						MessageContentType.Image, /*this is for default image messages implementation*/
+								MessageContentType.Video,
 								MessageContentType /*and this one is for custom content type (in this case - voice message)*/ {
 
     public static final String ACK_STATUS_PENDING = "PENDING";
@@ -260,6 +261,14 @@ public class Message implements IMessage,
 	@Expose
 	private String mediaLocalUri;
 
+
+	/**********************************************/
+
+	@SerializedName("media_thumbnail_local_uri")
+	@ColumnInfo(name = "media_thumbnail_local_uri")
+	@Expose
+	private String mediaThumbnailLocalUri;
+
 	/**********************************************/
 	@SerializedName("duration")
 	@ColumnInfo(name = "duration")
@@ -322,21 +331,61 @@ public class Message implements IMessage,
 		this.ackStatus = ACK_STATUS_PENDING;
 	}
 
-	public Message(String participantId, String selfId, String conversationId, Uri localUri, String messageLang) {
-		this.showNonTranslated = null;
-		this.messageId = UUID.randomUUID().toString();
-		this.conversationId = conversationId;
-		this.participantId = participantId;
-		this.recipients = new String[]{participantId};
-		this.senderId = selfId;
-		this.messageType = MSG_TYPE_IMAGE;
-		this.mediaUrl = "";
-		this.mediaThumbnailUrl = "";
-		this.mediaLocalUri = localUri.toString();
-		this.messageLanguage = messageLang;
-		this.timestamp = System.currentTimeMillis()/1000;
-		this.ackStatus = ACK_STATUS_PENDING;
+//	public Message(String participantId, String selfId, String conversationId, Uri localUri, String messageLang) {
+//		this.showNonTranslated = null;
+//		this.messageId = UUID.randomUUID().toString();
+//		this.conversationId = conversationId;
+//		this.participantId = participantId;
+//		this.recipients = new String[]{participantId};
+//		this.senderId = selfId;
+//		this.messageType = MSG_TYPE_IMAGE;
+//		this.mediaUrl = "";
+//		this.mediaThumbnailUrl = "";
+//		this.mediaLocalUri = localUri.toString();
+//		this.messageLanguage = messageLang;
+//		this.timestamp = System.currentTimeMillis()/1000;
+//		this.ackStatus = ACK_STATUS_PENDING;
+//	}
+
+
+	public static Message CreateImageMessage(String participantId, String selfId, String conversationId, Uri localUri, String messageLang){
+		Message message = new Message();
+		message.showNonTranslated = null;
+		message.messageId = UUID.randomUUID().toString();
+		message.conversationId = conversationId;
+		message.participantId = participantId;
+		message.recipients = new String[]{participantId};
+		message.senderId = selfId;
+		message.messageType = MSG_TYPE_IMAGE;
+		message.mediaUrl = "";
+		message.mediaThumbnailUrl = "";
+		message.mediaLocalUri = localUri.toString();
+		message.messageLanguage = messageLang;
+		message.timestamp = System.currentTimeMillis()/1000;
+		message.ackStatus = ACK_STATUS_PENDING;
+		return message;
 	}
+
+	public static Message CreateVideoMessage(String participantId, String selfId, String conversationId, Uri localMediaUri, Uri localThumbUri, String messageLang, int duration){
+		Message message = new Message();
+		message.showNonTranslated = null;
+		message.messageId = UUID.randomUUID().toString();
+		message.conversationId = conversationId;
+		message.participantId = participantId;
+		message.recipients = new String[]{participantId};
+		message.senderId = selfId;
+		message.messageType = MSG_TYPE_VIDEO;
+		message.mediaUrl = "";
+		message.mediaThumbnailUrl = "";
+		message.mediaLocalUri = localMediaUri.toString();
+		message.duration = duration;
+		message.mediaThumbnailLocalUri = localThumbUri.toString();
+		message.messageLanguage = messageLang;
+		message.timestamp = System.currentTimeMillis()/1000;
+		message.ackStatus = ACK_STATUS_PENDING;
+		return message;
+	}
+
 
 
 	public Message() {
@@ -404,9 +453,36 @@ public class Message implements IMessage,
     }
 
 
+	@Nullable
+	@Override
+	public String getVideoURL() {
+		return mediaUrl;
+	}
+
+	@Nullable
+	@Override
+	public String getThumbForDisplay() {
+		if (isLocal())
+			return mediaThumbnailLocalUri;
+		else
+			return mediaThumbnailUrl;
+
+	}
+
+	@Nullable
+	@Override
+	public String getVideoForDisplay() {
+		if (isLocal())
+			return mediaLocalUri;
+		else
+			return mediaThumbnailUrl;
+
+	}
+
+
+
 	@Override
 	public boolean isLocal() {
-		//return !((mediaThumbnailUrl != null)&& (!mediaThumbnailUrl.equals("")));
 		return (mediaThumbnailUrl == null) ||(mediaThumbnailUrl.equals(""));
 	}
 
@@ -414,8 +490,12 @@ public class Message implements IMessage,
 	@Nullable
 	@Override
 	public String getImageForDisplay() {
-		if (isLocal())
-			return mediaLocalUri;
+		if (isLocal()) {
+			if ((mediaThumbnailLocalUri != null)&& (!mediaThumbnailLocalUri.equals("")))
+				return mediaThumbnailLocalUri;
+			else
+				return mediaLocalUri;
+		}
 		else
 			return mediaThumbnailUrl;
 	}
@@ -426,6 +506,13 @@ public class Message implements IMessage,
 	public String getImageLocal() {
 		return mediaLocalUri;
 	}
+
+	@Nullable
+	@Override
+	public String getThumbLocal() {
+		return mediaThumbnailLocalUri;
+	}
+
 
 	public String getImageThumbURL() {
 		return mediaThumbnailUrl;
@@ -716,6 +803,15 @@ public class Message implements IMessage,
 	public String getMediaLocalUri() {
 		return mediaLocalUri;
 	}
+
+	public String getMediaThumbnailLocalUri() {
+		return mediaThumbnailLocalUri;
+	}
+
+	public void setMediaThumbnailLocalUri(String mediaThumbnailLocalUri) {
+		this.mediaThumbnailLocalUri = mediaThumbnailLocalUri;
+	}
+
 
 	public void setMediaLocalUri(String mediaLocalUri) {
 		this.mediaLocalUri = mediaLocalUri;

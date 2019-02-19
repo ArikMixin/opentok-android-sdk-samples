@@ -93,6 +93,7 @@ public class RegistrationActivity extends PermissionActivity {
 	private AppCompatButton mPicFinishBtn;
 	private TextView mPicPhoneNumTV;
 	private byte[] mProfilePicByte;
+	private Uri mCameraPhotoFileUri;
 
 	@Override
 	protected String[] getPermissions() {
@@ -543,8 +544,8 @@ public class RegistrationActivity extends PermissionActivity {
 				StrictMode.setVmPolicy(builder.build());
 
 				Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-				Uri outputFileUri = ImagePickerUtil.getCaptureImageOutputUri(RegistrationActivity.this);
-				takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+				mCameraPhotoFileUri = ImagePickerUtil.getCaptureImageOutputUri(RegistrationActivity.this);
+				takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraPhotoFileUri);
 				takePictureIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
 				if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 					startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
@@ -688,11 +689,10 @@ public class RegistrationActivity extends PermissionActivity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-		if (resultCode == Activity.RESULT_OK) {
-			Uri imageUri = ImagePickerUtil.getPickImageResultUri(this, data);
-			setBitmapAsProfilePic(imageUri);
-
+		if (requestCode == REQUEST_TAKE_PHOTO) {
+			if (resultCode == Activity.RESULT_OK) {
+				setBitmapAsProfilePic(mCameraPhotoFileUri);
+			}
 		}
 
 

@@ -18,6 +18,7 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -111,18 +112,22 @@ public class ImagePickerUtil {
 		try {
 
 
-			ExifInterface exif = new ExifInterface(uri.getPath());
-			int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
-			Log.d("EXIF", "Exif: " + orientation);
-			Matrix matrix = new Matrix();
-			if (orientation == 6) {
-				matrix.postRotate(90);
-			} else if (orientation == 3) {
-				matrix.postRotate(180);
-			} else if (orientation == 8) {
-				matrix.postRotate(270);
+			Matrix matrix = null;
+			try {
+				ExifInterface exif = new ExifInterface(uri.getPath());
+				int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+				Log.d("EXIF", "Exif: " + orientation);
+				matrix = new Matrix();
+				if (orientation == 6) {
+					matrix.postRotate(90);
+				} else if (orientation == 3) {
+					matrix.postRotate(180);
+				} else if (orientation == 8) {
+					matrix.postRotate(270);
+				}
+			} catch (IOException e) {
+				
 			}
-
 
 
 			InputStream imageStream;
@@ -147,7 +152,9 @@ public class ImagePickerUtil {
 				newHeight = 1300 * height / width;
 
 				imageBitmap = Bitmap.createScaledBitmap(imageBitmap, newWidth, newHeight, false);
-				imageBitmap = Bitmap.createBitmap(imageBitmap, 0, 0, newWidth, newHeight, matrix, true);
+
+				if (matrix != null)
+					imageBitmap = Bitmap.createBitmap(imageBitmap, 0, 0, newWidth, newHeight, matrix, true);
 
 			}
 

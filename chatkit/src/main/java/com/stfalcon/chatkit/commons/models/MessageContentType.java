@@ -46,6 +46,26 @@ public interface MessageContentType extends IMessage {
 
     }
 
+
+
+    interface Video extends IMessage {
+        @Nullable
+        String getVideoURL();
+
+        @Nullable
+        String getThumbForDisplay();
+
+        @Nullable
+        String getVideoForDisplay();
+
+
+        boolean isLocal();
+
+        @Nullable
+        String getThumbLocal();
+
+    }
+
     // other default types will be here
 
 }
