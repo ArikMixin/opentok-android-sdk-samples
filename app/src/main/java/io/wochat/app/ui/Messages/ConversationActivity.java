@@ -30,6 +30,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -92,7 +93,7 @@ public class ConversationActivity extends AppCompatActivity implements
 	MessageInput.ButtonClickListener {
 
 	private static final String TAG = "ConversationActivity";
-	private static final int REQUEST_SELECT_IMAGE = 1;
+	private static final int REQUEST_SELECT_IMAGE_VIDEO = 1;
 	private static final int REQUEST_SELECT_CAMERA_PHOTO = 2;
 	private static final int REQUEST_SELECT_CAMERA_VIDEO = 3;
 	private MessagesList mMessagesListRV;
@@ -428,11 +429,13 @@ public class ConversationActivity extends AppCompatActivity implements
 	}
 
 	private void selectImage() {
-		Intent photoPickerIntent = new Intent(Intent.ACTION_PICK,
-		android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-		photoPickerIntent.setType("image/*");
-		photoPickerIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
-		startActivityForResult(photoPickerIntent, REQUEST_SELECT_IMAGE);
+		Intent photoPickerIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+		//photoPickerIntent.setType("image/* video/*");
+		photoPickerIntent.setType("*/*");
+		//photoPickerIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {"image/*", "video/*"});
+		photoPickerIntent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {"video/*", "image/*"});
+		//photoPickerIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+		startActivityForResult(photoPickerIntent, REQUEST_SELECT_IMAGE_VIDEO);
 	}
 
 	private void selectPhotoCamera(){
@@ -497,7 +500,30 @@ public class ConversationActivity extends AppCompatActivity implements
 			}
 		}
 		else if (message.isVideo()){
+			StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+			StrictMode.setVmPolicy(builder.build());
+
+			// try locally
+			Log.e(TAG, "play file check local: " + message.getMediaLocalUri());
+			if ((message.getMediaLocalUri() != null) && (!message.getMediaLocalUri().equals(""))){
+				Uri uri = Uri.parse(message.getMediaLocalUri());
+				Log.e(TAG, "play file local uri: " + uri);
+				String s = ImagePickerUtil.getFilePathFromContentUriNoStreaming(this, uri);
+				Log.e(TAG, "play file local file: " + s);
+				if (s != null){
+					Log.e(TAG, "play file local file exist: " + s);
+
+					//Uri accessibleUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".my.package.name.provider", createImageFile());
+					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+					intent.setDataAndType(uri, "video/mp4");
+					startActivity(intent);
+					return;
+				}
+			}
+
+			// play remotely
 			Uri uri = Uri.parse(message.getMediaUrl());
+			Log.e(TAG, "play file remotely: " + uri);
 			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 			intent.setDataAndType(uri, "video/mp4");
 			startActivity(intent);
@@ -828,17 +854,33 @@ public class ConversationActivity extends AppCompatActivity implements
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		if (requestCode == REQUEST_SELECT_IMAGE) {
+		if (requestCode == REQUEST_SELECT_IMAGE_VIDEO) {
 			if (resultCode == Activity.RESULT_OK) {
 				Uri uri = ImagePickerUtil.getPickImageResultUri(this, intent);
-				if ((mService != null)&& (mService.isXmppConnected())){
-					submitTempImageMessage(uri);
+				String mimeType = ImagePickerUtil.getMimeType(this, uri);
+				if (ImagePickerUtil.MIME_TYPE_IMAGE.equals(mimeType)) {
+					if ((mService != null) && (mService.isXmppConnected())) {
+						submitTempImageMessage(uri);
+					} else {
+						mSelectedImageForDelayHandlingUri = uri;
+					}
+					Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
 				}
-				else {
-					mSelectedImageForDelayHandlingUri = uri;
-				}
+				else if (ImagePickerUtil.MIME_TYPE_VIDEO.equals(mimeType)) {
+					Log.e(TAG, "video: " + uri);
+					File f = getExternalCacheDir();
+					showProgressDialog();
+					String videoPath = ImagePickerUtil.getFilePathFromContentUri(ConversationActivity.this, uri );
+					hideProgressDialog();
+					if (videoPath == null){
+					}
+					Log.e(TAG, "video file: " + videoPath);
+					if (f.mkdirs() || f.isDirectory()) {
+						Log.e(TAG, "before compression: " + videoPath);
+						new VideoCompressor().execute(videoPath);
+					}
 
-				Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
+				}
 
 			}
 		}
@@ -860,19 +902,14 @@ public class ConversationActivity extends AppCompatActivity implements
 				Uri videoUri = intent.getData();
 				Log.e(TAG, "video: " + videoUri);
 				File f = getExternalCacheDir();
-				String videoPath = getFilePathFromContentUri(videoUri, getContentResolver());
+				showProgressDialog();
+				String videoPath = ImagePickerUtil.getFilePathFromContentUri(this, videoUri);
+				hideProgressDialog();
 				Log.e(TAG, "video file: " + videoPath);
-
-				//File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + getPackageName() + "/media/videos");
 				if (f.mkdirs() || f.isDirectory()) {
-
 					Log.e(TAG, "before compression: " + videoPath);
 					new VideoCompressor().execute(videoPath);
-
-
 				}
-
-
 			}
 		}
 	}
@@ -932,19 +969,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		}
 	}
 
-	private String getFilePathFromContentUri(Uri selectedVideoUri,
-											 ContentResolver contentResolver) {
-		String filePath;
-		String[] filePathColumn = {MediaStore.MediaColumns.DATA};
 
-		Cursor cursor = contentResolver.query(selectedVideoUri, filePathColumn, null, null, null);
-		cursor.moveToFirst();
-
-		int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-		filePath = cursor.getString(columnIndex);
-		cursor.close();
-		return filePath;
-	}
 
 
 	private Observer<Message> mMessageObserver = new Observer<Message>() {

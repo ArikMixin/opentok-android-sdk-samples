@@ -1043,6 +1043,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 				messageText,
 				message.getSenderId(),
 				message.getAckStatus(),
+				message.getMessageType(),
 				unreadMessagesCount);
 			return true;
 		} catch (Exception e) {
@@ -1099,7 +1100,8 @@ public void updateAckStatusToSent(Message message){
 					message.getTimestamp(),
 					message.getMessageText(),
 					message.getSenderId(),
-					message.getAckStatus());
+					message.getAckStatus(),
+					message.getMessageType());
 
 				if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)){
 					String selfLang = mSharedPreferences.getUserLang();

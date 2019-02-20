@@ -40,34 +40,50 @@
             app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
             app:layout_constraintTop_toTopOf="parent"/>
 
+        <LinearLayout
+            android:id="@+id/center_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp"
+            android:layout_marginStart="10dp"
+            android:gravity="center_vertical"
+            app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
+            app:layout_constraintTop_toBottomOf="@+id/dialogName">
 
         <ImageView
             android:id="@+id/dialogCocheIV"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
             android:src="@drawable/coche_seen"
-            app:layout_constraintBottom_toBottomOf="@+id/dialogLastMessage"
-            app:layout_constraintHorizontal_chainStyle="spread_inside"
-            app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
-            app:layout_constraintTop_toTopOf="@+id/dialogLastMessage"
             />
 
-        <TextView
-            android:id="@id/dialogLastMessage"
+
+
+        <ImageView
+            android:id="@+id/dialogMsgTypeIV"
+            android:layout_marginStart="5dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:layout_marginTop="2dp"
-            android:ellipsize="end"
-            android:gravity="top"
-            android:maxLines="1"
-            android:maxWidth="200dp"
-            android:text="ggg Hi how are you my friend Hi how are you my friend Hi how are you my friend"
-            android:textColor="@color/font_gray_1"
-            android:textSize="13sp"
-            app:layout_constraintStart_toEndOf="@+id/dialogCocheIV"
-            app:layout_constraintTop_toBottomOf="@+id/dialogName"/>
+            android:src="@drawable/msg_in_video_dark"
+            />
+
+
+            <TextView
+                android:id="@id/dialogLastMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:ellipsize="end"
+                android:gravity="top"
+                android:maxLines="1"
+                android:maxWidth="200dp"
+                android:text="Hi how are you my friend Hi how are you my friend Hi how are you my friend"
+                android:textColor="@color/font_gray_1"
+                android:textSize="13sp"
+                />
+
+        </LinearLayout>
 
 
         <TextView
@@ -83,7 +99,7 @@
             android:textColor="@color/black"
             android:textSize="10sp"
             app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
-            app:layout_constraintTop_toBottomOf="@+id/dialogLastMessage"/>
+            app:layout_constraintTop_toBottomOf="@+id/center_layout"/>
 
 
         <TextView
@@ -102,7 +118,7 @@
             android:textColor="@color/app_blue"
             android:textSize="12sp"
             app:layout_constraintStart_toEndOf="@+id/dialogDate"
-            app:layout_constraintTop_toBottomOf="@+id/dialogLastMessage"/>
+            app:layout_constraintTop_toBottomOf="@+id/center_layout"/>
 
         <ImageButton
             android:id="@+id/imageButton"

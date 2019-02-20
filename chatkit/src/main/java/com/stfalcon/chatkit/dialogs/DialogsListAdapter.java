@@ -674,7 +674,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
 
             //Set Last message text
             if ((dialog.getLastMessageId() != null)&&(!dialog.getLastMessageId().equals(""))) {
-                tvLastMessage.setText(dialog.getLastMessageText());
+                tvLastMessage.setText(dialog.getLastMessageTextToDisplay());
             } else {
                 tvLastMessage.setText(null);
             }

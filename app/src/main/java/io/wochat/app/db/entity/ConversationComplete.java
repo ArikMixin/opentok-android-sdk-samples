@@ -78,6 +78,11 @@ public class ConversationComplete implements IDialog {
 		return new Date(mLastMessageTimestamp);
 	}
 
+	@Override
+	public String getLastMessageTextToDisplay() {
+		return null;
+	}
+
 	public String getLastMessageText() {
 		return mLastMessageText;
 	}

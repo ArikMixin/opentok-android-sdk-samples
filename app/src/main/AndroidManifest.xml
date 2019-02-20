@@ -65,7 +65,7 @@
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.example.homefolder.example.provider"
+            android:authorities="ppp.io.wochat.app.provider"
             android:exported="false"
             android:grantUriPermissions="true">
 

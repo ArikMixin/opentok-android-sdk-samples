@@ -66,6 +66,11 @@ public class Dialog implements IDialog<Message> {
     }
 
     @Override
+    public String getLastMessageTextToDisplay() {
+        return lastMessageText;
+    }
+
+
     public String getLastMessageText() {
         return lastMessageText;
     }

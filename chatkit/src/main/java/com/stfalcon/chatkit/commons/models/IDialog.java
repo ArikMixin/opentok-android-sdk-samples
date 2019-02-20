@@ -35,7 +35,7 @@ public interface IDialog<MESSAGE extends IMessage> {
 
     Date getLastMessageCreatedDate();
 
-    String getLastMessageText();
+    String getLastMessageTextToDisplay();
 
     String getLastMessageId();
 

@@ -92,6 +92,11 @@ public class Conversation implements IDialog{
 	@Expose
 	private String lastMessageText;
 	/***************************************************/
+	@SerializedName("last_message_type")
+	@ColumnInfo(name = "last_message_type")
+	@Expose
+	private String lastMessageType;
+	/***************************************************/
 	@SerializedName("last_message_sender_id")
 	@ColumnInfo(name = "last_message_sender_id")
 	@Expose
@@ -250,6 +255,18 @@ public class Conversation implements IDialog{
 		return lastMessageText;
 	}
 
+	@Override
+	public String getLastMessageTextToDisplay() {
+		if (lastMessageType.equals(Message.MSG_TYPE_VIDEO))
+			return "Video";
+		else if (lastMessageType.equals(Message.MSG_TYPE_IMAGE))
+			return "Image";
+		else if (lastMessageType.equals(Message.MSG_TYPE_AUDIO))
+			return "Audio";
+		else
+			return lastMessageText;
+	}
+
 	public void setLastMessageText(String lastMessageText) {
 		this.lastMessageText = lastMessageText;
 	}
@@ -275,6 +292,13 @@ public class Conversation implements IDialog{
 		mLastMessageAckStatus = lastMessageAckStatus;
 	}
 
+	public String getLastMessageType() {
+		return lastMessageType;
+	}
+
+	public void setLastMessageType(String lastMessageType) {
+		this.lastMessageType = lastMessageType;
+	}
 
 
 	@Override

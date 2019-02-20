@@ -21,6 +21,7 @@ public class CustomDialogViewHolder
 
     private final ImageView mCocheIV;
 	private final CircleFlagImageView mAvatarcfiv;
+	private final ImageView mMsgTypeIV;
 
 	//private View onlineIndicator;
 
@@ -28,6 +29,7 @@ public class CustomDialogViewHolder
         super(itemView);
         //onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
         mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
+		mMsgTypeIV = (ImageView)itemView.findViewById(R.id.dialogMsgTypeIV);
 		mAvatarcfiv = (CircleFlagImageView) itemView.findViewById(R.id.dialogAvatar);
     }
 
@@ -39,7 +41,20 @@ public class CustomDialogViewHolder
 
         if (conversation.getLastMessageAckStatus()!= null) {
 			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());
-			mCocheIV.setVisibility(Utils.booleanToVisibilityInvisible(!isIncoming));
+			mCocheIV.setVisibility(Utils.booleanToVisibilityGone(!isIncoming));
+
+			if (conversation.getLastMessageType().equals(Message.MSG_TYPE_VIDEO)){
+				mMsgTypeIV.setVisibility(View.VISIBLE);
+				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_video_dark);
+			}
+			else if (conversation.getLastMessageType().equals(Message.MSG_TYPE_IMAGE)){
+				mMsgTypeIV.setVisibility(View.VISIBLE);
+				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_camera_dark);
+			}
+			else {
+				mMsgTypeIV.setVisibility(View.GONE);
+			}
+
 			switch (conversation.getLastMessageAckStatus()) {
 				case Message.ACK_STATUS_PENDING:
 					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_pending);
@@ -57,7 +72,7 @@ public class CustomDialogViewHolder
 			}
 		}
 		else
-			mCocheIV.setVisibility(View.INVISIBLE);
+			mCocheIV.setVisibility(View.GONE);
 
 
 //        if (conversationComplete.getConversation().isGroup()) {
