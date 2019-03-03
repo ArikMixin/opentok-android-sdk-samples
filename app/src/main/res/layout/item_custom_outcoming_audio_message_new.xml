@@ -19,9 +19,11 @@
         <android.support.constraint.ConstraintLayout
             android:id="@id/bubble"
             android:layout_width="310dp"
-            android:layout_height="75dp"
+            android:layout_height="wrap_content"
             android:background="@color/audio_msg_back_outgoing"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingBottom="4dp"
+            android:paddingTop="4dp">
 
 
             <ImageView
@@ -39,7 +41,7 @@
 
             <SeekBar
                 android:id="@+id/seekbar"
-                android:layout_width="180dp"
+                android:layout_width="170dp"
                 android:layout_height="wrap_content"
                 android:paddingLeft="6dp"
                 android:paddingRight="6dp"
@@ -88,12 +90,10 @@
 
             <io.wochat.app.components.CircleImageView
                 android:id="@id/messageUserAvatar"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
                 android:layout_gravity="center_vertical|right"
-                android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
                 android:src="@drawable/ic_action_empty_contact"
                 app:civ_border_color="@color/app_blue"
                 app:civ_border_width="2dp"
@@ -109,12 +109,13 @@
 
     <ImageButton
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/fl"
-        android:layout_alignParentLeft="true"
         android:background="@android:color/transparent"
-        android:src="@drawable/transfer_arrow"/>
+        android:scaleType="fitCenter"
+        android:src="@drawable/transfer"/>
 
 </RelativeLayout>

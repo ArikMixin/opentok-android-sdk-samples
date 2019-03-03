@@ -357,12 +357,12 @@ class XMPPProvider {
 	}
 
 	public boolean getPresence(String contactId){
-		Roster roster = Roster.getInstanceFor(mConnection);
 		try {
+			Roster roster = Roster.getInstanceFor(mConnection);
 			Presence presence = roster.getPresence(JidCreate.bareFrom(getUserJid(contactId)));
 			Log.e(TAG, "getPresence for: " + contactId + " , res: " + presence);
 			return presence.isAvailable();
-		} catch (XmppStringprepException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			Log.e(TAG, "getPresence error res for: " + contactId);
 			return false;
