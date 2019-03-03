@@ -61,6 +61,8 @@ public interface IMessage {
     boolean isImage();
     boolean isVideo();
     boolean isText();
+    boolean isAudio();
+    boolean isGif();
 
 
 }

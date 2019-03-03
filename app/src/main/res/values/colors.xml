@@ -115,4 +115,15 @@
     <color name="outcoming_bubble">#e2f3fd</color>
     <color name="incoming_bubble">#f7f7f9</color>
 
+    <color name="audio_msg_profile_circle_incoming">#bac2d5</color>
+    <color name="audio_msg_profile_circle_outgoing">#e6b45c</color>
+
+    <color name="audio_msg_back_incoming">#ffffff</color>
+    <color name="audio_msg_back_outgoing">#ffe4b4</color>
+    <color name="audio_msg_avatar_border_outgoing">#e6b45c</color>
+
+    <color name="audio_msg_progress_incoming">#e1e4eb</color>
+    <color name="audio_msg_progress_outgoing">#ccd3e4</color>
+
+    <color name="audio_msg_text">#8d97ae</color>
 </resources>

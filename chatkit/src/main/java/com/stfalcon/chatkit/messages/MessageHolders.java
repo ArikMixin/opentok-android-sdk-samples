@@ -33,10 +33,11 @@ import java.util.List;
 @SuppressWarnings("WeakerAccess")
 public class MessageHolders {
 
-    private static final short VIEW_TYPE_DATE_HEADER = 130;
-    private static final short VIEW_TYPE_TEXT_MESSAGE = 131;
-    private static final short VIEW_TYPE_IMAGE_MESSAGE = 132;
-    private static final short VIEW_TYPE_VIDEO_MESSAGE = 133;
+    public static final short VIEW_TYPE_DATE_HEADER = 130;
+	public static final short VIEW_TYPE_TEXT_MESSAGE = 131;
+	public static final short VIEW_TYPE_IMAGE_MESSAGE = 132;
+	public static final short VIEW_TYPE_VIDEO_MESSAGE = 133;
+	public static final short VIEW_TYPE_AUDIO_MESSAGE = 134;
 
     private Class<? extends ViewHolder<Date>> dateHeaderHolder;
     private int dateHeaderLayout;
@@ -558,7 +559,7 @@ public class MessageHolders {
      */
     public <TYPE extends MessageContentType>
     MessageHolders registerContentType(
-            byte type,
+            short type,
             @NonNull Class<? extends BaseMessageViewHolder<TYPE>> incomingHolder, @LayoutRes int incomingLayout,
             @NonNull Class<? extends BaseMessageViewHolder<TYPE>> outcomingHolder, @LayoutRes int outcomingLayout,
             @NonNull ContentChecker contentChecker) {
@@ -589,7 +590,7 @@ public class MessageHolders {
      */
     public <TYPE extends MessageContentType>
     MessageHolders registerContentType(
-            byte type,
+		short type,
             @NonNull Class<? extends MessageHolders.BaseMessageViewHolder<TYPE>> incomingHolder, Object incomingPayload, @LayoutRes int incomingLayout,
             @NonNull Class<? extends MessageHolders.BaseMessageViewHolder<TYPE>> outcomingHolder, Object outcomingPayload, @LayoutRes int outcomingLayout,
             @NonNull MessageHolders.ContentChecker contentChecker) {
@@ -621,7 +622,7 @@ public class MessageHolders {
          * @param type    content type, for which content availability is determined.
          * @return weather the message has content for the current message.
          */
-        boolean hasContentFor(MESSAGE message, byte type);
+        boolean hasContentFor(MESSAGE message, short type);
     }
 
     /*
@@ -1332,10 +1333,10 @@ public class MessageHolders {
                 time.setTypeface(time.getTypeface(), style.getIncomingTimeTextStyle());
             }
 
-            if (userAvatar != null) {
-                userAvatar.getLayoutParams().width = style.getIncomingAvatarWidth();
-                userAvatar.getLayoutParams().height = style.getIncomingAvatarHeight();
-            }
+//            if (userAvatar != null) {
+//                userAvatar.getLayoutParams().width = style.getIncomingAvatarWidth();
+//                userAvatar.getLayoutParams().height = style.getIncomingAvatarHeight();
+//            }
 
         }
 
@@ -1352,6 +1353,7 @@ public class MessageHolders {
             extends BaseMessageViewHolder<MESSAGE> implements DefaultMessageViewHolder {
 
         protected TextView time;
+		protected ImageView userAvatar;
 
         @Deprecated
         public BaseOutcomingMessageViewHolder(View itemView) {
@@ -1378,10 +1380,17 @@ public class MessageHolders {
                 time.setTextSize(TypedValue.COMPLEX_UNIT_PX, style.getOutcomingTimeTextSize());
                 time.setTypeface(time.getTypeface(), style.getOutcomingTimeTextStyle());
             }
-        }
+
+//			if (userAvatar != null) {
+//				userAvatar.getLayoutParams().width = style.getIncomingAvatarWidth();
+//				userAvatar.getLayoutParams().height = style.getIncomingAvatarHeight();
+//			}
+
+		}
 
         private void init(View itemView) {
             time = (TextView) itemView.findViewById(R.id.messageTime);
+			userAvatar = (ImageView) itemView.findViewById(R.id.messageUserAvatar);
         }
     }
 
@@ -1444,12 +1453,12 @@ public class MessageHolders {
 
 	private static class ContentTypeConfig<TYPE extends MessageContentType> {
 
-        private byte type;
+        private short type;
         private HolderConfig<TYPE> incomingConfig;
         private HolderConfig<TYPE> outcomingConfig;
 
         private ContentTypeConfig(
-                byte type, HolderConfig<TYPE> incomingConfig, HolderConfig<TYPE> outcomingConfig) {
+			short type, HolderConfig<TYPE> incomingConfig, HolderConfig<TYPE> outcomingConfig) {
 
             this.type = type;
             this.incomingConfig = incomingConfig;

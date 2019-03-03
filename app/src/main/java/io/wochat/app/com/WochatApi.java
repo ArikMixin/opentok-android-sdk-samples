@@ -207,13 +207,19 @@ public class WochatApi {
 	public static final int UPLOAD_MIME_TYPE_IAMGE = 1;
 	public static final int UPLOAD_MIME_TYPE_VIDEO = 2;
 	public static final int UPLOAD_MIME_TYPE_GIF = 3;
-	public static final int UPLOAD_MIME_TYPE_VOICE = 4;
+	public static final int UPLOAD_MIME_TYPE_AUDIO = 4;
 
 	public void dataUploadFile(final byte[] fileData, int mimeType, final OnServerResponseListener lsnr) {
 
 		Log.e(TAG, "API dataUploadFile");
 
-		String url = BASE_URL + "media/upload/";
+		String url;
+		if (mimeType == UPLOAD_MIME_TYPE_AUDIO)
+			url = BASE_URL + "media/convert_audio/";
+		else
+			url = BASE_URL + "media/upload/";
+
+
 
 		RequestQueue queue = Volley.newRequestQueue(mContext);
 
@@ -265,8 +271,12 @@ public class WochatApi {
 						params.put("file", new DataPart("file.jpg", fileData, "image/jpeg"));
 						break;
 					case UPLOAD_MIME_TYPE_VIDEO:
-						//params.put("file", new DataPart("file.mp3", fileData, "video/mpeg"));
 						params.put("file", new DataPart("file.mp4", fileData, "video/mp4"));
+						break;
+					case UPLOAD_MIME_TYPE_AUDIO:
+						//params.put("file", new DataPart("file.mp3", fileData, "audio/mp3"));
+						params.put("file", new DataPart("file.amr", fileData, "audio/AMR"));
+
 						break;
 				}
 

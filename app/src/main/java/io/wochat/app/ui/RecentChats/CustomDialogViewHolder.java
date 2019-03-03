@@ -51,6 +51,14 @@ public class CustomDialogViewHolder
 				mMsgTypeIV.setVisibility(View.VISIBLE);
 				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_camera_dark);
 			}
+			else if (conversation.getLastMessageType().equals(Message.MSG_TYPE_AUDIO)){
+				mMsgTypeIV.setVisibility(View.VISIBLE);
+				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_mic_dark);
+			}
+			else if (conversation.getLastMessageType().equals(Message.MSG_TYPE_GIF)){
+				mMsgTypeIV.setVisibility(View.VISIBLE);
+				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_gif_dark);
+			}
 			else {
 				mMsgTypeIV.setVisibility(View.GONE);
 			}

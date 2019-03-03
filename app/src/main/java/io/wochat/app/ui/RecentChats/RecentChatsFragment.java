@@ -40,6 +40,7 @@ import io.wochat.app.WCService;
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.UnreadMessagesConversation;
+import io.wochat.app.db.entity.User;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.MainActivity;
@@ -65,6 +66,7 @@ public class RecentChatsFragment extends Fragment  implements
 	private ConversationViewModel mConversationViewModel;
 	private List<Conversation> mConversation;
 	private List<UnreadMessagesConversation> mUnreadMessagesConversation;
+	private User mSelfUser;
 	private String mSelfUserLang;
 
 	public static RecentChatsFragment newInstance() {
@@ -81,18 +83,23 @@ public class RecentChatsFragment extends Fragment  implements
 		setHasOptionsMenu(true);
 
 
-		mSelfUserId = WCSharedPreferences.getInstance(getContext()).getUserId();
-		mSelfUserLang = WCSharedPreferences.getInstance(getContext()).getUserLang();
+		//mSelfUserId = WCSharedPreferences.getInstance(getContext()).getUserId();
+		//mSelfUserLang = WCSharedPreferences.getInstance(getContext()).getUserLang();
 
 
 //		mSelfUserId = share
-//		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
-//		mUserViewModel.getSelfUser().observe(this, user -> {
-//			if (user != null)
-//				mSelfUserId = user.getUserId();
-//			else
-//				mSelfUserId = null;
-//		});
+		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
+		mUserViewModel.getSelfUser().observe(this, user -> {
+			if (user != null) {
+				mSelfUser = user;
+				mSelfUserId = user.getUserId();
+				mSelfUserLang = user.getLanguage();
+			}
+			else {
+				mSelfUserId = null;
+				mSelfUserLang = null;
+			}
+		});
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mConversationViewModel.getConversationListLD().observe(this, conversations -> {
@@ -230,6 +237,7 @@ public class RecentChatsFragment extends Fragment  implements
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+				intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 				startActivity(intent);
 
 			}
@@ -244,6 +252,7 @@ public class RecentChatsFragment extends Fragment  implements
 		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
 		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 		startActivity(intent);

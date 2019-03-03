@@ -26,7 +26,7 @@ public final class MessagesFixtures extends FixturesData {
 
     public static Message getVoiceMessage() {
         Message message = new Message(getRandomId(), getContact(), null, "EN");
-        message.setVoice(new Message.Voice("http://example.com", rnd.nextInt(200) + 30));
+        //message.setVoice(new Message.Voice("http://example.com", rnd.nextInt(200) + 30));
         return message;
     }
 

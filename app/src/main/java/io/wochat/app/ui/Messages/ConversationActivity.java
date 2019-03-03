@@ -6,21 +6,19 @@ import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.media.MediaMetadataRetriever;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.StrictMode;
@@ -30,9 +28,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -40,10 +36,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -55,11 +55,10 @@ import com.stfalcon.chatkit.messages.MessageHolders;
 import com.stfalcon.chatkit.messages.MessageInput;
 import com.stfalcon.chatkit.messages.MessagesList;
 import com.stfalcon.chatkit.messages.MessagesListAdapter;
-//import com.stfalcon.chatkit.utils.DateFormatter;
 import com.stfalcon.chatkit.utils.DateFormatter;
 
 import java.io.File;
-import java.net.URISyntaxException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -68,19 +67,19 @@ import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.db.entity.Conversation;
-import io.wochat.app.db.entity.ImageInfo;
 import io.wochat.app.db.entity.Message;
-import io.wochat.app.db.fixtures.MessagesFixtures;
 import io.wochat.app.ui.Consts;
-import io.wochat.app.ui.RegistrationActivity;
+import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.utils.videocompression.MediaController;
 import io.wochat.app.viewmodel.ConversationViewModel;
 
+//import com.stfalcon.chatkit.utils.DateFormatter;
 
 
-public class ConversationActivity extends AppCompatActivity implements
+
+public class ConversationActivity extends PermissionActivity implements
 	MessagesListAdapter.OnMessageLongClickListener<Message>,
 	MessagesListAdapter.OnLoadMoreListener,
 	MessageInput.InputListener,
@@ -90,7 +89,8 @@ public class ConversationActivity extends AppCompatActivity implements
 	MessagesListAdapter.OnBindViewHolder,
 	MessageInput.TypingListener,
 	DateFormatter.Formatter,
-	MessageInput.ButtonClickListener {
+	MessageInput.ButtonClickListener,
+	MessageHolders.ContentChecker<Message>{
 
 	private static final String TAG = "ConversationActivity";
 	private static final int REQUEST_SELECT_IMAGE_VIDEO = 1;
@@ -112,6 +112,10 @@ public class ConversationActivity extends AppCompatActivity implements
 	private String mConversationId;
 	private String mSelfId;
 	private List<Message> mMessages;
+	private int xDelta;
+	private int yDelta;
+	private float oldX;
+	private float oldY;
 	private WCService mService;
 	private boolean mBound;
 	private Conversation mConversation;
@@ -131,6 +135,12 @@ public class ConversationActivity extends AppCompatActivity implements
 	private File mCameraVideoMediaForDelayHandlingFile;
 	private File mCameraVideoThumbForDelayHandlingFile;
 	private int mCameraVideoDurationForDelayHandling;
+	private ImageView mRecordingBigIV;
+	private boolean mIsInputInTextMode;
+	private MediaRecorder mRecorder;
+	private File mAudioFile;
+	private long mRecorderStartTimeStamp;
+	private String mSelfPicUrl;
 
 
 	@Override
@@ -194,7 +204,7 @@ public class ConversationActivity extends AppCompatActivity implements
 //		mParticipantContactObj = Contact.fromJson(participantContactString);
 		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 		mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
-
+		mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
 		mContactNameTV = (TextView) findViewById(R.id.contact_name_tv);
 		mContactDetailsTV = (TextView) findViewById(R.id.contact_details_tv);
 		mContactDetailsTV.setText("");
@@ -274,7 +284,9 @@ public class ConversationActivity extends AppCompatActivity implements
 
 		mTypingSignalBR = new TypingSignalBR();
 
-
+		mRecordingBigIV = (ImageView) findViewById(R.id.recording_big_iv);
+		mRecordingBigIV.setImageDrawable(getDrawable(R.drawable.mic_recording_empty));
+		mRecordingBigIV.setOnTouchListener(mRecordingOnTouchListener);
 
 	}
 
@@ -321,7 +333,18 @@ public class ConversationActivity extends AppCompatActivity implements
 				R.layout.item_custom_incoming_video_message)
 			.setOutcomingVideoConfig(
 				CustomOutcomingVideoMessageViewHolder.class,
-				R.layout.item_custom_outcoming_video_message);
+				R.layout.item_custom_outcoming_video_message)
+
+			.registerContentType(
+				MessageHolders.VIEW_TYPE_AUDIO_MESSAGE,
+				CustomIncomingAudioMessageViewHolder.class,
+				mParticipantPic,
+				R.layout.item_custom_incoming_audio_message_new,
+				CustomOutcomingAudioMessageViewHolder.class,
+				mSelfPicUrl,
+				R.layout.item_custom_outcoming_audio_message_new,
+				this)
+			;
 
 		mMessagesAdapter = new MessagesListAdapter<>(mSelfId, holdersConfig, mImageLoader);
 		mMessagesAdapter.setOnMessageLongClickListener(this);
@@ -404,6 +427,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		message.setTranslatedLanguage(mParticipantLang);
 		mConversationViewModel.addNewOutcomingMessage(message);
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
+		mIsInputInTextMode = false;
 		mService.sendMessage(message);
 		return true;
 
@@ -550,6 +574,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		String theText = mMessageInput.getInputEditText().getText().toString();
 		if (!theText.equals("")) {
 			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_send_light));
+			mIsInputInTextMode = true;
 		}
 		mService.sendTypingSignal(mParticipantId, mConversationId, true);
 	}
@@ -559,6 +584,7 @@ public class ConversationActivity extends AppCompatActivity implements
 		String theText = mMessageInput.getInputEditText().getText().toString();
 		if (theText.equals("")) {
 			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
+			mIsInputInTextMode = false;
 		}
 		mService.sendTypingSignal(mParticipantId, mConversationId, false);
 	}
@@ -657,8 +683,69 @@ public class ConversationActivity extends AppCompatActivity implements
 
 
 
+	@Override
+	public boolean hasContentFor(Message message, short type) {
+		switch (type) {
+			case MessageHolders.VIEW_TYPE_AUDIO_MESSAGE:
+				return ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty()));
+		}
+		return false;
+	}
 
 
+	private void returnRecordingButtonToPlace(boolean withAnimation){
+		if (withAnimation) {
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mRecordingBigIV.getLayoutParams();
+
+			final int rightMarginStart = params.rightMargin;
+			final int rightMarginEnd = Utils.dp2px(this, -10);
+
+			Log.e("GIL", "angle rightMarginStart: " + rightMarginStart);
+			Log.e("GIL", "angle rightMarginEnd: " + rightMarginEnd);
+
+			Log.e("GIL", "angle deltaRight: " + (rightMarginStart - rightMarginEnd));
+
+			final int deltaRight = rightMarginStart - rightMarginEnd;
+
+			int absDeltaRight = Math.abs(deltaRight);
+
+			Animation a = new Animation() {
+				@Override
+				protected void applyTransformation(float interpolatedTime, Transformation t) {
+					RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mRecordingBigIV.getLayoutParams();
+					params.rightMargin = rightMarginStart + (int) ((rightMarginEnd - rightMarginStart) * interpolatedTime);
+					mRecordingBigIV.setLayoutParams(params);
+				}
+			};
+			a.setDuration(300);
+			a.setAnimationListener(new Animation.AnimationListener() {
+				@Override
+				public void onAnimationStart(Animation animation) {
+				}
+
+				@Override
+				public void onAnimationEnd(Animation animation) {
+					mRecordingBigIV.setImageDrawable(getDrawable(R.drawable.mic_recording_empty));
+					if (deltaRight > 500)
+						cancelRecord();
+					else
+						finishRecord();
+				}
+
+				@Override
+				public void onAnimationRepeat(Animation animation) {
+
+				}
+			});
+			mRecordingBigIV.startAnimation(a);
+		}
+		else {
+			RelativeLayout.LayoutParams layoutParams1 = (RelativeLayout.LayoutParams) mRecordingBigIV.getLayoutParams();
+			layoutParams1.rightMargin = 0;
+			mRecordingBigIV.setLayoutParams(layoutParams1);
+		}
+
+	}
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -1025,6 +1112,20 @@ public class ConversationActivity extends AppCompatActivity implements
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
 
+	private void submitTempAudioMessage(File audioFile, int duration) {
+
+		Uri audioUri = Uri.fromFile(audioFile);
+
+		Log.e(TAG, "submitTempAudioMessage: " + audioFile);
+		if (mService == null) {
+			Log.e(TAG, "submitTempAudioMessage mService is NULL - cancel");
+			return;
+		}
+
+		Message message = Message.CreateAudioMessage(mParticipantId, mSelfId, mConversationId, audioUri, duration);
+		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
+		mConversationViewModel.addNewOutcomingMessage(message);
+	}
 
 
 	@Override
@@ -1054,4 +1155,217 @@ public class ConversationActivity extends AppCompatActivity implements
 
 	}
 
+
+
+	private View.OnTouchListener mRecordingOnTouchListener = new View.OnTouchListener(){
+
+		@Override
+		public boolean onTouch(View view, MotionEvent event) {
+
+			final int x = (int) event.getRawX();
+			final int y = (int) event.getRawY();
+
+			switch (event.getAction() & MotionEvent.ACTION_MASK) {
+
+				case MotionEvent.ACTION_DOWN:
+					if (!mIsInputInTextMode){
+						if (hasPermissions()) {
+							mRecordingBigIV.setImageDrawable(getDrawable(R.drawable.mic_recording_big));
+							startRecord();
+
+							oldX = event.getX();
+							oldY = event.getY();
+							RelativeLayout.LayoutParams lParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
+							xDelta = lParams.rightMargin + x;
+							yDelta = y - lParams.topMargin;
+						}
+						else {
+							requestPermissions();
+						}
+					}
+					break;
+
+				case MotionEvent.ACTION_UP:
+					if (mIsInputInTextMode){
+						//Toast.makeText(ConversationActivity.this, "simple click", Toast.LENGTH_SHORT).show();
+						mMessageInput.getButton().callOnClick();
+					}
+					else {
+						returnRecordingButtonToPlace(true);
+					}
+
+					break;
+
+				case MotionEvent.ACTION_MOVE:
+
+					RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
+
+					Log.e("GIL", "xDelta: " + xDelta);
+					int newMargin = xDelta - x;
+					if ((layoutParams.rightMargin <= 500) && (newMargin > 500)){
+						//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.mic_recording_delete));
+					}
+					else if ((layoutParams.rightMargin >= 500) && (newMargin < 500)){
+						//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.mic_recording_small));
+					}
+					layoutParams.rightMargin = newMargin;
+					Log.e("GIL", "rightMargin: " + layoutParams.rightMargin);
+
+					layoutParams.topMargin = 0;
+					layoutParams.leftMargin = 0;
+					layoutParams.bottomMargin = 0;//y1 - yDelta;
+					view.setLayoutParams(layoutParams);
+
+
+					break;
+			}
+
+			return true;
+
+
+		}
+	};
+
+	private boolean mRecordingStarted = false;
+
+
+	private void startRecord(){
+		mRecordingStarted = true;
+		//Toast.makeText(ConversationActivity.this, "start rec", Toast.LENGTH_SHORT).show();
+
+
+
+		mRecorder = new MediaRecorder();
+		mRecorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
+			@Override
+			public void onError(MediaRecorder mr, int what, int extra) {
+				Log.e(TAG, "MediaRecorder onError what: " + what + " , extra: " + extra);
+			}
+		});
+
+		mRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
+			@Override
+			public void onInfo(MediaRecorder mr, int what, int extra) {
+
+			}
+		});
+
+
+		mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+		//mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+		mAudioFile = ImagePickerUtil.getAudioOutputFile(this);
+		mRecorder.setOutputFile(mAudioFile.getPath());
+		mRecorder.setOutputFormat(MediaRecorder.OutputFormat.AMR_NB);
+		mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+		mRecorder.setAudioChannels(2);
+
+		Log.e(TAG, "startRecord, file: " + mAudioFile.getPath());
+		try {
+			mRecorder.prepare();
+			Log.e(TAG, "startRecord, after prepare");
+		} catch (IOException e) {
+			Log.e(TAG, "startRecord prepare failed");
+		}
+
+		mRecorder.start();
+		mRecorderStartTimeStamp = System.currentTimeMillis();
+		Log.e(TAG, "startRecord started");
+		//mMessageInput.getInputEditText().setHint(R.string.hint_slide_to_cancel);
+		//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.mic_recording_small));
+		mRecordingTimer.startCountUp();
+
+	}
+
+	private void finishRecord(){
+		if ((!mRecordingStarted) || (mRecorder == null))
+			return;
+
+		int duration = (int)(System.currentTimeMillis() - mRecorderStartTimeStamp);
+
+		mRecordingTimer.cancel();
+
+		//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.smiley));
+
+		mRecordingStarted = false;
+		//Toast.makeText(ConversationActivity.this, "stop rec", Toast.LENGTH_SHORT).show();
+		mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
+
+
+		mRecorder.stop();
+		mRecorder.release();
+		mRecorder = null;
+
+		Log.e(TAG, "finishRecord, file: " + mAudioFile.getPath());
+		submitTempAudioMessage(mAudioFile, duration);
+
+	}
+
+	private void cancelRecord(){
+		if ((!mRecordingStarted) || (mRecorder == null))
+			return;
+		Log.e(TAG, "cancelRecord");
+		//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.smiley));
+
+		mRecordingStarted = false;
+		Toast.makeText(ConversationActivity.this, "Recording canceled", Toast.LENGTH_SHORT).show();
+		mRecordingTimer.cancel();
+		mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
+
+		mRecorder.stop();
+		mRecorder.release();
+		mRecorder = null;
+		mAudioFile.delete();
+		mAudioFile = null;
+	}
+
+
+	private RecordingTimer mRecordingTimer = new RecordingTimer();
+
+	private class RecordingTimer extends CountDownTimer {
+
+
+		private int mCounter;
+
+		public RecordingTimer() {
+			super(60*60*1000, 1000);
+		}
+
+		public void startCountUp() {
+			mCounter = 0;
+			super.start();
+		}
+
+		@Override
+		public void onTick(long millisUntilFinished) {
+			mCounter++;
+			String time = Utils.convertSecondsToHMmSs(mCounter*1000);
+			String displayText = time + "  < " + getString(R.string.hint_slide_to_cancel);
+			mMessageInput.getInputEditText().setHint(displayText);
+		}
+
+		@Override
+		public void onFinish() {
+			finishRecord();
+		}
+	};
+
+
+	private String[] PERMISSIONS = {
+		android.Manifest.permission.RECORD_AUDIO
+	};
+
+	@Override
+	protected String[] getPermissions() {
+		return PERMISSIONS;
+	}
+
+	@Override
+	protected void showPermissionsExplanationDialog() {
+
+	}
+
+	@Override
+	protected boolean isNeededPermissionsExplanationDialog() {
+		return false;
+	}
 }

@@ -56,7 +56,8 @@ public abstract class PermissionActivity extends AppCompatActivity {
 		boolean hasPermission = hasPermissions();
 
 		if(hasPermission){
-			mOnPermissionResultListener.OnPermissionGranted(true);
+			if (mOnPermissionResultListener != null)
+				mOnPermissionResultListener.OnPermissionGranted(true);
 		}
 		else{
 			// Permission is not granted
@@ -134,11 +135,13 @@ public abstract class PermissionActivity extends AppCompatActivity {
 		if (requestCode == PERMISSIONS_REQUEST){
 			for (int i=0; i<grantResults.length;i++){
 				if (grantResults[i] != PackageManager.PERMISSION_GRANTED){
-					mOnPermissionResultListener.OnPermissionGranted(false);
+					if (mOnPermissionResultListener != null)
+						mOnPermissionResultListener.OnPermissionGranted(false);
 					return;
 				}
 			}
-			mOnPermissionResultListener.OnPermissionGranted(true);
+			if (mOnPermissionResultListener != null)
+				mOnPermissionResultListener.OnPermissionGranted(true);
 		}
 
 	}

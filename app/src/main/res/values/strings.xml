@@ -41,6 +41,7 @@
     <string name="calls_title">Calls</string>
     <string name="camera_title">Camera</string>
     <string name="hint_enter_a_message">Type a message...</string>
+    <string name="hint_slide_to_cancel">Slide to cancel</string>
     <string name="date_header_today">Today</string>
     <string name="date_header_yesterday">Yesterday</string>
     <string name="last_seen_today">last seen today at</string>

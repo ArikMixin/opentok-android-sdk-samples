@@ -364,6 +364,38 @@ public class WCRepository {
 		return mSelfUser;
 	}
 
+
+	public void uploadAudio(Message message, byte[] mediaFileBytes){
+		mAppExecutors.networkIO().execute(() -> {
+
+			mWochatApi.dataUploadFile(mediaFileBytes, mWochatApi.UPLOAD_MIME_TYPE_AUDIO, new WochatApi.OnServerResponseListener() {
+					@Override
+					public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+						Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+						if (isSuccess) {
+							try {
+								String mediaUrl = response.getString("sound_url");
+								message.setMediaUrl(mediaUrl);
+								updateMessageOnly(message);
+								mUploadImageResult.setValue(new StateData<Message>().success(message));
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+
+						}
+						else if (errorLogic != null) {
+							mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+						}
+
+						else if (errorComm != null) {
+							mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
+						}
+					}
+				});
+
+		});
+	}
+
 	public void uploadVideo(Message message, byte[] mediaFileBytes){
 		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.dataUploadFile(mediaFileBytes, mWochatApi.UPLOAD_MIME_TYPE_VIDEO, new WochatApi.OnServerResponseListener() {
@@ -824,6 +856,11 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 					res = handleIncomingMessageImage(message);
 					listener.OnSaved(res, message);
 					break;
+				case Message.MSG_TYPE_AUDIO:
+					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
+					res = handleIncomingMessageImage(message);
+					listener.OnSaved(res, message);
+					break;
 				case Message.MSG_TYPE_GIF:
 					break;
 			}
@@ -1131,7 +1168,13 @@ public void updateAckStatusToSent(Message message){
 						uploadVideo(message, mediaFileBytes);
 					}
 				}
-
+				else if (message.getMessageType().equals(Message.MSG_TYPE_AUDIO)) {
+					if (message.getMediaLocalUri() != null) {
+						File mediaFile = new File(new URI(message.getMediaLocalUri()));
+						byte[] mediaFileBytes = Files.toByteArray(mediaFile);
+						uploadAudio(message, mediaFileBytes);
+					}
+				}
 
 			} catch (Exception e) {
 				e.printStackTrace();

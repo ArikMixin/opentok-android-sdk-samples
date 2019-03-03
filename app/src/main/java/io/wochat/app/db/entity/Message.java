@@ -278,8 +278,8 @@ public class Message implements IMessage,
 	@Ignore
 	private Contact contact;
 	/**********************************************/
-	@Ignore
-	private Voice voice;
+//	@Ignore
+//	private Voice voice;
 	/**********************************************/
 	@SerializedName("original_message_id")
 	@Expose
@@ -386,6 +386,22 @@ public class Message implements IMessage,
 		return message;
 	}
 
+	public static Message CreateAudioMessage(String participantId, String selfId, String conversationId, Uri localMediaUri, int duration){
+		Message message = new Message();
+		message.messageId = UUID.randomUUID().toString();
+		message.conversationId = conversationId;
+		message.participantId = participantId;
+		message.recipients = new String[]{participantId};
+		message.senderId = selfId;
+		message.messageType = MSG_TYPE_AUDIO;
+		message.mediaUrl = "";
+		message.mediaThumbnailUrl = "";
+		message.mediaLocalUri = localMediaUri.toString();
+		message.duration = duration;
+		message.timestamp = System.currentTimeMillis()/1000;
+		message.ackStatus = ACK_STATUS_PENDING;
+		return message;
+	}
 
 
 	public Message() {
@@ -421,6 +437,16 @@ public class Message implements IMessage,
 	@Override
 	public boolean isVideo() {
 		return messageType.equals(MSG_TYPE_VIDEO);
+	}
+
+	@Override
+	public boolean isAudio() {
+		return messageType.equals(MSG_TYPE_AUDIO);
+	}
+
+	@Override
+	public boolean isGif() {
+		return messageType.equals(MSG_TYPE_GIF);
 	}
 
 	@Override
@@ -530,9 +556,9 @@ public class Message implements IMessage,
 	}
 
 
-	public Voice getVoice() {
-        return voice;
-    }
+//    public Voice getVoice() {
+//        return voice;
+//    }
 
     public @ACK_STATUS String getStatus() {
         return ackStatus;
@@ -546,9 +572,9 @@ public class Message implements IMessage,
         this.mediaUrl = image.url;
     }
 
-    public void setVoice(Voice voice) {
-        this.voice = voice;
-    }
+//    public void setVoice(Voice voice) {
+//        this.voice = voice;
+//    }
 
     public static class Image {
 
@@ -813,6 +839,18 @@ public class Message implements IMessage,
 
 	public String getMediaLocalUri() {
 		return mediaLocalUri;
+	}
+	public Uri getMediaLocalParseUri() {
+		if ((mediaLocalUri != null)&& (!mediaLocalUri.isEmpty()))
+			return Uri.parse(mediaLocalUri);
+		else
+			return null;
+	}
+	public Uri getMediaParseUri() {
+		if ((mediaUrl != null)&& (!mediaUrl.isEmpty()))
+			return Uri.parse(mediaUrl);
+		else
+			return null;
 	}
 
 	public String getMediaThumbnailLocalUri() {

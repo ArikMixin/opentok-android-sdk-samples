@@ -121,6 +121,17 @@ public class ImagePickerUtil {
 	}
 
 
+	public static File getAudioOutputFile(Context context) {
+		File mediaFile = null;
+		File file = context.getExternalCacheDir();
+		String mImageName;
+		if (file != null) {
+			String timeStamp = new SimpleDateFormat("ddMMyyyy_HHmm_SSS", Locale.getDefault()).format(new Date());
+			mImageName = "AUDIO_" + timeStamp + ".mp3";
+			mediaFile = new File(file.getPath() + File.separator + mImageName);
+		}
+		return mediaFile;
+	}
 
 	public static String getMimeType(Context context, Uri uri){
 		String[] columns = { MediaStore.Images.Media.DATA, MediaStore.Images.Media.MIME_TYPE };
