@@ -8,6 +8,7 @@ import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 
 import io.wochat.app.R;
 import io.wochat.app.components.CircleFlagImageView;
+import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.utils.Utils;
@@ -37,7 +38,9 @@ public class CustomDialogViewHolder
     public void onBind(Conversation conversation) {
         super.onBind(conversation);
 
-        mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(), conversation.getParticipantLanguage());
+        mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
+			conversation.getParticipantLanguage(),
+			Contact.getInitialsFromName(conversation.getParticipantName()));
 
         if (conversation.getLastMessageAckStatus()!= null) {
 			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());

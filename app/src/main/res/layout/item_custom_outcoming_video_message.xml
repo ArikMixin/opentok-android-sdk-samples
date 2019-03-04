@@ -26,7 +26,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/icon_play"
+            android:src="@drawable/play_icon"
             android:layout_gravity="center"
             />
 
@@ -93,11 +93,12 @@
 
     <ImageButton
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
+        android:scaleType="fitCenter"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@+id/image_wrapper_fl"
         android:background="@android:color/transparent"
-        android:src="@drawable/transfer_arrow"
+        android:src="@drawable/transfer"
 
 
         />

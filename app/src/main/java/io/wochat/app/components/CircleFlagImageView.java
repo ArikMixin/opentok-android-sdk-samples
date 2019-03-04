@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
@@ -17,6 +18,7 @@ import io.wochat.app.utils.Utils;
 public class CircleFlagImageView extends LinearLayout {
 	private CircleImageView mContactPicCIV;
 	private CircleImageView mContactFlagCIV;
+	private TextView mContactInitialsTV;
 
 	public CircleFlagImageView(Context context) {
 		super(context);
@@ -44,28 +46,33 @@ public class CircleFlagImageView extends LinearLayout {
 		inflater.inflate(R.layout.contact_clircle_flag_new, this);
 		mContactPicCIV = (CircleImageView)findViewById(R.id.contact_pic_civ);
 		mContactFlagCIV = (CircleImageView)findViewById(R.id.contact_flag_civ);
+		mContactInitialsTV = (TextView)findViewById(R.id.contact_initials_tv);
 	}
 
-	public void setInfo(String picUrl, String language){
+	public void setInfo(String picUrl, String language, String initials){
 		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(language);
 
 		int imageSizeDp = Utils.dp2px(getContext(), 50);
 		int flagSizeDp = Utils.dp2px(getContext(), 20);
 
 		if((picUrl != null)&& (!picUrl.trim().equals(""))){
+			mContactInitialsTV.setVisibility(GONE);
 			Picasso.get().
 				load(picUrl).
 				resize(imageSizeDp,imageSizeDp).
-				placeholder(R.drawable.ic_empty_contact_1).
+				placeholder(R.drawable.ic_empty_contact).
 				centerCrop().
 				into(mContactPicCIV);
 		}
 		else {
+			mContactInitialsTV.setVisibility(VISIBLE);
+			mContactInitialsTV.setText(initials);
 			Picasso.get().
-				load(R.drawable.ic_empty_contact_1).
+				load(R.drawable.ic_empty_contact).
 				resize(imageSizeDp,imageSizeDp).
 				centerCrop().
 				into(mContactPicCIV);
+			mContactInitialsTV.bringToFront();
 		}
 
 		Picasso.get().
@@ -80,7 +87,7 @@ public class CircleFlagImageView extends LinearLayout {
 	public void setContact(Contact contact){
 		String picUrl = contact.getAvatar();
 		String language = contact.getContactServer().getLanguage();
-		setInfo(picUrl, language);
+		setInfo(picUrl, language, contact.getInitials());
 	}
 
 

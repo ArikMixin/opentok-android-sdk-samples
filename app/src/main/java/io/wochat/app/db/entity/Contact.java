@@ -151,6 +151,26 @@ public class Contact implements IContact {
 			return contactServer.getUserName();
 	}
 
+	public static String getInitialsFromName(String name){
+    	if (name == null)
+    		return "XX";
+    	String capitalName = name.toUpperCase();
+		String[] arr = capitalName.split(" ");
+		if (arr.length >= 2){
+			return arr[0].substring(0,1) + arr[1].substring(0,1);
+		}
+		else if (capitalName.length() >= 2)
+			return capitalName.substring(0,2);
+		else  if (capitalName.length() == 1)
+			return capitalName.substring(0,1);
+		else return "XX";
+	}
+
+	public String getInitials(){
+    	String name  = getDisplayName();
+    	return getInitialsFromName(name);
+	}
+
 
 	public String toJson(){
 		Gson gson = new Gson();

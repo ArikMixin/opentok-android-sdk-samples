@@ -66,6 +66,7 @@ import java.util.List;
 import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleFlagImageView;
+import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.ui.Consts;
@@ -214,7 +215,7 @@ public class ConversationActivity extends PermissionActivity implements
 		});
 
 		mContactAvatarCIV = (CircleFlagImageView) findViewById(R.id.contact_avatar_civ);
-		mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang);
+		mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
 		//mImageLoader.loadImage(mContactAvatarCIV.get, mParticipantPic, null);
 		mContactAvatarCIV.setOnClickListener(v -> {
 			//Utils.showImage(ConversationActivity.this, mParticipantPic);

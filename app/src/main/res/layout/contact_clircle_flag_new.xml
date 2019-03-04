@@ -11,7 +11,7 @@
         android:id="@+id/contact_pic_civ"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/ic_empty_contact_1"/>
+        android:src="@drawable/ic_empty_contact"/>
 
     <io.wochat.app.components.CircleImageView
         android:id="@+id/contact_flag_civ"
@@ -22,11 +22,25 @@
         android:layout_marginEnd="0dp"
         android:src="@drawable/flag_united_kingdom"
         app:civ_border_color="@color/whitee"
-        app:civ_border_width="2dp"
+        app:civ_border_width="1dp"
         app:layout_constraintBottom_toBottomOf="@+id/contact_pic_civ"
         app:layout_constraintEnd_toEndOf="@+id/contact_pic_civ"
         app:layout_constraintHeight_default="percent"
-        app:layout_constraintHeight_percent=".4"
+        app:layout_constraintHeight_percent=".35"
         app:layout_constraintWidth_default="percent"
-        app:layout_constraintWidth_percent=".4"/>
+        app:layout_constraintWidth_percent=".35"/>
+
+    <TextView
+        android:id="@+id/contact_initials_tv"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:text="TV"
+        android:textColor="@color/white"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 </android.support.constraint.ConstraintLayout>
