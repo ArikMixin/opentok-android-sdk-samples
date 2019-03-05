@@ -1154,6 +1154,9 @@ public void updateAckStatusToSent(Message message){
 
 
 				}
+				else if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)){
+
+				}
 				else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
 					if (message.getMediaLocalUri() != null) {
 						byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));

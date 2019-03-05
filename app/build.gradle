@@ -80,5 +80,8 @@ dependencies {
     implementation files('libs/isoparser-1.0.6.jar')
     //implementation group: 'com.googlecode.mp4parser', name: 'isoparser', version: '1.0.6'
 
+    implementation 'com.nuance:speechkit:2.2.4'
+    //implementation 'com.nuance:speechkit:2.1+@aar'
+
 }
 

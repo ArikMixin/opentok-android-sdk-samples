@@ -23,6 +23,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.StrictMode;
 import android.provider.MediaStore;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
@@ -64,6 +67,7 @@ import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.R;
+import io.wochat.app.WCApplication;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.db.entity.Contact;
@@ -72,6 +76,7 @@ import io.wochat.app.db.entity.Message;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
+import io.wochat.app.utils.SpeechUtils;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.utils.videocompression.MediaController;
 import io.wochat.app.viewmodel.ConversationViewModel;
@@ -91,7 +96,8 @@ public class ConversationActivity extends PermissionActivity implements
 	MessageInput.TypingListener,
 	DateFormatter.Formatter,
 	MessageInput.ButtonClickListener,
-	MessageHolders.ContentChecker<Message>{
+	MessageHolders.ContentChecker<Message>,
+	SpeechUtils.SpeechUtilsSTTListener{
 
 	private static final String TAG = "ConversationActivity";
 	private static final int REQUEST_SELECT_IMAGE_VIDEO = 1;
@@ -142,7 +148,10 @@ public class ConversationActivity extends PermissionActivity implements
 	private File mAudioFile;
 	private long mRecorderStartTimeStamp;
 	private String mSelfPicUrl;
-
+	private boolean mSameLanguageWithParticipant;
+	private SpeechRecognizer mSpeechRecognizer;
+	private Intent mSpeechRecognizerIntent;
+	private SpeechUtils mSpeechUtils;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -213,6 +222,9 @@ public class ConversationActivity extends PermissionActivity implements
 		mContactNameTV.setOnClickListener(v -> {
 			Toast.makeText(ConversationActivity.this, "open profile for " + mParticipantName, Toast.LENGTH_SHORT).show();
 		});
+
+
+		mSameLanguageWithParticipant = mParticipantLang.equals(mSelfId);
 
 		mContactAvatarCIV = (CircleFlagImageView) findViewById(R.id.contact_avatar_civ);
 		mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
@@ -289,6 +301,11 @@ public class ConversationActivity extends PermissionActivity implements
 		mRecordingBigIV.setImageDrawable(getDrawable(R.drawable.mic_recording_empty));
 		mRecordingBigIV.setOnTouchListener(mRecordingOnTouchListener);
 
+		mSpeechUtils = new SpeechUtils();
+		mSpeechUtils.setSpeechUtilsSTTListener(this);
+
+
+
 	}
 
 
@@ -345,6 +362,16 @@ public class ConversationActivity extends PermissionActivity implements
 				mSelfPicUrl,
 				R.layout.item_custom_outcoming_audio_message_new,
 				this)
+
+			.registerContentType(
+				MessageHolders.VIEW_TYPE_SPEECH_MESSAGE,
+				CustomIncomingSpeechableMessageViewHolder.class,
+				mParticipantPic,
+				R.layout.item_custom_incoming_audio_message_new,
+				CustomOutcomingSpeechableMessageViewHolder.class,
+				mSelfPicUrl,
+				R.layout.item_custom_outcoming_audio_message_new,
+				this)
 			;
 
 		mMessagesAdapter = new MessagesListAdapter<>(mSelfId, holdersConfig, mImageLoader);
@@ -379,6 +406,19 @@ public class ConversationActivity extends PermissionActivity implements
 			}
 		});
 
+	}
+
+
+	@Override
+	public boolean hasContentFor(Message message, short type) {
+		switch (type) {
+			case MessageHolders.VIEW_TYPE_AUDIO_MESSAGE:
+				return ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty()));
+			case MessageHolders.VIEW_TYPE_SPEECH_MESSAGE:
+				//return ((message.getTranslatedText() != null) && (!message.getTranslatedText().isEmpty()));
+				return true;
+		}
+		return false;
 	}
 
 
@@ -684,14 +724,6 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 
-	@Override
-	public boolean hasContentFor(Message message, short type) {
-		switch (type) {
-			case MessageHolders.VIEW_TYPE_AUDIO_MESSAGE:
-				return ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty()));
-		}
-		return false;
-	}
 
 
 	private void returnRecordingButtonToPlace(boolean withAnimation){
@@ -728,9 +760,9 @@ public class ConversationActivity extends PermissionActivity implements
 				public void onAnimationEnd(Animation animation) {
 					mRecordingBigIV.setImageDrawable(getDrawable(R.drawable.mic_recording_empty));
 					if (deltaRight > 500)
-						cancelRecord();
+						cancelRecordOrSpeech();
 					else
-						finishRecord();
+						finishRecordOrSpeech();
 				}
 
 				@Override
@@ -828,6 +860,7 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 
+
 	private class TypingSignalBR extends BroadcastReceiver {
 
 		@Override
@@ -923,11 +956,13 @@ public class ConversationActivity extends PermissionActivity implements
 	protected void onPause() {
 		super.onPause();
 		unregisterReceiver(mTypingSignalBR);
+		//mSpeechUtils.destroy();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+		//mSpeechUtils.initSpeech(this, this.getPackageName(), mSelfLang);
 		mClearTypingHandler = new Handler(getMainLooper());
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(WCService.TYPING_SIGNAL_ACTION);
@@ -1128,6 +1163,15 @@ public class ConversationActivity extends PermissionActivity implements
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
 
+	private void submitTempSpeechableMessage(String text, int duration) {
+		Message message = new Message(mParticipantId, mSelfId, mConversationId, text, mSelfLang);
+		message.setTranslatedLanguage(mParticipantLang);
+		message.setMessageType(Message.MSG_TYPE_SPEECHABLE);
+		message.setDuration(duration);
+		mConversationViewModel.addNewOutcomingMessage(message);
+		mService.sendMessage(message);
+	}
+
 
 	@Override
 	public void onBackPressed() {
@@ -1172,7 +1216,7 @@ public class ConversationActivity extends PermissionActivity implements
 					if (!mIsInputInTextMode){
 						if (hasPermissions()) {
 							mRecordingBigIV.setImageDrawable(getDrawable(R.drawable.mic_recording_big));
-							startRecord();
+							startRecordOrSpeech();
 
 							oldX = event.getX();
 							oldY = event.getY();
@@ -1227,15 +1271,68 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 	};
 
+
+	private void startRecordOrSpeech(){
+		if (mSameLanguageWithParticipant){
+			startRecord();
+		}
+		else  {
+			mSpeechUtils.initSpeech(this, this.getPackageName(), mSelfLang);
+			mSpeechUtils.startSpeechToText();
+		}
+	}
+
+
+	private void cancelRecordOrSpeech(){
+		if (mSameLanguageWithParticipant){
+			cancelRecord();
+		}
+		else  {
+			mSpeechUtils.cancelSpeechToText();
+		}
+
+	}
+
+	private void finishRecordOrSpeech(){
+		if (mSameLanguageWithParticipant){
+			finishRecord();
+		}
+		else  {
+			mSpeechUtils.stopSpeechToText();
+		}
+
+	}
+
+
+	@Override
+	public void onSpeechToTextResult(String text, int duration) {
+		Log.e(TAG, "onSpeechResult: " + text);
+		mSpeechUtils.destroy();
+		submitTempSpeechableMessage(text, duration);
+	}
+
+	@Override
+	public void onBeginningOfSpeechToText() {
+
+	}
+
+	@Override
+	public void onEndOfSpeechToText() {
+
+	}
+
+	@Override
+	public void onErrorOfSpeechToText() {
+
+	}
+
+
+
 	private boolean mRecordingStarted = false;
 
 
 	private void startRecord(){
 		mRecordingStarted = true;
-		//Toast.makeText(ConversationActivity.this, "start rec", Toast.LENGTH_SHORT).show();
-
-
-
 		mRecorder = new MediaRecorder();
 		mRecorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
 			@Override
@@ -1271,8 +1368,6 @@ public class ConversationActivity extends PermissionActivity implements
 		mRecorder.start();
 		mRecorderStartTimeStamp = System.currentTimeMillis();
 		Log.e(TAG, "startRecord started");
-		//mMessageInput.getInputEditText().setHint(R.string.hint_slide_to_cancel);
-		//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.mic_recording_small));
 		mRecordingTimer.startCountUp();
 
 	}
@@ -1346,7 +1441,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 		@Override
 		public void onFinish() {
-			finishRecord();
+			finishRecordOrSpeech(); // should never be called only in case the time reach the end
 		}
 	};
 
