@@ -752,6 +752,9 @@ public class MessageHolders {
 			return VIEW_TYPE_VIDEO_MESSAGE;
 		}
 
+		if (message.isText())
+			return VIEW_TYPE_TEXT_MESSAGE;
+
 
 		// other default types will be here
 
@@ -1295,7 +1298,7 @@ public class MessageHolders {
             extends BaseMessageViewHolder<MESSAGE> implements DefaultMessageViewHolder {
 
         protected TextView time;
-        protected ImageView userAvatar;
+        //protected ImageView userAvatar;
 
         @Deprecated
         public BaseIncomingMessageViewHolder(View itemView) {
@@ -1343,7 +1346,7 @@ public class MessageHolders {
 
         private void init(View itemView) {
             time = (TextView) itemView.findViewById(R.id.messageTime);
-            userAvatar = (ImageView) itemView.findViewById(R.id.messageUserAvatar);
+            //userAvatar = (ImageView) itemView.findViewById(R.id.messageUserAvatar);
         }
     }
 
@@ -1354,7 +1357,7 @@ public class MessageHolders {
             extends BaseMessageViewHolder<MESSAGE> implements DefaultMessageViewHolder {
 
         protected TextView time;
-		protected ImageView userAvatar;
+		//protected ImageView userAvatar;
 
         @Deprecated
         public BaseOutcomingMessageViewHolder(View itemView) {
@@ -1391,7 +1394,7 @@ public class MessageHolders {
 
         private void init(View itemView) {
             time = (TextView) itemView.findViewById(R.id.messageTime);
-			userAvatar = (ImageView) itemView.findViewById(R.id.messageUserAvatar);
+			//userAvatar = (ImageView) itemView.findViewById(R.id.messageUserAvatar);
         }
     }
 

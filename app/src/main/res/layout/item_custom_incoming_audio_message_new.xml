@@ -91,7 +91,7 @@
                 app:layout_constraintStart_toEndOf="@+id/time"
                 app:layout_constraintTop_toTopOf="@+id/time"/>
 
-            <io.wochat.app.components.CircleImageView
+            <io.wochat.app.components.CircleFlagImageView
                 android:id="@id/messageUserAvatar"
                 android:layout_width="45dp"
                 android:layout_height="45dp"

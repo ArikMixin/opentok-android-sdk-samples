@@ -14,7 +14,9 @@ import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.messages.MessageHolders;
 
 import io.wochat.app.R;
+import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.components.CircleImageView;
+import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.utils.DateFormatter;
 import io.wochat.app.utils.Utils;
@@ -25,8 +27,9 @@ public class CustomOutcomingAudioMessageViewHolder
 		implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
 	private static final String TAG = "ParentAudioMsgViewHldr" ;
+	private final Contact mSelfContact;
 	private String mPictureUrl;
-	private CircleImageView mAvatarCIV;
+	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
 	private TextView mDurationTV;
 	private TextView mTimeTV;
@@ -49,13 +52,19 @@ public class CustomOutcomingAudioMessageViewHolder
 		mPlayPauseIV.setOnClickListener(this);
         mSeekBar = (SeekBar) itemView.findViewById(R.id.seekbar);
 		mSeekBar.setOnSeekBarChangeListener(this);
-		mAvatarCIV = (CircleImageView)itemView.findViewById(R.id.messageUserAvatar);
-		mPictureUrl = (String)payload;
+		//mAvatarCIV = (CircleImageView)itemView.findViewById(R.id.messageUserAvatar);
 
-		if (mPictureUrl == null)
-			Picasso.get().load(R.drawable.ic_action_empty_contact).placeholder(R.drawable.ic_action_empty_contact).into(mAvatarCIV);
-		else
-			Picasso.get().load(mPictureUrl).error(R.drawable.ic_action_empty_contact).placeholder(R.drawable.ic_action_empty_contact).into(mAvatarCIV);
+		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
+		mSelfContact = (Contact)payload;
+		mAvatarCIV.setContact(mSelfContact);
+
+
+//		mPictureUrl = (String)payload;
+//
+//		if (mPictureUrl == null)
+//			Picasso.get().load(R.drawable.ic_action_empty_contact).placeholder(R.drawable.ic_action_empty_contact).into(mAvatarCIV);
+//		else
+//			Picasso.get().load(mPictureUrl).error(R.drawable.ic_action_empty_contact).placeholder(R.drawable.ic_action_empty_contact).into(mAvatarCIV);
 
     }
 

@@ -42,7 +42,21 @@ public class Contact implements IContact {
 	@SerializedName("has_server_data")
 	private boolean hasServerData;
 
-    public String getContactId() {
+
+
+	// for stub usage
+	public Contact(String id, String lang, String name, String picUrl) {
+		this.contactId = id;
+		this.contactLocal = new ContactLocal();
+		this.contactServer = new ContactServer();
+		this.hasServerData = true;
+		this.contactLocal.setDisplayName(name);
+		this.contactServer.setUserName(name);
+		this.contactServer.setLanguage(lang);
+		this.contactServer.setProfilePicUrl(picUrl);
+	}
+
+	public String getContactId() {
         return contactId;
     }
 

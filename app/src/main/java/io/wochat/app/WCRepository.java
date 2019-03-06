@@ -841,6 +841,11 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 					res = handleIncomingMessageText(message);
 					listener.OnSaved(res, message);
 					break;
+				case Message.MSG_TYPE_SPEECHABLE:
+					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
+					res = handleIncomingMessageText(message);
+					listener.OnSaved(res, message);
+					break;
 				case Message.MSG_TYPE_ACKNOWLEDGMENT:
 					res = handleAcknowledgmentMessage(message);
 					break;

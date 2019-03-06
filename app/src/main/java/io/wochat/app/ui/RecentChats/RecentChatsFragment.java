@@ -68,6 +68,7 @@ public class RecentChatsFragment extends Fragment  implements
 	private List<UnreadMessagesConversation> mUnreadMessagesConversation;
 	private User mSelfUser;
 	private String mSelfUserLang;
+	private String mSelfUserName;
 
 	public static RecentChatsFragment newInstance() {
 		return new RecentChatsFragment();
@@ -94,10 +95,12 @@ public class RecentChatsFragment extends Fragment  implements
 				mSelfUser = user;
 				mSelfUserId = user.getUserId();
 				mSelfUserLang = user.getLanguage();
+				mSelfUserName = user.getUserName();
 			}
 			else {
 				mSelfUserId = null;
 				mSelfUserLang = null;
+				mSelfUserName = null;
 			}
 		});
 
@@ -237,6 +240,7 @@ public class RecentChatsFragment extends Fragment  implements
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+				intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 				intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 				startActivity(intent);
 
@@ -255,6 +259,7 @@ public class RecentChatsFragment extends Fragment  implements
 		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 		startActivity(intent);
 	}
 

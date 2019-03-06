@@ -73,8 +73,8 @@ public class SpeechUtils extends Transaction.Listener implements
 	public void initSpeech(Context context, String packageName, String selfLang) {
 		Log.e(TAG, "initSpeech selfLang: " + selfLang);
 
-		mSelfLang = "iw";
-		//mSelfLang = selfLang;
+		//mSelfLang = "en";
+		mSelfLang = selfLang;
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
 		mSpeechRecognizer.setRecognitionListener(this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -84,24 +84,12 @@ public class SpeechUtils extends Transaction.Listener implements
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
 
 
-		int isSupported = -1;
 		try {
 			mTextToSpeech = new TextToSpeech(context, this);
 			mTextToSpeech.setOnUtteranceProgressListener(mUtteranceProgressListener);
-			isSupported = mTextToSpeech.isLanguageAvailable(new Locale(mSelfLang));
 		} catch (Exception e) {
-			isSupported = -1;
-
 		}
-		if (isSupported > 0) {
-			mGoogleTextToSpeachSupported = true;
-			Log.e(TAG, "TextToSpeech isLanguageAvailable " + mSelfLang + " : true");
-		}
-		else {
-			Log.e(TAG, "TextToSpeech isLanguageAvailable " + mSelfLang + " : false");
-			mGoogleTextToSpeachSupported = false;
-			initNuanceSpeechkit(context);
-		}
+		initNuanceSpeechkit(context);
 	}
 
 
@@ -109,11 +97,15 @@ public class SpeechUtils extends Transaction.Listener implements
 		@Override
 		public void onStart(String utteranceId) {
 			Log.e(TAG, "TextToSpeech UtteranceProgressListener onStart");
+			if (mSpeechUtilsTTSListener != null)
+				mSpeechUtilsTTSListener.onBeginPlaying();
 		}
 
 		@Override
 		public void onDone(String utteranceId) {
 			Log.e(TAG, "TextToSpeech UtteranceProgressListener onDone");
+			if (mSpeechUtilsTTSListener != null)
+				mSpeechUtilsTTSListener.onFinishedPlaying();
 		}
 
 		@Override
@@ -210,7 +202,19 @@ public class SpeechUtils extends Transaction.Listener implements
 	public void onInit(int status) {
 		if(status != TextToSpeech.ERROR) {
 			Log.e(TAG, "TextToSpeech onInit OK: " + status);
-			mTextToSpeech.setLanguage(new Locale(mSelfLang));
+
+			int isSupported = mTextToSpeech.isLanguageAvailable(new Locale(mSelfLang));
+			if (isSupported >= 0) {
+				mGoogleTextToSpeachSupported = true;
+				Log.e(TAG, "TextToSpeech isLanguageAvailable " + mSelfLang + " : true");
+				mTextToSpeech.setLanguage(new Locale(mSelfLang));
+			}
+			else {
+				Log.e(TAG, "TextToSpeech isLanguageAvailable " + mSelfLang + " : false");
+				mGoogleTextToSpeachSupported = false;
+
+			}
+
 			if (mSpeechUtilsTTSListener != null)
 				mSpeechUtilsTTSListener.onTextToSpeechInitOK();
 		}

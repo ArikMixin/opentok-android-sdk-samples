@@ -152,6 +152,9 @@ public class ConversationActivity extends PermissionActivity implements
 	private SpeechRecognizer mSpeechRecognizer;
 	private Intent mSpeechRecognizerIntent;
 	private SpeechUtils mSpeechUtils;
+	private String mSelfName;
+	private Contact mSelfContact;
+	private Contact mParticipantContact;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -210,11 +213,15 @@ public class ConversationActivity extends PermissionActivity implements
 		mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
 		mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
 		mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
-//		String participantContactString = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
-//		mParticipantContactObj = Contact.fromJson(participantContactString);
+
 		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 		mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
+		mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 		mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
+
+		mSelfContact = new Contact(mSelfId, mSelfLang, mSelfName, mSelfPicUrl);
+		mParticipantContact = new Contact(mParticipantId, mParticipantLang, mParticipantName, mParticipantPic);
+
 		mContactNameTV = (TextView) findViewById(R.id.contact_name_tv);
 		mContactDetailsTV = (TextView) findViewById(R.id.contact_details_tv);
 		mContactDetailsTV.setText("");
@@ -356,20 +363,20 @@ public class ConversationActivity extends PermissionActivity implements
 			.registerContentType(
 				MessageHolders.VIEW_TYPE_AUDIO_MESSAGE,
 				CustomIncomingAudioMessageViewHolder.class,
-				mParticipantPic,
+				mParticipantContact,
 				R.layout.item_custom_incoming_audio_message_new,
 				CustomOutcomingAudioMessageViewHolder.class,
-				mSelfPicUrl,
+				mSelfContact,
 				R.layout.item_custom_outcoming_audio_message_new,
 				this)
 
 			.registerContentType(
 				MessageHolders.VIEW_TYPE_SPEECH_MESSAGE,
 				CustomIncomingSpeechableMessageViewHolder.class,
-				mParticipantPic,
+				mParticipantContact,
 				R.layout.item_custom_incoming_audio_message_new,
 				CustomOutcomingSpeechableMessageViewHolder.class,
-				mSelfPicUrl,
+				mSelfContact,
 				R.layout.item_custom_outcoming_audio_message_new,
 				this)
 			;

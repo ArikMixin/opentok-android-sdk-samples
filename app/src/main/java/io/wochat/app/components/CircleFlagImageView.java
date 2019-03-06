@@ -90,5 +90,9 @@ public class CircleFlagImageView extends LinearLayout {
 		setInfo(picUrl, language, contact.getInitials());
 	}
 
+	public void displayFlag(boolean withFlag){
+		mContactFlagCIV.setVisibility(Utils.booleanToVisibilityInvisible(withFlag));
+	}
+
 
 }

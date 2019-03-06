@@ -2,6 +2,7 @@ package io.wochat.app.ui.Messages;
 
 import android.media.MediaPlayer;
 import android.os.Build;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -14,8 +15,10 @@ import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.messages.MessageHolders;
 
 import io.wochat.app.R;
+import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.components.CircleImageView;
 import io.wochat.app.db.WCSharedPreferences;
+import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.utils.DateFormatter;
 import io.wochat.app.utils.SpeechUtils;
@@ -27,8 +30,9 @@ public class CustomOutcomingSpeechableMessageViewHolder
 		implements View.OnClickListener, SpeechUtils.SpeechUtilsTTSListener{
 
 	private static final String TAG = "OutSpeechMsgViewHldr" ;
+	private final Contact mSelfContact;
 	private String mPictureUrl;
-	private CircleImageView mAvatarCIV;
+	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
 	private TextView mDurationTV;
 	private TextView mTimeTV;
@@ -42,6 +46,7 @@ public class CustomOutcomingSpeechableMessageViewHolder
 	private SpeechUtils mSpeechUtils;
 	private String mMessageText;
 	private int mMessageDuration;
+	private SeekBarTimer mSeekBarTimer;
 
 	public CustomOutcomingSpeechableMessageViewHolder(View itemView, Object payload) {
         super(itemView, payload);
@@ -52,50 +57,26 @@ public class CustomOutcomingSpeechableMessageViewHolder
         mPlayPauseIV = (ImageView) itemView.findViewById(R.id.play_pause_iv);
 		mPlayPauseIV.setOnClickListener(this);
         mSeekBar = (SeekBar) itemView.findViewById(R.id.seekbar);
-		mAvatarCIV = (CircleImageView)itemView.findViewById(R.id.messageUserAvatar);
-		mPictureUrl = (String)payload;
+		mSeekBar.setOnTouchListener((v, event) -> {
+			return true;
+		});
 
-		if (mPictureUrl == null)
-			Picasso.get().load(R.drawable.ic_action_empty_contact).placeholder(R.drawable.ic_action_empty_contact).into(mAvatarCIV);
-		else
-			Picasso.get().load(mPictureUrl).error(R.drawable.ic_action_empty_contact).placeholder(R.drawable.ic_action_empty_contact).into(mAvatarCIV);
+		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
+		mSelfContact = (Contact)payload;
+		mAvatarCIV.setContact(mSelfContact);
+
+
+//		mPictureUrl = (String)payload;
+//
+//		if (mPictureUrl == null)
+//			Picasso.get().load(R.drawable.ic_action_empty_contact).placeholder(R.drawable.ic_action_empty_contact).into(mAvatarCIV);
+//		else
+//			Picasso.get().load(mPictureUrl).error(R.drawable.ic_action_empty_contact).placeholder(R.drawable.ic_action_empty_contact).into(mAvatarCIV);
 
 
 
     }
 
-
-//    private void initMediaPlayer(){
-//		if (mMediaPlayer != null){
-//			if (mMediaPlayer.isPlaying())
-//				mMediaPlayer.stop();
-//			mMediaPlayer.release();
-//			mMediaPlayer = null;
-//		}
-//		mMediaPlayer = new MediaPlayer();
-//		mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-//			@Override
-//			public void onCompletion(MediaPlayer mp) {
-//				mHandler.removeCallbacks(mUpdateSeekbarRunnable);
-//				mDurationTV.setText(Utils.convertSecondsToHMmSs(mMediaPlayer.getDuration()));
-//				setSeekBarProgress(0);
-//				mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
-//			}
-//		});
-//		mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-//			@Override
-//			public void onPrepared(MediaPlayer mp) {
-//				mSeekBar.post(() -> {
-//					int duration = mMediaPlayer.getDuration();
-//					Log.e(TAG, "onPrepared, duration: " + duration );
-//					mSeekBar.setMax(duration);
-//					mDurationTV.setText(Utils.convertSecondsToHMmSs(duration));
-//				});
-//
-//			}
-//		});
-//
-//	}
 
 
 
@@ -103,7 +84,16 @@ public class CustomOutcomingSpeechableMessageViewHolder
     public void onBind(Message message) {
         super.onBind(message);
 
+
         mMessageText = message.getText();
+		mMessageDuration = message.getDuration();
+
+		if (mSeekBarTimer != null)
+			mSeekBarTimer.cancel();
+
+		mSeekBarTimer = new SeekBarTimer(mMessageDuration);
+
+
 
 		mSpeechUtils = new SpeechUtils();
 		mSpeechUtils.setSpeechUtilsTTSListener(this);
@@ -142,24 +132,7 @@ public class CustomOutcomingSpeechableMessageViewHolder
 
     }
 
-	private Runnable mUpdateSeekbarRunnable = new Runnable() { // this one is on the main thread
-		@Override
-		public void run() {
-//			mCurrentPosition = mMediaPlayer.getCurrentPosition();
-//			Log.e(TAG, "updateSeekBar Runnable, CurrentPosition: " + mCurrentPosition);
-//			setSeekBarProgress(mCurrentPosition);
-//			String time = Utils.convertSecondsToHMmSs(mCurrentPosition);
-//			mDurationTV.setText(time);
-//			if (mMediaPlayer.isPlaying())
-//				mHandler.postDelayed(mUpdateSeekbarRunnable, 200);
-//			else {
-//				mDurationTV.setText(Utils.convertSecondsToHMmSs(mMediaPlayer.getDuration()));
-//				if (mCurrentPosition == mMediaPlayer.getDuration()) {
-//					setSeekBarProgress(0);
-//				}
-//			}
-		}
-	};
+
 
 	private void setSeekBarProgress(int progress){
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
@@ -168,16 +141,12 @@ public class CustomOutcomingSpeechableMessageViewHolder
 			mSeekBar.setProgress(progress);
 	}
 
-	private void updateSeekBar(){
-		Log.e(TAG, "updateSeekBar");
-		mHandler.post(mUpdateSeekbarRunnable);
-	}
+
 
     private void play(){
 		mSpeechUtils.startTextToSpeech(mMessageText);
 		mIsPlaying = true;
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_pause_orange));
-		updateSeekBar();
 	}
 
 	private void pause(){
@@ -211,13 +180,42 @@ public class CustomOutcomingSpeechableMessageViewHolder
 
 	@Override
 	public void onBeginPlaying() {
-
+		mSeekBarTimer.start();
 	}
 
 	@Override
 	public void onFinishedPlaying() {
-		setSeekBarProgress(0);
-		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
-
+		mSeekBarTimer.cancel();
+		setSeekBarProgress(mSeekBar.getMax());
+		new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				setSeekBarProgress(0);
+				mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
+			}
+		}, 200);
 	}
+
+
+	private class SeekBarTimer extends CountDownTimer{
+
+		private final long mMillisInFuture;
+
+		public SeekBarTimer(long messageDuration) {
+			super(messageDuration, messageDuration/20);
+			mMillisInFuture = messageDuration;
+		}
+
+		@Override
+		public void onTick(long millisUntilFinished) {
+			int progress = (int)(mMillisInFuture - millisUntilFinished);
+			setSeekBarProgress(progress);
+		}
+
+		@Override
+		public void onFinish() {
+			setSeekBarProgress(0);
+		}
+	}
+
 }
