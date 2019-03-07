@@ -342,4 +342,8 @@ public class Utils {
 		else
 			return String.format("%02d:%02d", m,s);
 	}
+
+	public static boolean isHebrew(String lang) {
+		return ("iw".equals(lang.toLowerCase()))||("he".equals(lang.toLowerCase()));
+	}
 }

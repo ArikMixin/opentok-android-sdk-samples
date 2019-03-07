@@ -85,6 +85,9 @@ public class CustomOutcomingSpeechableMessageViewHolder
         super.onBind(message);
 
 
+
+
+
         mMessageText = message.getText();
 		mMessageDuration = message.getDuration();
 

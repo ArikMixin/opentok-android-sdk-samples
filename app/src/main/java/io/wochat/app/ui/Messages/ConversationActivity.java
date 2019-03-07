@@ -30,6 +30,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.LinearLayoutManager;
@@ -231,7 +232,11 @@ public class ConversationActivity extends PermissionActivity implements
 		});
 
 
-		mSameLanguageWithParticipant = mParticipantLang.equals(mSelfId);
+
+		if ((Utils.isHebrew(mParticipantLang)) && (Utils.isHebrew(mSelfLang)))
+			mSameLanguageWithParticipant = true;
+		else
+			mSameLanguageWithParticipant = mParticipantLang.equals(mSelfLang);
 
 		mContactAvatarCIV = (CircleFlagImageView) findViewById(R.id.contact_avatar_civ);
 		mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
@@ -1296,6 +1301,10 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 		else  {
 			mSpeechUtils.cancelSpeechToText();
+			mRecordingTimer.cancel();
+			mRecordingStarted = false;
+			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
+
 		}
 
 	}
@@ -1306,6 +1315,9 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 		else  {
 			mSpeechUtils.stopSpeechToText();
+			mRecordingTimer.cancel();
+			mRecordingStarted = false;
+			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
 		}
 
 	}
@@ -1320,16 +1332,27 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onBeginningOfSpeechToText() {
-
+		mRecordingTimer.startCountUp();
 	}
 
 	@Override
 	public void onEndOfSpeechToText() {
+		mRecordingTimer.cancel();
+		mRecordingStarted = false;
+		mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
 
 	}
 
 	@Override
-	public void onErrorOfSpeechToText() {
+	public void onErrorOfSpeechToText(@StringRes int resourceString) {
+		if (resourceString != 0)
+			Toast.makeText(this, getString(resourceString), Toast.LENGTH_SHORT).show();
+		else
+			Toast.makeText(this, "Speech recognition error", Toast.LENGTH_SHORT).show();
+
+		mRecordingTimer.cancel();
+		mRecordingStarted = false;
+		mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
 
 	}
 
@@ -1386,11 +1409,7 @@ public class ConversationActivity extends PermissionActivity implements
 		int duration = (int)(System.currentTimeMillis() - mRecorderStartTimeStamp);
 
 		mRecordingTimer.cancel();
-
-		//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.smiley));
-
 		mRecordingStarted = false;
-		//Toast.makeText(ConversationActivity.this, "stop rec", Toast.LENGTH_SHORT).show();
 		mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
 
 

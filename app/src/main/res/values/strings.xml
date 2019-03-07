@@ -50,4 +50,11 @@
     <string name="last_seen_past">last seen</string>
     <string name="online">Online</string>
 
+    <string name="stt_error_network_timeout">Network operation timed out</string>
+    <string name="stt_error_network">Network Error</string>
+    <string name="stt_error_permissions">Insufficient permissions</string>
+    <string name="stt_error_client">Internal error</string>
+    <string name="stt_error_no_match">No recognition result matched</string>
+    <string name="stt_error_recognizer_busy">Recognition service is busy</string>
+
 </resources>

@@ -964,7 +964,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 							message.displayMessageAfterTranslation();
 
 							if (isIncoming)
-								updateMessageAndConversation(message);
+								updateMessageAndConversationForIncoming(message);
 							else
 								updateMessageTextOnly(message);
 
@@ -1024,10 +1024,10 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 		}
 	}
 
-	private void updateMessageAndConversation(Message message) {
+	private void updateMessageAndConversationForIncoming(Message message) {
     	mAppExecutors.diskIO().execute(() -> {
 			mMessageDao.update(message);
-			mConversationDao.updateIncomingText(message.getConversationId(), message.getText());
+			mConversationDao.updateIncomingText(message.getConversationId(), message.getTranslatedText());
 		});
 
 	}

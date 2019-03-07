@@ -9,6 +9,7 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.support.annotation.StringRes;
 import android.util.Log;
 
 import com.nuance.speechkit.Audio;
@@ -23,6 +24,8 @@ import com.nuance.speechkit.TransactionException;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
+
+import io.wochat.app.R;
 
 public class SpeechUtils extends Transaction.Listener implements
 	RecognitionListener,
@@ -45,7 +48,7 @@ public class SpeechUtils extends Transaction.Listener implements
 		void onSpeechToTextResult(String text, int duration);
 		void onBeginningOfSpeechToText();
 		void onEndOfSpeechToText();
-		void onErrorOfSpeechToText();
+		void onErrorOfSpeechToText(@StringRes int resourceString);
 	}
 
 	public interface SpeechUtilsTTSListener {
@@ -147,9 +150,37 @@ public class SpeechUtils extends Transaction.Listener implements
 
 	@Override
 	public void onError(int error) {
+		@StringRes int resourceString = 0;
+		switch (error){
+			case SpeechRecognizer.ERROR_AUDIO:
+				resourceString = R.string.stt_error_network_timeout;
+				break;
+			case SpeechRecognizer.ERROR_CLIENT:
+				resourceString = R.string.stt_error_client;
+				break;
+			case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
+				resourceString = R.string.stt_error_permissions;
+				break;
+			case SpeechRecognizer.ERROR_NETWORK:
+				resourceString = R.string.stt_error_network;
+				break;
+			case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
+				resourceString = R.string.stt_error_network_timeout;
+				break;
+			case SpeechRecognizer.ERROR_NO_MATCH:
+				resourceString = R.string.stt_error_no_match;
+				break;
+			case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+				resourceString = R.string.stt_error_recognizer_busy;
+				break;
+			case SpeechRecognizer.ERROR_SERVER:
+				resourceString = R.string.stt_error_network_timeout;
+				break;
+
+		}
 		Log.e(TAG, "RecognitionListener onError: " + error);
-		if (mSpeechUtilsSTTListener != null)
-			mSpeechUtilsSTTListener.onErrorOfSpeechToText();
+		if ((mSpeechUtilsSTTListener != null) && (error != SpeechRecognizer.ERROR_CLIENT))
+			mSpeechUtilsSTTListener.onErrorOfSpeechToText(resourceString);
 
 	}
 
@@ -200,7 +231,7 @@ public class SpeechUtils extends Transaction.Listener implements
 
 	@Override
 	public void onInit(int status) {
-		if(status != TextToSpeech.ERROR) {
+		if(status == TextToSpeech.SUCCESS) {
 			Log.e(TAG, "TextToSpeech onInit OK: " + status);
 
 			int isSupported = mTextToSpeech.isLanguageAvailable(new Locale(mSelfLang));
@@ -272,7 +303,7 @@ public class SpeechUtils extends Transaction.Listener implements
 		// https://developer.nuance.com/public/index.php?task=supportedLanguages
 		// ***********************************************************************
 
-		if((mSelfLang.toLowerCase().equals("iw")) || (mSelfLang.toLowerCase().equals("he")))
+		if(Utils.isHebrew(mSelfLang))
 			mNuanceSpeechOptions.setLanguage(new Language("heb-ISR"));
 
 		else if(mSelfLang.toLowerCase().equals("ar"))
