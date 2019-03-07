@@ -267,6 +267,8 @@ public class Utils {
 
 
 	public static @DrawableRes int getCountryFlagDrawableFromLang(String language) {
+		if (language == null)
+			return 0;
 		switch (language){
 			case "IW":
 			case "HE":
@@ -344,6 +346,8 @@ public class Utils {
 	}
 
 	public static boolean isHebrew(String lang) {
+		if (lang == null)
+			return false;
 		return ("iw".equals(lang.toLowerCase()))||("he".equals(lang.toLowerCase()));
 	}
 }

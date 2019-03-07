@@ -75,11 +75,13 @@ public class CircleFlagImageView extends LinearLayout {
 			mContactInitialsTV.bringToFront();
 		}
 
-		Picasso.get().
-			load(flagDrawable).
-			resize(flagSizeDp,flagSizeDp).
-			centerCrop().
-			into(mContactFlagCIV);
+		if (flagDrawable != 0) {
+			Picasso.get().
+				load(flagDrawable).
+				resize(flagSizeDp, flagSizeDp).
+				centerCrop().
+				into(mContactFlagCIV);
+		}
 
 
 	}

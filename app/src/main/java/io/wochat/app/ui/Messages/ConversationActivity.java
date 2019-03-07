@@ -482,6 +482,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mIsInputInTextMode = false;
 		mService.sendMessage(message);
+		returnRecordingButtonToPlace(false);
 		return true;
 
 	}
