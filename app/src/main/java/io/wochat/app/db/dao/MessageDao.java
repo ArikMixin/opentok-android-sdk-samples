@@ -108,4 +108,11 @@ public interface MessageDao {
 	void updateMessageTranslatedText(String messageId, String translatedText);
 
 
+	@Delete
+	void deleteMessages(List<Message> list);
+
+	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp DESC LIMIT 1")
+	Message getLastMessagesForConversation(String conversationId);
+
+
 }

@@ -1190,4 +1190,39 @@ public void updateAckStatusToSent(Message message){
 			}
 		});
 	}
+
+
+	public void deleteMessages(List<Message> messages){
+		mAppExecutors.diskIO().execute(() -> {
+
+			String conversationId = messages.get(0).getConversationId();
+			mMessageDao.deleteMessages(messages);
+			Message lastMessage = mMessageDao.getLastMessagesForConversation(conversationId);
+			if (lastMessage != null) {
+				boolean isOutgoing = lastMessage.getSenderId().equals(mSharedPreferences.getUserId());
+				if (isOutgoing) {
+					mConversationDao.updateOutgoing(
+						conversationId,
+						lastMessage.getMessageId(),
+						lastMessage.getTimestamp(),
+						lastMessage.getMessageText(),
+						lastMessage.getSenderId(),
+						lastMessage.getAckStatus(),
+						lastMessage.getMessageType());
+				}
+				else {
+					mConversationDao.updateIncoming(
+						conversationId,
+						lastMessage.getMessageId(),
+						lastMessage.getTimestamp(),
+						lastMessage.getText(),
+						lastMessage.getSenderId(),
+						lastMessage.getAckStatus(),
+						lastMessage.getMessageType(),
+						0);
+				}
+			}
+		});
+
+	}
 }

@@ -88,11 +88,6 @@ public interface ConversationDao {
 							String lastMessageText);
 
 
-//	@Query("UPDATE conversation_table SET " +
-//		"num_of_unread_messages = :numOfUnreadMessages " +
-//		"WHERE conversation_id =:conversationId")
-//	void update(String conversationId, int numOfUnreadMessages);
-
 
 	@Query("UPDATE conversation_table SET " +
 		"num_of_unread_messages = 0 " +
@@ -111,56 +106,6 @@ public interface ConversationDao {
 	@Insert
     void insert(Conversation conversation);
 
-
-
-//	@Query("SELECT conversation_table.participant_id AS mConversation, message_table.conversation_id AS unique2 "
-//		+ "FROM conversation_table INNER JOIN message_table ON conversation_table..bar = Bar.id")
-
-//	@Query("SELECT conversation_table.conversation_id AS mConvId, " +
-//		"message_table.message_text AS mLastMessageText, " +
-//		"message_table.sender AS mLastMessageSenderId, " +
-//		"message_table.message_id AS mLastMessageId, " +
-//		"message_table.timestamp AS mLastMessageTimestamp, " +
-//		"message_table.ack_status AS mLastMessageAckStatus, " +
-//		"contact_table.cntct_srvr_profile_pic_url AS mContactProfilePicUrl, " +
-//		"contact_table.cntct_srvr_user_name AS mContactName, " +
-//		"conversation_table.* " +
-//		"FROM conversation_table, message_table, contact_table " +
-//		"WHERE (conversation_table.conversation_id =:conversationId) AND " +
-//		"(conversation_table.participant_id = contact_table.cntct_srvr_contact_server_id) AND " +
-//		"(conversation_table.last_message_id = message_table.message_id)")
-//	public ConversationComplete getConversationComplete(String conversationId);
-//
-//
-//	@Query("SELECT conversation_table.conversation_id AS mConvId, " +
-//		"message_table.message_text AS mLastMessageText, " +
-//		"message_table.sender AS mLastMessageSenderId, " +
-//		"message_table.message_id AS mLastMessageId, " +
-//		"message_table.timestamp AS mLastMessageTimestamp, " +
-//		"message_table.ack_status AS mLastMessageAckStatus, " +
-//		"contact_table.cntct_srvr_profile_pic_url AS mContactProfilePicUrl, " +
-//		"contact_table.cntct_srvr_user_name AS mContactName, " +
-//		"conversation_table.* " +
-//		"FROM conversation_table, message_table, contact_table " +
-//		"WHERE (conversation_table.conversation_id =:conversationId) AND " +
-//		"(conversation_table.participant_id = contact_table.cntct_srvr_contact_server_id) AND " +
-//		"(conversation_table.last_message_id = message_table.message_id)")
-//	public LiveData<ConversationComplete> getConversationCompleteLD(String conversationId);
-//
-//	@Query("SELECT conversation_table.conversation_id AS mConvId, " +
-//		"message_table.message_text AS mLastMessageText, " +
-//		"message_table.sender AS mLastMessageSenderId, " +
-//		"message_table.message_id AS mLastMessageId, " +
-//		"message_table.timestamp AS mLastMessageTimestamp, " +
-//		"message_table.ack_status AS mLastMessageAckStatus, " +
-//		"contact_table.cntct_srvr_profile_pic_url AS mContactProfilePicUrl, " +
-//		"contact_table.cntct_srvr_user_name AS mContactName, " +
-//		"conversation_table.* " +
-//		"FROM conversation_table, message_table, contact_table " +
-//		"WHERE (conversation_table.participant_id = contact_table.cntct_srvr_contact_server_id) AND " +
-//		"(conversation_table.last_message_id = message_table.message_id) " +
-//		"ORDER BY message_table.timestamp DESC")
-//	public LiveData<List<ConversationComplete>> getConversationCompleteListLD();
 
 
 	@Query("SELECT * " +

@@ -1,5 +1,6 @@
 package com.stfalcon.chatkit.messages;
 
+import android.os.Build;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
@@ -813,7 +814,17 @@ public class MessageHolders {
             return isSelected;
         }
 
-        /**
+		public void setSelected(boolean selected) {
+			isSelected = selected;
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+				if (selected)
+					itemView.setBackgroundColor(itemView.getResources().getColor(R.color.cornflower_blue_light_40));
+				else
+					itemView.setBackgroundColor(itemView.getResources().getColor(R.color.transparent));
+			}
+		}
+
+		/**
          * Returns weather is selection mode enabled
          *
          * @return weather is selection mode enabled.
@@ -871,7 +882,8 @@ public class MessageHolders {
         public void onBind(MESSAGE message) {
             super.onBind(message);
             if (bubble != null) {
-                bubble.setSelected(isSelected());
+                //bubble.setSelected(isSelected()); gil
+				setSelected(isSelected());
             }
 
             if (text != null) {
@@ -930,7 +942,8 @@ public class MessageHolders {
         public void onBind(MESSAGE message) {
             super.onBind(message);
             if (bubble != null) {
-                bubble.setSelected(isSelected());
+                //bubble.setSelected(isSelected());
+				setSelected(isSelected());
             }
 
             if (text != null) {
@@ -993,8 +1006,10 @@ public class MessageHolders {
 				imageLoader.loadImageCenter(image, message.getImageForDisplay(), 0,getPayloadForImageLoader(message));
             }
 
+            setSelected(isSelected());
+
             if (imageOverlay != null) {
-                imageOverlay.setSelected(isSelected());
+                //imageOverlay.setSelected(isSelected());
             }
         }
 
@@ -1066,9 +1081,9 @@ public class MessageHolders {
 					imageLoader.loadImageCenter(image, message.getImageForDisplay(), 0,getPayloadForImageLoader(message));
 
 			}
-
+			setSelected(isSelected());
             if (imageOverlay != null) {
-                imageOverlay.setSelected(isSelected());
+                //imageOverlay.setSelected(isSelected());
             }
         }
 
@@ -1135,8 +1150,9 @@ public class MessageHolders {
 				imageLoader.loadImageCenter(image, message.getThumbForDisplay(), 0,getPayloadForImageLoader(message));
 			}
 
+			setSelected(isSelected());
 			if (imageOverlay != null) {
-				imageOverlay.setSelected(isSelected());
+				//imageOverlay.setSelected(isSelected());
 			}
 		}
 
@@ -1208,9 +1224,9 @@ public class MessageHolders {
 					imageLoader.loadImageCenter(image, message.getThumbForDisplay(), 0,getPayloadForImageLoader(message));
 
 			}
-
+			setSelected(isSelected());
 			if (imageOverlay != null) {
-				imageOverlay.setSelected(isSelected());
+				//imageOverlay.setSelected(isSelected());
 			}
 		}
 

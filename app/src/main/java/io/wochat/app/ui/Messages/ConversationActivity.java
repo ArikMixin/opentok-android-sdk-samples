@@ -98,7 +98,7 @@ public class ConversationActivity extends PermissionActivity implements
 	DateFormatter.Formatter,
 	MessageInput.ButtonClickListener,
 	MessageHolders.ContentChecker<Message>,
-	SpeechUtils.SpeechUtilsSTTListener{
+	SpeechUtils.SpeechUtilsSTTListener, MessagesListAdapter.SelectionListener {
 
 	private static final String TAG = "ConversationActivity";
 	private static final int REQUEST_SELECT_IMAGE_VIDEO = 1;
@@ -156,6 +156,8 @@ public class ConversationActivity extends PermissionActivity implements
 	private String mSelfName;
 	private Contact mSelfContact;
 	private Contact mParticipantContact;
+	private boolean mIsInMsgSelectionMode;
+	private int mSelectedMessageCount;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -394,6 +396,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessagesAdapter.setOnMessageClickListener(this);
 		mMessagesAdapter.setOnBindViewHolder(this);
 		mMessagesAdapter.setDateHeadersFormatter(this);
+		mMessagesAdapter.enableSelectionMode(this);
 
 		mMessagesListRV.setAdapter(mMessagesAdapter, true);
 		mMessagesListRV.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -438,29 +441,75 @@ public class ConversationActivity extends PermissionActivity implements
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int id = item.getItemId();
 
-		if (id == android.R.id.home){
-			finish();
-			return true;
+		switch (id){
+			case android.R.id.home:
+				if (mSelectedMessageCount > 0){
+					mMessagesAdapter.unselectAllItems();
+				}
+				else {
+					finish();
+					return true;
+				}
+			case R.id.action_phone:
+			case R.id.action_video:
+			case R.id.action_reply:
+				break;
+			case R.id.action_delete:
+				actionDelete();
+				break;
+			case R.id.action_copy:
+				actionCopy();
+				break;
+			case R.id.action_frwrd:
+				break;
+
 		}
+
 		return super.onOptionsItemSelected(item);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.menu_conversation, menu);
-		Drawable d0 = menu.getItem(0).getIcon(); // change 0 with 1,2 ...
-		Drawable d1 = menu.getItem(1).getIcon();
-		d0.mutate();
-		d1.mutate();
-		d0.setColorFilter(getResources().getColor(R.color.white), PorterDuff.Mode.SRC_IN);
-		d1.setColorFilter(getResources().getColor(R.color.white), PorterDuff.Mode.SRC_IN);
+		if (mSelectedMessageCount > 0){
+			inflater.inflate(R.menu.menu_conversation_selection, menu);
+			mContactAvatarCIV.setVisibility(View.GONE);
+			mContactNameTV.setText(mSelectedMessageCount + "");
+			mContactDetailsTV.setVisibility(View.GONE);
+		}
+		else {
+			inflater.inflate(R.menu.menu_conversation, menu);
+			mContactAvatarCIV.setVisibility(View.VISIBLE);
+			mContactDetailsTV.setVisibility(View.VISIBLE);
+			mContactNameTV.setText(mParticipantName);
+			if (isSelectedMessagesTextOnly()){
+
+			}
+		}
+		int count = menu.size();
+		for (int i=0; i<count; i++){
+			Drawable d1 = menu.getItem(i).getIcon();
+			d1.mutate();
+			d1.setColorFilter(getResources().getColor(R.color.white), PorterDuff.Mode.SRC_IN);
+		}
+
 		return true;
 	}
 
 
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		MenuItem menuCopy = menu.findItem(R.id.action_copy);
+		MenuItem menuReply = menu.findItem(R.id.action_reply);
+		if (menuCopy != null)
+			menuCopy.setVisible(isSelectedMessagesTextOnly());
+
+		if (menuReply != null)
+			menuReply.setVisible(mSelectedMessageCount == 1);
 
 
+		return super.onPrepareOptionsMenu(menu);
+	}
 
 	@Override
 	public void onLoadMore(int page, int totalItemsCount) {
@@ -543,12 +592,30 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onMessageViewClick(View view, Message message) {
-
+//		if (mIsInMsgSelectionMode){
+//			onMessageViewLongClick(view, message);
+//		}
 	}
 
 
 	@Override
 	public void onMessageViewLongClick(View view, Message message) {
+//		if (view.getTag() == null) {
+//			mIsInMsgSelectionMode = true;
+//			mMsgSelectionCount++;
+//			view.setBackground(getResources().getDrawable(R.color.blue_semi_transparent));
+//			view.setTag(1);
+//		}
+//		else {
+//			view.setBackground(getResources().getDrawable(R.color.transparent));
+//			view.setTag(null);
+//			mMsgSelectionCount--;
+//			if (mMsgSelectionCount == 0) {
+//				mIsInMsgSelectionMode = false;
+//				Toast.makeText(this, "exit selection", Toast.LENGTH_SHORT).show();
+//			}
+//		}
+
 
 	}
 
@@ -667,14 +734,14 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void updateUIWithMessages(){
+		if ((mMessages == null)||mMessages.isEmpty())
+			return;
 		if ((pointerDateUpperList == null)&& (pointerDateBottomList == null)){ // RV is empty
-			if (mMessages.size()>0){
-				Message message = mMessages.get(0);
-				pointerDateUpperList = message.getCreatedAt();
-				pointerDateBottomList = message.getCreatedAt();
-				mMessagesAdapter.addToStart(message, true);
-				return;
-			}
+			Message message = mMessages.get(0);
+			pointerDateUpperList = message.getCreatedAt();
+			pointerDateBottomList = message.getCreatedAt();
+			mMessagesAdapter.addToStart(message, true);
+			return;
 		}
 		else {
 			Message message = mMessages.get(0);
@@ -872,6 +939,11 @@ public class ConversationActivity extends PermissionActivity implements
 		return drawable;
 	}
 
+	@Override
+	public void onSelectionChanged(int count) {
+		mSelectedMessageCount = count;
+		invalidateOptionsMenu();
+	}
 
 
 	private class TypingSignalBR extends BroadcastReceiver {
@@ -1192,8 +1264,12 @@ public class ConversationActivity extends PermissionActivity implements
 			mPreviewImagesIV.setVisibility(View.GONE);
 			mPreviewImagesPB.setVisibility(View.GONE);
 		}
-		else
+		else if (mSelectedMessageCount > 0){
+			mMessagesAdapter.unselectAllItems();
+		}
+		else {
 			super.onBackPressed();
+		}
 	}
 
 
@@ -1491,4 +1567,41 @@ public class ConversationActivity extends PermissionActivity implements
 	protected boolean isNeededPermissionsExplanationDialog() {
 		return false;
 	}
+
+
+	private boolean isSelectedMessagesTextOnly(){
+		ArrayList<Message> msgs = mMessagesAdapter.getSelectedMessages();
+		for (Message message : msgs){
+			if (!message.isText())
+				return false;
+		}
+		return true;
+	}
+
+
+	private void actionDelete(){
+		List<Message> messages = mMessagesAdapter.getSelectedMessages();
+		mConversationViewModel.deleteMessages(messages);
+		if (mSelectedMessageCount == 1) {
+			Toast.makeText(this, "Message deleted", Toast.LENGTH_SHORT).show();
+		}
+		else {
+			Toast.makeText(this, String.format("%d messages deleted", mSelectedMessageCount), Toast.LENGTH_SHORT).show();
+		}
+		mMessagesAdapter.delete(messages);
+		mMessagesAdapter.unselectAllItems();
+	}
+
+	private void actionCopy(){
+		if (mSelectedMessageCount == 1) {
+			Toast.makeText(this, "Message copied", Toast.LENGTH_SHORT).show();
+			mMessagesAdapter.copySelectedMessagesText(this, message -> message.getText(), true);
+		}
+		else {
+			Toast.makeText(this, String.format("%d messages copied", mSelectedMessageCount), Toast.LENGTH_SHORT).show();
+			mMessagesAdapter.copySelectedMessagesText(this, message -> message.getText(), true);
+		}
+		mMessagesAdapter.unselectAllItems();
+	}
+
 }

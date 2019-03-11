@@ -11,7 +11,7 @@
 
     <item
         android:id="@+id/action_phone"
-        android:title="search"
+        android:title="phone"
         android:icon="@drawable/phone"
         android:orderInCategory="101"
         app:showAsAction="always"
@@ -19,7 +19,7 @@
 
     <item
         android:id="@+id/action_video"
-        android:title="search"
+        android:title="video"
         android:icon="@drawable/video_camera"
         android:orderInCategory="100"
         app:showAsAction="always"

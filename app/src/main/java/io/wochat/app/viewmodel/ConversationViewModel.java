@@ -143,13 +143,10 @@ public class ConversationViewModel extends AndroidViewModel {
 		}
 	}
 
+	public void deleteMessages(List<Message> messages){
+		mRepository.deleteMessages(messages);
+	}
 
-//	public void uploadImage(String messageId, byte[] bytes){
-//		mRepository.uploadImage(messageId, bytes);
-//	}
-//	public MutableLiveData<StateData<ImageInfo>> getUploadImageResult() {
-//		return mRepository.getUploadImageResult();
-//	}
 
 
 }

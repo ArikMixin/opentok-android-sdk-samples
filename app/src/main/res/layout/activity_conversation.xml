@@ -30,6 +30,7 @@
                 app:layout_scrollFlags="scroll|enterAlways"
                 app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
                 app:popupTheme="@style/AppTheme.PopupOverlay"
+                app:itemIconTint="@android:color/white"
                 app:title="">
 
                 <LinearLayout
@@ -126,14 +127,14 @@
                 app:incomingTimeTextColor="@color/black"
                 app:incomingDefaultBubbleColor="@color/incoming_bubble"
                 app:incomingDefaultBubblePressedColor="@color/incoming_bubble"
-                app:incomingDefaultBubbleSelectedColor="@color/incoming_bubble"
+                app:incomingDefaultBubbleSelectedColor="@color/blue_semi_transparent"
 
                 app:outcomingImageTimeTextColor="@color/white"
                 app:outcomingTextColor="@color/black"
                 app:outcomingTimeTextColor="@color/black"
                 app:outcomingDefaultBubbleColor="@color/outcoming_bubble"
                 app:outcomingDefaultBubblePressedColor="@color/outcoming_bubble"
-                app:outcomingDefaultBubbleSelectedColor="@color/outcoming_bubble"
+                app:outcomingDefaultBubbleSelectedColor="@color/blue_semi_transparent"
                  />
 
             <LinearLayout

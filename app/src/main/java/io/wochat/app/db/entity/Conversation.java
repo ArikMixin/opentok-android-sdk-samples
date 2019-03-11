@@ -26,7 +26,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
 			@ForeignKey(entity = Message.class,
 				parentColumns = "message_id",
 				childColumns = "last_message_id",
-				onDelete = CASCADE),
+				onDelete = ForeignKey.SET_NULL),
 
 			@ForeignKey(entity = Contact.class,
 				parentColumns = "contact_id",

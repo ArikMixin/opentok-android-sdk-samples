@@ -25,8 +25,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import static android.arch.persistence.room.ForeignKey.CASCADE;
-
 
 @Entity(tableName = "message_table",
 	indices = {@Index("participant_id"), @Index("sender"), @Index("conversation_id")},
@@ -34,17 +32,17 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
 		@ForeignKey(entity = Conversation.class,
 			parentColumns = "conversation_id",
 			childColumns = "conversation_id",
-			onDelete = CASCADE),
+			onDelete = ForeignKey.CASCADE),
 
 		@ForeignKey(entity = Contact.class,
 			parentColumns = "contact_id",
 			childColumns = "participant_id",
-			onDelete = CASCADE),
+			onDelete = ForeignKey.CASCADE),
 
 		@ForeignKey(entity = Contact.class,
 			parentColumns = "contact_id",
 			childColumns = "sender",
-			onDelete = CASCADE)
+			onDelete = ForeignKey.CASCADE)
 	})
 
 
