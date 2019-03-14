@@ -76,6 +76,9 @@ public class ConversationViewModel extends AndroidViewModel {
 		return mRepository.getConversationListLD();
 	}
 
+	public LiveData<Conversation> getConversationLD(String id){
+		return mRepository.getConversationLD(id);
+	}
 
 
 	public LiveData<List<Message>> getUnreadMessagesConversation(String conversationId){

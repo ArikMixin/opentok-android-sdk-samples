@@ -160,6 +160,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private Contact mParticipantContact;
 	private boolean mIsInMsgSelectionMode;
 	private int mSelectedMessageCount;
+	private String mForwardContactId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -1619,13 +1620,43 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 	private void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
+		if (contacts.length == 1)
+			mForwardContactId = contacts[0];
+		else
+			mForwardContactId = null;
+
 		mConversationViewModel.forwardMessagesToContacts(contacts, messages);
 		mMessagesAdapter.unselectAllItems();
 
 		mConversationViewModel.getOutgoingPendingMessages().observe(this, pendingMessages -> {
 			mService.sendMessages(pendingMessages);
+			if (mForwardContactId != null){
+				String conversationId = Conversation.getConversationId(mSelfId, mForwardContactId);
+				mConversationViewModel.getConversationLD(conversationId).observe(this, conversation -> {
+					OpenConversationActivity(conversation);
+				});
+			}
 		});
 
+	}
+
+	private void OpenConversationActivity(Conversation conversation) {
+
+		Intent intent = new Intent(this, ConversationActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfPicUrl);
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
+		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
+
+		setIntent(intent);
+		recreate();
+//		startActivity(intent);
+//		finish();
 	}
 
 }
