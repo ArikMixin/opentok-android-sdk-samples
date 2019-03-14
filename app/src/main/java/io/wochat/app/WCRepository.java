@@ -831,6 +831,27 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
     		return false;
 
     	mAppExecutors.diskIO().execute(() -> {
+    		if (!mConversationDao.hasConversation(message.getConversationId())){
+				String participantId = message.getSenderId();
+				String selfId = mSharedPreferences.getUserId();
+				if(mContactDao.hasContact(participantId)){  // has contact, no conversation
+					Contact contact = mContactDao.getContact(participantId);
+					Conversation conversation = new Conversation(participantId, selfId);
+					conversation.setParticipantName(contact.getName());
+					conversation.setParticipantLanguage(contact.getLanguage());
+					conversation.setParticipantProfilePicUrl(contact.getAvatar());
+					mConversationDao.insert(conversation);
+				}
+				else { // no contact, no conversation
+					Contact contact = new Contact(participantId);
+					mContactDao.insert(contact);
+					getContactFromServer(participantId);
+					Conversation conversation = new Conversation(participantId, selfId);
+					mConversationDao.insert(conversation);
+				}
+			}
+
+
 			boolean res = true;
 			message.setParticipantId(message.getSenderId());
 			message.setRecipients(new String[]{mSharedPreferences.getUserId()});
@@ -1247,7 +1268,7 @@ public void updateAckStatusToSent(Message message){
 						Contact contact = mContactDao.getContact(contacts[i]);
 						Message newMessage = message.generateForwardMessage(mSharedPreferences.getUserId(), contact.getId(), contact.getLanguage());
 						addNewOutgoingMessage(newMessage);
-						try {Thread.sleep(1001);} catch (InterruptedException e) {}
+						try {Thread.sleep(50);} catch (InterruptedException e) {}
 					}
 				}
 			});
@@ -1256,8 +1277,13 @@ public void updateAckStatusToSent(Message message){
 	}
 
 
-	public LiveData<List<Message>> getOutgoingPendingMessages(){
+	public LiveData<List<Message>> getOutgoingPendingMessagesLD(){
     	return mMessageDao.getOutgoingPending(mSharedPreferences.getUserId());
+	}
+
+
+	public List<Message> getOutgoingPendingMessages(){
+		return mMessageDao.getOutgoingPendingMessages(mSharedPreferences.getUserId());
 	}
 
 }

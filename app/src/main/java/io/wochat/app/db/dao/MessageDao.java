@@ -20,24 +20,24 @@ import io.wochat.app.db.entity.UnreadMessagesConversation;
 @Dao
 public interface MessageDao {
 
-    @Query("SELECT * from message_table ORDER BY timestamp DESC")
+    @Query("SELECT * from message_table ORDER BY timestamp_milli DESC")
 	LiveData<List<Message>> getAllMessagesLD();
 
-	@Query("SELECT * from message_table ORDER BY timestamp DESC")
+	@Query("SELECT * from message_table ORDER BY timestamp_milli DESC")
 	List<Message> getAllMessages();
 
 
-	@Query("SELECT * FROM message_table WHERE participant_id =:participantId ORDER BY timestamp DESC")
+	@Query("SELECT * FROM message_table WHERE participant_id =:participantId ORDER BY timestamp_milli DESC")
 	LiveData<List<Message>> getMessagesForParticipantLD(String participantId);
 
-	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp DESC")
+	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp_milli DESC")
 	LiveData<List<Message>> getMessagesForConversationLD(String conversationId);
 
 
-	@Query("SELECT * FROM message_table WHERE participant_id =:participantId AND should_be_displayed = 1 ORDER BY timestamp DESC")
+	@Query("SELECT * FROM message_table WHERE participant_id =:participantId AND should_be_displayed = 1 ORDER BY timestamp_milli DESC")
 	List<Message> getMessagesForParticipant(String participantId);
 
-	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp DESC")
+	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp_milli DESC")
 	List<Message> getMessagesForConversation(String conversationId);
 
 	@Query("SELECT * FROM message_table WHERE message_id =:messageId")
@@ -111,7 +111,7 @@ public interface MessageDao {
 	@Delete
 	void deleteMessages(List<Message> list);
 
-	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp DESC LIMIT 1")
+	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp_milli DESC LIMIT 1")
 	Message getLastMessagesForConversation(String conversationId);
 
 
@@ -120,5 +120,11 @@ public interface MessageDao {
 		"(ack_status = 'PENDING') AND" +
 		"(sender = :selfId)")
 	LiveData<List<Message>> getOutgoingPending(String selfId);
+
+
+	@Query("SELECT * FROM message_table WHERE " +
+		"(ack_status = 'PENDING') AND" +
+		"(sender = :selfId)")
+	List<Message> getOutgoingPendingMessages(String selfId);
 
 }

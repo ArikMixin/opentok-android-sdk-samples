@@ -545,7 +545,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onClick(int buttonId) {
-		Log.e(TAG, "onClick: " + buttonId);
+		//Log.e(TAG, "onClick: " + buttonId);
 		switch (buttonId){
 			case R.id.attachmentButton:
 				selectImage();
@@ -655,14 +655,14 @@ public class ConversationActivity extends PermissionActivity implements
 			StrictMode.setVmPolicy(builder.build());
 
 			// try locally
-			Log.e(TAG, "play file check local: " + message.getMediaLocalUri());
+			//Log.e(TAG, "play file check local: " + message.getMediaLocalUri());
 			if ((message.getMediaLocalUri() != null) && (!message.getMediaLocalUri().equals(""))){
 				Uri uri = Uri.parse(message.getMediaLocalUri());
-				Log.e(TAG, "play file local uri: " + uri);
+				//Log.e(TAG, "play file local uri: " + uri);
 				String s = ImagePickerUtil.getFilePathFromContentUriNoStreaming(this, uri);
-				Log.e(TAG, "play file local file: " + s);
+				//Log.e(TAG, "play file local file: " + s);
 				if (s != null){
-					Log.e(TAG, "play file local file exist: " + s);
+					//Log.e(TAG, "play file local file exist: " + s);
 
 					//Uri accessibleUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".my.package.name.provider", createImageFile());
 					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -674,7 +674,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 			// play remotely
 			Uri uri = Uri.parse(message.getMediaUrl());
-			Log.e(TAG, "play file remotely: " + uri);
+			//Log.e(TAG, "play file remotely: " + uri);
 			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 			intent.setDataAndType(uri, "video/mp4");
 			startActivity(intent);
@@ -819,10 +819,10 @@ public class ConversationActivity extends PermissionActivity implements
 			final int rightMarginStart = params.rightMargin;
 			final int rightMarginEnd = Utils.dp2px(this, -10);
 
-			Log.e("GIL", "angle rightMarginStart: " + rightMarginStart);
-			Log.e("GIL", "angle rightMarginEnd: " + rightMarginEnd);
-
-			Log.e("GIL", "angle deltaRight: " + (rightMarginStart - rightMarginEnd));
+//			Log.e("GIL", "angle rightMarginStart: " + rightMarginStart);
+//			Log.e("GIL", "angle rightMarginEnd: " + rightMarginEnd);
+//
+//			Log.e("GIL", "angle deltaRight: " + (rightMarginStart - rightMarginEnd));
 
 			final int deltaRight = rightMarginStart - rightMarginEnd;
 
@@ -885,7 +885,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName componentName, IBinder service) {
-			Log.e(TAG, "ServiceConnection: onServiceConnected");
+			//Log.e(TAG, "ServiceConnection: onServiceConnected");
 			WCService.WCBinder binder = (WCService.WCBinder) service;
 			mService = binder.getService();
 			mBound = true;
@@ -905,7 +905,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 		@Override
 		public void onServiceDisconnected(ComponentName componentName) {
-			Log.e(TAG, "ServiceConnection: onServiceDisconnected");
+			//Log.e(TAG, "ServiceConnection: onServiceDisconnected");
 
 			mService = null;
 			mBound = false;
@@ -915,7 +915,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private void initMarkAsReadMessagesHandling() {
 		mConversationViewModel.getUnreadMessagesConversation(mConversationId).
 			observe(this, messageList -> {
-				Log.e(TAG, "getMarkAsReadAffectedMessages change: " + messageList==null?"null":""+messageList.size());
+				//Log.e(TAG, "getMarkAsReadAffectedMessages change: " + messageList==null?"null":""+messageList.size());
 				if ((mService != null)&&(messageList != null)&&(!messageList.isEmpty())){
 					mService.sendAckStatusForIncomingMessages(messageList, Message.ACK_STATUS_READ);
 					mConversationViewModel.markAllMessagesAsRead(mConversationId);
@@ -1078,19 +1078,19 @@ public class ConversationActivity extends PermissionActivity implements
 					} else {
 						mSelectedImageForDelayHandlingUri = uri;
 					}
-					Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
+					//Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
 				}
 				else if (ImagePickerUtil.MIME_TYPE_VIDEO.equals(mimeType)) {
-					Log.e(TAG, "video: " + uri);
+					//Log.e(TAG, "video: " + uri);
 					File f = getExternalCacheDir();
 					showProgressDialog();
 					String videoPath = ImagePickerUtil.getFilePathFromContentUri(ConversationActivity.this, uri );
 					hideProgressDialog();
 					if (videoPath == null){
 					}
-					Log.e(TAG, "video file: " + videoPath);
+					//Log.e(TAG, "video file: " + videoPath);
 					if (f.mkdirs() || f.isDirectory()) {
-						Log.e(TAG, "before compression: " + videoPath);
+						//Log.e(TAG, "before compression: " + videoPath);
 						new VideoCompressor().execute(videoPath);
 					}
 
@@ -1107,21 +1107,21 @@ public class ConversationActivity extends PermissionActivity implements
 					mSelectedImageForDelayHandlingUri = mCameraPhotoFileUri;
 				}
 
-				Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
+				//Log.e(TAG, "onActivityResult select image: " + mSelectedImageForDelayHandlingUri);
 
 			}
 		}
 		else if (requestCode == REQUEST_SELECT_CAMERA_VIDEO){
 			if (resultCode == Activity.RESULT_OK) {
 				Uri videoUri = intent.getData();
-				Log.e(TAG, "video: " + videoUri);
+				//Log.e(TAG, "video: " + videoUri);
 				File f = getExternalCacheDir();
 				showProgressDialog();
 				String videoPath = ImagePickerUtil.getFilePathFromContentUri(this, videoUri);
 				hideProgressDialog();
-				Log.e(TAG, "video file: " + videoPath);
+				//Log.e(TAG, "video file: " + videoPath);
 				if (f.mkdirs() || f.isDirectory()) {
-					Log.e(TAG, "before compression: " + videoPath);
+					//Log.e(TAG, "before compression: " + videoPath);
 					new VideoCompressor().execute(videoPath);
 				}
 			}
@@ -1152,7 +1152,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 		@Override
 		protected Boolean doInBackground(String... filePath) {
-			Log.e(TAG, "start video compression");
+			//Log.e(TAG, "start video compression");
 			MediaController.cachDir = getExternalCacheDir().getPath();
 			boolean res = MediaController.getInstance().convertVideo(filePath[0]);
 			return res;
@@ -1162,18 +1162,18 @@ public class ConversationActivity extends PermissionActivity implements
 		protected void onPostExecute(Boolean compressed) {
 			super.onPostExecute(compressed);
 			hideProgressDialog();
-			Log.e(TAG, "compression result: " + compressed);
+			//Log.e(TAG, "compression result: " + compressed);
 			if (compressed) {
 				File compressedVideo = MediaController.cachedFile;
 				Bitmap snapshotImage = MediaController.bitmapFrame;
 				File thumbFile = MediaController.thumbFile;
 				int duration = Integer.valueOf(MediaController.duration);
 
-				Log.e(TAG, "Compression successfully!");
-				Log.e(TAG, "Compressed File Path: " + compressedVideo);
-				Log.e(TAG, "video duration: " + duration);
-				Log.e(TAG, "bitmap: "+ snapshotImage);
-				Log.e(TAG, "thumb: "+ thumbFile.getPath());
+				//Log.e(TAG, "Compression successfully!");
+				//Log.e(TAG, "Compressed File Path: " + compressedVideo);
+				//Log.e(TAG, "video duration: " + duration);
+				//Log.e(TAG, "bitmap: "+ snapshotImage);
+				//Log.e(TAG, "thumb: "+ thumbFile.getPath());
 
 				if ((mService != null)&& (mService.isXmppConnected())){
 					submitTempVideoMessage(compressedVideo, thumbFile, duration);
@@ -1220,9 +1220,9 @@ public class ConversationActivity extends PermissionActivity implements
 	};
 
 	private void submitTempImageMessage(Uri imageUri) {
-		Log.e(TAG, "submitTempImageMessage: " + imageUri);
+		//Log.e(TAG, "submitTempImageMessage: " + imageUri);
 		if (mService == null) {
-			Log.e(TAG, "submitTempImageMessage mService is NULL - cancel");
+			//Log.e(TAG, "submitTempImageMessage mService is NULL - cancel");
 			return;
 		}
 
@@ -1236,9 +1236,9 @@ public class ConversationActivity extends PermissionActivity implements
 		Uri compressedVideoUri = Uri.fromFile(compressedVideoFile);
 		Uri thumbUri = Uri.fromFile(thumbFile);
 
-		Log.e(TAG, "submitTempVideoMessage: " + compressedVideoFile);
+		//Log.e(TAG, "submitTempVideoMessage: " + compressedVideoFile);
 		if (mService == null) {
-			Log.e(TAG, "submitTempVideoMessage mService is NULL - cancel");
+			//Log.e(TAG, "submitTempVideoMessage mService is NULL - cancel");
 			return;
 		}
 
@@ -1251,9 +1251,9 @@ public class ConversationActivity extends PermissionActivity implements
 
 		Uri audioUri = Uri.fromFile(audioFile);
 
-		Log.e(TAG, "submitTempAudioMessage: " + audioFile);
+		//Log.e(TAG, "submitTempAudioMessage: " + audioFile);
 		if (mService == null) {
-			Log.e(TAG, "submitTempAudioMessage mService is NULL - cancel");
+			//Log.e(TAG, "submitTempAudioMessage mService is NULL - cancel");
 			return;
 		}
 
@@ -1348,7 +1348,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 					RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
 
-					Log.e("GIL", "xDelta: " + xDelta);
+					//Log.e("GIL", "xDelta: " + xDelta);
 					int newMargin = xDelta - x;
 					if ((layoutParams.rightMargin <= 500) && (newMargin > 500)){
 						//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.mic_recording_delete));
@@ -1357,7 +1357,7 @@ public class ConversationActivity extends PermissionActivity implements
 						//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.mic_recording_small));
 					}
 					layoutParams.rightMargin = newMargin;
-					Log.e("GIL", "rightMargin: " + layoutParams.rightMargin);
+					//Log.e("GIL", "rightMargin: " + layoutParams.rightMargin);
 
 					layoutParams.topMargin = 0;
 					layoutParams.leftMargin = 0;
@@ -1416,7 +1416,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onSpeechToTextResult(String text, int duration) {
-		Log.e(TAG, "onSpeechResult: " + text);
+		//Log.e(TAG, "onSpeechResult: " + text);
 		mSpeechUtils.destroy();
 		submitTempSpeechableMessage(text, duration);
 	}
@@ -1458,7 +1458,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mRecorder.setOnErrorListener(new MediaRecorder.OnErrorListener() {
 			@Override
 			public void onError(MediaRecorder mr, int what, int extra) {
-				Log.e(TAG, "MediaRecorder onError what: " + what + " , extra: " + extra);
+				//Log.e(TAG, "MediaRecorder onError what: " + what + " , extra: " + extra);
 			}
 		});
 
@@ -1478,17 +1478,17 @@ public class ConversationActivity extends PermissionActivity implements
 		mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 		mRecorder.setAudioChannels(2);
 
-		Log.e(TAG, "startRecord, file: " + mAudioFile.getPath());
+		//Log.e(TAG, "startRecord, file: " + mAudioFile.getPath());
 		try {
 			mRecorder.prepare();
-			Log.e(TAG, "startRecord, after prepare");
+			//Log.e(TAG, "startRecord, after prepare");
 		} catch (IOException e) {
-			Log.e(TAG, "startRecord prepare failed");
+			//Log.e(TAG, "startRecord prepare failed");
 		}
 
 		mRecorder.start();
 		mRecorderStartTimeStamp = System.currentTimeMillis();
-		Log.e(TAG, "startRecord started");
+		//Log.e(TAG, "startRecord started");
 		mRecordingTimer.startCountUp();
 
 	}
@@ -1508,7 +1508,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mRecorder.release();
 		mRecorder = null;
 
-		Log.e(TAG, "finishRecord, file: " + mAudioFile.getPath());
+		//Log.e(TAG, "finishRecord, file: " + mAudioFile.getPath());
 		submitTempAudioMessage(mAudioFile, duration);
 
 	}
@@ -1516,7 +1516,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private void cancelRecord(){
 		if ((!mRecordingStarted) || (mRecorder == null))
 			return;
-		Log.e(TAG, "cancelRecord");
+		//Log.e(TAG, "cancelRecord");
 		//mMessageInput.getImojiButton().setImageDrawable(getDrawable(R.drawable.smiley));
 
 		mRecordingStarted = false;
@@ -1620,6 +1620,10 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 	private void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
+		Log.e(TAG, "forwardMessagesToContacts, num contacts: " + contacts.length + " , num msgs: " + messages.size());
+
+		int totalMessagesToSend = contacts.length * messages.size();
+
 		if (contacts.length == 1)
 			mForwardContactId = contacts[0];
 		else
@@ -1628,20 +1632,27 @@ public class ConversationActivity extends PermissionActivity implements
 		mConversationViewModel.forwardMessagesToContacts(contacts, messages);
 		mMessagesAdapter.unselectAllItems();
 
-		mConversationViewModel.getOutgoingPendingMessages().observe(this, pendingMessages -> {
-			mService.sendMessages(pendingMessages);
-			if (mForwardContactId != null){
-				String conversationId = Conversation.getConversationId(mSelfId, mForwardContactId);
-				mConversationViewModel.getConversationLD(conversationId).observe(this, conversation -> {
-					OpenConversationActivity(conversation);
-				});
+		Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages().observe");
+		mConversationViewModel.getOutgoingPendingMessagesLD().observe(this, pendingMessages -> {
+			Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() result: " + pendingMessages.size());
+
+			if ((pendingMessages != null)&&(pendingMessages.size()>= totalMessagesToSend)) {
+				mService.sendMessages(pendingMessages);
+				Log.e(TAG, "forwardMessagesToContacts, mForwardContactId: " + mForwardContactId);
+				if (mForwardContactId != null) {
+					String conversationId = Conversation.getConversationId(mSelfId, mForwardContactId);
+					Log.e(TAG, "forwardMessagesToContacts, new conversationId: " + conversationId);
+					mConversationViewModel.getConversationLD(conversationId).observe(this, conversation -> {
+						OpenConversationActivity(conversation);
+					});
+				}
 			}
 		});
 
 	}
 
 	private void OpenConversationActivity(Conversation conversation) {
-
+		Log.e(TAG, "OpenConversationActivity : conversationId: " + conversation.getConversationId());
 		Intent intent = new Intent(this, ConversationActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());

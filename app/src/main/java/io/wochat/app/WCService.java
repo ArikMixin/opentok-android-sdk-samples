@@ -110,8 +110,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		if(connected && authenticated) {
 			((WCApplication) getApplication()).getAppExecutors().diskIO().execute(() -> {
 				List<Conversation> convList = mRepository.getAllConversations();
+				List<Message> msgs = mRepository.getOutgoingPendingMessages();
 				mAppExecutors.networkIO().execute(() -> {
 					subscribe(convList);
+					if ((msgs != null) && (!msgs.isEmpty()))
+						sendMessages(msgs);
 				});
 
 			});
@@ -226,12 +229,14 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 
 	public void sendMessages(List<Message> messages){
+		Log.e(TAG, "sendMessages count: " + messages.size());
 		for (Message  message : messages) {
 			sendMessage(message);
 		}
 	}
 
 	public void sendMessage(Message message){
+		Log.e(TAG, "sendMessage: " + message.toJson());
 		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
 	}
 

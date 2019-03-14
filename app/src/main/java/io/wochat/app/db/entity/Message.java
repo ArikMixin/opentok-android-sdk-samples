@@ -57,6 +57,7 @@ public class Message implements IMessage,
     public static final String ACK_STATUS_READ = "READ";
 
 
+
 	@StringDef({
 		ACK_STATUS_PENDING,
 		ACK_STATUS_SENT,
@@ -165,10 +166,15 @@ public class Message implements IMessage,
 //	@Expose
 //    private String[] groups;
 	/**********************************************/
-	@SerializedName("timestamp")
-	@ColumnInfo(name = "timestamp")
+//	@SerializedName("timestamp")
+//	@ColumnInfo(name = "timestamp")
+//	@Expose
+//	private long timestamp;
+
+	@SerializedName("timestamp_milliseconds")
+	@ColumnInfo(name = "timestamp_milli")
 	@Expose
-	private long timestamp;
+	private long timestampMilli;
 	/**********************************************/
 	@SerializedName("message_text")
 	@ColumnInfo(name = "message_text")
@@ -309,7 +315,8 @@ public class Message implements IMessage,
 		this.messageType = MSG_TYPE_TEXT;
 		this.messageText = messageText;
 		this.messageLanguage = messageLang;
-		this.timestamp = System.currentTimeMillis()/1000;
+		//this.timestamp = System.currentTimeMillis()/1000;
+		this.timestampMilli = System.currentTimeMillis();
 		this.ackStatus = ACK_STATUS_PENDING;
 	}
 
@@ -325,7 +332,8 @@ public class Message implements IMessage,
 		this.mediaUrl = imageUrl;
 		this.mediaThumbnailUrl = thumbUrl;
 		this.messageLanguage = messageLang;
-		this.timestamp = System.currentTimeMillis()/1000;
+		//this.timestamp = System.currentTimeMillis()/1000;
+		this.timestampMilli = System.currentTimeMillis();
 		this.ackStatus = ACK_STATUS_PENDING;
 	}
 
@@ -359,7 +367,8 @@ public class Message implements IMessage,
 		message.mediaThumbnailUrl = "";
 		message.mediaLocalUri = localUri.toString();
 		message.messageLanguage = messageLang;
-		message.timestamp = System.currentTimeMillis()/1000;
+		//message.timestamp = System.currentTimeMillis()/1000;
+		message.timestampMilli = System.currentTimeMillis();
 		message.ackStatus = ACK_STATUS_PENDING;
 		return message;
 	}
@@ -379,7 +388,8 @@ public class Message implements IMessage,
 		message.duration = duration;
 		message.mediaThumbnailLocalUri = localThumbUri.toString();
 		message.messageLanguage = messageLang;
-		message.timestamp = System.currentTimeMillis()/1000;
+		//message.timestamp = System.currentTimeMillis()/1000;
+		message.timestampMilli = System.currentTimeMillis();
 		message.ackStatus = ACK_STATUS_PENDING;
 		return message;
 	}
@@ -396,7 +406,8 @@ public class Message implements IMessage,
 		message.mediaThumbnailUrl = "";
 		message.mediaLocalUri = localMediaUri.toString();
 		message.duration = duration;
-		message.timestamp = System.currentTimeMillis()/1000;
+		//message.timestamp = System.currentTimeMillis()/1000;
+		message.timestampMilli = System.currentTimeMillis();
 		message.ackStatus = ACK_STATUS_PENDING;
 		return message;
 	}
@@ -418,7 +429,8 @@ public class Message implements IMessage,
 		this.messageType = MSG_TYPE_TEXT;
         this.contact = contact;
 		//this.senderId = selfId;
-        this.timestamp = timestamp;
+        //this.timestamp = timestamp;
+		this.timestampMilli = timestamp;
         this.ackStatus = ACK_STATUS_PENDING;
     }
 
@@ -473,7 +485,8 @@ public class Message implements IMessage,
 
     @Override
     public Date getCreatedAt() {
-        return new Date(timestamp*1000);
+        //return new Date(timestamp*1000);
+		return new Date(timestampMilli);
     }
 
 
@@ -563,7 +576,8 @@ public class Message implements IMessage,
     }
 
     public void setCreatedAt(long timestamp) {
-        this.timestamp = timestamp/1000;
+        //this.timestamp = timestamp/1000;
+		this.timestampMilli = timestamp;
     }
 
     public void setImage(Image image) {
@@ -662,7 +676,7 @@ public class Message implements IMessage,
 //	}
 
 	public long getTimestamp() {
-		return timestamp;
+		return timestampMilli;
 	}
 
 //	public long getTimestampInSec() {
@@ -670,7 +684,8 @@ public class Message implements IMessage,
 //	}
 
 	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
+		//this.timestamp = timestamp;
+		this.timestampMilli = timestamp;
 	}
 
 	public String getMessageText() {
@@ -881,6 +896,14 @@ public class Message implements IMessage,
 		}
 	}
 
+	public long getTimestampMilli() {
+		return timestampMilli;
+	}
+
+	public void setTimestampMilli(long timestampMilli) {
+		this.timestampMilli = timestampMilli;
+	}
+
 
 	private boolean isOutgoing(){
 		return (!participantId.equals(senderId));
@@ -894,7 +917,8 @@ public class Message implements IMessage,
 		newMessage.senderId = selfId;
 		newMessage.conversationId = Conversation.getConversationId(participantId, selfId);
 		newMessage.recipients = new String[]{participantId};
-		newMessage.timestamp = System.currentTimeMillis()/1000;
+		//newMessage.timestamp = System.currentTimeMillis()/1000;
+		newMessage.timestampMilli = System.currentTimeMillis();
 		newMessage.ackStatus = ACK_STATUS_PENDING;
 		newMessage.translatedLanguage = participantLanguage; // in order to invoke translation to the new participant language
 

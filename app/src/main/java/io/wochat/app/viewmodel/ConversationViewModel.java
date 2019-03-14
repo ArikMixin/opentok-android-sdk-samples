@@ -157,7 +157,7 @@ public class ConversationViewModel extends AndroidViewModel {
 	}
 
 
-	public LiveData<List<Message>> getOutgoingPendingMessages(){
-		return mRepository.getOutgoingPendingMessages();
+	public LiveData<List<Message>> getOutgoingPendingMessagesLD(){
+		return mRepository.getOutgoingPendingMessagesLD();
 	}
 }
