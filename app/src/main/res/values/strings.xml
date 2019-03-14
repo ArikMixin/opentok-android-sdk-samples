@@ -56,5 +56,8 @@
     <string name="stt_error_client">Internal error</string>
     <string name="stt_error_no_match">No recognition result matched</string>
     <string name="stt_error_recognizer_busy">Recognition service is busy</string>
+    <string name="search_select_contacts">Select Contacts</string>
+    <string name="search_select_contact">Select Contact</string>
+    <string name="search_frwrd_to">Forward to...</string>
 
 </resources>

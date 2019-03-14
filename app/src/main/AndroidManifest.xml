@@ -63,6 +63,17 @@
                 <action android:name="android.intent.action.SEARCH"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.Contact.ContactMultiSelectorActivity"
+            android:theme="@style/NoActionBarAppTheme">
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/contact_searchable"/>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
+            </intent-filter>
+        </activity>
 
 
         <provider

@@ -225,6 +225,12 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 
+	public void sendMessages(List<Message> messages){
+		for (Message  message : messages) {
+			sendMessage(message);
+		}
+	}
+
 	public void sendMessage(Message message){
 		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
 	}

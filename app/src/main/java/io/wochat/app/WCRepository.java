@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import com.google.common.io.Files;
@@ -22,6 +21,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,6 @@ import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
-import io.wochat.app.db.entity.ImageInfo;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.StateData;
@@ -50,6 +50,7 @@ import io.wochat.app.utils.Utils;
  * Repository handling the work with products and comments.
  */
 public class WCRepository {
+
 
 	public interface OnSaveMessageToDBListener{
 		void OnSaved(boolean success, Message savedMessage);
@@ -1129,66 +1130,75 @@ public void updateAckStatusToSent(Message message){
 	}
 
 
+	public void addNewOutgoingMessageInIOThread(Message message) {
+		mAppExecutors.diskIO().execute(() -> {
+			addNewOutgoingMessage(message);
+		});
+	}
+
 	public void addNewOutgoingMessage(Message message) {
     	Log.e(TAG, "addNewOutgoingMessage: " + message.getMessageType() + " , id: " + message.getId());
-		mAppExecutors.diskIO().execute(() -> {
-			try {
-				message.setShowNonTranslated(true);
-				message.setShouldBeDisplayed(true);
-				mMessageDao.insert(message);
-				mConversationDao.updateOutgoing(
-					message.getConversationId(),
-					message.getMessageId(),
-					message.getTimestamp(),
-					message.getMessageText(),
-					message.getSenderId(),
-					message.getAckStatus(),
-					message.getMessageType());
 
-				if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)){
-					String selfLang = mSharedPreferences.getUserLang();
-					boolean needTranslation = (!message.getTranslatedLanguage().equals(selfLang));
-					if (needTranslation)
-						translate(message, false);
-//					new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-//						@Override
-//						public void run() {
-//							translate(message, false);
-//						}
-//					}, 1000);
+		try {
 
-
-				}
-				else if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)){
-
-				}
-				else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
-					if (message.getMediaLocalUri() != null) {
-						byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));
-						uploadImage(message, bytes);
-					}
-				}
-				else if (message.getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
-
-					if (message.getMediaLocalUri() != null) {
-						File mediaFile = new File(new URI(message.getMediaLocalUri()));
-						byte[] mediaFileBytes = Files.toByteArray(mediaFile);
-						uploadVideo(message, mediaFileBytes);
-					}
-				}
-				else if (message.getMessageType().equals(Message.MSG_TYPE_AUDIO)) {
-					if (message.getMediaLocalUri() != null) {
-						File mediaFile = new File(new URI(message.getMediaLocalUri()));
-						byte[] mediaFileBytes = Files.toByteArray(mediaFile);
-						uploadAudio(message, mediaFileBytes);
-					}
-				}
-
-			} catch (Exception e) {
-				e.printStackTrace();
-				Log.e(TAG, "error: message: " + message.toString());
+			if(!mConversationDao.hasConversation(message.getConversationId())) {
+				Conversation conversation = new Conversation(message.getParticipantId(), message.getSenderId());
+				Contact contact = mContactDao.getContact(message.getParticipantId());
+				conversation.setParticipantName(contact.getName());
+				conversation.setParticipantLanguage(contact.getLanguage());
+				conversation.setParticipantProfilePicUrl(contact.getAvatar());
+				mConversationDao.insert(conversation);
 			}
-		});
+
+			message.setShowNonTranslated(true);
+			message.setShouldBeDisplayed(true);
+			mMessageDao.insert(message);
+			mConversationDao.updateOutgoing(
+				message.getConversationId(),
+				message.getMessageId(),
+				message.getTimestamp(),
+				message.getMessageText(),
+				message.getSenderId(),
+				message.getAckStatus(),
+				message.getMessageType());
+
+			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)){
+				String selfLang = mSharedPreferences.getUserLang();
+				boolean needTranslation = (!message.getTranslatedLanguage().equals(selfLang));
+				if (needTranslation)
+					translate(message, false);
+
+			}
+			else if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)){
+
+			}
+			else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
+				if (message.getMediaLocalUri() != null) {
+					byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));
+					uploadImage(message, bytes);
+				}
+			}
+			else if (message.getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
+
+				if (message.getMediaLocalUri() != null) {
+					File mediaFile = new File(new URI(message.getMediaLocalUri()));
+					byte[] mediaFileBytes = Files.toByteArray(mediaFile);
+					uploadVideo(message, mediaFileBytes);
+				}
+			}
+			else if (message.getMessageType().equals(Message.MSG_TYPE_AUDIO)) {
+				if (message.getMediaLocalUri() != null) {
+					File mediaFile = new File(new URI(message.getMediaLocalUri()));
+					byte[] mediaFileBytes = Files.toByteArray(mediaFile);
+					uploadAudio(message, mediaFileBytes);
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			Log.e(TAG, "error: message: " + message.toString());
+		}
+
 	}
 
 
@@ -1225,4 +1235,29 @@ public void updateAckStatusToSent(Message message){
 		});
 
 	}
+
+
+	public void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
+			mAppExecutors.diskIO().execute(() -> {
+
+				Collections.sort(messages, (m1, m2) -> (int) (m1.getTimestamp() - m2.getTimestamp()));
+
+				for (int i=0; i<contacts.length; i++){
+					for (Message message : messages){
+						Contact contact = mContactDao.getContact(contacts[i]);
+						Message newMessage = message.generateForwardMessage(mSharedPreferences.getUserId(), contact.getId(), contact.getLanguage());
+						addNewOutgoingMessage(newMessage);
+						try {Thread.sleep(1001);} catch (InterruptedException e) {}
+					}
+				}
+			});
+
+
+	}
+
+
+	public LiveData<List<Message>> getOutgoingPendingMessages(){
+    	return mMessageDao.getOutgoingPending(mSharedPreferences.getUserId());
+	}
+
 }

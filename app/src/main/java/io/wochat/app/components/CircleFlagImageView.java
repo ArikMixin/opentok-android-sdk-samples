@@ -1,6 +1,7 @@
 package io.wochat.app.components;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -19,6 +20,9 @@ public class CircleFlagImageView extends LinearLayout {
 	private CircleImageView mContactPicCIV;
 	private CircleImageView mContactFlagCIV;
 	private TextView mContactInitialsTV;
+	private boolean mWithFlag;
+	private boolean mIsChecked;
+	private boolean mIsCanceled;
 
 	public CircleFlagImageView(Context context) {
 		super(context);
@@ -75,9 +79,27 @@ public class CircleFlagImageView extends LinearLayout {
 			mContactInitialsTV.bringToFront();
 		}
 
-		if (flagDrawable != 0) {
+		if ((flagDrawable != 0) && (!mIsChecked) && (!mIsCanceled)){
 			Picasso.get().
 				load(flagDrawable).
+				resize(flagSizeDp, flagSizeDp).
+				centerCrop().
+				into(mContactFlagCIV);
+		}
+		else if (mIsChecked){
+//			mContactFlagCIV.setImageDrawable(getResources().getDrawable(R.drawable.ic_contact_checked));
+			Picasso.get().
+				load(R.drawable.ic_contact_checked).
+				resize(flagSizeDp, flagSizeDp).
+				centerCrop().
+				into(mContactFlagCIV);
+
+			//mContactFlagCIV.setBackgroundColor(getResources().getColor(R.color.white));
+		}
+		else if (mIsCanceled){
+			//mContactFlagCIV.setImageDrawable(getResources().getDrawable(R.drawable.ic_cancel));
+			Picasso.get().
+				load(R.drawable.ic_contact_cancel).
 				resize(flagSizeDp, flagSizeDp).
 				centerCrop().
 				into(mContactFlagCIV);
@@ -92,8 +114,53 @@ public class CircleFlagImageView extends LinearLayout {
 		setInfo(picUrl, language, contact.getInitials());
 	}
 
+
+	public void setContact(Contact contact, boolean isChecked, boolean isCanceled){
+		mIsChecked = isChecked;
+		mIsCanceled = isCanceled;
+		String picUrl = contact.getAvatar();
+		String language = contact.getContactServer().getLanguage();
+		setInfo(picUrl, language, contact.getInitials());
+	}
+
+
 	public void displayFlag(boolean withFlag){
+		mWithFlag = withFlag;
 		mContactFlagCIV.setVisibility(Utils.booleanToVisibilityInvisible(withFlag));
+	}
+
+
+	public void displayChecked(boolean isDisplayed){
+		if (isDisplayed) {
+			int flagSizeDp = Utils.dp2px(getContext(), 20);
+			mContactFlagCIV.setVisibility(VISIBLE);
+			mContactFlagCIV.setImageDrawable(getResources().getDrawable(R.drawable.ic_contact_checked));
+			mContactFlagCIV.bringToFront();
+//			Picasso.get().
+//				load(R.drawable.ic_checked).
+//				resize(flagSizeDp, flagSizeDp).
+//				centerCrop().
+//				into(mContactFlagCIV);
+		}
+		else {
+			displayFlag(mWithFlag);
+		}
+	}
+
+
+	public void displayCanceled(boolean isDisplayed){
+		if (isDisplayed) {
+			int flagSizeDp = Utils.dp2px(getContext(), 20);
+			mContactFlagCIV.setVisibility(VISIBLE);
+			Picasso.get().
+				load(R.drawable.ic_contact_cancel).
+				resize(flagSizeDp, flagSizeDp).
+				centerCrop().
+				into(mContactFlagCIV);
+		}
+		else {
+			displayFlag(mWithFlag);
+		}
 	}
 
 

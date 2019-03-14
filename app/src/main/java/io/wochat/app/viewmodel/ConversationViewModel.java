@@ -29,6 +29,7 @@ public class ConversationViewModel extends AndroidViewModel {
 	private final AppExecutors mAppExecutors;
 
 
+
 	public interface ConversationListener{
 		void onConversationResult(Conversation conversation);
 	}
@@ -92,7 +93,7 @@ public class ConversationViewModel extends AndroidViewModel {
 	}
 
 	public void addNewOutcomingMessage(Message message){
-		mRepository.addNewOutgoingMessage(message);
+		mRepository.addNewOutgoingMessageInIOThread(message);
 	}
 
 	public void markAllMessagesAsRead(String conversationId){
@@ -148,5 +149,12 @@ public class ConversationViewModel extends AndroidViewModel {
 	}
 
 
+	public void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
+		mRepository.forwardMessagesToContacts(contacts, messages);
+	}
 
+
+	public LiveData<List<Message>> getOutgoingPendingMessages(){
+		return mRepository.getOutgoingPendingMessages();
+	}
 }

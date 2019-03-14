@@ -75,6 +75,7 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.SpeechUtils;
@@ -101,9 +102,10 @@ public class ConversationActivity extends PermissionActivity implements
 	SpeechUtils.SpeechUtilsSTTListener, MessagesListAdapter.SelectionListener {
 
 	private static final String TAG = "ConversationActivity";
-	private static final int REQUEST_SELECT_IMAGE_VIDEO = 1;
-	private static final int REQUEST_SELECT_CAMERA_PHOTO = 2;
-	private static final int REQUEST_SELECT_CAMERA_VIDEO = 3;
+	private static final int REQUEST_SELECT_IMAGE_VIDEO 	= 1;
+	private static final int REQUEST_SELECT_CAMERA_PHOTO 	= 2;
+	private static final int REQUEST_SELECT_CAMERA_VIDEO 	= 3;
+	private static final int REQUEST_SELECT_CONTACTS 		= 4;
 	private MessagesList mMessagesListRV;
 	protected MessagesListAdapter<Message> mMessagesAdapter;
 	protected ImageLoader mImageLoader;
@@ -461,6 +463,9 @@ public class ConversationActivity extends PermissionActivity implements
 				actionCopy();
 				break;
 			case R.id.action_frwrd:
+				Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+				startActivityForResult(intent, REQUEST_SELECT_CONTACTS);
+				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 				break;
 
 		}
@@ -1120,7 +1125,15 @@ public class ConversationActivity extends PermissionActivity implements
 				}
 			}
 		}
+		else if (requestCode == REQUEST_SELECT_CONTACTS){
+			if (resultCode == Activity.RESULT_OK) {
+				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
+				ArrayList<Message> selectedMessages = mMessagesAdapter.getSelectedMessages();
+				forwardMessagesToContacts(contacts, selectedMessages);
+			}
+		}
 	}
+
 
 //	private void updateImageMessage(ImageInfo imageInfo) {
 //		if (mService == null)
@@ -1602,6 +1615,17 @@ public class ConversationActivity extends PermissionActivity implements
 			mMessagesAdapter.copySelectedMessagesText(this, message -> message.getText(), true);
 		}
 		mMessagesAdapter.unselectAllItems();
+	}
+
+
+	private void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
+		mConversationViewModel.forwardMessagesToContacts(contacts, messages);
+		mMessagesAdapter.unselectAllItems();
+
+		mConversationViewModel.getOutgoingPendingMessages().observe(this, pendingMessages -> {
+			mService.sendMessages(pendingMessages);
+		});
+
 	}
 
 }

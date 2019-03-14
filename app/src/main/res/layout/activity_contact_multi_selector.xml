@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.Contact.ContactSelectorActivity">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        >
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:theme="@style/ToolbarColoredBackArrow"
+            android:background="@android:color/white"
+            app:popupTheme="@style/AppTheme.PopupOverlay" >
+
+            <ProgressBar
+                android:id="@+id/toolbar_progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:indeterminateTint="@color/app_blue"
+                android:indeterminateTintMode="src_in"
+                android:layout_gravity="right"
+                />
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <LinearLayout
+        android:id="@+id/header_ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:animateLayoutChanges="true">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/header_rv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </android.support.v7.widget.RecyclerView>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/contact_list_rv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            tools:listitems="@layout/country_list_row">
+
+
+        </android.support.v7.widget.RecyclerView>
+
+        <xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScroller
+            android:id="@+id/fast_scroller"
+            android:layout_width="10dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="right"/>
+
+    </LinearLayout>
+
+
+</LinearLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/send_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_margin="@dimen/fab_margin"
+        android:tint="@color/white"
+        app:srcCompat="@drawable/ic_send"/>
+</FrameLayout>

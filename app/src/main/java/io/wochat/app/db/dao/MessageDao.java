@@ -115,4 +115,10 @@ public interface MessageDao {
 	Message getLastMessagesForConversation(String conversationId);
 
 
+
+	@Query("SELECT * FROM message_table WHERE " +
+		"(ack_status = 'PENDING') AND" +
+		"(sender = :selfId)")
+	LiveData<List<Message>> getOutgoingPending(String selfId);
+
 }

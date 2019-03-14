@@ -887,4 +887,28 @@ public class Message implements IMessage,
 	}
 
 
+	public Message generateForwardMessage(String selfId, String participantId, String participantLanguage){
+		Message newMessage = fromJson(toJson());
+		newMessage.messageId = UUID.randomUUID().toString();
+		newMessage.participantId = participantId;
+		newMessage.senderId = selfId;
+		newMessage.conversationId = Conversation.getConversationId(participantId, selfId);
+		newMessage.recipients = new String[]{participantId};
+		newMessage.timestamp = System.currentTimeMillis()/1000;
+		newMessage.ackStatus = ACK_STATUS_PENDING;
+		newMessage.translatedLanguage = participantLanguage; // in order to invoke translation to the new participant language
+
+		if (selfId.equals(senderId)){ // outgoing - remove translation
+			newMessage.translatedText = null;
+		}
+		else { // incoming - check if translated
+			if ((translatedText != null) && (!translatedText.equals(""))){
+				newMessage.messageText = translatedText;  // take the text that was translated to me and put it as the message text
+				newMessage.messageLanguage = translatedLanguage; // my language
+			}
+		}
+
+		return newMessage;
+	}
+
 }
