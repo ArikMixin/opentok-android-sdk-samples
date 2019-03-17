@@ -7,16 +7,24 @@ import android.widget.ImageView;
 import com.stfalcon.chatkit.messages.MessageHolders;
 
 import io.wochat.app.R;
+import io.wochat.app.components.MessageReplyLayout;
 import io.wochat.app.db.entity.Message;
 
 public class CustomOutcomingTextMessageViewHolder
         extends MessageHolders.OutcomingTextMessageViewHolder<Message> {
 
     private final ImageView mCocheIV;
+    private final MessageReplyLayout mMessageReplyLayout;
+    private final Payload mPayload;
+
 
     public CustomOutcomingTextMessageViewHolder(View itemView, Object payload) {
         super(itemView, payload);
         mCocheIV = (ImageView) itemView.findViewById(R.id.coche_iv);
+        mMessageReplyLayout = (MessageReplyLayout) itemView.findViewById(R.id.reply_layout);
+        mMessageReplyLayout.showCloseBtn(false);
+        mPayload = (Payload) payload;
+
     }
 
     @Override
@@ -42,5 +50,27 @@ public class CustomOutcomingTextMessageViewHolder
                 break;
         }
 
+
+        Message replyMessage = mPayload.onPayloadListener.getRepliedMessage(message.getRepliedMessageId());
+        if (replyMessage == null){
+			mMessageReplyLayout.setVisibility(View.GONE);
+		}
+		else {
+			mMessageReplyLayout.setVisibility(View.VISIBLE);
+			String name = mPayload.onPayloadListener.getSenderName(message.getRepliedMessageId());
+			mMessageReplyLayout.showReplyMessage(replyMessage, name);
+		}
+
+
+    }
+
+
+    public static class Payload {
+        public OnPayloadListener onPayloadListener;
+    }
+
+    public interface OnPayloadListener {
+        Message getRepliedMessage(String repliedMessageId);
+        String getSenderName(String repliedMessageId);
     }
 }

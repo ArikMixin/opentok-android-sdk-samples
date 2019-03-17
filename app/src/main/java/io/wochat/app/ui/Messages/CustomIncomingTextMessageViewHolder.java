@@ -1,47 +1,51 @@
 package io.wochat.app.ui.Messages;
 
 import android.view.View;
-
+import android.widget.ImageView;
 
 
 import com.stfalcon.chatkit.messages.MessageHolders;
 
+import io.wochat.app.R;
+import io.wochat.app.components.MessageReplyLayout;
 import io.wochat.app.db.entity.Message;
 
 public class CustomIncomingTextMessageViewHolder
         extends MessageHolders.IncomingTextMessageViewHolder<Message> {
 
 
+	private final MessageReplyLayout mMessageReplyLayout;
+	private final Payload mPayload;
 
-    public CustomIncomingTextMessageViewHolder(View itemView, Object payload) {
+	public CustomIncomingTextMessageViewHolder(View itemView, Object payload) {
         super(itemView, payload);
-
+		mMessageReplyLayout = (MessageReplyLayout) itemView.findViewById(R.id.reply_layout);
+		mMessageReplyLayout.showCloseBtn(false);
+		mPayload = (Payload) payload;
     }
 
     @Override
     public void onBind(Message message) {
         super.onBind(message);
-
-
-        //We can set click listener on view from payload
-//        final Payload payload = (Payload) this.payload;
-//        userAvatar.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                if (payload != null && payload.avatarClickListener != null) {
-//                    payload.avatarClickListener.onAvatarClick();
-//                }
-//            }
-//        });
+		Message replyMessage = mPayload.onPayloadListener.getRepliedMessage(message.getRepliedMessageId());
+		if (replyMessage == null){
+			mMessageReplyLayout.setVisibility(View.GONE);
+		}
+		else {
+			mMessageReplyLayout.setVisibility(View.VISIBLE);
+			String name = mPayload.onPayloadListener.getSenderName(message.getRepliedMessageId());
+			mMessageReplyLayout.showReplyMessage(replyMessage, name);
+		}
     }
 
     public static class Payload {
-        public OnAvatarClickListener avatarClickListener;
+        public OnPayloadListener onPayloadListener;
     }
 
-    public interface OnAvatarClickListener {
-        void onAvatarClick();
-    }
+    public interface OnPayloadListener {
+		Message getRepliedMessage(String repliedMessageId);
+		String getSenderName(String repliedMessageId);
+	}
 
 
 }

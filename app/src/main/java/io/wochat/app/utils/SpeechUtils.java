@@ -209,22 +209,30 @@ public class SpeechUtils extends Transaction.Listener implements
 
 	public void destroy(){
 		Log.e(TAG, "destroy");
+		if (mSpeechRecognizer == null)
+			return;
 		mSpeechRecognizer.destroy();
 	}
 
 
 	public void startSpeechToText() {
 		Log.e(TAG, "startSpeech");
+		if (mSpeechRecognizer == null)
+			return;
 		mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
 	}
 
 	public void stopSpeechToText() {
 		Log.e(TAG, "stopSpeech");
+		if (mSpeechRecognizer == null)
+			return;
 		mSpeechRecognizer.stopListening();
 	}
 
 	public void cancelSpeechToText() {
 		Log.e(TAG, "cancelSpeech");
+		if (mSpeechRecognizer == null)
+			return;
 		mSpeechRecognizer.cancel();
 	}
 

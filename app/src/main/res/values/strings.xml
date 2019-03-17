@@ -59,5 +59,9 @@
     <string name="search_select_contacts">Select Contacts</string>
     <string name="search_select_contact">Select Contact</string>
     <string name="search_frwrd_to">Forward to...</string>
+    <string name="reply_contact_self_name">You</string>
+    <string name="reply_image_msg_text">Image</string>
+    <string name="reply_video_msg_text">Video</string>
+    <string name="reply_audio_msg_text">Audio</string>
 
 </resources>

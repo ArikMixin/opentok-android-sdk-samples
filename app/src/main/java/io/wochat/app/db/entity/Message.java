@@ -700,8 +700,8 @@ public class Message implements IMessage,
 		return repliedMessageId;
 	}
 
-	public void setRepliedMessageId(String replied_message_id) {
-		this.repliedMessageId = replied_message_id;
+	public void setRepliedMessageId(String repliedMessageId) {
+		this.repliedMessageId = repliedMessageId;
 	}
 
 	public int getHitshotId() {
@@ -905,7 +905,7 @@ public class Message implements IMessage,
 	}
 
 
-	private boolean isOutgoing(){
+	public boolean isOutgoing(){
 		return (!participantId.equals(senderId));
 	}
 

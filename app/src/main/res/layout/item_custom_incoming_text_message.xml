@@ -30,6 +30,14 @@
         android:minWidth="100dp"
         android:orientation="vertical">
 
+
+        <io.wochat.app.components.MessageReplyLayout
+            android:id="@+id/reply_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        </io.wochat.app.components.MessageReplyLayout>
+
         <TextView
             android:id="@id/messageText"
             android:layout_width="wrap_content"

@@ -23,8 +23,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.StrictMode;
 import android.provider.MediaStore;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.annotation.ColorInt;
 import android.support.annotation.DrawableRes;
@@ -44,6 +42,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -68,9 +67,9 @@ import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.R;
-import io.wochat.app.WCApplication;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleFlagImageView;
+import io.wochat.app.components.MessageReplyLayout;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
@@ -161,6 +160,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private boolean mIsInMsgSelectionMode;
 	private int mSelectedMessageCount;
 	private String mForwardContactId;
+	private MessageReplyLayout mInputMessageReplyLayout;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -265,6 +265,11 @@ public class ConversationActivity extends PermissionActivity implements
 		});
 
 		mMessagesListRV = (MessagesList) findViewById(R.id.messagesList);
+		mInputMessageReplyLayout = (MessageReplyLayout) findViewById(R.id.input_reply_message_layout);
+		mInputMessageReplyLayout.setVisibility(View.GONE);
+		mInputMessageReplyLayout.setOnCloseListener(v -> {
+			mMessagesAdapter.unselectAllItems();
+		});
 
 		mPreviewImagesIV = (PhotoView)findViewById(R.id.preview_iv);
 		mPreviewImagesPB = (ProgressBar)findViewById(R.id.preview_pb);
@@ -339,33 +344,71 @@ public class ConversationActivity extends PermissionActivity implements
 
 	private void initAdapter() {
 
-		//We can pass any data to ViewHolder with payload
-		CustomIncomingTextMessageViewHolder.Payload payload = new CustomIncomingTextMessageViewHolder.Payload();
-		//For example click listener
-		payload.avatarClickListener = new CustomIncomingTextMessageViewHolder.OnAvatarClickListener() {
+		CustomIncomingTextMessageViewHolder.Payload payloadIncoming = new CustomIncomingTextMessageViewHolder.Payload();
+		payloadIncoming.onPayloadListener = new CustomIncomingTextMessageViewHolder.OnPayloadListener() {
 			@Override
-			public void onAvatarClick() {
-				Toast.makeText(ConversationActivity.this,
-					"Text message avatar clicked", Toast.LENGTH_SHORT).show();
+			public Message getRepliedMessage(String repliedMessageId) {
+				return getMessageById(repliedMessageId);
+			}
+
+			@Override
+			public String getSenderName(String repliedMessageId) {
+				Message message = getMessageById(repliedMessageId);
+				if (message != null) {
+					if (message.isOutgoing())
+						return "You";
+					else {
+						return mParticipantName;
+					}
+				}
+				else return "";
 			}
 		};
+		CustomOutcomingTextMessageViewHolder.Payload payloadOutcoming = new CustomOutcomingTextMessageViewHolder.Payload();
+		payloadOutcoming.onPayloadListener = new CustomOutcomingTextMessageViewHolder.OnPayloadListener() {
+			@Override
+			public Message getRepliedMessage(String repliedMessageId) {
+				return getMessageById(repliedMessageId);
+			}
+
+			@Override
+			public String getSenderName(String repliedMessageId) {
+				Message message = getMessageById(repliedMessageId);
+				if (message != null) {
+					if (message.isOutgoing())
+						return "You";
+					else {
+						return mParticipantName;
+					}
+				}
+				else return "";
+			}
+		};
+
 		MessageHolders holdersConfig = new MessageHolders()
+
 			.setIncomingTextConfig(
 				CustomIncomingTextMessageViewHolder.class,
 				R.layout.item_custom_incoming_text_message,
-				payload)
+				payloadIncoming)
+
 			.setOutcomingTextConfig(
 				CustomOutcomingTextMessageViewHolder.class,
-				R.layout.item_custom_outcoming_text_message)
+				R.layout.item_custom_outcoming_text_message,
+				payloadOutcoming)
+
 			.setIncomingImageConfig(
 				CustomIncomingImageMessageViewHolder.class,
 				R.layout.item_custom_incoming_image_message)
+
 			.setOutcomingImageConfig(
 				CustomOutcomingImageMessageViewHolder.class,
 				R.layout.item_custom_outcoming_image_message)
+
 			.setIncomingVideoConfig(
 				CustomIncomingVideoMessageViewHolder.class,
 				R.layout.item_custom_incoming_video_message)
+
 			.setOutcomingVideoConfig(
 				CustomOutcomingVideoMessageViewHolder.class,
 				R.layout.item_custom_outcoming_video_message)
@@ -448,6 +491,7 @@ public class ConversationActivity extends PermissionActivity implements
 			case android.R.id.home:
 				if (mSelectedMessageCount > 0){
 					mMessagesAdapter.unselectAllItems();
+					mInputMessageReplyLayout.setVisibility(View.GONE);
 				}
 				else {
 					finish();
@@ -456,6 +500,11 @@ public class ConversationActivity extends PermissionActivity implements
 			case R.id.action_phone:
 			case R.id.action_video:
 			case R.id.action_reply:
+				mInputMessageReplyLayout.showReplyMessage(mMessagesAdapter.getSelectedMessage(), mParticipantName);
+				mMessagesAdapter.unselectAllItems();
+				mMessageInput.requestFocus();
+				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.showSoftInput(mMessageInput.getInputEditText(), InputMethodManager.SHOW_IMPLICIT);
 				break;
 			case R.id.action_delete:
 				actionDelete();
@@ -533,6 +582,10 @@ public class ConversationActivity extends PermissionActivity implements
 		String msgText = input.toString();
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
+		if (mInputMessageReplyLayout.getVisibility() == View.VISIBLE){
+			message.setRepliedMessageId(mInputMessageReplyLayout.getMessage().getId());
+			mInputMessageReplyLayout.setVisibility(View.GONE);
+		}
 		mConversationViewModel.addNewOutcomingMessage(message);
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mIsInputInTextMode = false;
@@ -1280,6 +1333,7 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 		else if (mSelectedMessageCount > 0){
 			mMessagesAdapter.unselectAllItems();
+			mInputMessageReplyLayout.setVisibility(View.GONE);
 		}
 		else {
 			super.onBackPressed();
@@ -1669,5 +1723,16 @@ public class ConversationActivity extends PermissionActivity implements
 //		startActivity(intent);
 //		finish();
 	}
+
+
+	private Message getMessageById(String id){
+		for(Message message : mMessages){
+			if (message.getId().equals(id))
+				return message;
+		}
+
+		return null;
+	}
+
 
 }

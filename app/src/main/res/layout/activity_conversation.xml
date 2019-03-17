@@ -114,36 +114,44 @@
                 android:background="@color/white"
                 />
 
-            <com.stfalcon.chatkit.messages.MessagesList
-                android:id="@+id/messagesList"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_above="@+id/input_padder_ll"
-
-                app:incomingAvatarHeight="0dp"
-                app:incomingAvatarWidth="0dp"
-                app:incomingImageTimeTextColor="@color/white"
-                app:incomingTextColor="@color/black"
-                app:incomingTimeTextColor="@color/black"
-                app:incomingDefaultBubbleColor="@color/incoming_bubble"
-                app:incomingDefaultBubblePressedColor="@color/incoming_bubble"
-                app:incomingDefaultBubbleSelectedColor="@color/blue_semi_transparent"
-
-                app:outcomingImageTimeTextColor="@color/white"
-                app:outcomingTextColor="@color/black"
-                app:outcomingTimeTextColor="@color/black"
-                app:outcomingDefaultBubbleColor="@color/outcoming_bubble"
-                app:outcomingDefaultBubblePressedColor="@color/outcoming_bubble"
-                app:outcomingDefaultBubbleSelectedColor="@color/blue_semi_transparent"
-                 />
 
             <LinearLayout
-                android:id="@+id/input_padder_ll"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_above="@+id/input"
-                android:background="@color/white"
-                android:orientation="horizontal">
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_above="@id/input">
+
+                <com.stfalcon.chatkit.messages.MessagesList
+                    android:id="@+id/messagesList"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+
+                    app:incomingAvatarHeight="0dp"
+                    app:incomingAvatarWidth="0dp"
+                    app:incomingImageTimeTextColor="@color/white"
+                    app:incomingTextColor="@color/black"
+                    app:incomingTimeTextColor="@color/black"
+                    app:incomingDefaultBubbleColor="@color/incoming_bubble"
+                    app:incomingDefaultBubblePressedColor="@color/incoming_bubble"
+                    app:incomingDefaultBubbleSelectedColor="@color/blue_semi_transparent"
+
+                    app:outcomingImageTimeTextColor="@color/white"
+                    app:outcomingTextColor="@color/black"
+                    app:outcomingTimeTextColor="@color/black"
+                    app:outcomingDefaultBubbleColor="@color/outcoming_bubble"
+                    app:outcomingDefaultBubblePressedColor="@color/outcoming_bubble"
+                    app:outcomingDefaultBubbleSelectedColor="@color/blue_semi_transparent"
+                     />
+
+
+                <io.wochat.app.components.MessageReplyLayout
+                    android:id="@+id/input_reply_message_layout"
+                    android:layout_marginTop="2dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                </io.wochat.app.components.MessageReplyLayout>
 
             </LinearLayout>
 
@@ -164,7 +172,7 @@
                 android:paddingBottom="0dp"
                 android:paddingLeft="0dp"
                 android:paddingRight="0dp"
-                android:paddingTop="1dp"
+                android:paddingTop="0.01dp"
                 app:attachmentButtonBackground="?attr/selectableItemBackgroundBorderless"
                 app:attachmentButtonDefaultIconColor="@color/green"
                 app:attachmentButtonDefaultIconPressedColor="@color/green_dark"
@@ -180,22 +188,22 @@
                 app:cameraButtonIcon="@drawable/msg_in_camera_dark"
                 app:cameraButtonWidth="27dp"
 
-                app:magicButtonIcon="@drawable/flag_israel"
-                app:locationButtonIcon="@drawable/msg_in_location_dark"
-                app:videoButtonIcon="@drawable/msg_in_video_dark"
-
                 app:inputButtonBackground="@drawable/msg_in_send_back"
                 app:inputButtonDefaultIconColor="@color/white"
                 app:inputButtonDefaultIconDisabledColor="@color/white60"
+
                 app:inputButtonIcon="@drawable/msg_in_mic_light"
                 app:inputButtonMargin="15dp"
                 app:inputHint="@string/hint_enter_a_message"
                 app:inputMaxLines="5"
+                app:locationButtonIcon="@drawable/msg_in_location_dark"
+                app:magicButtonIcon="@drawable/flag_israel"
                 app:showAttachmentButton="true"
                 app:showCameraButton="true"
                 app:showLocationButton="true"
+                app:showMagicButton="true"
                 app:showVideoButton="true"
-                app:showMagicButton="true"/>
+                app:videoButtonIcon="@drawable/msg_in_video_dark"/>
 
 
             <ImageView
