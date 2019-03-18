@@ -9,6 +9,7 @@ import com.stfalcon.chatkit.messages.MessageHolders;
 import io.wochat.app.R;
 import io.wochat.app.components.MessageReplyLayout;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.utils.Utils;
 
 public class CustomIncomingTextMessageViewHolder
         extends MessageHolders.IncomingTextMessageViewHolder<Message> {
@@ -22,6 +23,7 @@ public class CustomIncomingTextMessageViewHolder
 		mMessageReplyLayout = (MessageReplyLayout) itemView.findViewById(R.id.reply_layout);
 		mMessageReplyLayout.showCloseBtn(false);
 		mPayload = (Payload) payload;
+
     }
 
     @Override
@@ -36,6 +38,10 @@ public class CustomIncomingTextMessageViewHolder
 			String name = mPayload.onPayloadListener.getSenderName(message.getRepliedMessageId());
 			mMessageReplyLayout.showReplyMessage(replyMessage, name);
 		}
+
+		//itemView.setMinimumWidth(Utils.dp2px(itemView.getContext(), 550));
+		//itemView.getLayoutParams().width = 1000;
+
     }
 
     public static class Payload {

@@ -33,8 +33,9 @@
 
         <io.wochat.app.components.MessageReplyLayout
             android:id="@+id/reply_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="250dp">
 
         </io.wochat.app.components.MessageReplyLayout>
 
@@ -47,7 +48,7 @@
             android:layout_marginRight="4dp"
             android:layout_marginStart="8dp"
             android:lineSpacingExtra="5sp"
-            android:text="fgdsgfds fdg dfs gfdsg fdsg fdsg fds"/>
+            android:text="kkkk"/>
 
         <LinearLayout
             android:layout_width="match_parent"

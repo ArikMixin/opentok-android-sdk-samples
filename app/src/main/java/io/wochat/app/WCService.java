@@ -231,7 +231,12 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void sendMessages(List<Message> messages){
 		Log.e(TAG, "sendMessages count: " + messages.size());
 		for (Message  message : messages) {
-			sendMessage(message);
+			if (message.isImage()){
+				if ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty())) // make sure media was uploaded
+					sendMessage(message);
+			}
+			else
+				sendMessage(message);
 		}
 	}
 

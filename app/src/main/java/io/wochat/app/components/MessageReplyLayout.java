@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -25,6 +26,8 @@ public class MessageReplyLayout extends LinearLayout {
 	private ImageView mMessageImageIV;
 	private OnClickListener mOnCloseListener;
 	private Message mMessage;
+	private FrameLayout mMessageImageFL;
+	private ImageView mMessageImageVideoIconIV;
 
 	public MessageReplyLayout(Context context) {
 		super(context);
@@ -53,6 +56,8 @@ public class MessageReplyLayout extends LinearLayout {
 		mContactNameTV = findViewById(R.id.rply_contact_name_tv);
 		mMessageTxtTV = findViewById(R.id.rply_message_text_tv);
 		mMessageImageIV = findViewById(R.id.rply_message_image_iv);
+		mMessageImageVideoIconIV = findViewById(R.id.rply_message_image_video_icon_iv);
+		mMessageImageFL = (FrameLayout)findViewById(R.id.rply_message_image_fl);
 		mCloseIB = findViewById(R.id.rply_close_ib);
 		mCloseIB.setOnClickListener(v -> {
 			setVisibility(GONE);
@@ -91,24 +96,44 @@ public class MessageReplyLayout extends LinearLayout {
 			case Message.MSG_TYPE_TEXT:
 				mMessageTxtTV.setText(message.getText());
 				mMessageTxtTV.setCompoundDrawablesWithIntrinsicBounds(null , null, null, null);
-				mMessageImageIV.setVisibility(GONE);
+				mMessageImageFL.setVisibility(GONE);
+				setMinimumWidth(Utils.dp2px(getContext(), 50));
 				break;
 			case Message.MSG_TYPE_IMAGE:
 				mMessageTxtTV.setText(R.string.reply_image_msg_text);
 				mMessageTxtTV.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.ic_action_camera) , null, null, null);
-				mMessageImageIV.setVisibility(VISIBLE);
-				Picasso.get().load(message.getImageThumbURL()).into(mMessageImageIV);
+				mMessageImageFL.setVisibility(VISIBLE);
+				mMessageImageVideoIconIV.setVisibility(INVISIBLE);
+				try {
+					Picasso.get().load(message.getImageThumbURL()).into(mMessageImageIV);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				setMinimumWidth(Utils.dp2px(getContext(), 250));
 				break;
 			case Message.MSG_TYPE_VIDEO:
-				mMessageTxtTV.setText(R.string.reply_video_msg_text);
-				mMessageTxtTV.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.ic_action_video) , null, null, null);				mMessageImageIV.setVisibility(VISIBLE);
-				Picasso.get().load(message.getImageThumbURL()).into(mMessageImageIV);
+				mMessageTxtTV.setText(String.format(getContext().getString(R.string.reply_video_msg_text), Utils.convertSecondsToHMmSs(message.getDuration())));
+				mMessageTxtTV.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.ic_action_video) , null, null, null);
+				mMessageImageFL.setVisibility(VISIBLE);
+				mMessageImageVideoIconIV.setVisibility(VISIBLE);
+				try {
+					Picasso.get().load(message.getImageThumbURL()).into(mMessageImageIV);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				setMinimumWidth(Utils.dp2px(getContext(), 250));
 				break;
 			case Message.MSG_TYPE_AUDIO:
 			case Message.MSG_TYPE_SPEECHABLE:
+				mMessageTxtTV.setText(String.format(getContext().getString(R.string.reply_audio_msg_text), Utils.convertSecondsToHMmSs(message.getDuration())));
 				mMessageTxtTV.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.msg_in_mic_light) , null, null, null);
-				mMessageTxtTV.setText(R.string.reply_audio_msg_text);
-				mMessageImageIV.setVisibility(GONE);
+				mMessageImageFL.setVisibility(GONE);
+				break;
+
+			case Message.MSG_TYPE_LOCATION:
+				mMessageTxtTV.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.msg_in_location) , null, null, null);
+				mMessageTxtTV.setText(R.string.reply_location_msg_text);
+				mMessageImageFL.setVisibility(GONE);
 				break;
 
 		}
