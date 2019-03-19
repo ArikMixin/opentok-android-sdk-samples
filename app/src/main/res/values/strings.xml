@@ -71,5 +71,10 @@
     <string name="settings_invite_friends">Invite Friends</string>
     <string name="settings_help_and_support">Help and support</string>
     <string name="settings_actionbar_title">Settings</string>
+    <string name="settings_profile_edit_actionbar_title">Profile</string>
+    <string name="settings_profile_edit_name_title">Name</string>
+    <string name="settings_profile_edit_status_title">About</string>
+    <string name="settings_profile_edit_phone_title">Phone</string>
+    <string name="settings_user_default_phone">No phone</string>
 
 </resources>

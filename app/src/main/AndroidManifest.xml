@@ -24,6 +24,9 @@
         tools:replace="android:supportsRtl"
         android:supportsRtl="false"
         android:theme="@style/AppTheme">
+        <activity android:name=".ui.settings.SettingsProfileEditActivity"
+                  android:screenOrientation="portrait">
+        </activity>
         <activity android:name=".ui.settings.SettingsActivity"
                   android:theme="@style/AppTheme"
                   android:screenOrientation="portrait">
