@@ -1,0 +1,41 @@
+package io.wochat.app.ui.settings;
+
+import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
+import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import io.wochat.app.R;
+
+public class SettingsActivity extends AppCompatActivity {
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_settings);
+
+		ActionBar bar = getSupportActionBar();
+		bar.setTitle(R.string.settings_actionbar_title);
+		bar.setDisplayHomeAsUpEnabled(true);
+
+		getSupportFragmentManager().beginTransaction().replace(R.id.container_settings_user_fragment,
+			new SettingsUserFragment()).commit();
+		getSupportFragmentManager().beginTransaction().replace(R.id.container_settings_fragment,
+			new SettingsFragment()).commit();
+
+		LinearLayout settingsUserFragmentContainer = findViewById(R.id.container_settings_user_fragment);
+		settingsUserFragmentContainer.setOnClickListener(v ->
+			Toast.makeText(SettingsActivity.this, "user", Toast.LENGTH_SHORT).show());
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int id = item.getItemId();
+		if (id == android.R.id.home) {
+			finish();
+		}
+		return super.onOptionsItemSelected(item);
+	}
+}

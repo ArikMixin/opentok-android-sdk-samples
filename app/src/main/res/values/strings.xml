@@ -63,5 +63,13 @@
     <string name="reply_image_msg_text">Image</string>
     <string name="reply_video_msg_text">Video</string>
     <string name="reply_audio_msg_text">Audio</string>
+    <string name="settings_user_default_name">No name</string>
+    <string name="settings_user_default_status">No status</string>
+    <string name="settings_translation_language">Translation Language</string>
+    <string name="settings_default_translation_language">English (USA)</string>
+    <string name="settings_bug_report">Bug Report</string>
+    <string name="settings_invite_friends">Invite Friends</string>
+    <string name="settings_help_and_support">Help and support</string>
+    <string name="settings_actionbar_title">Settings</string>
 
 </resources>
