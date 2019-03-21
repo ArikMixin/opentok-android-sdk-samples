@@ -261,25 +261,7 @@ public class WCRepository {
 		});
 	}
 
-	public void uploadUpdatedProfilePic(byte[] profilePicByte) {
-		mSharedPreferences.saveUserProfileImages(profilePicByte);
-		mWochatApi.dataUploadFile(profilePicByte, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, new WochatApi.OnServerResponseListener() {
-			@Override
-			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
-				if (isSuccess) {
-				try {
-					String imageUrl = response.getString("url");
-						mAppExecutors.diskIO().execute(() ->
-							mUserDao.updateUserProfilePic(imageUrl));
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-				//todo : patch to server
-			}
-			}
-		});
 
-	}
 
 	private void userConfirmRegistration(String profilePicUrl, String userName){
 		mWochatApi.userConfirmRegistration(userName, profilePicUrl, new WochatApi.OnServerResponseListener() {
@@ -1309,12 +1291,51 @@ public void updateAckStatusToSent(Message message){
 	public void updateUserName(String name) {
 		mAppExecutors.diskIO().execute(() ->
 			mUserDao.updateUserName(name));
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.patchName(name,
+				(isSuccess, errorLogic, errorComm, response) -> {
+					//do action
+				});
+		});
+
+
 	}
 
 	public void updateUserStatus(String status) {
 		mAppExecutors.diskIO().execute(() ->
 			mUserDao.updateUserStatus(status));
+		mAppExecutors.networkIO().execute(() -> {
+		   mWochatApi.patchStatus(status,
+			   (isSuccess, errorLogic, errorComm, response) -> {
+				   //do action
+			   });
+		});
 	}
+
+	public void uploadUpdatedProfilePic(byte[] profilePicByte) {
+		mSharedPreferences.saveUserProfileImages(profilePicByte);
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.dataUploadFile(profilePicByte, mWochatApi.UPLOAD_MIME_TYPE_IAMGE,
+				(isSuccess, errorLogic, errorComm, response) -> {
+					if (isSuccess) {
+						try {
+							String imageUrl = response.getString("url");
+							mAppExecutors.diskIO().execute(() ->
+								mUserDao.updateUserProfilePic(imageUrl));
+							mAppExecutors.networkIO().execute(() -> {
+								mWochatApi.patchPicUrl(imageUrl,
+									(isSuccess1, errorLogic1, errorComm1, response1) -> {
+									 //do action
+								});
+							});
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+				});
+		});
+	}
+
 	}
 
 
