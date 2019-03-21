@@ -23,4 +23,16 @@ public class UserViewModel extends AndroidViewModel {
 	public LiveData<User> getSelfUser() {
 		return mRepository.getSelfUser();
 	}
+
+	public void updateUserName (String name) {
+        mRepository.updateUserName(name);
+	}
+
+	public void updateUserStatus(String status) {
+		mRepository.updateUserStatus(status);
+	}
+
+	public void uploadUpdatedProfilePic(byte[] profilePicByte) {
+		mRepository.uploadUpdatedProfilePic(profilePicByte);
+	}
 }

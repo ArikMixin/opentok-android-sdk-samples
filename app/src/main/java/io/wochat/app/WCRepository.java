@@ -261,6 +261,26 @@ public class WCRepository {
 		});
 	}
 
+	public void uploadUpdatedProfilePic(byte[] profilePicByte) {
+		mSharedPreferences.saveUserProfileImages(profilePicByte);
+		mWochatApi.dataUploadFile(profilePicByte, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, new WochatApi.OnServerResponseListener() {
+			@Override
+			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+				if (isSuccess) {
+				try {
+					String imageUrl = response.getString("url");
+						mAppExecutors.diskIO().execute(() ->
+							mUserDao.updateUserProfilePic(imageUrl));
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+				//todo : patch to server
+			}
+			}
+		});
+
+	}
+
 	private void userConfirmRegistration(String profilePicUrl, String userName){
 		mWochatApi.userConfirmRegistration(userName, profilePicUrl, new WochatApi.OnServerResponseListener() {
 			@Override
@@ -1286,4 +1306,15 @@ public void updateAckStatusToSent(Message message){
 		return mMessageDao.getOutgoingPendingMessages(mSharedPreferences.getUserId());
 	}
 
-}
+	public void updateUserName(String name) {
+		mAppExecutors.diskIO().execute(() ->
+			mUserDao.updateUserName(name));
+	}
+
+	public void updateUserStatus(String status) {
+		mAppExecutors.diskIO().execute(() ->
+			mUserDao.updateUserStatus(status));
+	}
+	}
+
+

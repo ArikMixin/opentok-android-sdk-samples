@@ -1,5 +1,6 @@
 package io.wochat.app.ui.settings;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -41,7 +42,9 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 	@Override
 	public boolean onPreferenceClick(Preference preference) {
 		if (preference.getKey().equals(getString(R.string.SETTINGS_TRANSLATION_LANGUAGE))) {
-			Toast.makeText(getContext(), "translation", Toast.LENGTH_SHORT).show();
+			Intent intent = new Intent(getContext(), SettingsLanguagesActivity.class);
+			startActivity(intent);
+			//TODO: 3/19/2019 startActivityForResult
 		}
 		else if (preference.getKey().equals(getString(R.string.SETTINGS_BUG_REPORT))) {
 			Toast.makeText(getContext(), "bug report", Toast.LENGTH_SHORT).show();

@@ -24,13 +24,17 @@
         tools:replace="android:supportsRtl"
         android:supportsRtl="false"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.settings.SettingsProfileEditActivity"
+        <activity android:name=".ui.settings.SettingsLanguagesActivity"
                   android:screenOrientation="portrait">
         </activity>
-        <activity android:name=".ui.settings.SettingsActivity"
-                  android:theme="@style/AppTheme"
-                  android:screenOrientation="portrait">
+        <activity
+            android:name=".ui.settings.SettingsProfileEditActivity"
+            android:screenOrientation="portrait">
         </activity>
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme"></activity>
         <activity
             android:name=".ui.SplashActivity"
             android:screenOrientation="portrait"

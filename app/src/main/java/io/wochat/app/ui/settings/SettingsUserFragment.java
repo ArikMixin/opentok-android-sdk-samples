@@ -47,21 +47,11 @@ public class SettingsUserFragment extends Fragment {
 
 			mCircleFlagImageView.setInfo(urlPic, language, initials);
 
-			if (name == null ) {
-			    mName.setText(R.string.settings_user_default_name);
-			}
-			else if (name.isEmpty()) {
-				mName.setText(R.string.settings_user_default_name);
-			}
-			else{
-				mName.setText(name);
-			}
+			mName.setText(name);
+
 
 			if (status == null ) {
-				mStatus.setText(R.string.settings_user_default_status);
-			}
-			else if (status.isEmpty()) {
-				mStatus.setText(R.string.settings_user_default_status);
+				mStatus.setText("");
 			}
 			else{
 				mStatus.setText(status);

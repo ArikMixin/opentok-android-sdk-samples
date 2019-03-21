@@ -63,8 +63,6 @@
     <string name="reply_image_msg_text">Image</string>
     <string name="reply_video_msg_text">Video</string>
     <string name="reply_audio_msg_text">Audio</string>
-    <string name="settings_user_default_name">No name</string>
-    <string name="settings_user_default_status">No status</string>
     <string name="settings_translation_language">Translation Language</string>
     <string name="settings_default_translation_language">English (USA)</string>
     <string name="settings_bug_report">Bug Report</string>
@@ -76,5 +74,10 @@
     <string name="settings_profile_edit_status_title">About</string>
     <string name="settings_profile_edit_phone_title">Phone</string>
     <string name="settings_user_default_phone">No phone</string>
+    <string name="dialog_save_button_text">Save</string>
+    <string name="dialog_default_negative_button_text">Cancel</string>
+    <string name="settings_profile_edit_dialog_name_title">Enter Your Name</string>
+    <string name="settings_profile_edit_dialog_status_title">Add About</string>
+    <string name="settings_profile_edit_dialog_empty_string_warning">Name can\'t be empty</string>
 
 </resources>

@@ -6,7 +6,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
-import android.widget.Toast;
+
 
 import io.wochat.app.R;
 
@@ -30,7 +30,7 @@ public class SettingsActivity extends AppCompatActivity {
 		settingsUserFragmentContainer.setOnClickListener(v -> {
 			Intent intent = new Intent(SettingsActivity.this,
 				SettingsProfileEditActivity.class);
-			startActivity(intent);//TODO: 3/19/2019 startActivityForResult
+			startActivity(intent);
 		});
 
 	}

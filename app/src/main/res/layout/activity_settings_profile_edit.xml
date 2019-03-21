@@ -52,7 +52,6 @@
 
             <TextView
                 android:id="@+id/name_summary_tv"
-                android:text="@string/settings_user_default_name"
                 android:textSize="16sp"
                 android:layout_marginStart="20dp"
                 android:textColor="@color/black"
@@ -107,7 +106,6 @@
 
             <TextView
                 android:id="@+id/status_summary_tv"
-                android:text="@string/settings_user_default_status"
                 android:textSize="16sp"
                 android:layout_marginStart="20dp"
                 android:textColor="@color/black"
@@ -148,8 +146,7 @@
 
         <LinearLayout
             android:layout_marginTop="10dp"
-            android:layout_weight="9"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="?listPreferredItemHeight"
             android:orientation="vertical">
             <TextView
@@ -170,14 +167,6 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <ImageView
-            android:layout_marginRight="5dp"
-            android:layout_marginTop="5dp"
-            android:layout_gravity="center"
-            android:src="@drawable/settings_edit_profile_pen"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="20dp" />
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
