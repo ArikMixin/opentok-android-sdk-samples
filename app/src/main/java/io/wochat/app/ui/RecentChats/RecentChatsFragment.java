@@ -115,6 +115,12 @@ public class RecentChatsFragment extends Fragment  implements
 				}
 				initAdapter();
 
+				String conversationId = ((MainActivity) getActivity()).getIntentConversationId();
+				if (conversationId != null){
+					Conversation conversation = getConversation(conversationId);
+					onDialogClick(conversation);
+				}
+
 			}
 			else {
 				Log.e("AAA", "conversations: null");
@@ -316,5 +322,20 @@ public class RecentChatsFragment extends Fragment  implements
 //					service.getAllPresence();
 //			}
 //		}, 3000);
+//	}
+
+
+
+	private Conversation getConversation(String conversationId){
+		for(Conversation conversation : mConversation){
+			if (conversationId.equals(conversation.getConversationId()))
+				return conversation;
+		}
+		return null;
+	}
+
+//	public void displayConversation(String conversationId) {
+//		Conversation conversation = getConversation(conversationId);
+//		onDialogClick(conversation);
 //	}
 }

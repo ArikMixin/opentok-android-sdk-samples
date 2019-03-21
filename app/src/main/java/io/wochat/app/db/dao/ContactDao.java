@@ -29,6 +29,8 @@ import java.util.List;
 import io.wochat.app.db.entity.Contact;
 //import io.wochat.app.db.entity.ContactInvitation;
 import io.wochat.app.db.entity.ContactLocal;
+import io.wochat.app.db.entity.ContactServer;
+import io.wochat.app.db.entity.Location;
 
 
 /**
@@ -100,11 +102,48 @@ public interface ContactDao {
 	@Update(onConflict = OnConflictStrategy.IGNORE)
 	void update(Contact[] contact);
 
+	@Update(onConflict = OnConflictStrategy.REPLACE)
+	void updateForce(Contact contact);
+
+
 	@Query("DELETE FROM contact_table WHERE contact_id =:id")
 	void deleteContact(String id);
 
 	@Query("DELETE FROM contact_local_table WHERE phone_num_stripped =:id")
 	void deleteContactLocal(String id);
+
+
+	@Query("UPDATE contact_table SET  " +
+		"cntct_srvr_country_code = :countryCode, " +
+		"cntct_srvr_user_name = :userName, " +
+		"cntct_srvr_status = :status, " +
+		"cntct_srvr_country_code = :countryCode, " +
+		"cntct_srvr_language = :language, " +
+		"cntct_srvr_profile_pic_url = :profilePicUrl, " +
+		"cntct_srvr_location = :location, " +
+		"cntct_srvr_gender = :gender, " +
+		"cntct_srvr_birthdate = :birthdate, " +
+		"cntct_srvr_last_update_date = :lastUpdateDate, " +
+		"cntct_srvr_discoverable = :discoverable, " +
+		"cntct_srvr_os = :os, " +
+		"cntct_srvr_language_locale = :languageLocale, " +
+		"cntct_srvr_app_version = :appVersion " +
+		"WHERE contact_id =:id ")
+
+	void update(String id,
+				String userName,
+				String status,
+				String countryCode,
+				String language,
+				String profilePicUrl,
+				Location location,
+				String gender,
+				String birthdate,
+				Integer lastUpdateDate,
+				Boolean discoverable,
+				String os,
+				String languageLocale,
+				String appVersion);
 
 
 //	@Insert(onConflict = OnConflictStrategy.REPLACE)

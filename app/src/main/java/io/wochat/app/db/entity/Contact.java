@@ -54,6 +54,7 @@ public class Contact implements IContact {
 		this.contactServer.setUserName(name);
 		this.contactServer.setLanguage(lang);
 		this.contactServer.setProfilePicUrl(picUrl);
+		this.contactServer.setContactServerId(id);
 	}
 
 	public String getContactId() {
@@ -72,6 +73,7 @@ public class Contact implements IContact {
 		this.contactId = id;
 		this.contactLocal = new ContactLocal();
 		this.contactServer = new ContactServer();
+		this.contactServer.setContactServerId(id);
 		this.hasServerData = false;
 	}
 
@@ -90,6 +92,7 @@ public class Contact implements IContact {
 		this.contactId = id;
 		this.contactLocal.setDisplayName(name);
 		this.contactServer.setProfilePicUrl(avatar);
+		this.contactServer.setContactServerId(id);
 		//this.online = online;
 	}
 
@@ -161,8 +164,9 @@ public class Contact implements IContact {
 	public String getDisplayName(){
 		if ((contactLocal != null)&&(contactLocal.getDisplayName()!= null)&&(!contactLocal.getDisplayName().equals("")))
 			return contactLocal.getDisplayName();
-		else
+		else if (contactServer != null)
 			return contactServer.getUserName();
+		else return null;
 	}
 
 	public static String getInitialsFromName(String name){

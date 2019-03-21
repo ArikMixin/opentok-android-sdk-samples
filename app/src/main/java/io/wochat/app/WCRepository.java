@@ -4,6 +4,9 @@ import android.app.Application;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.ContentResolver;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -14,6 +17,7 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,6 +45,7 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.User;
+import io.wochat.app.model.NotificationData;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
 import io.wochat.app.utils.ImagePickerUtil;
@@ -52,8 +57,9 @@ import io.wochat.app.utils.Utils;
 public class WCRepository {
 
 
+
 	public interface OnSaveMessageToDBListener{
-		void OnSaved(boolean success, Message savedMessage);
+		void OnSaved(boolean success, Message savedMessage, Contact participant);
 	}
 
 	public interface OnMarkMessagesAsReadListener{
@@ -584,11 +590,35 @@ public class WCRepository {
 //	}
 
 
-	public void insertContactAndUpdateConversationContactData(Contact contact) {
+	public void insertContactAndUpdateConversationContactData(ContactServer contactServer) {
 		mAppExecutors.diskIO().execute(() -> {
 			mDatabase.runInTransaction(() -> {
-				mContactDao.insert(contact);
+				Contact contact;
+				if(mContactDao.hasContact(contactServer.getUserId())){
+					contact = mContactDao.getContact(contactServer.getUserId());
+					contact.setContactServer(contactServer);
+					mContactDao.updateForce(contact);
+//					mContactDao.update(contactServer.getUserId(),
+//						contactServer.getUserName(),
+//						contactServer.getStatus(),
+//						contactServer.getCountryCode(),
+//						contactServer.getLanguage(),
+//						contactServer.getProfilePicUrl(),
+//						contactServer.getLocation(),
+//						contactServer.getGender(),
+//						contactServer.getBirthdate(),
+//						contactServer.getLastUpdateDate(),
+//						contactServer.getDiscoverable(),
+//						contactServer.getOs(),
+//						contactServer.getLanguageLocale(),
+//						contactServer.getAppVersion());
+				}
+				else {
+					contact = new Contact(contactServer);
+					mContactDao.insert(contact);
+				}
 				mConversationDao.updateConversationWithContactData(contact.getId(), contact.getName(), contact.getLanguage(), contact.getAvatar());
+
 			});
 		});
 
@@ -831,11 +861,15 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
     		return false;
 
     	mAppExecutors.diskIO().execute(() -> {
+			Contact contact;
+			String participantId = message.getSenderId();
+
     		if (!mConversationDao.hasConversation(message.getConversationId())){
-				String participantId = message.getSenderId();
+
 				String selfId = mSharedPreferences.getUserId();
+
 				if(mContactDao.hasContact(participantId)){  // has contact, no conversation
-					Contact contact = mContactDao.getContact(participantId);
+					contact = mContactDao.getContact(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					conversation.setParticipantName(contact.getName());
 					conversation.setParticipantLanguage(contact.getLanguage());
@@ -843,12 +877,15 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 					mConversationDao.insert(conversation);
 				}
 				else { // no contact, no conversation
-					Contact contact = new Contact(participantId);
+					contact = new Contact(participantId);
 					mContactDao.insert(contact);
 					getContactFromServer(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					mConversationDao.insert(conversation);
 				}
+			}
+			else {
+    			contact = mContactDao.getContact(participantId);
 			}
 
 
@@ -861,12 +898,12 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 				case Message.MSG_TYPE_TEXT:
 					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
 					res = handleIncomingMessageText(message);
-					listener.OnSaved(res, message);
+					listener.OnSaved(res, message, contact);
 					break;
 				case Message.MSG_TYPE_SPEECHABLE:
 					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
 					res = handleIncomingMessageText(message);
-					listener.OnSaved(res, message);
+					listener.OnSaved(res, message, contact);
 					break;
 				case Message.MSG_TYPE_ACKNOWLEDGMENT:
 					res = handleAcknowledgmentMessage(message);
@@ -876,17 +913,17 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 				case Message.MSG_TYPE_IMAGE:
 					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
 					res = handleIncomingMessageImage(message);
-					listener.OnSaved(res, message);
+					listener.OnSaved(res, message, contact);
 					break;
 				case Message.MSG_TYPE_VIDEO:
 					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
 					res = handleIncomingMessageImage(message);
-					listener.OnSaved(res, message);
+					listener.OnSaved(res, message, contact);
 					break;
 				case Message.MSG_TYPE_AUDIO:
 					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
 					res = handleIncomingMessageImage(message);
-					listener.OnSaved(res, message);
+					listener.OnSaved(res, message, contact);
 					break;
 				case Message.MSG_TYPE_GIF:
 					break;
@@ -1080,8 +1117,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 						JSONObject jsonContactObj = jsonContactArray.getJSONObject(0);
 						Gson gson = new Gson();
 						ContactServer contactServer = gson.fromJson(jsonContactObj.toString(), ContactServer.class);
-						Contact contact = new Contact(contactServer);
-						insertContactAndUpdateConversationContactData(contact);
+						insertContactAndUpdateConversationContactData(contactServer);
 					}
 
 				} catch (JSONException e) {
@@ -1285,5 +1321,113 @@ public void updateAckStatusToSent(Message message){
 	public List<Message> getOutgoingPendingMessages(){
 		return mMessageDao.getOutgoingPendingMessages(mSharedPreferences.getUserId());
 	}
+
+
+	public interface NotificationDataListener {
+		void onNotificationDataResult(NotificationData data);
+	}
+
+
+	public void getNotificationData(Message message, ContactServer contactServer, NotificationDataListener listener) {
+    	if ((message == null)||(contactServer == null)) {
+			Log.e(TAG, "getNotificationData: null - exit ");
+    		return;
+		}
+    	mAppExecutors.diskIO().execute(() -> {
+			NotificationData data = new NotificationData();
+			Contact contact;
+
+			if (!mContactDao.hasContact(contactServer.getUserId())){
+				contact = new Contact(contactServer);
+				mContactDao.insert(contact);
+			}
+			else {
+				contact = mContactDao.getContact(contactServer.getUserId());
+			}
+			data.contact = contact;
+
+			data.selfUser = mUserDao.getSelfUser();
+
+			Conversation conversation;
+
+			if(!mConversationDao.hasConversation(message.getConversationId())){
+				conversation = new Conversation(contact.getId(), mSharedPreferences.getUserId());
+				conversation.setParticipantName(contact.getName());
+				conversation.setParticipantLanguage(contact.getLanguage());
+				conversation.setParticipantProfilePicUrl(contact.getAvatar());
+				mConversationDao.insert(conversation);
+			}
+			else {
+				conversation = mConversationDao.getConversation(message.getConversationId());
+			}
+
+			data.conversation = conversation;
+
+    		data.title =contact.getDisplayName();
+    		if (data.title == null)
+				data.title = contactServer.getUserName();
+			if (data.title == null)
+				data.title = "";
+
+			data.conversationId = message.getConversationId();
+			data.messageId = message.getId();
+
+			switch (message.getMessageType()){
+				case Message.MSG_TYPE_TEXT:
+					if ((message.getTranslatedText() != null)&&(!message.getTranslatedText().isEmpty()))
+						data.body = message.getTranslatedText();
+					else
+						data.body = message.getMessageText();
+					break;
+
+				case Message.MSG_TYPE_VIDEO:
+					data.body = "Video";
+					break;
+				case Message.MSG_TYPE_AUDIO:
+					data.body = "Audio";
+					break;
+				case Message.MSG_TYPE_IMAGE:
+					data.body = "Image";
+					break;
+			}
+
+			Log.e(TAG, "getNotificationData, text: " + data.body);
+
+			mAppExecutors.mainThread().execute(() -> {
+				Log.e(TAG, "getNotificationData, download: " + contactServer.getProfilePicUrl());
+				if (contactServer.getProfilePicUrl() == null){
+					Log.e(TAG, "getNotificationData, no profile image");
+					data.largeIcon = null;
+					listener.onNotificationDataResult(data);
+					return;
+				}
+
+				Picasso.get().load(contactServer.getProfilePicUrl()).error(R.drawable.profile_circle).into(new Target() {
+					@Override
+					public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+						Log.e(TAG, "getNotificationData, onBitmapLoaded");
+						data.largeIcon = Utils.getCircleBitmap(bitmap);
+						listener.onNotificationDataResult(data);
+					}
+
+					@Override
+					public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+						Log.e(TAG, "getNotificationData, onBitmapFailed");
+						data.largeIcon = null;
+						listener.onNotificationDataResult(data);
+					}
+
+					@Override
+					public void onPrepareLoad(Drawable placeHolderDrawable) {
+						Log.e(TAG, "getNotificationData, onPrepareLoad");
+					}
+				});
+			});
+
+
+
+		});
+	}
+
 
 }

@@ -6,6 +6,7 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -99,8 +100,8 @@ public class ContactServer {
 
 //------------------------------------
 
-	@Embedded(prefix="cntct_local_")
-    private ContactLocal contactLocal;
+//	@Embedded(prefix="cntct_local_")
+//    private ContactLocal contactLocal;
 
 //------------------------------------
 
@@ -224,13 +225,13 @@ public class ContactServer {
         this.appVersion = appVersion;
     }
 
-	public ContactLocal getContactLocal() {
-		return contactLocal;
-	}
-
-	public void setContactLocal(ContactLocal contactLocal) {
-		this.contactLocal = contactLocal;
-	}
+//	public ContactLocal getContactLocal() {
+//		return contactLocal;
+//	}
+//
+//	public void setContactLocal(ContactLocal contactLocal) {
+//		this.contactLocal = contactLocal;
+//	}
 
 
 	@Override
@@ -250,15 +251,36 @@ public class ContactServer {
             append("os", os).
             append("languageLocale", languageLocale).
             append("appVersion", appVersion).
-			append("contactLocal", contactLocal.toString()).
+			//append("contactLocal", contactLocal==null?"null":contactLocal.toString()).
             toString();
     }
 
-//    public ContactLocal getContactLocal() {
-//        return contactLocal;
-//    }
-//
-//    public void setContactLocal(ContactLocal contactLocal) {
-//        this.contactLocal = contactLocal;
-//    }
+    public String toJson(){
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
+
+    public static ContactServer fromJson(String json){
+        Gson gson = new Gson();
+        return gson.fromJson(json, ContactServer.class);
+    }
+
+
+
+/*
+    private String contactServerId;
+    private String userName;
+    private String status;
+    private String countryCode;
+    private String language;
+    private String profilePicUrl;
+    private Location location;
+    private String gender;
+    private String birthdate;
+    private Integer lastUpdateDate;
+    private Boolean discoverable;
+    private String os;
+    private String languageLocale;
+    private String appVersion;
+    */
 }

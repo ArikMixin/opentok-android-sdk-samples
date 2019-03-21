@@ -19,6 +19,8 @@ package com.stfalcon.chatkit.messages;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.LayoutRes;
 import android.support.v7.widget.RecyclerView;
 import android.text.Spannable;
@@ -444,6 +446,13 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
         notifySelectionChanged();
     }
 
+
+    public void selectMessage(String id){
+        int pos = getMessagePositionById(id);
+        final Wrapper wrapper = items.get(pos);
+        wrapper.isSelected = true;
+    }
+
     /**
      * Deletes all of the selected messages and disables selection mode.
      * Call {@link #getSelectedMessages()} before calling this method to delete messages from your data source.
@@ -562,7 +571,7 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
     }
 
     @SuppressWarnings("unchecked")
-    private int getMessagePositionById(String id) {
+    public int getMessagePositionById(String id) {
         for (int i = 0; i < items.size(); i++) {
             Wrapper wrapper = items.get(i);
             if (wrapper.item instanceof IMessage) {

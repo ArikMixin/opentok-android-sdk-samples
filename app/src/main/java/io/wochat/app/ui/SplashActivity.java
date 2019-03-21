@@ -92,7 +92,7 @@ public class SplashActivity extends PermissionActivity {
 				public void run() {
 					goOn();
 				}
-			},1000);
+			},500);
 		}
 
 	}
@@ -122,6 +122,10 @@ public class SplashActivity extends PermissionActivity {
 
 	private void startMainActivity(){
 		Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+		if(getIntent().hasExtra(Consts.INTENT_CONVERSATION_ID)){
+			String conversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+			intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
+		}
 		startActivity(intent);
 		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 		finish();

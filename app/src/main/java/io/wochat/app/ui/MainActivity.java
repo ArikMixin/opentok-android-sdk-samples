@@ -27,6 +27,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.firebase.iid.FirebaseInstanceId;
+
 import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.BadgedTabLayout;
@@ -72,11 +74,16 @@ public class MainActivity extends AppCompatActivity {
 	private ConversationViewModel mConversationViewModel;
 	private UserViewModel mUserViewModel;
 	private User mSelfUser;
+	private String mIntentConversationId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		String token = FirebaseInstanceId.getInstance().getToken();
+		Log.e(TAG, "Firebase token: " + token);
+
 
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
@@ -216,12 +223,37 @@ public class MainActivity extends AppCompatActivity {
 		});
 
 
+		if (getIntent().hasExtra(Consts.INTENT_CONVERSATION_ID)){
+			mIntentConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+			getIntent().removeExtra(Consts.INTENT_CONVERSATION_ID);
+		}
+		else {
+			mIntentConversationId = null;
+		}
+
+
+	}
+
+	public String getIntentConversationId(){ // one timer
+		String tmpIntentConversationId = mIntentConversationId;
+		mIntentConversationId = null;
+		return tmpIntentConversationId;
 	}
 
 
+//	@Override
+//	protected void onNewIntent(Intent intent) {
+//		super.onNewIntent(intent);
+//		if (intent.hasExtra(Consts.INTENT_CONVERSATION_ID)){
+//			mIntentConversationId = intent.getStringExtra(Consts.INTENT_CONVERSATION_ID);
+//			getIntent().removeExtra(Consts.INTENT_CONVERSATION_ID);
+//			mViewPager.setCurrentItem(TAB_POSITION_CHAT);
+//			RecentChatsFragment f = (RecentChatsFragment)mSectionsPagerAdapter.getItem(TAB_POSITION_CHAT);
+//			f.displayConversation(mIntentConversationId);
+//		}
+//	}
 
-
-@Override
+	@Override
 	protected void onStart() {
 		super.onStart();
 		Log.e(TAG, "onStart, call bindService WCService");
@@ -244,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
 			Log.e(TAG, "ServiceConnection: onServiceConnected");
 			WCService.WCBinder binder = (WCService.WCBinder) service;
 			mService = binder.getService();
+			mService.setCurrentConversationId(null);
 			mBound = true;
 
 		}

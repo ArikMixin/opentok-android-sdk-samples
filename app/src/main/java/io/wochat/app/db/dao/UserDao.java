@@ -51,7 +51,11 @@ public interface UserDao {
 	@Query("SELECT * FROM user_table LIMIT 1")
 	LiveData<User> getFirstUser();
 
-    // We do not need a conflict strategy, because the word is our primary key, and you cannot
+	@Query("SELECT * FROM user_table LIMIT 1")
+	User getSelfUser();
+
+
+	// We do not need a conflict strategy, because the word is our primary key, and you cannot
     // add two items with the same primary key to the database. If the table has more than one
     // column, you can use @Insert(onConflict = OnConflictStrategy.REPLACE) to update a row.
     @Insert

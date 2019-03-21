@@ -17,8 +17,10 @@ import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.db.WCSharedPreferences;
+import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.logic.NotificationHelper;
 
 
 public class WCService extends Service implements XMPPProvider.OnChatMessageListener {
@@ -43,6 +45,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	private String mSelfUserId;
 	private AppObserverBR mAppObserverBR;
 	private AppExecutors mAppExecutors;
+	private String mCurrentConversationId;
 //	private WCDatabase mDatabase;
 //	private ConversationDao mConversationDao;
 //	private MessageDao mMessageDao;
@@ -63,6 +66,22 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		return super.onUnbind(intent);
 	}
 
+
+	private boolean isMessageOfUserNotificationType(Message message){
+		switch (message.getMessageType()){
+			case Message.MSG_TYPE_AUDIO:
+			case Message.MSG_TYPE_CONTACT:
+			case Message.MSG_TYPE_GIF:
+			case Message.MSG_TYPE_IMAGE:
+			case Message.MSG_TYPE_LOCATION:
+			case Message.MSG_TYPE_SPEECHABLE:
+			case Message.MSG_TYPE_TEXT:
+			case Message.MSG_TYPE_VIDEO:
+				return true;
+		}
+		return false;
+	}
+
 	@Override
 	public void onNewIncomingMessage(String msg, String conversationId) {
 		try {
@@ -73,10 +92,16 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				return;
 			}
 
+
 			boolean res = mRepository.handleIncomingMessage(message, new WCRepository.OnSaveMessageToDBListener() {
 				@Override
-				public void OnSaved(boolean success, Message savedMessage) {
+				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
 					sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
+					if (isMessageOfUserNotificationType(savedMessage)){
+						if (!message.getConversationId().equals(mCurrentConversationId)){
+							NotificationHelper.handleNotificationIncomingMessage(getApplication(), savedMessage, contact);
+						}
+					}
 				}
 			});
 		} catch (Exception e) {
@@ -134,6 +159,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		for(Conversation conversation : conversations){
 			subscribe(conversation.getParticipantId(), conversation.getParticipantName());
 		}
+	}
+
+	public void setCurrentConversationId(String conversationId) {
+		Log.e(TAG, "CurrentConversationId: " + conversationId);
+		mCurrentConversationId = conversationId;
 	}
 
 
@@ -251,6 +281,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		msg.setAckStatus(ackStatus);
 		msg.setOriginalMessageId(message.getMessageId());
 		mXMPPProvider.sendStringMessage(msg.toJson(), msg.getParticipantId(), message.getConversationId());
+		if (ackStatus.equals(Message.ACK_STATUS_READ)){
+			NotificationHelper.deleteNotification(this, message);
+		}
 	}
 
 	public void sendTypingSignal(String participantId, String conversationId, boolean isTyping) {

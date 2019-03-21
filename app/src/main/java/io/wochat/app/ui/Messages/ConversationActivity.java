@@ -680,6 +680,24 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onMessageClick(Message message) {
+		if (message.getRepliedMessageId() != null){
+			int pos = mMessagesAdapter.getMessagePositionById(message.getRepliedMessageId());
+			if (pos > -1) {
+				mMessagesListRV.smoothScrollToPosition(pos);
+				mScrollToEndIB.setVisibility(View.VISIBLE);
+				highlightMessage(message.getRepliedMessageId());
+			}
+			else {
+				Message repliedMessage = getMessageById(message.getRepliedMessageId());
+				updateUIWithMessagesOnGoTo(repliedMessage);
+				pos = mMessagesAdapter.getMessagePositionById(message.getRepliedMessageId());
+				if (pos > -1) {
+					mMessagesListRV.scrollToPosition(pos);
+					mScrollToEndIB.setVisibility(View.VISIBLE);
+					highlightMessage(message.getRepliedMessageId());
+				}
+			}
+		}
 		if (message.isText()) {
 			message.setShowNonTranslated(!message.isShowNonTranslated());
 			mMessagesAdapter.update(message);
@@ -735,6 +753,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 	}
 
+
 	@Override
 	public void onMessageLongClick(Message message) {
 
@@ -782,6 +801,15 @@ public class ConversationActivity extends PermissionActivity implements
 //		inflater.inflate(R.menu.menu_conversation, menu);
 //		return true;
 //	}
+
+
+	private void updateUIWithMessagesOnGoTo(Message message){
+		ArrayList<Message> messages = getMessagesBetween(pointerDateUpperList, message.getCreatedAt());
+		if (messages.size()>0) {
+			pointerDateUpperList = messages.get(messages.size() - 1).getCreatedAt();
+			mMessagesAdapter.addToEnd(messages, false);
+		}
+	}
 
 
 	private void updateUIWithMessagesOnLoadMore(){
@@ -942,6 +970,7 @@ public class ConversationActivity extends PermissionActivity implements
 			WCService.WCBinder binder = (WCService.WCBinder) service;
 			mService = binder.getService();
 			mBound = true;
+			mService.setCurrentConversationId(mConversationId);
 			initMarkAsReadMessagesHandling();
 			mService.getLastOnline(mParticipantId);
 			if (mSelectedImageForDelayHandlingUri != null) {
@@ -960,6 +989,7 @@ public class ConversationActivity extends PermissionActivity implements
 		public void onServiceDisconnected(ComponentName componentName) {
 			//Log.e(TAG, "ServiceConnection: onServiceDisconnected");
 
+			mService.setCurrentConversationId(null);
 			mService = null;
 			mBound = false;
 		}
@@ -1732,6 +1762,12 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 		return null;
+	}
+
+	private void highlightMessage(String messageId) {
+		mMessagesAdapter.selectMessage(messageId);
+		new Handler(getMainLooper()).postDelayed(() -> mMessagesAdapter.unselectAllItems(),
+			2000);
 	}
 
 

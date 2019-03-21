@@ -36,6 +36,9 @@
                 android:id="@+id/rply_contact_name_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:maxWidth="150dp"
                 android:text="Avi Cohen"
                 android:textColor="@color/app_blue"
                 android:textStyle="bold"/>

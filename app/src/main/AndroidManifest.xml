@@ -98,7 +98,8 @@
         <activity
             android:name=".ui.Messages.ConversationActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/NoActionBarAppTheme">
+            android:theme="@style/NoActionBarAppTheme"
+            android:parentActivityName=".ui.MainActivity">
         </activity>
 
         <service

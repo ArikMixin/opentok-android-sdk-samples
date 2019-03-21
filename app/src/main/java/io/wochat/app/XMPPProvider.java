@@ -498,6 +498,7 @@ class XMPPProvider {
 			else
 				return 0;
 		} catch (Exception e) {
+			Log.e(TAG, "ERROR - getLastOnline contactId: " + contactId);
 			e.printStackTrace();
 			return 0;
 		}
