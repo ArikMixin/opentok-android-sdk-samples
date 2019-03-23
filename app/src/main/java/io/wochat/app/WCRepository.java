@@ -265,8 +265,6 @@ public class WCRepository {
 		});
 	}
 
-
-
 	private void userConfirmRegistration(String profilePicUrl, String userName){
 		mWochatApi.userConfirmRegistration(userName, profilePicUrl, new WochatApi.OnServerResponseListener() {
 			@Override
