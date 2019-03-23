@@ -68,4 +68,10 @@ public interface UserDao {
 
 	@Query("UPDATE user_table SET profilePicUrl=:profilePicUrl")
 	void updateUserProfilePic(String profilePicUrl);
+
+	@Query("UPDATE user_table SET language=:languageCode")
+	void updateUserLanguage(String languageCode);
+
+	@Query("UPDATE user_table SET countryCode=:countryCode")
+	void updateUserCountryCode(String countryCode);
 }

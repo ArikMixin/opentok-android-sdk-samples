@@ -365,6 +365,86 @@ public class WochatApi {
 		queue.add(jsonObjectRequest);
 	}
 
+    public  void patchName (String userName, OnServerResponseListener lsnr) {
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("user_name", userName);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "user/";
+
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+
+	}
+
+	public  void patchStatus (String status, OnServerResponseListener lsnr) {
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("status", status);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "user/";
+
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+	public  void patchPicUrl (String picUrl, OnServerResponseListener lsnr) {
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("profile_pic_url", picUrl);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "user/";
+
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+	public  void patchLanguage (String language, OnServerResponseListener lsnr) {
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("language", language);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "user/";
+
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+	public  void patchCountryCode (String countryCode, OnServerResponseListener lsnr) {
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("country_code", countryCode);
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "user/";
+
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+	public void  getSupportedLanguages(String language, OnServerResponseListener lsnr) {
+
+		String url = BASE_URL + "supported_languages/?language=" + language;
+
+		sendRequestAndHandleResult(Request.Method.GET, url, null, lsnr);
+
+	}
+
 
 
 	private void sendRequestAndHandleResult(int method, String url, JSONObject jsonObject, final OnServerResponseListener lsnr){
@@ -381,7 +461,7 @@ public class WochatApi {
 						try {
 							boolean result = response.getBoolean("success");
 							String error = response.getString("error");
-							if (result)
+							if (result && (!response.getString("data").equals("")))
 								data = response.getJSONObject("data");
 							lsnr.OnServerResponse(result, error, null, data);
 						} catch (JSONException e) {

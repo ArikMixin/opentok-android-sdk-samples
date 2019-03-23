@@ -79,5 +79,9 @@
     <string name="settings_profile_edit_dialog_name_title">Enter Your Name</string>
     <string name="settings_profile_edit_dialog_status_title">Add About</string>
     <string name="settings_profile_edit_dialog_empty_string_warning">Name can\'t be empty</string>
+    <string name="settings_translation_languages_actionbar_title">Translation Language</string>
+    <string name="settings_invite_friends_invitation_text">Download Wochat! The first universal language chat!</string>
+    <string name="settings_invite_friends_download_link">‏http://wochat.io/download</string>
+    <string name="settings_help_link">http://wochat.io/</string>
 
 </resources>

@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.ui.settings.SupportedLanguage;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
@@ -86,6 +88,7 @@ public class WCRepository {
 	private MutableLiveData<List<Message>> mMarkAsReadAffectedMessages;
 	private Map<String, ContactLocal> mLocalContact;
 	private Object mLocalContactSyncObject = new Object();
+	private MutableLiveData<List<SupportedLanguage>> mSupportLanguages;
 
 
 	private UserDao mUserDao;
@@ -142,6 +145,7 @@ public class WCRepository {
 		mIsDuringRefreshContacts = new MutableLiveData<>();
 		mIsDuringRefreshContacts.setValue(false);
 		mMarkAsReadAffectedMessages = new MutableLiveData<>();
+		mSupportLanguages = new MutableLiveData<>();
 //        WordRoomDatabase db = WordRoomDatabase.getDatabase(application);
 //        mWordDao = db.wordDao();
         //mAllWords = mWordDao.getAlphabetizedWords();
@@ -1333,6 +1337,52 @@ public void updateAckStatusToSent(Message message){
 						}
 					}
 				});
+		});
+	}
+
+	public MutableLiveData<List<SupportedLanguage>> getSupportedLanguages() {
+    	return  mSupportLanguages;
+	}
+
+	public void loadLanguages(String deviceLanguageCode) {
+		mAppExecutors.networkIO().execute(new Runnable() {
+			@Override
+			public void run() {
+				mWochatApi.getSupportedLanguages(deviceLanguageCode,
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if (isSuccess) {
+							try {
+								JSONArray jsonSupportLanguagesArray = response.getJSONArray("languages");
+								Gson gson = new Gson();
+								SupportedLanguage[] languagesFromJson = gson.fromJson(jsonSupportLanguagesArray.toString(), SupportedLanguage[].class);
+								List<SupportedLanguage>supportedLanguageList = Arrays.asList(languagesFromJson);
+								mSupportLanguages.setValue(supportedLanguageList);
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						}
+					});
+			}
+		});
+	}
+
+	public void updateUserLanguage(String languageCode) {
+    	mAppExecutors.diskIO().execute(() ->
+			mUserDao.updateUserLanguage(languageCode));
+    	mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.patchLanguage(languageCode, (isSuccess, errorLogic, errorComm, response) -> {
+				//do action
+			});
+		});
+	}
+
+	public void updateUserCounryCode(String countryCode) {
+    	mAppExecutors.diskIO().execute(() ->
+			mUserDao.updateUserCountryCode(countryCode));
+		mAppExecutors.networkIO().execute(() -> {
+			   mWochatApi.patchCountryCode(countryCode, (isSuccess, errorLogic, errorComm, response) -> {
+				  //do action
+				   });
 		});
 	}
 
