@@ -151,7 +151,6 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 				}
 				else{
 					mUserViewModel.updateUserName(inputNameS);
-					// TODO: 3/20/2019 patch to server
 					mNameAlertDialog.dismiss();
 				}
 
@@ -248,7 +247,6 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 				   // int which = -1
 				   String inputStatusS = mInputStatus.getText().toString();
 				   mUserViewModel.updateUserStatus(inputStatusS);
-				   // TODO: 3/20/2019 patch to server
 				   break;
 
 			   case BUTTON_NEGATIVE:
@@ -299,7 +297,6 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 		// TODO: 3/21/2019 display bitmap like in Registration Activity line 743
 		   //upload image
 		mUserViewModel.uploadUpdatedProfilePic(mProfilePicByte);
-		//todo patch to server
 	}
 
 

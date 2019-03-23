@@ -29,6 +29,7 @@
 
     <!--NAME-->
     <LinearLayout
+        android:background="?android:attr/selectableItemBackground"
         android:layout_marginTop="40dp"
         android:orientation="horizontal"
         android:id="@+id/edt_name_ll"
@@ -84,6 +85,7 @@
 
     <!--STATUS-->
     <LinearLayout
+        android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"
         android:id="@+id/edt_status_ll"
         android:layout_width="match_parent"
@@ -138,6 +140,7 @@
 
     <!--PHONE-->
     <LinearLayout
+        android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"
         android:id="@+id/edt_phone_ll"
         android:layout_width="match_parent"
