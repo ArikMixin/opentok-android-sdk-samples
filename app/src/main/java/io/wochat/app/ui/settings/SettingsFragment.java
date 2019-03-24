@@ -1,5 +1,6 @@
 package io.wochat.app.ui.settings;
 
+import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.graphics.Color;
@@ -8,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.view.View;
@@ -18,6 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Locale;
 
 import io.wochat.app.R;
+import io.wochat.app.model.StateData;
+import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.viewmodel.UserViewModel;
 
 import static android.app.Activity.RESULT_OK;
@@ -58,6 +62,20 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 			String countryName = loc2.getDisplayCountry(loc2);
 
 			mTranslationP.setSummary(languageNameCap + " (" + countryName + ")");
+		});
+
+		//observe profile editing call status
+		MutableLiveData<StateData<String>> userProfileEditResult = mUserViewModel.getUserProfileEditResult();
+		userProfileEditResult.observe(this, stringStateData -> {
+			if (stringStateData.isSuccess()) {
+				// do nothing here just error handling
+			}
+			else if (stringStateData.isErrorComm()) {
+				showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_comm_body));
+			}
+			else if (stringStateData.isErrorLogic()) {
+				showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_general_body));
+			}
 		});
 
 		//setClick
@@ -108,6 +126,15 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 			mUserViewModel.updateUserLanguage(supportedLanguage.getLanguageCode());
 			mUserViewModel.updateUserCountryCode(supportedLanguage.getCountryCode());
 		}
+	}
+
+	private void showUserErrorMessage(String title, String body) {
+		new AlertDialog.Builder(getContext())
+			.setTitle(title)
+			.setMessage(body)
+			.setPositiveButton(android.R.string.ok, (dialog, which) ->
+				dialog.dismiss())
+			.show();
 	}
 
 }

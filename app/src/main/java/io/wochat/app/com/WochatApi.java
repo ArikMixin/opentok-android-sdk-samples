@@ -365,7 +365,7 @@ public class WochatApi {
 		queue.add(jsonObjectRequest);
 	}
 
-    public  void patchName (String userName, OnServerResponseListener lsnr) {
+    public  void updateUserName (String userName, OnServerResponseListener lsnr) {
 
 		JSONObject jsonObject = new JSONObject();
 		try {
@@ -381,7 +381,7 @@ public class WochatApi {
 
 	}
 
-	public  void patchStatus (String status, OnServerResponseListener lsnr) {
+	public  void updateUserStatus (String status, OnServerResponseListener lsnr) {
 		JSONObject jsonObject = new JSONObject();
 		try {
 			jsonObject.put("status", status);
@@ -395,7 +395,7 @@ public class WochatApi {
 		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
 	}
 
-	public  void patchPicUrl (String picUrl, OnServerResponseListener lsnr) {
+	public  void updateUserProfilePicUrl (String picUrl, OnServerResponseListener lsnr) {
 		JSONObject jsonObject = new JSONObject();
 		try {
 			jsonObject.put("profile_pic_url", picUrl);
@@ -409,7 +409,7 @@ public class WochatApi {
 		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
 	}
 
-	public  void patchLanguage (String language, OnServerResponseListener lsnr) {
+	public  void updateUserLanguage (String language, OnServerResponseListener lsnr) {
 		JSONObject jsonObject = new JSONObject();
 		try {
 			jsonObject.put("language", language);
@@ -423,7 +423,7 @@ public class WochatApi {
 		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
 	}
 
-	public  void patchCountryCode (String countryCode, OnServerResponseListener lsnr) {
+	public  void updateUserCountryCode (String countryCode, OnServerResponseListener lsnr) {
 		JSONObject jsonObject = new JSONObject();
 		try {
 			jsonObject.put("country_code", countryCode);

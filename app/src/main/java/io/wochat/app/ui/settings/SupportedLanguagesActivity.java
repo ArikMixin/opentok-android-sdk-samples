@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 import io.wochat.app.R;
+import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.viewmodel.SupportedLanguagesViewModel;
 
 public class SupportedLanguagesActivity extends AppCompatActivity implements

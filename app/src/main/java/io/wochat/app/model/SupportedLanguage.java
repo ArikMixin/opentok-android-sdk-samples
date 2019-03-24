@@ -1,4 +1,4 @@
-package io.wochat.app.ui.settings;
+package io.wochat.app.model;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;

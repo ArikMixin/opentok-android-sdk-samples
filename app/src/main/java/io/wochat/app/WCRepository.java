@@ -41,7 +41,7 @@ import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
 import io.wochat.app.db.entity.Message;
-import io.wochat.app.ui.settings.SupportedLanguage;
+import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
@@ -89,6 +89,7 @@ public class WCRepository {
 	private Map<String, ContactLocal> mLocalContact;
 	private Object mLocalContactSyncObject = new Object();
 	private MutableLiveData<List<SupportedLanguage>> mSupportLanguages;
+	private MutableLiveData<StateData<String>> mUserProfileEditResult;
 
 
 	private UserDao mUserDao;
@@ -146,6 +147,7 @@ public class WCRepository {
 		mIsDuringRefreshContacts.setValue(false);
 		mMarkAsReadAffectedMessages = new MutableLiveData<>();
 		mSupportLanguages = new MutableLiveData<>();
+		mUserProfileEditResult = new MutableLiveData<>();
 //        WordRoomDatabase db = WordRoomDatabase.getDatabase(application);
 //        mWordDao = db.wordDao();
         //mAllWords = mWordDao.getAlphabetizedWords();
@@ -1291,27 +1293,37 @@ public void updateAckStatusToSent(Message message){
 	}
 
 	public void updateUserName(String name) {
-		mAppExecutors.diskIO().execute(() ->
-			mUserDao.updateUserName(name));
-		mAppExecutors.networkIO().execute(() -> {
-			mWochatApi.patchName(name,
+		mAppExecutors.networkIO().execute(() ->
+			mWochatApi.updateUserName(name,
 				(isSuccess, errorLogic, errorComm, response) -> {
-					//do action
-				});
-		});
-
-
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() ->
+						mUserDao.updateUserName(name));
+				}
+				else if (errorLogic != null) {
+					mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic));
+				}
+				else if (errorComm != null) {
+					mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm));
+				}
+			}));
 	}
 
 	public void updateUserStatus(String status) {
-		mAppExecutors.diskIO().execute(() ->
-			mUserDao.updateUserStatus(status));
-		mAppExecutors.networkIO().execute(() -> {
-		   mWochatApi.patchStatus(status,
-			   (isSuccess, errorLogic, errorComm, response) -> {
-				   //do action
-			   });
-		});
+		mAppExecutors.networkIO().execute(() ->
+			mWochatApi.updateUserStatus(status,
+			(isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() ->
+						mUserDao.updateUserStatus(status));
+				}
+				else if (errorLogic != null) {
+					mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic));
+				}
+				else if (errorComm != null) {
+					mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm));
+				}
+			}));
 	}
 
 	public void uploadUpdatedProfilePic(byte[] profilePicByte) {
@@ -1322,14 +1334,19 @@ public void updateAckStatusToSent(Message message){
 					if (isSuccess) {
 						try {
 							String imageUrl = response.getString("url");
-							mAppExecutors.diskIO().execute(() ->
+			mWochatApi.updateUserProfilePicUrl(imageUrl,
+				(isSuccess1, errorLogic1, errorComm1, response1) -> {
+					if (isSuccess1) {
+						mAppExecutors.diskIO().execute(() ->
 								mUserDao.updateUserProfilePic(imageUrl));
-							mAppExecutors.networkIO().execute(() -> {
-								mWochatApi.patchPicUrl(imageUrl,
-									(isSuccess1, errorLogic1, errorComm1, response1) -> {
-									 //do action
-								});
-							});
+					}
+					else if (errorLogic1 != null) {
+						mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic1));
+					}
+					else if (errorComm1 != null) {
+						mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm1));
+					}
+				});
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}
@@ -1365,25 +1382,42 @@ public void updateAckStatusToSent(Message message){
 	}
 
 	public void updateUserLanguage(String languageCode) {
-    	mAppExecutors.diskIO().execute(() ->
-			mUserDao.updateUserLanguage(languageCode));
     	mAppExecutors.networkIO().execute(() -> {
-			mWochatApi.patchLanguage(languageCode, (isSuccess, errorLogic, errorComm, response) -> {
-				//do action
+			mWochatApi.updateUserLanguage(languageCode, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() ->
+						mUserDao.updateUserLanguage(languageCode));
+				}
+				else if (errorLogic != null) {
+					mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic));
+				}
+				else if (errorComm != null) {
+					mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm));
+				}
 			});
 		});
 	}
 
-	public void updateUserCounryCode(String countryCode) {
-    	mAppExecutors.diskIO().execute(() ->
-			mUserDao.updateUserCountryCode(countryCode));
+	public void updateUserCountryCode(String countryCode) {
 		mAppExecutors.networkIO().execute(() -> {
-			   mWochatApi.patchCountryCode(countryCode, (isSuccess, errorLogic, errorComm, response) -> {
-				  //do action
+			   mWochatApi.updateUserCountryCode(countryCode, (isSuccess, errorLogic, errorComm, response) -> {
+				       if (isSuccess) {
+						   mAppExecutors.diskIO().execute(() ->
+							   mUserDao.updateUserCountryCode(countryCode));
+					   }
+					   else if (errorLogic != null) {
+						   mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic));
+					   }
+					   else if (errorComm != null) {
+						   mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm));
+					   }
 				   });
 		});
 	}
 
+	public MutableLiveData<StateData<String>> getUserProfileEditResult() {
+    	return mUserProfileEditResult;
+	}
 	}
 
 

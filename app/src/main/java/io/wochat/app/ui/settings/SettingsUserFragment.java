@@ -20,8 +20,8 @@ import io.wochat.app.viewmodel.UserViewModel;
 public class SettingsUserFragment extends Fragment {
 
 	private CircleFlagImageView mCircleFlagImageView;
-	private TextView mName;
-	private TextView mStatus;
+	private TextView mNameTV;
+	private TextView mStatusTV;
 
 	public SettingsUserFragment() {
 		// Required empty public constructor
@@ -33,8 +33,8 @@ public class SettingsUserFragment extends Fragment {
 							 Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.fragment_settings_user, container, false);
 		mCircleFlagImageView = v.findViewById(R.id.user_flag_civ);
-		mName = v.findViewById(R.id.user_name_tv);
-		mStatus = v.findViewById(R.id.user_status_tv);
+		mNameTV = v.findViewById(R.id.user_name_tv);
+		mStatusTV = v.findViewById(R.id.user_status_tv);
 
 		UserViewModel userViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
 		userViewModel.getSelfUser().observe(this, user -> {
@@ -47,14 +47,14 @@ public class SettingsUserFragment extends Fragment {
 
 			mCircleFlagImageView.setInfo(urlPic, language, initials);
 
-			mName.setText(name);
+			mNameTV.setText(name);
 
 
 			if (status == null ) {
-				mStatus.setText("");
+				mStatusTV.setText("");
 			}
 			else{
-				mStatus.setText(status);
+				mStatusTV.setText(status);
 			}
 		});
 

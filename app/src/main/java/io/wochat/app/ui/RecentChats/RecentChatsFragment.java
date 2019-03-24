@@ -202,7 +202,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		inflater.inflate(R.menu.menu_main_activity2, menu);
+		inflater.inflate(R.menu.menu_main, menu);
 
 	}
 

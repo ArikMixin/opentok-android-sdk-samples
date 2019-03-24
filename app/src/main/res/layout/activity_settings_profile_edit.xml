@@ -14,7 +14,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <io.wochat.app.components.CircleFlagImageView
-            android:id="@+id/cf_iv"
+            android:id="@+id/profile_cfiv"
             android:layout_width="200dp"
             android:layout_height="200dp">
         </io.wochat.app.components.CircleFlagImageView>
@@ -73,7 +73,7 @@
 
     <!--DIVIDER-->
     <View
-        android:id="@+id/divider_view_1"
+        android:id="@+id/divider_1_view"
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:background="@color/settings_divider"
@@ -90,7 +90,7 @@
         android:id="@+id/edt_status_ll"
         android:layout_width="match_parent"
         android:layout_height="?listPreferredItemHeight"
-        app:layout_constraintTop_toBottomOf="@id/divider_view_1">
+        app:layout_constraintTop_toBottomOf="@id/divider_1_view">
 
         <LinearLayout
             android:layout_marginTop="10dp"
@@ -128,7 +128,7 @@
 
     <!--DIVIDER-->
     <View
-        android:id="@+id/divider_view_2"
+        android:id="@+id/divider_2_view"
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
         android:background="@color/settings_divider"
@@ -140,12 +140,11 @@
 
     <!--PHONE-->
     <LinearLayout
-        android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"
         android:id="@+id/edt_phone_ll"
         android:layout_width="match_parent"
         android:layout_height="?listPreferredItemHeight"
-        app:layout_constraintTop_toBottomOf="@id/divider_view_2">
+        app:layout_constraintTop_toBottomOf="@id/divider_2_view">
 
         <LinearLayout
             android:layout_marginTop="10dp"

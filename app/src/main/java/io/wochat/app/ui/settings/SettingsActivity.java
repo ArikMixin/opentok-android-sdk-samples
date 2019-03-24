@@ -21,12 +21,12 @@ public class SettingsActivity extends AppCompatActivity {
 		bar.setTitle(R.string.settings_actionbar_title);
 		bar.setDisplayHomeAsUpEnabled(true);
 
-		getSupportFragmentManager().beginTransaction().replace(R.id.container_settings_user_fragment,
+		getSupportFragmentManager().beginTransaction().replace(R.id.container_settings_user_fragment_ll,
 			new SettingsUserFragment()).commit();
-		getSupportFragmentManager().beginTransaction().replace(R.id.container_settings_fragment,
+		getSupportFragmentManager().beginTransaction().replace(R.id.container_settings_fragment_ll,
 			new SettingsFragment()).commit();
 
-		LinearLayout settingsUserFragmentContainer = findViewById(R.id.container_settings_user_fragment);
+		LinearLayout settingsUserFragmentContainer = findViewById(R.id.container_settings_user_fragment_ll);
 		settingsUserFragmentContainer.setOnClickListener(v -> {
 			Intent intent = new Intent(SettingsActivity.this,
 				SettingsProfileEditActivity.class);
