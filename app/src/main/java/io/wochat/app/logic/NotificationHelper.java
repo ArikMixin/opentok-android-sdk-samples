@@ -47,14 +47,16 @@ public class NotificationHelper {
 		ContactServer contact = ContactServer.fromJson(senderString);
 		WCRepository repo = ((WCApplication) application).getRepository();
 		repo.getNotificationData(message, contact, data -> {
-			showNotification(application.getApplicationContext(), data);
+			if (data != null)
+				showNotification(application.getApplicationContext(), data);
 		});
 	}
 
 	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
 		WCRepository repo = ((WCApplication) application).getRepository();
 		repo.getNotificationData(message, contact.getContactServer(), data -> {
-			showNotification(application.getApplicationContext(), data);
+			if (data != null)
+				showNotification(application.getApplicationContext(), data);
 		});
 	}
 
@@ -83,6 +85,8 @@ public class NotificationHelper {
 		intent.putExtra(Consts.INTENT_SELF_LANG, data.selfUser.getLanguage());
 		intent.putExtra(Consts.INTENT_SELF_NAME, data.selfUser.getUserName());
 		intent.putExtra(Consts.INTENT_SELF_PIC_URL, data.selfUser.getProfilePicUrl());
+
+		intent.putExtra(Consts.INTENT_CLICK_FROM_NOTIFICATION, true);
 
 
 

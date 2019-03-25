@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.format.DateUtils;
 import android.util.Log;
 
 import com.google.common.io.Files;
@@ -26,10 +27,13 @@ import org.json.JSONObject;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.wochat.app.com.WochatApi;
 import io.wochat.app.db.WCDatabase;
@@ -37,6 +41,7 @@ import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ConversationDao;
 import io.wochat.app.db.dao.MessageDao;
+import io.wochat.app.db.dao.NotifDao;
 import io.wochat.app.db.dao.UserDao;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.ContactLocal;
@@ -44,6 +49,7 @@ import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.db.entity.Notif;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.NotificationData;
 import io.wochat.app.model.StateData;
@@ -98,6 +104,7 @@ public class WCRepository {
 	private ContactDao mContactDao;
 	private ConversationDao mConversationDao;
 	private MessageDao mMessageDao;
+	private NotifDao mNotifDao;
 	private LiveData<List<User>> mAllUsers;
 	private LiveData<User> mSelfUser;
 
@@ -155,6 +162,7 @@ public class WCRepository {
 		mContactDao = mDatabase.contactDao();
 		mConversationDao = mDatabase.conversationDao();
 		mMessageDao = mDatabase.messageDao();
+		mNotifDao = mDatabase.notifDao();
 		mSelfUser = mUserDao.getFirstUser();
 
     }
@@ -1328,12 +1336,35 @@ public void updateAckStatusToSent(Message message){
 	}
 
 
+	public void updateNotificationClicked(String conversationId) {
+		mAppExecutors.diskIO().execute(() -> {
+			mNotifDao.updateIsCanceledForConversation(conversationId);
+			mNotifDao.deleteNotifications(new Date(System.currentTimeMillis() - DateUtils.WEEK_IN_MILLIS)); // delete old notifications from db
+		});
+	}
+
+
+	public void cancelNotification(String messageId){
+		mAppExecutors.diskIO().execute(() -> {
+			mNotifDao.updateIsCanceled(messageId);
+		});
+	}
+
+
 	public void getNotificationData(Message message, ContactServer contactServer, NotificationDataListener listener) {
     	if ((message == null)||(contactServer == null)) {
 			Log.e(TAG, "getNotificationData: null - exit ");
     		return;
 		}
     	mAppExecutors.diskIO().execute(() -> {
+
+			Notif notif = mNotifDao.getNotification(message.getId());
+			if (notif != null){
+				listener.onNotificationDataResult(null);
+				return;
+			}
+
+
 			NotificationData data = new NotificationData();
 			Contact contact;
 
@@ -1372,6 +1403,17 @@ public void updateAckStatusToSent(Message message){
 			data.conversationId = message.getConversationId();
 			data.messageId = message.getId();
 
+
+			Notif newNotif = new Notif();
+			newNotif.setMessageId(data.messageId);
+			newNotif.setCanceled(false);
+			newNotif.setDisplayed(true);
+			newNotif.setContactId(data.contact.getId());
+			newNotif.setConversationId(data.conversationId);
+			newNotif.setTimestamp(new Date());
+			mNotifDao.insert(newNotif);
+
+
 			switch (message.getMessageType()){
 				case Message.MSG_TYPE_TEXT:
 					if ((message.getTranslatedText() != null)&&(!message.getTranslatedText().isEmpty()))
@@ -1381,13 +1423,16 @@ public void updateAckStatusToSent(Message message){
 					break;
 
 				case Message.MSG_TYPE_VIDEO:
-					data.body = "Video";
+					data.body = "\uD83D\uDCF9 Video";
 					break;
 				case Message.MSG_TYPE_AUDIO:
-					data.body = "Audio";
+					data.body = "\uD83C\uDFA4 Audio";
 					break;
 				case Message.MSG_TYPE_IMAGE:
-					data.body = "Image";
+					data.body = "\uD83D\uDCF7 Image";
+					break;
+				case Message.MSG_TYPE_LOCATION:
+					data.body = "\uD83D\uDCCD Location";
 					break;
 			}
 

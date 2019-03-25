@@ -11,4 +11,5 @@ public class Consts {
 	public static final String INTENT_SELF_LANG = "INTENT_SELF_LANG";
 	public static final String INTENT_SELF_PIC_URL = "INTENT_SELF_PIC_URL";
 	public static final String INTENT_SELF_NAME = "INTENT_SELF_NAME";
+	public static final String INTENT_CLICK_FROM_NOTIFICATION = "INTENT_CLICK_FROM_NOTIFICATION";
 }

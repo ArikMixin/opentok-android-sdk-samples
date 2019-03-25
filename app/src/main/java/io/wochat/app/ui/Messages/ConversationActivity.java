@@ -161,6 +161,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private int mSelectedMessageCount;
 	private String mForwardContactId;
 	private MessageReplyLayout mInputMessageReplyLayout;
+	private boolean mClickedFromNotifivation;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -224,6 +225,11 @@ public class ConversationActivity extends PermissionActivity implements
 		mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
 		mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 		mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
+
+
+		if(getIntent().hasExtra(Consts.INTENT_CLICK_FROM_NOTIFICATION)){
+			mClickedFromNotifivation = getIntent().getBooleanExtra(Consts.INTENT_CLICK_FROM_NOTIFICATION, false);
+		}
 
 		mSelfContact = new Contact(mSelfId, mSelfLang, mSelfName, mSelfPicUrl);
 		mParticipantContact = new Contact(mParticipantId, mParticipantLang, mParticipantName, mParticipantPic);
@@ -326,6 +332,10 @@ public class ConversationActivity extends PermissionActivity implements
 		mSpeechUtils = new SpeechUtils();
 		mSpeechUtils.setSpeechUtilsSTTListener(this);
 
+
+		if (mClickedFromNotifivation){
+			mConversationViewModel.updateNotificationClicked(mConversationId);
+		}
 
 
 	}

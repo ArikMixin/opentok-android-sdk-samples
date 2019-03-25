@@ -160,4 +160,10 @@ public class ConversationViewModel extends AndroidViewModel {
 	public LiveData<List<Message>> getOutgoingPendingMessagesLD(){
 		return mRepository.getOutgoingPendingMessagesLD();
 	}
+
+
+	public void updateNotificationClicked(String conversationId) {
+		mRepository.updateNotificationClicked(conversationId);
+	}
+
 }
