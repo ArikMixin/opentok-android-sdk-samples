@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="SETTINGS_USER">SETTINGS_USER</string>
+    <string name="SETTINGS_TRANSLATION_LANGUAGE">SETTINGS_TRANSLATION_LANGUAGE</string>
+    <string name="SETTINGS_BUG_REPORT">SETTINGS_BUG_REPORT</string>
+    <string name="SETTINGS_INVITE_FRIENDS">SETTINGS_INVITE_FRIENDS</string>
+    <string name="SETTINGS_HELP">SETTINGS_HELP</string>
+</resources>

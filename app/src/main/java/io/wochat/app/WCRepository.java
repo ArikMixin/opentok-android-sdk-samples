@@ -28,6 +28,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.Notif;
+import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.NotificationData;
 import io.wochat.app.model.StateData;
@@ -63,12 +65,11 @@ import io.wochat.app.utils.Utils;
 public class WCRepository {
 
 
-
-	public interface OnSaveMessageToDBListener{
+	public interface OnSaveMessageToDBListener {
 		void OnSaved(boolean success, Message savedMessage, Contact participant);
 	}
 
-	public interface OnMarkMessagesAsReadListener{
+	public interface OnMarkMessagesAsReadListener {
 		void OnAffectedMessages(List<Message> messageList);
 	}
 
@@ -98,6 +99,8 @@ public class WCRepository {
 	private MutableLiveData<List<Message>> mMarkAsReadAffectedMessages;
 	private Map<String, ContactLocal> mLocalContact;
 	private Object mLocalContactSyncObject = new Object();
+	private MutableLiveData<List<SupportedLanguage>> mSupportLanguages;
+	private MutableLiveData<StateData<Void>> mUserProfileEditResult;
 
 
 	private UserDao mUserDao;
@@ -108,36 +111,34 @@ public class WCRepository {
 	private LiveData<List<User>> mAllUsers;
 	private LiveData<User> mSelfUser;
 
-    private static WCRepository mInstance;
+	private static WCRepository mInstance;
 
 
-    public interface APIResultListener{
-    	void onApiResult(boolean isSuccess);
+	public interface APIResultListener {
+		void onApiResult(boolean isSuccess);
 	}
 
 
-
-    public static WCRepository getInstance(Application application, final WCDatabase database, AppExecutors appExecutors) {
-        if (mInstance == null) {
-            synchronized (WCRepository.class) {
-                if (mInstance == null) {
+	public static WCRepository getInstance(Application application, final WCDatabase database, AppExecutors appExecutors) {
+		if (mInstance == null) {
+			synchronized (WCRepository.class) {
+				if (mInstance == null) {
 					mInstance = new WCRepository(application, database, appExecutors);
-                }
-            }
-        }
-        return mInstance;
-    }
+				}
+			}
+		}
+		return mInstance;
+	}
 
 
-
-    // Note that in order to unit test the WordRepository, you have to remove the Application
-    // dependency. This adds complexity and much more code, and this sample is not about testing.
-    // See the BasicSample in the android-architecture-components repository at
-    // https://github.com/googlesamples
-    public WCRepository(Application application, final WCDatabase database, AppExecutors appExecutors) {
+	// Note that in order to unit test the WordRepository, you have to remove the Application
+	// dependency. This adds complexity and much more code, and this sample is not about testing.
+	// See the BasicSample in the android-architecture-components repository at
+	// https://github.com/googlesamples
+	public WCRepository(Application application, final WCDatabase database, AppExecutors appExecutors) {
 		Log.e(TAG, "WCRepository constructor");
-    	mDatabase = database;
-    	mAppExecutors = appExecutors;
+		mDatabase = database;
+		mAppExecutors = appExecutors;
 		mSharedPreferences = WCSharedPreferences.getInstance(application);
 		String userId = mSharedPreferences.getUserId();
 		String token = mSharedPreferences.getToken();
@@ -155,9 +156,11 @@ public class WCRepository {
 		mIsDuringRefreshContacts = new MutableLiveData<>();
 		mIsDuringRefreshContacts.setValue(false);
 		mMarkAsReadAffectedMessages = new MutableLiveData<>();
+		mSupportLanguages = new MutableLiveData<>();
+		mUserProfileEditResult = new MutableLiveData<>();
 //        WordRoomDatabase db = WordRoomDatabase.getDatabase(application);
 //        mWordDao = db.wordDao();
-        //mAllWords = mWordDao.getAlphabetizedWords();
+		//mAllWords = mWordDao.getAlphabetizedWords();
 		mUserDao = mDatabase.userDao();
 		mContactDao = mDatabase.contactDao();
 		mConversationDao = mDatabase.conversationDao();
@@ -165,8 +168,7 @@ public class WCRepository {
 		mNotifDao = mDatabase.notifDao();
 		mSelfUser = mUserDao.getFirstUser();
 
-    }
-
+	}
 
 
 	public void userRegistration(String userTrimmedPhone, String userCountryCode) {
@@ -238,12 +240,11 @@ public class WCRepository {
 	}
 
 
-
-	public void userFinishRegistration(byte[] profilePicBytes, String userName){
+	public void userFinishRegistration(byte[] profilePicBytes, String userName) {
 		if (profilePicBytes == null)
 			userConfirmRegistration(null, userName);
 		else
-    		userUploadProfilePic(profilePicBytes, userName);
+			userUploadProfilePic(profilePicBytes, userName);
 	}
 
 	private void userUploadProfilePic(byte[] bytes, final String userName) {
@@ -275,7 +276,7 @@ public class WCRepository {
 		});
 	}
 
-	private void userConfirmRegistration(String profilePicUrl, String userName){
+	private void userConfirmRegistration(String profilePicUrl, String userName) {
 		mWochatApi.userConfirmRegistration(userName, profilePicUrl, new WochatApi.OnServerResponseListener() {
 			@Override
 			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
@@ -337,38 +338,37 @@ public class WCRepository {
 	}
 
 
-	public MutableLiveData<StateData<UserRegistrationState>> getUserRegistrationState(){
+	public MutableLiveData<StateData<UserRegistrationState>> getUserRegistrationState() {
 		return mUserRegistrationState;
 	}
 
-	public MutableLiveData<StateData<String>> getUserRegistrationResult(){
-    	return mUserRegistrationResult;
+	public MutableLiveData<StateData<String>> getUserRegistrationResult() {
+		return mUserRegistrationResult;
 	}
 
-	public MutableLiveData<StateData<String>> getUserVerificationResult(){
+	public MutableLiveData<StateData<String>> getUserVerificationResult() {
 		return mUserVerificationResult;
 	}
 
-	public MutableLiveData<StateData<String>> getUploadProfilePicResult(){
+	public MutableLiveData<StateData<String>> getUploadProfilePicResult() {
 		return mUploadProfilePicResult;
 	}
 
-	public MutableLiveData<StateData<Message>> getUploadImageResult(){
+	public MutableLiveData<StateData<Message>> getUploadImageResult() {
 		return mUploadImageResult;
 	}
 
-	public MutableLiveData<StateData<String>> getUserConfirmRegistrationResult(){
+	public MutableLiveData<StateData<String>> getUserConfirmRegistrationResult() {
 		return mUserConfirmRegistrationResult;
 	}
 
 	public String getUserCountryCode() {
-    	return mSharedPreferences.getUserCountryCode();
+		return mSharedPreferences.getUserCountryCode();
 	}
 
 	public boolean hasUserRegistrationData() {
 		return mSharedPreferences.hasUserRegistrationData();
 	}
-
 
 
 	public LiveData<List<User>> getAllUsers() {
@@ -380,38 +380,38 @@ public class WCRepository {
 	}
 
 
-	public void uploadAudio(Message message, byte[] mediaFileBytes){
+	public void uploadAudio(Message message, byte[] mediaFileBytes) {
 		mAppExecutors.networkIO().execute(() -> {
 
 			mWochatApi.dataUploadFile(mediaFileBytes, mWochatApi.UPLOAD_MIME_TYPE_AUDIO, new WochatApi.OnServerResponseListener() {
-					@Override
-					public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
-						Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
-						if (isSuccess) {
-							try {
-								String mediaUrl = response.getString("sound_url");
-								message.setMediaUrl(mediaUrl);
-								updateMessageOnly(message);
-								mUploadImageResult.setValue(new StateData<Message>().success(message));
-							} catch (JSONException e) {
-								e.printStackTrace();
-							}
-
-						}
-						else if (errorLogic != null) {
-							mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+				@Override
+				public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+					Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+					if (isSuccess) {
+						try {
+							String mediaUrl = response.getString("sound_url");
+							message.setMediaUrl(mediaUrl);
+							updateMessageOnly(message);
+							mUploadImageResult.setValue(new StateData<Message>().success(message));
+						} catch (JSONException e) {
+							e.printStackTrace();
 						}
 
-						else if (errorComm != null) {
-							mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
-						}
 					}
-				});
+					else if (errorLogic != null) {
+						mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+					}
+
+					else if (errorComm != null) {
+						mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
+					}
+				}
+			});
 
 		});
 	}
 
-	public void uploadVideo(Message message, byte[] mediaFileBytes){
+	public void uploadVideo(Message message, byte[] mediaFileBytes) {
 		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.dataUploadFile(mediaFileBytes, mWochatApi.UPLOAD_MIME_TYPE_VIDEO, new WochatApi.OnServerResponseListener() {
 				@Override
@@ -457,7 +457,7 @@ public class WCRepository {
 
 
 	public void uploadImage(Message message, byte[] bytes) {
-    	mAppExecutors.networkIO().execute(() -> {
+		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, new WochatApi.OnServerResponseListener() {
 				@Override
 				public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
@@ -541,10 +541,8 @@ public class WCRepository {
 	}
 
 	public MutableLiveData<Boolean> getIsDuringRefreshContacts() {
-    	return mIsDuringRefreshContacts;
+		return mIsDuringRefreshContacts;
 	}
-
-
 
 
 	public LiveData<Contact> getContact(String id) {
@@ -552,10 +550,10 @@ public class WCRepository {
 	}
 
 
-	private Contact[] updateContactsWithLocals(Map<String, ContactServer> contactServers, Map<String, ContactLocal> localContacts){
+	private Contact[] updateContactsWithLocals(Map<String, ContactServer> contactServers, Map<String, ContactLocal> localContacts) {
 		Contact[] contacts = new Contact[localContacts.size()];
-		int i=0;
-		for (ContactLocal contactLocal: localContacts.values()) {
+		int i = 0;
+		for (ContactLocal contactLocal : localContacts.values()) {
 			String id = contactLocal.getPhoneNumStripped();
 			ContactServer contactServer = contactServers.get(id);
 			Contact contact = new Contact();
@@ -568,13 +566,13 @@ public class WCRepository {
 
 		return contacts;
 	}
-	
-	private void updateContactsWithLocals(Contact[] contacts, Map<String, ContactLocal> localContacts){
 
-    	for (int i=0; i<contacts.length; i++){
+	private void updateContactsWithLocals(Contact[] contacts, Map<String, ContactLocal> localContacts) {
+
+		for (int i = 0; i < contacts.length; i++) {
 			String id = contacts[i].getId();
 			ContactLocal local = localContacts.get(id);
-    		contacts[i].setContactLocal(local);
+			contacts[i].setContactLocal(local);
 		}
 
 //		ContactLocal[] contactLocalArray = localContacts.values().toArray(new ContactLocal[0]);
@@ -602,7 +600,7 @@ public class WCRepository {
 		mAppExecutors.diskIO().execute(() -> {
 			mDatabase.runInTransaction(() -> {
 				Contact contact;
-				if(mContactDao.hasContact(contactServer.getUserId())){
+				if (mContactDao.hasContact(contactServer.getUserId())) {
 					contact = mContactDao.getContact(contactServer.getUserId());
 					contact.setContactServer(contactServer);
 					mContactDao.updateForce(contact);
@@ -626,7 +624,6 @@ public class WCRepository {
 					mContactDao.insert(contact);
 				}
 				mConversationDao.updateConversationWithContactData(contact.getId(), contact.getName(), contact.getLanguage(), contact.getAvatar());
-
 			});
 		});
 
@@ -694,8 +691,7 @@ public class WCRepository {
 //	}
 
 
-
-	public void syncContactsLocalAndServer(){
+	public void syncContactsLocalAndServer() {
 		mLocalContact = null;
 		mIsDuringRefreshContacts.setValue(true);
 		retrieveLocalContacts();
@@ -707,7 +703,7 @@ public class WCRepository {
 		}, 20000);
 	}
 
-	public void retrieveLocalContacts(){
+	public void retrieveLocalContacts() {
 		Log.e(TAG, "retrieveLocalContacts");
 		RetrieveLocalContactsAsyncTask asyncTask = new RetrieveLocalContactsAsyncTask();
 		asyncTask.executeOnExecutor(mAppExecutors.diskIO());
@@ -716,8 +712,8 @@ public class WCRepository {
 	}
 
 	private void initSyncContactsWithServer() {
-    	Log.e(TAG, "initSyncContactsWithServer called");
-		synchronized(mLocalContactSyncObject){
+		Log.e(TAG, "initSyncContactsWithServer called");
+		synchronized (mLocalContactSyncObject) {
 			if (mLocalContact != null) {
 				syncContactsWithServer();
 			}
@@ -736,13 +732,13 @@ public class WCRepository {
 	}
 
 
-	public void syncContactsWithServer(){
+	public void syncContactsWithServer() {
 		Log.e(TAG, "syncContactsWithServer called");
 
 		String[] contactArray = new String[mLocalContact.size()];
-		int i=0;
+		int i = 0;
 
-		for(String contact : mLocalContact.keySet()){
+		for (String contact : mLocalContact.keySet()) {
 			contactArray[i++] = contact;
 		}
 		mWochatApi.userGetContacts(contactArray, new WochatApi.OnServerResponseListener() {
@@ -761,7 +757,7 @@ public class WCRepository {
 							contactServersMap.put(contactServer.getUserId(), contactServer);
 						}
 
-						synchronized(mLocalContactSyncObject) {
+						synchronized (mLocalContactSyncObject) {
 							Contact[] contacts = updateContactsWithLocals(contactServersMap, mLocalContact);
 							insert(contacts);
 						}
@@ -795,7 +791,7 @@ public class WCRepository {
 			ContactLocal[] contactLocalArray = localContacts.values().toArray(new ContactLocal[0]);
 			insert(contactLocalArray);
 
-			synchronized(mLocalContactSyncObject) {
+			synchronized (mLocalContactSyncObject) {
 				mLocalContact = localContacts;
 			}
 
@@ -807,39 +803,39 @@ public class WCRepository {
 //	}
 //
 
-public ConversationAndItsMessages getConversationAndMessagesSorted(String conversationId){
+	public ConversationAndItsMessages getConversationAndMessagesSorted(String conversationId) {
 		ConversationAndItsMessages caim = new ConversationAndItsMessages();
 		caim.setConversation(mConversationDao.getConversation(conversationId));
 		caim.setMessages(mMessageDao.getMessagesForConversation(conversationId));
 		return caim;
 	}
 
-	public LiveData<List<Message>> getMessagesLD(String conversationId){
+	public LiveData<List<Message>> getMessagesLD(String conversationId) {
 		return mMessageDao.getMessagesForConversationLD(conversationId);
 	}
 
-	public LiveData<Conversation> getConversationLD(String conversationId){
+	public LiveData<Conversation> getConversationLD(String conversationId) {
 		return mConversationDao.getConversationLD(conversationId);
 	}
 
-	public LiveData<List<Conversation>> getConversationListLD(){
+	public LiveData<List<Conversation>> getConversationListLD() {
 		return mConversationDao.getConversationListLD();
 	}
 
-	public Conversation getConversation(String conversationId){
+	public Conversation getConversation(String conversationId) {
 		return mConversationDao.getConversation(conversationId);
 	}
 
-	public List<Conversation> getAllConversations(){
+	public List<Conversation> getAllConversations() {
 		return mConversationDao.getAllConversations();
 	}
 
 
-	public boolean hasConversation(String conversationId){
-    	return mConversationDao.hasConversation(conversationId);
+	public boolean hasConversation(String conversationId) {
+		return mConversationDao.hasConversation(conversationId);
 	}
 
-	public void addNewConversation(Conversation conversation){
+	public void addNewConversation(Conversation conversation) {
 		mAppExecutors.diskIO().execute(() -> mConversationDao.insert(conversation));
 	}
 
@@ -847,12 +843,12 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 		return mMessageDao.getUnreadMessagesConversationLD(conversationId);
 	}
 
-	public LiveData<Integer> getUnreadConversationNum(){
+	public LiveData<Integer> getUnreadConversationNum() {
 		return mConversationDao.getUnreadConversationCount();
 	}
 
 
-	public void markAllMessagesAsRead(String conversationId){
+	public void markAllMessagesAsRead(String conversationId) {
 		mAppExecutors.diskIO().execute(() -> {
 			try {
 				Log.e(TAG, "markAllMessagesAsRead, conversationId: " + conversationId);
@@ -865,18 +861,18 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 	}
 
 	public boolean handleIncomingMessage(Message message, final OnSaveMessageToDBListener listener) {
-    	if (message == null)
-    		return false;
+		if (message == null)
+			return false;
 
-    	mAppExecutors.diskIO().execute(() -> {
+		mAppExecutors.diskIO().execute(() -> {
 			Contact contact;
 			String participantId = message.getSenderId();
 
-    		if (!mConversationDao.hasConversation(message.getConversationId())){
+			if (!mConversationDao.hasConversation(message.getConversationId())) {
 
 				String selfId = mSharedPreferences.getUserId();
 
-				if(mContactDao.hasContact(participantId)){  // has contact, no conversation
+				if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
 					contact = mContactDao.getContact(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					conversation.setParticipantName(contact.getName());
@@ -893,7 +889,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 				}
 			}
 			else {
-    			contact = mContactDao.getContact(participantId);
+				contact = mContactDao.getContact(participantId);
 			}
 
 
@@ -902,7 +898,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 			message.setRecipients(new String[]{mSharedPreferences.getUserId()});
 			String convId = Conversation.getConversationId(message.getSenderId(), message.getRecipients()[0]);
 			message.setConversationId(convId);
-			switch (message.getMessageType()){
+			switch (message.getMessageType()) {
 				case Message.MSG_TYPE_TEXT:
 					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
 					res = handleIncomingMessageText(message);
@@ -939,7 +935,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 
 
 		});
-    	return true;
+		return true;
 	}
 
 	private boolean handleAcknowledgmentMessage(Message message) {
@@ -963,27 +959,27 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 		return true;
 	}
 
-	private boolean handleIncomingMessageText(Message message){
-    	boolean res;
+	private boolean handleIncomingMessageText(Message message) {
+		boolean res;
 		String selfLang = mSharedPreferences.getUserLang();
 		boolean needTranslation = (!message.getMessageLanguage().equals(selfLang));
 
-			try {
+		try {
 			String conversationId = message.getConversationId();
-			if(mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
+			if (mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
 				res = insertMessageAndUpdateConversation(message, needTranslation);
 			}
 			else {
 				String participantId = message.getSenderId();
 				String selfId = mSharedPreferences.getUserId();
-				if(mContactDao.hasContact(participantId)){  // has contact, no conversation
+				if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
 					Contact contact = mContactDao.getContact(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					conversation.setParticipantName(contact.getName());
 					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
-					res = insertMessageAndUpdateConversation(message,needTranslation);
+					res = insertMessageAndUpdateConversation(message, needTranslation);
 				}
 				else { // no contact, no conversation
 					Contact contact = new Contact(participantId);
@@ -1006,12 +1002,12 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 		}
 	}
 
-	private void translate(Message message, boolean isIncoming){
-    	mAppExecutors.networkIO().execute(() -> {
+	private void translate(Message message, boolean isIncoming) {
+		mAppExecutors.networkIO().execute(() -> {
 			String selfLang = mSharedPreferences.getUserLang();
 			String fromLanguage;
 			String toLanguage;
-			if (isIncoming){
+			if (isIncoming) {
 				fromLanguage = message.getMessageLanguage();
 				toLanguage = selfLang;
 			}
@@ -1022,7 +1018,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 
 			mWochatApi.translate(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
 				(isSuccess, errorLogic, errorComm, response) -> {
-					if ((isSuccess)&& (response != null)) {
+					if ((isSuccess) && (response != null)) {
 						Log.e(TAG, "translate res: " + response.toString());
 						try {
 							String translatedText = response.getString("message");
@@ -1049,7 +1045,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 	}
 
 
-	private boolean handleIncomingMessageImage(Message message){
+	private boolean handleIncomingMessageImage(Message message) {
 		boolean res;
 		String selfLang = mSharedPreferences.getUserLang();
 		//boolean needTranslation = (!message.getMessageLanguage().equals(selfLang));
@@ -1057,20 +1053,20 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 
 		try {
 			String conversationId = message.getConversationId();
-			if(mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
+			if (mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
 				res = insertMessageAndUpdateConversation(message, needTranslation);
 			}
 			else {
 				String participantId = message.getSenderId();
 				String selfId = mSharedPreferences.getUserId();
-				if(mContactDao.hasContact(participantId)){  // has contact, no conversation
+				if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
 					Contact contact = mContactDao.getContact(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					conversation.setParticipantName(contact.getName());
 					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
-					res = insertMessageAndUpdateConversation(message,needTranslation);
+					res = insertMessageAndUpdateConversation(message, needTranslation);
 				}
 				else { // no contact, no conversation
 					Contact contact = new Contact(participantId);
@@ -1083,7 +1079,6 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 			}
 
 
-
 			return res;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1092,7 +1087,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 	}
 
 	private void updateMessageAndConversationForIncoming(Message message) {
-    	mAppExecutors.diskIO().execute(() -> {
+		mAppExecutors.diskIO().execute(() -> {
 			mMessageDao.update(message);
 			mConversationDao.updateIncomingText(message.getConversationId(), message.getTranslatedText());
 		});
@@ -1114,7 +1109,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 	}
 
 	private void getContactFromServer(String participantId) {
-    	String[] contactArray = new String[1];
+		String[] contactArray = new String[1];
 		contactArray[0] = participantId;
 		mWochatApi.userGetContacts(contactArray, (isSuccess, errorLogic, errorComm, response) -> {
 			if (isSuccess) {
@@ -1136,11 +1131,11 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 
 	}
 
-	private boolean insertMessageAndUpdateConversation(Message message, boolean needTranslation){
+	private boolean insertMessageAndUpdateConversation(Message message, boolean needTranslation) {
 		try {
 			message.setShouldBeDisplayed(!needTranslation);
 
-			String messageText = needTranslation? "": message.getMessageText();
+			String messageText = needTranslation ? "" : message.getMessageText();
 
 			mMessageDao.insert(message);
 			int unreadMessagesCount = mMessageDao.getUnreadMessagesCountConversation(message.getConversationId());
@@ -1161,7 +1156,7 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 	}
 
 
-//	public void updateInvited(String contactId) {
+	//	public void updateInvited(String contactId) {
 //		new updateInvitedAsyncTask(mDatabase).execute(contactId);
 //	}
 //
@@ -1182,8 +1177,8 @@ public ConversationAndItsMessages getConversationAndMessagesSorted(String conver
 //			return null;
 //		}
 //	}
-public void updateAckStatusToSent(Message message){
-    	mAppExecutors.diskIO().execute(() -> {
+	public void updateAckStatusToSent(Message message) {
+		mAppExecutors.diskIO().execute(() -> {
 			mMessageDao.updateAckStatusToSent(message.getMessageId());
 			mConversationDao.updateLastMessageAck(message.getConversationId(), message.getMessageId(), Message.ACK_STATUS_SENT);
 		});
@@ -1191,7 +1186,7 @@ public void updateAckStatusToSent(Message message){
 	}
 
 	public LiveData<Message> getMessage(String messageId) {
-    	return mMessageDao.getMessage(messageId);
+		return mMessageDao.getMessage(messageId);
 	}
 
 
@@ -1202,11 +1197,11 @@ public void updateAckStatusToSent(Message message){
 	}
 
 	public void addNewOutgoingMessage(Message message) {
-    	Log.e(TAG, "addNewOutgoingMessage: " + message.getMessageType() + " , id: " + message.getId());
+		Log.e(TAG, "addNewOutgoingMessage: " + message.getMessageType() + " , id: " + message.getId());
 
 		try {
 
-			if(!mConversationDao.hasConversation(message.getConversationId())) {
+			if (!mConversationDao.hasConversation(message.getConversationId())) {
 				Conversation conversation = new Conversation(message.getParticipantId(), message.getSenderId());
 				Contact contact = mContactDao.getContact(message.getParticipantId());
 				conversation.setParticipantName(contact.getName());
@@ -1227,14 +1222,14 @@ public void updateAckStatusToSent(Message message){
 				message.getAckStatus(),
 				message.getMessageType());
 
-			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)){
+			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
 				String selfLang = mSharedPreferences.getUserLang();
 				boolean needTranslation = (!message.getTranslatedLanguage().equals(selfLang));
 				if (needTranslation)
 					translate(message, false);
 
 			}
-			else if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)){
+			else if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)) {
 
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
@@ -1267,7 +1262,7 @@ public void updateAckStatusToSent(Message message){
 	}
 
 
-	public void deleteMessages(List<Message> messages){
+	public void deleteMessages(List<Message> messages) {
 		mAppExecutors.diskIO().execute(() -> {
 
 			String conversationId = messages.get(0).getConversationId();
@@ -1303,34 +1298,165 @@ public void updateAckStatusToSent(Message message){
 
 
 	public void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
-			mAppExecutors.diskIO().execute(() -> {
+		mAppExecutors.diskIO().execute(() -> {
 
-				Collections.sort(messages, (m1, m2) -> (int) (m1.getTimestamp() - m2.getTimestamp()));
+			Collections.sort(messages, (m1, m2) -> (int) (m1.getTimestamp() - m2.getTimestamp()));
 
-				for (int i=0; i<contacts.length; i++){
-					for (Message message : messages){
-						Contact contact = mContactDao.getContact(contacts[i]);
-						Message newMessage = message.generateForwardMessage(mSharedPreferences.getUserId(), contact.getId(), contact.getLanguage());
-						addNewOutgoingMessage(newMessage);
-						try {Thread.sleep(50);} catch (InterruptedException e) {}
+			for (int i = 0; i < contacts.length; i++) {
+				for (Message message : messages) {
+					Contact contact = mContactDao.getContact(contacts[i]);
+					Message newMessage = message.generateForwardMessage(mSharedPreferences.getUserId(), contact.getId(), contact.getLanguage());
+					addNewOutgoingMessage(newMessage);
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
 					}
 				}
-			});
+			}
+		});
 
 
 	}
 
 
-	public LiveData<List<Message>> getOutgoingPendingMessagesLD(){
-    	return mMessageDao.getOutgoingPending(mSharedPreferences.getUserId());
+	public LiveData<List<Message>> getOutgoingPendingMessagesLD() {
+		return mMessageDao.getOutgoingPending(mSharedPreferences.getUserId());
 	}
 
 
-	public List<Message> getOutgoingPendingMessages(){
+	public List<Message> getOutgoingPendingMessages() {
 		return mMessageDao.getOutgoingPendingMessages(mSharedPreferences.getUserId());
 	}
 
+	public void updateUserName(String name) {
+		mAppExecutors.networkIO().execute(() ->
+			mWochatApi.updateUserName(name,
+				(isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() ->
+						mUserDao.updateUserName(name));
+				}
+				else if (errorLogic != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
+				}
+				else if (errorComm != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
+				}
+			}));
+	}
 
+	public void updateUserStatus(String status) {
+		mAppExecutors.networkIO().execute(() ->
+			mWochatApi.updateUserStatus(status,
+			(isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() ->
+						mUserDao.updateUserStatus(status));
+				}
+				else if (errorLogic != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
+				}
+				else if (errorComm != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
+				}
+			}));
+	}
+
+	public void uploadUpdatedProfilePic(byte[] profilePicByte) {
+		mSharedPreferences.saveUserProfileImages(profilePicByte);
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.dataUploadFile(profilePicByte, mWochatApi.UPLOAD_MIME_TYPE_IAMGE,
+				(isSuccess, errorLogic, errorComm, response) -> {
+					if (isSuccess) {
+						try {
+							String imageUrl = response.getString("url");
+			mWochatApi.updateUserProfilePicUrl(imageUrl,
+				(isSuccess1, errorLogic1, errorComm1, response1) -> {
+					if (isSuccess1) {
+						mAppExecutors.diskIO().execute(() ->
+								mUserDao.updateUserProfilePic(imageUrl));
+					}
+					else if (errorLogic1 != null) {
+						mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic1));
+					}
+					else if (errorComm1 != null) {
+						mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm1));
+					}
+				});
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+				});
+		});
+	}
+
+	public MutableLiveData<List<SupportedLanguage>> getSupportedLanguages() {
+    	return  mSupportLanguages;
+	}
+
+	public void loadLanguages(String deviceLanguageCode) {
+		mAppExecutors.networkIO().execute(new Runnable() {
+			@Override
+			public void run() {
+				mWochatApi.getSupportedLanguages(deviceLanguageCode,
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if (isSuccess) {
+							try {
+								JSONArray jsonSupportLanguagesArray = response.getJSONArray("languages");
+								Gson gson = new Gson();
+								SupportedLanguage[] languagesFromJson = gson.fromJson(jsonSupportLanguagesArray.toString(), SupportedLanguage[].class);
+								List<SupportedLanguage>supportedLanguageList = Arrays.asList(languagesFromJson);
+								mSupportLanguages.setValue(supportedLanguageList);
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						}
+					});
+			}
+		});
+	}
+
+	public void updateUserLanguage(String languageCode) {
+    	mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.updateUserLanguage(languageCode, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() ->
+						mUserDao.updateUserLanguage(languageCode));
+				}
+				else if (errorLogic != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
+				}
+				else if (errorComm != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
+				}
+			});
+		});
+	}
+
+	public void updateUserCountryCode(String countryCode) {
+		mAppExecutors.networkIO().execute(() -> {
+			   mWochatApi.updateUserCountryCode(countryCode, (isSuccess, errorLogic, errorComm, response) -> {
+				       if (isSuccess) {
+						   mAppExecutors.diskIO().execute(() ->
+							   mUserDao.updateUserCountryCode(countryCode));
+					   }
+					   else if (errorLogic != null) {
+						   mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
+					   }
+					   else if (errorComm != null) {
+						   mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
+					   }
+				   });
+		});
+	}
+
+	public MutableLiveData<StateData<Void>> getUserProfileEditResult() {
+    	return mUserProfileEditResult;
+	}
+	
+	
+	
 	public interface NotificationDataListener {
 		void onNotificationDataResult(NotificationData data);
 	}
@@ -1473,6 +1599,8 @@ public void updateAckStatusToSent(Message message){
 
 		});
 	}
-
-
-}
+	
+	
+	
+	
+	}

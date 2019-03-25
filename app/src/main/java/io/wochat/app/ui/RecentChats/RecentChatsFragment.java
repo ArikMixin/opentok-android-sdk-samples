@@ -45,6 +45,7 @@ import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
+import io.wochat.app.ui.settings.SettingsActivity;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ConversationViewModel;
 import io.wochat.app.viewmodel.UserViewModel;
@@ -216,6 +217,13 @@ public class RecentChatsFragment extends Fragment  implements
 	public boolean onOptionsItemSelected(MenuItem item) {
 
 		int id = item.getItemId();
+
+		if (id == R.id.action_settings) {
+			Intent intent = new Intent(getContext(), SettingsActivity.class);
+			startActivity(intent);
+			return true;
+		}
+
 		return super.onOptionsItemSelected(item);
 	}
 

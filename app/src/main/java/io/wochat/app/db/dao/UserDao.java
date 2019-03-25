@@ -63,4 +63,19 @@ public interface UserDao {
 
     @Query("DELETE FROM user_table")
     void deleteAll();
+
+    @Query("UPDATE user_table SET userName=:name")
+	void updateUserName (String name);
+
+	@Query("UPDATE user_table SET status=:status")
+	void updateUserStatus(String status);
+
+	@Query("UPDATE user_table SET profilePicUrl=:profilePicUrl")
+	void updateUserProfilePic(String profilePicUrl);
+
+	@Query("UPDATE user_table SET language=:languageCode")
+	void updateUserLanguage(String languageCode);
+
+	@Query("UPDATE user_table SET countryCode=:countryCode")
+	void updateUserCountryCode(String countryCode);
 }

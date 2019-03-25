@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--divider-->
+    <Preference
+        android:layout="@layout/settings_custom_divider">
+    </Preference>
+
+    <Preference
+        android:key="@string/SETTINGS_TRANSLATION_LANGUAGE"
+        android:icon="@drawable/settings_translation"
+        android:title="@string/settings_translation_language"
+        android:summary="@string/settings_default_translation_language">
+    </Preference>
+
+    <Preference
+        android:key="@string/SETTINGS_BUG_REPORT"
+        android:icon="@drawable/settings_bug_report"
+        android:title="@string/settings_bug_report">
+    </Preference>
+
+    <Preference
+        android:key="@string/SETTINGS_INVITE_FRIENDS"
+        android:icon="@drawable/settings_invite_friends"
+        android:title="@string/settings_invite_friends">
+    </Preference>
+
+    <Preference
+        android:key="@string/SETTINGS_HELP"
+        android:icon="@drawable/settings_help"
+        android:title="@string/settings_help_and_support">
+    </Preference>
+
+</PreferenceScreen>

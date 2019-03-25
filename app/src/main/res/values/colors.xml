@@ -126,4 +126,7 @@
     <color name="audio_msg_progress_outgoing">#ccd3e4</color>
 
     <color name="audio_msg_text">#8d97ae</color>
+
+    <color name="settings_divider">#E7E7E7</color>
+    <color name="linear_layout_unselected">#FAFAFA</color>
 </resources>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:id="@+id/edit_pic_fl"
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_marginTop="50dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <io.wochat.app.components.CircleFlagImageView
+            android:id="@+id/profile_cfiv"
+            android:layout_width="200dp"
+            android:layout_height="200dp">
+        </io.wochat.app.components.CircleFlagImageView>
+
+        <ImageView
+            android:id="@+id/camera_iv"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_gravity="bottom|right"
+            android:src="@drawable/circle_camera_edit_profile" />
+    </FrameLayout>
+
+    <!--NAME-->
+    <LinearLayout
+        android:background="?android:attr/selectableItemBackground"
+        android:layout_marginTop="40dp"
+        android:orientation="horizontal"
+        android:id="@+id/edt_name_ll"
+        android:layout_width="match_parent"
+        android:layout_height="?listPreferredItemHeight"
+        app:layout_constraintTop_toBottomOf="@id/edit_pic_fl">
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_weight="9"
+            android:layout_width="0dp"
+            android:layout_height="?listPreferredItemHeight"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/name_title_tv"
+                android:textSize="14sp"
+                android:layout_marginStart="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_profile_edit_name_title"/>
+
+            <TextView
+                android:id="@+id/name_summary_tv"
+                android:textSize="16sp"
+                android:layout_marginStart="20dp"
+                android:textColor="@color/black"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+            <ImageView
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_gravity="center"
+                android:src="@drawable/settings_edit_profile_pen"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="20dp" />
+
+    </LinearLayout>
+
+    <!--DIVIDER-->
+    <View
+        android:id="@+id/divider_1_view"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/settings_divider"
+        android:layout_gravity="bottom"
+        app:layout_constraintTop_toBottomOf="@+id/edt_name_ll"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent">
+    </View>
+
+    <!--STATUS-->
+    <LinearLayout
+        android:background="?android:attr/selectableItemBackground"
+        android:orientation="horizontal"
+        android:id="@+id/edt_status_ll"
+        android:layout_width="match_parent"
+        android:layout_height="?listPreferredItemHeight"
+        app:layout_constraintTop_toBottomOf="@id/divider_1_view">
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_weight="9"
+            android:layout_width="0dp"
+            android:layout_height="?listPreferredItemHeight"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/status_title_tv"
+                android:textSize="14sp"
+                android:layout_marginStart="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_profile_edit_status_title"/>
+
+            <TextView
+                android:id="@+id/status_summary_tv"
+                android:textSize="16sp"
+                android:layout_marginStart="20dp"
+                android:textColor="@color/black"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_gravity="center"
+            android:src="@drawable/settings_edit_profile_pen"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="20dp" />
+
+    </LinearLayout>
+
+    <!--DIVIDER-->
+    <View
+        android:id="@+id/divider_2_view"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/settings_divider"
+        android:layout_gravity="bottom"
+        app:layout_constraintTop_toBottomOf="@+id/edt_status_ll"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent">
+    </View>
+
+    <!--PHONE-->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:id="@+id/edt_phone_ll"
+        android:layout_width="match_parent"
+        android:layout_height="?listPreferredItemHeight"
+        app:layout_constraintTop_toBottomOf="@id/divider_2_view">
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="?listPreferredItemHeight"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/phone_title_tv"
+                android:textSize="14sp"
+                android:layout_marginStart="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_profile_edit_phone_title"/>
+
+            <TextView
+                android:id="@+id/phone_summary_tv"
+                android:text="@string/settings_user_default_phone"
+                android:textSize="16sp"
+                android:layout_marginStart="20dp"
+                android:textColor="@color/black"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
