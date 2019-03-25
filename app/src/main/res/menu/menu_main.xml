@@ -5,9 +5,9 @@
 
     <item android:id="@+id/action_settings"
           android:icon="@drawable/ic_action_dots_vert"
-          app:showAsAction="always"
+          app:showAsAction="never"
           android:orderInCategory="101"
-          android:title="settings" />
+          android:title="Settings" />
 
     <item
         android:id="@+id/action_search"

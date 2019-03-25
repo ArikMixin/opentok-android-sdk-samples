@@ -82,6 +82,7 @@ dependencies {
 
     implementation 'com.nuance:speechkit:2.2.4'
     //implementation 'com.nuance:speechkit:2.1+@aar'
+    implementation 'com.android.support:preference-v7:27.1.1'
 
 }
 
