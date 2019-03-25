@@ -89,7 +89,7 @@ public class WCRepository {
 	private Map<String, ContactLocal> mLocalContact;
 	private Object mLocalContactSyncObject = new Object();
 	private MutableLiveData<List<SupportedLanguage>> mSupportLanguages;
-	private MutableLiveData<StateData<String>> mUserProfileEditResult;
+	private MutableLiveData<StateData<Void>> mUserProfileEditResult;
 
 
 	private UserDao mUserDao;
@@ -1301,10 +1301,10 @@ public void updateAckStatusToSent(Message message){
 						mUserDao.updateUserName(name));
 				}
 				else if (errorLogic != null) {
-					mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic));
+					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
 				}
 				else if (errorComm != null) {
-					mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm));
+					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
 				}
 			}));
 	}
@@ -1318,10 +1318,10 @@ public void updateAckStatusToSent(Message message){
 						mUserDao.updateUserStatus(status));
 				}
 				else if (errorLogic != null) {
-					mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic));
+					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
 				}
 				else if (errorComm != null) {
-					mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm));
+					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
 				}
 			}));
 	}
@@ -1341,10 +1341,10 @@ public void updateAckStatusToSent(Message message){
 								mUserDao.updateUserProfilePic(imageUrl));
 					}
 					else if (errorLogic1 != null) {
-						mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic1));
+						mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic1));
 					}
 					else if (errorComm1 != null) {
-						mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm1));
+						mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm1));
 					}
 				});
 						} catch (JSONException e) {
@@ -1389,10 +1389,10 @@ public void updateAckStatusToSent(Message message){
 						mUserDao.updateUserLanguage(languageCode));
 				}
 				else if (errorLogic != null) {
-					mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic));
+					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
 				}
 				else if (errorComm != null) {
-					mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm));
+					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
 				}
 			});
 		});
@@ -1406,16 +1406,16 @@ public void updateAckStatusToSent(Message message){
 							   mUserDao.updateUserCountryCode(countryCode));
 					   }
 					   else if (errorLogic != null) {
-						   mUserProfileEditResult.setValue(new StateData<String>().errorLogic(errorLogic));
+						   mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
 					   }
 					   else if (errorComm != null) {
-						   mUserProfileEditResult.setValue(new StateData<String>().errorComm(errorComm));
+						   mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
 					   }
 				   });
 		});
 	}
 
-	public MutableLiveData<StateData<String>> getUserProfileEditResult() {
+	public MutableLiveData<StateData<Void>> getUserProfileEditResult() {
     	return mUserProfileEditResult;
 	}
 	}

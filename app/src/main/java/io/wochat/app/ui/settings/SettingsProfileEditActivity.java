@@ -107,7 +107,7 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 		});
 
 		//observe profile editing call status
-		MutableLiveData<StateData<String>> userProfileEditResult = mUserViewModel.getUserProfileEditResult();
+		MutableLiveData<StateData<Void>> userProfileEditResult = mUserViewModel.getUserProfileEditResult();
 		userProfileEditResult.observe(this, stringStateData -> {
 			if (stringStateData.isSuccess()) {
 				// do nothing here just error handling

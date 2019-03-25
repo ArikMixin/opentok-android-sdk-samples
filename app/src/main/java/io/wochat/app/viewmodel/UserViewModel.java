@@ -15,7 +15,7 @@ import io.wochat.app.model.StateData;
 public class UserViewModel extends AndroidViewModel {
 
 	private final WCRepository mRepository;
-	private final MutableLiveData<StateData<String>> mUserProfileEditResult;
+	private final MutableLiveData<StateData<Void>> mUserProfileEditResult;
 
 	public UserViewModel(@NonNull Application application) {
 		super(application);
@@ -47,7 +47,7 @@ public class UserViewModel extends AndroidViewModel {
 		mRepository.updateUserCountryCode(countryCode);
 	}
 
-	public MutableLiveData<StateData<String>> getUserProfileEditResult() {
+	public MutableLiveData<StateData<Void>> getUserProfileEditResult() {
 		return mUserProfileEditResult;
 	}
 }
