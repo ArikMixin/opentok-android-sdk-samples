@@ -126,9 +126,9 @@ public class RegistrationViewModel extends AndroidViewModel {
 		return mRepository.getUploadProfilePicResult();
 	}
 
-	public String getUserCountryCode(){
-		return mRepository.getUserCountryCode();
-	}
+//	public String getUserCountryCode(){
+//		return mRepository.getUserCountryCode();
+//	}
 
 	public boolean hasUserRegistrationData() {
 		return mRepository.hasUserRegistrationData();

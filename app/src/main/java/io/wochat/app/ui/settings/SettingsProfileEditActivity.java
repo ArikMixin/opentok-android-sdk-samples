@@ -170,41 +170,6 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 
 	}
 
-//	private void setBitmapAsProfilePic(Uri selectedImage) {
-//
-//		try {
-//			InputStream imageStream;
-//			Bitmap imageBitmap = null;
-//			try {
-//				imageStream = getContentResolver().openInputStream(selectedImage);
-//				imageBitmap = BitmapFactory.decodeStream(imageStream);
-//			} catch (FileNotFoundException e) {
-//				e.printStackTrace();
-//			}
-//
-//			int width = imageBitmap.getWidth();
-//			int height = imageBitmap.getHeight();
-//
-//			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//
-//			if (width > 1300) {
-//				int newWidth, newHeight;
-//				newWidth = 1300;
-//				newHeight = 1300 * height / width;
-//
-//				imageBitmap = Bitmap.createScaledBitmap(imageBitmap, newWidth, newHeight, false);
-//
-//			}
-//			imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
-//			mProfilePicByte = byteArrayOutputStream.toByteArray();
-//
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//
-//		//upload image
-//		mUserViewModel.uploadUpdatedProfilePic(mProfilePicByte);
-//	}
 
 
 	@Override
@@ -241,20 +206,16 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 		final EditText editText = new EditText(this);
 		//remove edit text underline
 		editText.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-
 		AlertDialog.Builder builder = new AlertDialog.Builder(SettingsProfileEditActivity.this)
-			.setView(editText)
 			.setTitle(R.string.settings_profile_edit_dialog_name_title)
-			//positive button
+			.setView(editText)
 			.setPositiveButton((R.string.dialog_save_button_text), null)
-			//negative button
 			.setNegativeButton((R.string.dialog_default_negative_button_text), (dialog, which) ->
 				dialog.dismiss());
 
 		AlertDialog alertDialog = builder.create();
 		requestKeyboard(alertDialog);
 
-		//set edit text
 		editText.setText(mName);
 		editText.setSelectAllOnFocus(true);
 		editText.clearFocus();
@@ -293,18 +254,15 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 			.setView(editText)
 			.setTitle(R.string.settings_profile_edit_dialog_status_title)
 			.setPositiveButton((R.string.dialog_save_button_text), (dialog, which) -> {
-			//positive button
 				String inputStatusS = editText.getText().toString();
 				mUserViewModel.updateUserStatus(inputStatusS);
 			})
-			//negative button
 			.setNegativeButton((R.string.dialog_default_negative_button_text), (dialog, which) ->
 				dialog.dismiss());
 
 		AlertDialog alertDialog = builder.create();
 		requestKeyboard(alertDialog);
 
-		//set edit text
 		editText.setText(mStatus);
 		editText.setSelectAllOnFocus(true);
 		editText.clearFocus();

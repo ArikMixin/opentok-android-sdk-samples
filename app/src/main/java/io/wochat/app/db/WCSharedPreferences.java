@@ -93,13 +93,13 @@ public class WCSharedPreferences {
 			commit();
 	}
 
-	public String getUserCountryCode(){
-		return mSharedPreferences.getString(USER_COUNTRY_CODE, null);
-	}
+//	public String getUserCountryCode(){
+//		return mSharedPreferences.getString(USER_COUNTRY_CODE, null);
+//	}
 
-	public String getUserPhoneNum(){
-		return mSharedPreferences.getString(USER_PHONE_NUM, null);
-	}
+//	public String getUserPhoneNum(){
+//		return mSharedPreferences.getString(USER_PHONE_NUM, null);
+//	}
 
 	public String getXMPPPassword(){
 		return mSharedPreferences.getString(XMPP_PWD, null);

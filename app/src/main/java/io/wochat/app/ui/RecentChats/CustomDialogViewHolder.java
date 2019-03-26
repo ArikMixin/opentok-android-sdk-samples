@@ -54,7 +54,8 @@ public class CustomDialogViewHolder
 				mMsgTypeIV.setVisibility(View.VISIBLE);
 				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_camera_dark);
 			}
-			else if (conversation.getLastMessageType().equals(Message.MSG_TYPE_AUDIO)){
+			else if ((conversation.getLastMessageType().equals(Message.MSG_TYPE_AUDIO))||
+					 (conversation.getLastMessageType().equals(Message.MSG_TYPE_SPEECHABLE))){
 				mMsgTypeIV.setVisibility(View.VISIBLE);
 				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_mic_dark);
 			}

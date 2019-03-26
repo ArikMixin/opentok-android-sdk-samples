@@ -50,7 +50,8 @@ public interface ConversationDao {
 		"last_message_text = :lastMessageText ," +
 		"last_message_sender_id = :lastMessageSenderId ," +
 		"last_message_ack_status = :lastMessageAckStatus ," +
-		"last_message_type = :lastMessageType " +
+		"last_message_type = :lastMessageType ," +
+		"last_message_duration = :lastMessageDuration " +
 		"WHERE conversation_id =:conversationId")
 	void updateOutgoing(String conversationId,
 						String lastMessageId,
@@ -58,7 +59,8 @@ public interface ConversationDao {
 						String lastMessageText,
 						String lastMessageSenderId,
 						String lastMessageAckStatus,
-						String lastMessageType);
+						String lastMessageType,
+						int lastMessageDuration);
 
 
 	@Query("UPDATE conversation_table SET  " +
@@ -68,7 +70,8 @@ public interface ConversationDao {
 		"last_message_sender_id = :lastMessageSenderId ," +
 		"num_of_unread_messages = :numOfUnreadMessages ," +
 		"last_message_ack_status = :lastMessageAckStatus ," +
-		"last_message_type = :lastMessageType " +
+		"last_message_type = :lastMessageType ," +
+		"last_message_duration = :lastMessageDuration " +
 		"WHERE conversation_id =:conversationId")
 	void updateIncoming(String conversationId,
 						String lastMessageId,
@@ -77,6 +80,7 @@ public interface ConversationDao {
 						String lastMessageSenderId,
 						String lastMessageAckStatus,
 						String lastMessageType,
+						int lastMessageDuration,
 						int numOfUnreadMessages);
 
 

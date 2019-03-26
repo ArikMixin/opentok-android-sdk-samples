@@ -362,9 +362,9 @@ public class WCRepository {
 		return mUserConfirmRegistrationResult;
 	}
 
-	public String getUserCountryCode() {
-		return mSharedPreferences.getUserCountryCode();
-	}
+//	public String getUserCountryCode() {
+//		return mSharedPreferences.getUserCountryCode();
+//	}
 
 	public boolean hasUserRegistrationData() {
 		return mSharedPreferences.hasUserRegistrationData();
@@ -1147,6 +1147,7 @@ public class WCRepository {
 				message.getSenderId(),
 				message.getAckStatus(),
 				message.getMessageType(),
+				message.getDuration(),
 				unreadMessagesCount);
 			return true;
 		} catch (Exception e) {
@@ -1220,7 +1221,8 @@ public class WCRepository {
 				message.getMessageText(),
 				message.getSenderId(),
 				message.getAckStatus(),
-				message.getMessageType());
+				message.getMessageType(),
+				message.getDuration());
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
 				String selfLang = mSharedPreferences.getUserLang();
@@ -1278,7 +1280,8 @@ public class WCRepository {
 						lastMessage.getMessageText(),
 						lastMessage.getSenderId(),
 						lastMessage.getAckStatus(),
-						lastMessage.getMessageType());
+						lastMessage.getMessageType(),
+						lastMessage.getDuration());
 				}
 				else {
 					mConversationDao.updateIncoming(
@@ -1289,6 +1292,7 @@ public class WCRepository {
 						lastMessage.getSenderId(),
 						lastMessage.getAckStatus(),
 						lastMessage.getMessageType(),
+						lastMessage.getDuration(),
 						0);
 				}
 			}
@@ -1421,8 +1425,11 @@ public class WCRepository {
     	mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.updateUserLanguage(languageCode, (isSuccess, errorLogic, errorComm, response) -> {
 				if (isSuccess) {
-					mAppExecutors.diskIO().execute(() ->
-						mUserDao.updateUserLanguage(languageCode));
+					mAppExecutors.diskIO().execute(() -> {
+						mUserDao.updateUserLanguage(languageCode);
+						mSharedPreferences.saveUserLanguage(languageCode);
+					});
+
 				}
 				else if (errorLogic != null) {
 					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));

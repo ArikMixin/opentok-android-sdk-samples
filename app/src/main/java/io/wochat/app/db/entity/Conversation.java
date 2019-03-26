@@ -18,6 +18,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.util.Date;
 import java.util.List;
 
+import io.wochat.app.utils.Utils;
+
 import static android.arch.persistence.room.ForeignKey.CASCADE;
 
 @Entity(tableName = "conversation_table",
@@ -101,6 +103,12 @@ public class Conversation implements IDialog{
 	@ColumnInfo(name = "last_message_sender_id")
 	@Expose
 	String mLastMessageSenderId;
+
+	/***************************************************/
+	@SerializedName("last_message_duration")
+	@ColumnInfo(name = "last_message_duration")
+	@Expose
+	int mLastMessageDuration;
 	/***************************************************/
 	@SerializedName("last_message_ack_status")
 	@ColumnInfo(name = "last_message_ack_status")
@@ -257,12 +265,22 @@ public class Conversation implements IDialog{
 
 	@Override
 	public String getLastMessageTextToDisplay() {
-		if (lastMessageType.equals(Message.MSG_TYPE_VIDEO))
-			return "Video";
-		else if (lastMessageType.equals(Message.MSG_TYPE_IMAGE))
+		if (lastMessageType.equals(Message.MSG_TYPE_VIDEO)) {
+			return "Video (" + Utils.convertSecondsToHMmSs(mLastMessageDuration) + ") ";
+		}
+
+		else if (lastMessageType.equals(Message.MSG_TYPE_IMAGE)) {
 			return "Image";
-		else if (lastMessageType.equals(Message.MSG_TYPE_AUDIO))
-			return "Audio";
+		}
+
+		else if (lastMessageType.equals(Message.MSG_TYPE_AUDIO)) {
+			return "Audio (" + Utils.convertSecondsToHMmSs(mLastMessageDuration) + ") ";
+		}
+
+		else if (lastMessageType.equals(Message.MSG_TYPE_SPEECHABLE)) {
+			return "Audio (" + Utils.convertSecondsToHMmSs(mLastMessageDuration) + ") ";
+		}
+
 		else
 			return lastMessageText;
 	}
@@ -300,6 +318,14 @@ public class Conversation implements IDialog{
 		this.lastMessageType = lastMessageType;
 	}
 
+	public int getLastMessageDuration() {
+		return mLastMessageDuration;
+	}
+
+	public void setLastMessageDuration(int lastMessageDuration) {
+		mLastMessageDuration = lastMessageDuration;
+	}
+
 
 	@Override
 	public String toString() {
@@ -307,6 +333,10 @@ public class Conversation implements IDialog{
 			append("conversationId", conversationId).
 			append("participantId", participantId).
 			append("lastMessageId", lastMessageId).
+			append("lastMessageType", lastMessageType).
+			append("mLastMessageDuration", mLastMessageDuration).
+			append("lastMessageText", lastMessageText).
+			append("mLastMessageAckStatus", mLastMessageAckStatus).
 			append("lastMessageTimeStamp", lastMessageTimeStamp).
 			append("numOfUnreadMessages", numOfUnreadMessages).
 			append("isGroup", isGroup).
