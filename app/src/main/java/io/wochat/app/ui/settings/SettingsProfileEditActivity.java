@@ -83,8 +83,8 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 
 			mName = user.getUserName();
 			mStatus = user.getStatus();
-			String phone = user.getUserId();
-			String phoneFormatted = "+" + phone;
+
+			String phoneFormatted = user.getNiceFormattedPhone();
 			String urlPic = user.getProfilePicUrl();
 			String initials = Contact.getInitialsFromName(mName);
 			String language = user.getLanguage();

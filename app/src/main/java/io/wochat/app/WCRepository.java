@@ -65,6 +65,7 @@ import io.wochat.app.utils.Utils;
 public class WCRepository {
 
 
+
 	public interface OnSaveMessageToDBListener {
 		void OnSaved(boolean success, Message savedMessage, Contact participant);
 	}
@@ -1580,26 +1581,33 @@ public class WCRepository {
 					return;
 				}
 
-				Picasso.get().load(contactServer.getProfilePicUrl()).error(R.drawable.profile_circle).into(new Target() {
-					@Override
-					public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-						Log.e(TAG, "getNotificationData, onBitmapLoaded");
-						data.largeIcon = Utils.getCircleBitmap(bitmap);
-						listener.onNotificationDataResult(data);
-					}
+				try {
+					Picasso.get().load(contactServer.getProfilePicUrl()).error(R.drawable.profile_circle).into(new Target() {
+						@Override
+						public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+							Log.e(TAG, "getNotificationData, onBitmapLoaded");
+							data.largeIcon = Utils.getCircleBitmap(bitmap);
+							listener.onNotificationDataResult(data);
+						}
 
-					@Override
-					public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-						Log.e(TAG, "getNotificationData, onBitmapFailed");
-						data.largeIcon = null;
-						listener.onNotificationDataResult(data);
-					}
+						@Override
+						public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+							Log.e(TAG, "getNotificationData, onBitmapFailed");
+							data.largeIcon = null;
+							listener.onNotificationDataResult(data);
+						}
 
-					@Override
-					public void onPrepareLoad(Drawable placeHolderDrawable) {
-						Log.e(TAG, "getNotificationData, onPrepareLoad");
-					}
-				});
+						@Override
+						public void onPrepareLoad(Drawable placeHolderDrawable) {
+							Log.e(TAG, "getNotificationData, onPrepareLoad");
+						}
+					});
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e(TAG, "getNotificationData, onBitmapFailed");
+					data.largeIcon = null;
+					listener.onNotificationDataResult(data);
+				}
 			});
 
 
@@ -1607,7 +1615,16 @@ public class WCRepository {
 		});
 	}
 	
-	
-	
-	
+
+	public void clearConversation(String conversationId){
+		mAppExecutors.diskIO().execute(() -> {
+			mConversationDao.removeLastMessage(conversationId);
+			mMessageDao.deleteMessagesFromConversation(conversationId);
+		});
 	}
+
+	public LiveData<List<Message>> getMediaMessagesConversation(String conversationId) {
+		return mMessageDao.getMediaMessagesConversation(conversationId);
+	}
+
+}

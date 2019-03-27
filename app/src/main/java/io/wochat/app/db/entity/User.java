@@ -3,6 +3,10 @@ package io.wochat.app.db.entity;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import android.arch.persistence.room.Entity;
@@ -203,6 +207,20 @@ public class User {
 			append("languageLocale", languageLocale).
 			append("appVersion", appVersion).
 			toString();
+    }
+
+
+    public String getNiceFormattedPhone(){
+        String niceFormattedPhone = "+" + userId;
+        Phonenumber.PhoneNumber ph = null;
+        try {
+            ph = PhoneNumberUtil.getInstance().parse(userId, countryCode);
+            niceFormattedPhone = PhoneNumberUtil.getInstance().format(ph, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
+        } catch (NumberParseException e) {
+            e.printStackTrace();
+        }
+
+        return niceFormattedPhone;
     }
 
 }

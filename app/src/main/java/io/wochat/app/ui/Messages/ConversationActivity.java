@@ -75,6 +75,7 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
+import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.SpeechUtils;
@@ -239,7 +240,13 @@ public class ConversationActivity extends PermissionActivity implements
 		mContactDetailsTV.setText("");
 		mContactNameTV.setText(mParticipantName);
 		mContactNameTV.setOnClickListener(v -> {
-			Toast.makeText(ConversationActivity.this, "open profile for " + mParticipantName, Toast.LENGTH_SHORT).show();
+			Intent intent = new Intent(this, ContactInfoActivity.class);
+			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
+			intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+			intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
+			intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
+
+			startActivity(intent);
 		});
 
 
@@ -831,8 +838,15 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void updateUIWithMessages(){
-		if ((mMessages == null)||mMessages.isEmpty())
+		if ((mMessages == null)) {
 			return;
+		}
+
+		if (mMessages.isEmpty()){
+			mMessagesAdapter.clear();
+			return;
+		}
+
 		if ((pointerDateUpperList == null)&& (pointerDateBottomList == null)){ // RV is empty
 			Message message = mMessages.get(0);
 			pointerDateUpperList = message.getCreatedAt();

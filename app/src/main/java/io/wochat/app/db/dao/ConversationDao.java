@@ -86,6 +86,20 @@ public interface ConversationDao {
 
 
 	@Query("UPDATE conversation_table SET  " +
+		"last_message_id = NULL , " +
+		"last_message_timestamp = 0 ," +
+		"last_message_text = '' ," +
+		"last_message_sender_id = NULL ," +
+		"num_of_unread_messages = 0 ," +
+		"last_message_ack_status = NULL ," +
+		"last_message_type = NULL ," +
+		"last_message_duration = 0 " +
+		"WHERE conversation_id =:conversationId")
+	void removeLastMessage(String conversationId);
+
+
+
+	@Query("UPDATE conversation_table SET  " +
 		"last_message_text = :lastMessageText " +
 		"WHERE conversation_id =:conversationId")
 	void updateIncomingText(String conversationId,

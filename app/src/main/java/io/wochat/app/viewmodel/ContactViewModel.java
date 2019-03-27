@@ -11,6 +11,7 @@ import java.util.List;
 import io.wochat.app.WCApplication;
 import io.wochat.app.WCRepository;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.Message;
 //import io.wochat.app.db.entity.ContactInvitation;
 
 public class ContactViewModel extends AndroidViewModel {
@@ -48,6 +49,10 @@ public class ContactViewModel extends AndroidViewModel {
 	public void sycContacts(){
 		mRepository.syncContactsLocalAndServer();
 	}
+
+
+
+
 
 
 //	public void updateInvited(String contactId){

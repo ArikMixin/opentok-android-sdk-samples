@@ -4,13 +4,13 @@
           xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="Manifest.permission.READ_SMS"/>
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -21,11 +21,12 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        tools:replace="android:supportsRtl"
         android:supportsRtl="false"
-        android:theme="@style/AppTheme">
-        <activity android:name=".ui.settings.SupportedLanguagesActivity"
-                  android:screenOrientation="portrait">
+        android:theme="@style/AppTheme"
+        tools:replace="android:supportsRtl">
+        <activity
+            android:name=".ui.settings.SupportedLanguagesActivity"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name=".ui.settings.SettingsProfileEditActivity"
@@ -34,7 +35,7 @@
         <activity
             android:name=".ui.settings.SettingsActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme"/>
         <activity
             android:name=".ui.SplashActivity"
             android:screenOrientation="portrait"
@@ -61,7 +62,6 @@
             android:name=".ui.TempActivity"
             android:screenOrientation="portrait">
         </activity>
-
         <activity
             android:name=".ui.Contact.ContactSelectorActivity"
             android:theme="@style/NoActionBarAppTheme">
@@ -85,7 +85,6 @@
             </intent-filter>
         </activity>
 
-
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="ppp.io.wochat.app.provider"
@@ -107,9 +106,9 @@
         </activity>
         <activity
             android:name=".ui.Messages.ConversationActivity"
+            android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/NoActionBarAppTheme"
-            android:parentActivityName=".ui.MainActivity">
+            android:theme="@style/NoActionBarAppTheme">
         </activity>
 
         <service
@@ -117,6 +116,17 @@
             android:enabled="true"
             android:exported="true">
         </service>
+
+        <activity
+            android:name=".ui.ContactInfo.ContactInfoActivity"
+            android:label="@string/title_activity_info"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".ui.ContactInfo.ContactInfoMediaActivity"
+            android:screenOrientation="portrait">
+        </activity>
     </application>
 
 </manifest>

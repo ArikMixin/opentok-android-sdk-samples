@@ -9,6 +9,9 @@ import android.support.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.stfalcon.chatkit.commons.models.IContact;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -198,6 +201,33 @@ public class Contact implements IContact {
 	public static Contact fromJson(String json){
 		Gson gson = new Gson();
 		return gson.fromJson(json, Contact.class);
+	}
+
+
+
+	public String getNiceFormattedPhone(){
+		String niceFormattedPhone = "+" + contactId;
+
+		if ((contactLocal != null) &&
+			(contactLocal.getPhoneNumIso() != null)&&
+			(!contactLocal.getPhoneNumIso().isEmpty())){
+			niceFormattedPhone = contactLocal.getPhoneNumIso();
+		}
+		else {
+			if (contactServer != null) {
+				String phoneNo = contactServer.getUserId();
+				String localeCountry = contactServer.getCountryCode();
+				Phonenumber.PhoneNumber ph = null;
+				try {
+					ph = PhoneNumberUtil.getInstance().parse(phoneNo, localeCountry);
+					niceFormattedPhone = PhoneNumberUtil.getInstance().format(ph, PhoneNumberUtil.PhoneNumberFormat.INTERNATIONAL);
+				} catch (NumberParseException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return niceFormattedPhone;
 	}
 
 }

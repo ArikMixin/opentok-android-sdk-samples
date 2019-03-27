@@ -85,4 +85,3 @@ dependencies {
     implementation 'com.android.support:preference-v7:27.1.1'
 
 }
-

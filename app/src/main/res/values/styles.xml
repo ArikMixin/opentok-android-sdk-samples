@@ -6,7 +6,8 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item><!--special preference theme-->
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material
+        </item><!--special preference theme-->
     </style>
 
     <style name="NoActionBarAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
@@ -37,6 +38,7 @@
     <style name="ToolbarColoredBackArrow" parent="AppTheme">
         <item name="android:textColorSecondary">@color/colorPrimary</item>
     </style>
+
     <style name="MainActionBar" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>

@@ -166,4 +166,13 @@ public class ConversationViewModel extends AndroidViewModel {
 		mRepository.updateNotificationClicked(conversationId);
 	}
 
+
+	public void clearConversation(String conversationId){
+		mRepository.clearConversation(conversationId);
+	}
+
+
+	public LiveData<List<Message>> getMediaMessagesConversation(String conversationId) {
+		return mRepository.getMediaMessagesConversation(conversationId);
+	}
 }

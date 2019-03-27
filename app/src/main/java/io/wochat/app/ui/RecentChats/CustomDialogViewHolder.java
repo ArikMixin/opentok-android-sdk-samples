@@ -42,6 +42,12 @@ public class CustomDialogViewHolder
 			conversation.getParticipantLanguage(),
 			Contact.getInitialsFromName(conversation.getParticipantName()));
 
+		if (conversation.getLastMessageId() == null){
+			mCocheIV.setVisibility(View.GONE);
+			mMsgTypeIV.setVisibility(View.GONE);
+			return;
+		}
+
         if (conversation.getLastMessageAckStatus()!= null) {
 			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());
 			mCocheIV.setVisibility(Utils.booleanToVisibilityGone(!isIncoming));

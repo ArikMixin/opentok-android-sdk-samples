@@ -111,6 +111,9 @@ public interface MessageDao {
 	@Delete
 	void deleteMessages(List<Message> list);
 
+	@Query("DELETE FROM message_table WHERE conversation_id =:conversationId")
+	void deleteMessagesFromConversation(String conversationId);
+
 	@Query("SELECT * FROM message_table WHERE conversation_id =:conversationId AND should_be_displayed = 1 ORDER BY timestamp_milli DESC LIMIT 1")
 	Message getLastMessagesForConversation(String conversationId);
 
@@ -127,4 +130,10 @@ public interface MessageDao {
 		"(sender = :selfId)")
 	List<Message> getOutgoingPendingMessages(String selfId);
 
+
+	@Query("SELECT * FROM message_table WHERE " +
+		"(conversation_id =:conversationId) AND " +
+		"((message_type = 'IMAGE') OR" +
+		"(message_type = 'VIDEO')) ORDER BY timestamp_milli DESC")
+	LiveData<List<Message>> getMediaMessagesConversation(String conversationId);
 }
