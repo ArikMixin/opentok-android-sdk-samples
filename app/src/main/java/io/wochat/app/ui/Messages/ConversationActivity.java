@@ -65,6 +65,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import io.wochat.app.R;
 import io.wochat.app.WCService;
@@ -73,15 +74,18 @@ import io.wochat.app.components.MessageReplyLayout;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
+import io.wochat.app.ui.Languages.LanguageSelectorDialog;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.SpeechUtils;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.utils.videocompression.MediaController;
 import io.wochat.app.viewmodel.ConversationViewModel;
+import io.wochat.app.viewmodel.SupportedLanguagesViewModel;
 
 //import com.stfalcon.chatkit.utils.DateFormatter;
 
@@ -163,6 +167,8 @@ public class ConversationActivity extends PermissionActivity implements
 	private String mForwardContactId;
 	private MessageReplyLayout mInputMessageReplyLayout;
 	private boolean mClickedFromNotifivation;
+	private SupportedLanguagesViewModel mSupportedLanguagesViewModel;
+	private List<SupportedLanguage> mSupportedLanguages;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -303,17 +309,13 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
+		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
 
 
-//		mConversationViewModel.getUploadImageResult().observe(this, imageInfoStateData -> {
-//			if(imageInfoStateData.isSuccess()){
-//				ImageInfo imageInfo = imageInfoStateData.getData();
-//				Log.e(TAG, "imageInfo: " + imageInfo.getImageUrl());
-//				submitImageMessage(imageInfo);
-//			}
-//		});
-
-
+		mSupportedLanguagesViewModel.getSupportedLanguages().observe(this, supportedLanguages -> {
+			mSupportedLanguages = supportedLanguages;
+		});
+		mSupportedLanguagesViewModel.loadLanguages(Locale.getDefault().getLanguage());
 
 
 		mConversationViewModel.getConversationAndMessages(mConversationId,
@@ -627,9 +629,15 @@ public class ConversationActivity extends PermissionActivity implements
 			case R.id.videoButton:
 				selectVideoCamera();
 				break;
+
+
+			case R.id.magicButton:
+				magicButtonClicked();
+				break;
 		}
 		//mMessagesAdapter.addToStart(MessagesFixtures.getImageMessage(), true);
 	}
+
 
 	private void selectImage() {
 		Intent photoPickerIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -1794,5 +1802,11 @@ public class ConversationActivity extends PermissionActivity implements
 			2000);
 	}
 
+	private void magicButtonClicked() {
+		LanguageSelectorDialog dialog = new LanguageSelectorDialog();
+		dialog.showDialog(this, mSupportedLanguages);
+
+
+	}
 
 }

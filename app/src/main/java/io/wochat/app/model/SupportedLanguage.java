@@ -2,6 +2,9 @@ package io.wochat.app.model;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.hbb20.CCPCountry;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class SupportedLanguage {
 
@@ -43,4 +46,18 @@ public class SupportedLanguage {
 		return gson.fromJson(json, SupportedLanguage.class);
 	}
 
+	public int getFlagResID(){
+		return CCPCountry.getFlagMasterResID(countryCode);
+	}
+
+
+
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this).
+			append("languageNameFromISO", languageNameFromISO).
+			append("languageCode", languageCode).
+			append("countryCode", countryCode).
+			toString();
+	}
 }
