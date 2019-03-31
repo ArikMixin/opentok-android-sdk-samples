@@ -127,6 +127,20 @@ public class Message implements IMessage,
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface EVENT_CODE {}
 
+
+	public static final String SHOW_TRANSLATION_FALSE = "SHOW_TRANSLATION_FALSE";
+	public static final String SHOW_TRANSLATION_TRUE = "SHOW_TRANSLATION_TRUE";
+	public static final String SHOW_TRANSLATION_MAGIC = "SHOW_TRANSLATION_MAGIC";
+	@StringDef({
+		SHOW_TRANSLATION_FALSE,
+		SHOW_TRANSLATION_TRUE,
+		SHOW_TRANSLATION_MAGIC})
+
+	@Retention(RetentionPolicy.SOURCE)
+	public @interface SHOW_TRANSLATION_FLAG {}
+
+
+
 	/**********************************************/
 	@PrimaryKey
 	@NonNull
@@ -296,6 +310,12 @@ public class Message implements IMessage,
 	@Expose
 	@Ignore
 	private Boolean showNonTranslated;
+
+	/**********************************************/
+	@SerializedName("show_translation_flag")
+	@Expose
+	@Ignore
+	private @SHOW_TRANSLATION_FLAG String showTranslationFlag;
 	/**********************************************/
 
 //	private Image image;
@@ -307,6 +327,7 @@ public class Message implements IMessage,
 	// for outgoing message
 	public Message(String participantId, String selfId, String conversationId, String messageText, String messageLang) {
 		this.showNonTranslated = null;
+		this.showTranslationFlag = null;
 		this.messageId = UUID.randomUUID().toString();
 		this.conversationId = conversationId;
 		this.participantId = participantId;
@@ -323,6 +344,7 @@ public class Message implements IMessage,
 	// for outgoing Image message
 	public Message(String participantId, String selfId, String conversationId, String imageUrl, String thumbUrl, String messageLang) {
 		this.showNonTranslated = null;
+		this.showTranslationFlag = null;
 		this.messageId = UUID.randomUUID().toString();
 		this.conversationId = conversationId;
 		this.participantId = participantId;
@@ -357,6 +379,7 @@ public class Message implements IMessage,
 	public static Message CreateImageMessage(String participantId, String selfId, String conversationId, Uri localUri, String messageLang){
 		Message message = new Message();
 		message.showNonTranslated = null;
+		message.showTranslationFlag = null;
 		message.messageId = UUID.randomUUID().toString();
 		message.conversationId = conversationId;
 		message.participantId = participantId;
@@ -376,6 +399,7 @@ public class Message implements IMessage,
 	public static Message CreateVideoMessage(String participantId, String selfId, String conversationId, Uri localMediaUri, Uri localThumbUri, String messageLang, int duration){
 		Message message = new Message();
 		message.showNonTranslated = null;
+		message.showTranslationFlag = null;
 		message.messageId = UUID.randomUUID().toString();
 		message.conversationId = conversationId;
 		message.participantId = participantId;
@@ -415,6 +439,7 @@ public class Message implements IMessage,
 
 	public Message() {
 		showNonTranslated = null;
+		showTranslationFlag = null;
 	}
 
 	public Message(String id, Contact contact, String text, String messageLang) {
@@ -423,6 +448,7 @@ public class Message implements IMessage,
 
     public Message(String id, Contact contact, String messageText, String messageLang, long timestamp) {
 		this.showNonTranslated = null;
+		this.showTranslationFlag = null;
         this.messageId = id;
         this.messageText = messageText;
 		this.messageLanguage = messageLang;
@@ -466,24 +492,76 @@ public class Message implements IMessage,
 
 	@Override
     public String getText() {
-		if (showNonTranslated == null){
-			if (isOutgoing())
-				showNonTranslated = true;
+		if (showTranslationFlag == null){
+			if (isMagic())
+				showTranslationFlag = SHOW_TRANSLATION_MAGIC;
+			else if (isOutgoing())
+				showTranslationFlag = SHOW_TRANSLATION_FALSE;
 			else
-				showNonTranslated = false;
+				showTranslationFlag = SHOW_TRANSLATION_TRUE;
 		}
 
-		if (showNonTranslated)
+		if (showTranslationFlag.equals(SHOW_TRANSLATION_MAGIC) && isMagic())
+			return forceTranslatedText;
+		else if (showTranslationFlag.equals(SHOW_TRANSLATION_FALSE))
 			return messageText;
-		else {
-			if ((translatedText != null) && (!translatedText.equals("")))
-				return translatedText;
-			else
-				return messageText;
-		}
+		else if (isTranslated())
+			return translatedText;
+		else
+			return messageText;
+
+
+
+
+//		if (showNonTranslated == null){
+//			if (isOutgoing())
+//				showNonTranslated = true;
+//			else
+//				showNonTranslated = false;
+//		}
+
+//		if (showNonTranslated)
+//			return messageText;
+//		else {
+//			if ((translatedText != null) && (!translatedText.equals("")))
+//				return translatedText;
+//			else
+//				return messageText;
+//		}
     }
 
-    @Override
+	public void userClickAction(){
+		if (isMagic() && isTranslated()){
+			if(showTranslationFlag.equals(SHOW_TRANSLATION_MAGIC))
+				showTranslationFlag = SHOW_TRANSLATION_TRUE;
+			else if(showTranslationFlag.equals(SHOW_TRANSLATION_TRUE))
+				showTranslationFlag = SHOW_TRANSLATION_FALSE;
+			else if(showTranslationFlag.equals(SHOW_TRANSLATION_FALSE))
+				showTranslationFlag = SHOW_TRANSLATION_MAGIC;
+		}
+		else if (isTranslated()){ // only translated
+			if(showTranslationFlag.equals(SHOW_TRANSLATION_TRUE))
+				showTranslationFlag = SHOW_TRANSLATION_FALSE;
+			else if(showTranslationFlag.equals(SHOW_TRANSLATION_FALSE))
+				showTranslationFlag = SHOW_TRANSLATION_TRUE;
+		}
+		else if (isMagic()){ // only magic
+			if(showTranslationFlag.equals(SHOW_TRANSLATION_MAGIC))
+				showTranslationFlag = SHOW_TRANSLATION_FALSE;
+			else if(showTranslationFlag.equals(SHOW_TRANSLATION_FALSE))
+				showTranslationFlag = SHOW_TRANSLATION_MAGIC;
+		}
+		else {
+			showTranslationFlag = SHOW_TRANSLATION_FALSE;
+		}
+
+
+	}
+
+
+
+
+	@Override
     public Date getCreatedAt() {
         //return new Date(timestamp*1000);
 		return new Date(timestampMilli);
@@ -842,13 +920,25 @@ public class Message implements IMessage,
 		this.shouldBeDisplayed = shouldBeDisplayed;
 	}
 
-	public boolean isShowNonTranslated() {
-		return showNonTranslated;
+//	public boolean isShowNonTranslated() {
+//		return showNonTranslated;
+//	}
+//
+	public void showOriginalMessage() {
+		showTranslationFlag = SHOW_TRANSLATION_FALSE;
 	}
 
-	public void setShowNonTranslated(boolean showNonTranslated) {
-		this.showNonTranslated = showNonTranslated;
+
+
+
+	public String getShowTranslationFlag() {
+		return showTranslationFlag;
 	}
+
+	public void setShowTranslationFlag(String showTranslationFlag) {
+		this.showTranslationFlag = showTranslationFlag;
+	}
+
 
 	public String getMediaLocalUri() {
 		return mediaLocalUri;
@@ -933,6 +1023,16 @@ public class Message implements IMessage,
 		}
 
 		return newMessage;
+	}
+
+
+
+	public boolean isMagic(){
+		return (forceTranslatedLanguage != null)&& (!forceTranslatedLanguage.isEmpty());
+	}
+
+	public boolean isTranslated(){
+		return (translatedText != null) && (!translatedText.isEmpty());
 	}
 
 }

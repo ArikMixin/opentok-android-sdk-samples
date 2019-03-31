@@ -37,7 +37,7 @@ public class LanguageSelectorAdapter extends RecyclerView.Adapter<LanguageSelect
 		void onLanguageSelected(SupportedLanguage supportedLanguage);
 	}
 
-	public void setSupportedLanguageSelectionListener(LanguageSelectionListener languageSelectionListener) {
+	public void setLanguageSelectionListener(LanguageSelectionListener languageSelectionListener) {
 		mLanguageSelectionListener = languageSelectionListener;
 	}
 

@@ -165,6 +165,52 @@ public class WochatApi {
 		sendGetAndHandleResult(url, params, lsnr);
 	}
 
+	public void translate2(String messageId1, String fromLanguage1 , String toLanguage1 , String text1,
+						   String messageId2, String fromLanguage2 , String toLanguage2 , String text2,
+						   final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API translate2 fromLanguage1: " + messageId1 + ", toLanguage1: " + toLanguage1 + " , text1: " + text1 + " , messageId1: " + messageId1);
+		Log.e(TAG, "API translate2 fromLanguage2: " + messageId2 + ", toLanguage2: " + toLanguage2 + " , text2: " + text2 + " , messageId2: " + messageId2);
+
+
+		String url = BASE_URL + "/translate/";
+
+		HashMap<String, String> params1 = new HashMap<>();
+		params1.put("id", messageId1);
+		params1.put("from_language", fromLanguage1);
+		params1.put("to_language", toLanguage1);
+		params1.put("text", Uri.encode(text1));
+
+		sendGetAndHandleResult(url, params1, (isSuccess1, errorLogic1, errorComm1, response1) -> {
+			if (!isSuccess1){
+				lsnr.OnServerResponse(isSuccess1, errorLogic1, errorComm1, response1);
+				return;
+			}
+
+			HashMap<String, String> params2 = new HashMap<>();
+			params2.put("id", messageId2);
+			params2.put("from_language", fromLanguage2);
+			params2.put("to_language", toLanguage2);
+			params2.put("text", Uri.encode(text2));
+
+			sendGetAndHandleResult(url, params2, (isSuccess2, errorLogic2, errorComm2, response2) -> {
+				if (!isSuccess2) {
+					lsnr.OnServerResponse(isSuccess2, errorLogic2, errorComm2, response2);
+					return;
+				}
+				try {
+					response1.put("message2", response2.getString("message"));
+					lsnr.OnServerResponse(true, errorLogic2, errorComm2, response1);
+				} catch (JSONException e) {
+					e.printStackTrace();
+					lsnr.OnServerResponse(false, e.getMessage(), errorComm2, response2);
+				}
+
+			});
+
+		});
+	}
+
 
 	public void userGetContacts(String[] contactIdArray, final OnServerResponseListener lsnr) {
 

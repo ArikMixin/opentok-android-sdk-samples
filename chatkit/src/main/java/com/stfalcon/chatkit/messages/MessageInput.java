@@ -17,8 +17,10 @@
 package com.stfalcon.chatkit.messages;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.support.annotation.ColorInt;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.Space;
 import android.text.Editable;
@@ -266,6 +268,11 @@ public class MessageInput extends RelativeLayout
 
     public void setMagicButtonDrawable(Drawable drawable) {
         this.magicButton.setImageDrawable(drawable);
+    }
+
+    public void setMagicButtonBorders(@ColorInt int borderColor, int borderWidth) {
+        this.magicButton.setBorderColor(borderColor);
+        this.magicButton.setBorderWidth(borderWidth);
     }
 
 

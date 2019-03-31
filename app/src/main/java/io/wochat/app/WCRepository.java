@@ -963,12 +963,13 @@ public class WCRepository {
 	private boolean handleIncomingMessageText(Message message) {
 		boolean res;
 		String selfLang = mSharedPreferences.getUserLang();
-		boolean needTranslation = (!message.getMessageLanguage().equals(selfLang));
+		boolean needTranslation1 = (!message.getMessageLanguage().equals(selfLang));
+		boolean needTranslationMagic = message.isMagic();
 
 		try {
 			String conversationId = message.getConversationId();
 			if (mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
-				res = insertMessageAndUpdateConversation(message, needTranslation);
+				res = insertMessageAndUpdateConversation(message, needTranslation1, needTranslationMagic);
 			}
 			else {
 				String participantId = message.getSenderId();
@@ -980,7 +981,7 @@ public class WCRepository {
 					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
-					res = insertMessageAndUpdateConversation(message, needTranslation);
+					res = insertMessageAndUpdateConversation(message, needTranslation1, needTranslationMagic);
 				}
 				else { // no contact, no conversation
 					Contact contact = new Contact(participantId);
@@ -988,11 +989,11 @@ public class WCRepository {
 					getContactFromServer(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					mConversationDao.insert(conversation);
-					res = insertMessageAndUpdateConversation(message, needTranslation);
+					res = insertMessageAndUpdateConversation(message, needTranslation1, needTranslationMagic);
 				}
 			}
 
-			if (needTranslation) {
+			if ((needTranslation1) || (needTranslationMagic)) {
 				translate(message, true);
 			}
 
@@ -1005,6 +1006,7 @@ public class WCRepository {
 
 	private void translate(Message message, boolean isIncoming) {
 		mAppExecutors.networkIO().execute(() -> {
+			boolean needTranslation1, needTranslationMagic;
 			String selfLang = mSharedPreferences.getUserLang();
 			String fromLanguage;
 			String toLanguage;
@@ -1017,30 +1019,98 @@ public class WCRepository {
 				toLanguage = message.getTranslatedLanguage();
 			}
 
-			mWochatApi.translate(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
-				(isSuccess, errorLogic, errorComm, response) -> {
-					if ((isSuccess) && (response != null)) {
-						Log.e(TAG, "translate res: " + response.toString());
-						try {
-							String translatedText = response.getString("message");
-							message.setTranslatedText(translatedText);
-							message.setTranslatedLanguage(selfLang);
-							message.displayMessageAfterTranslation();
+			needTranslation1 = (!fromLanguage.equals(toLanguage));
+			needTranslationMagic = message.isMagic();
 
-							if (isIncoming)
-								updateMessageAndConversationForIncoming(message);
-							else
-								updateMessageTextOnly(message);
+			if (needTranslation1 && needTranslationMagic) {  // translate to 2 language, regular and magic
+				mWochatApi.translate2(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
+					message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText1 = response.getString("message");
+								message.setTranslatedText(translatedText1);
+								String translatedText2 = response.getString("message2");
+								message.setForceTranslatedText(translatedText2);
+
+								message.setTranslatedLanguage(selfLang);
+								message.displayMessageAfterTranslation();
+
+								if (isIncoming)
+									updateMessageAndConversationForIncoming(message);
+								else
+									updateMessageTextOnly(message);
 
 
-						} catch (JSONException e) {
-							e.printStackTrace();
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+
 						}
+						else
+							Log.e(TAG, "translate res: error");
+					});
+			}
 
-					}
-					else
-						Log.e(TAG, "translate res: error");
-				});
+			else if (needTranslation1) {  // regular translation only
+				mWochatApi.translate(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								message.setTranslatedText(translatedText);
+								message.setTranslatedLanguage(selfLang);
+								message.displayMessageAfterTranslation();
+
+								if (isIncoming)
+									updateMessageAndConversationForIncoming(message);
+								else
+									updateMessageTextOnly(message);
+
+
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+
+						}
+						else
+							Log.e(TAG, "translate res: error");
+					});
+			}
+
+
+			else {  // for magic only
+				mWochatApi.translate(message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								message.setForceTranslatedText(translatedText);
+
+								message.setTranslatedLanguage(selfLang);
+								message.displayMessageAfterTranslation();
+
+								if (isIncoming)
+									updateMessageAndConversationForIncoming(message);
+								else
+									updateMessageTextOnly(message);
+
+
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+
+						}
+						else
+							Log.e(TAG, "translate res: error");
+					});
+			}
+
+
+
 		});
 
 	}
@@ -1048,14 +1118,14 @@ public class WCRepository {
 
 	private boolean handleIncomingMessageImage(Message message) {
 		boolean res;
-		String selfLang = mSharedPreferences.getUserLang();
+		//String selfLang = mSharedPreferences.getUserLang();
 		//boolean needTranslation = (!message.getMessageLanguage().equals(selfLang));
-		boolean needTranslation = false;
+		//boolean needTranslation = false;
 
 		try {
 			String conversationId = message.getConversationId();
 			if (mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
-				res = insertMessageAndUpdateConversation(message, needTranslation);
+				res = insertMessageAndUpdateConversation(message, false, false);
 			}
 			else {
 				String participantId = message.getSenderId();
@@ -1067,7 +1137,7 @@ public class WCRepository {
 					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
-					res = insertMessageAndUpdateConversation(message, needTranslation);
+					res = insertMessageAndUpdateConversation(message, false, false);
 				}
 				else { // no contact, no conversation
 					Contact contact = new Contact(participantId);
@@ -1075,7 +1145,7 @@ public class WCRepository {
 					getContactFromServer(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					mConversationDao.insert(conversation);
-					res = insertMessageAndUpdateConversation(message, needTranslation);
+					res = insertMessageAndUpdateConversation(message, false, false);
 				}
 			}
 
@@ -1090,14 +1160,17 @@ public class WCRepository {
 	private void updateMessageAndConversationForIncoming(Message message) {
 		mAppExecutors.diskIO().execute(() -> {
 			mMessageDao.update(message);
-			mConversationDao.updateIncomingText(message.getConversationId(), message.getTranslatedText());
+			if (message.isMagic())
+				mConversationDao.updateIncomingText(message.getConversationId(), message.getForceTranslatedText());
+			else
+				mConversationDao.updateIncomingText(message.getConversationId(), message.getTranslatedText());
 		});
 
 	}
 
 	private void updateMessageTextOnly(Message message) {
 		mAppExecutors.diskIO().execute(() -> {
-			mMessageDao.updateMessageTranslatedText(message.getMessageId(), message.getTranslatedText());
+			mMessageDao.updateMessageTranslatedText(message.getMessageId(), message.getTranslatedText(), message.getForceTranslatedText());
 		});
 
 	}
@@ -1132,11 +1205,17 @@ public class WCRepository {
 
 	}
 
-	private boolean insertMessageAndUpdateConversation(Message message, boolean needTranslation) {
+	private boolean insertMessageAndUpdateConversation(Message message, boolean needTranslation1, boolean needTranslationMagic) {
 		try {
-			message.setShouldBeDisplayed(!needTranslation);
+			message.setShouldBeDisplayed(!needTranslation1);
 
-			String messageText = needTranslation ? "" : message.getMessageText();
+			String messageText;
+			if (needTranslationMagic)
+				messageText = message.getForceTranslatedText();
+			else if (needTranslation1)
+				messageText = "";
+			else
+				messageText = message.getMessageText();
 
 			mMessageDao.insert(message);
 			int unreadMessagesCount = mMessageDao.getUnreadMessagesCountConversation(message.getConversationId());
@@ -1212,7 +1291,7 @@ public class WCRepository {
 				mConversationDao.insert(conversation);
 			}
 
-			message.setShowNonTranslated(true);
+			message.showOriginalMessage();
 			message.setShouldBeDisplayed(true);
 			mMessageDao.insert(message);
 			mConversationDao.updateOutgoing(
@@ -1227,8 +1306,11 @@ public class WCRepository {
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
 				String selfLang = mSharedPreferences.getUserLang();
-				boolean needTranslation = (!message.getTranslatedLanguage().equals(selfLang));
-				if (needTranslation)
+
+				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
+				boolean needTranslationMagic = message.isMagic();
+
+				if (needTranslation1 || needTranslationMagic)
 					translate(message, false);
 
 			}

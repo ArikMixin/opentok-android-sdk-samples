@@ -103,9 +103,10 @@ public interface MessageDao {
 	void update(Message message);
 
 	@Query("UPDATE message_table " +
-		"SET  translated_text = :translatedText " +
+		"SET  translated_text = :translatedText , " +
+		"force_translated_text = :forceTranslatedText " +
 		"WHERE message_id =:messageId")
-	void updateMessageTranslatedText(String messageId, String translatedText);
+	void updateMessageTranslatedText(String messageId, String translatedText, String forceTranslatedText);
 
 
 	@Delete

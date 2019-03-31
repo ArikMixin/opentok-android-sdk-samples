@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.media.MediaRecorder;
@@ -169,6 +170,8 @@ public class ConversationActivity extends PermissionActivity implements
 	private boolean mClickedFromNotifivation;
 	private SupportedLanguagesViewModel mSupportedLanguagesViewModel;
 	private List<SupportedLanguage> mSupportedLanguages;
+	private String mMagicButtonForceLanguage;
+	private String mMagicButtonForceCountry;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -305,8 +308,9 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessageInput.setTypingListener(this);
 		mMessageInput.setInputListener(this);
 		mMessageInput.setButtonClickListener(this);
-		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
-		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
+		setMagicButtonLanguage(mParticipantLang, false);
+//		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
+//		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
@@ -601,6 +605,11 @@ public class ConversationActivity extends PermissionActivity implements
 		String msgText = input.toString();
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
+		if (mMagicButtonForceLanguage != null) {
+			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
+			message.setForceTranslatedCountry(mMagicButtonForceCountry);
+		}
+
 		if (mInputMessageReplyLayout.getVisibility() == View.VISIBLE){
 			message.setRepliedMessageId(mInputMessageReplyLayout.getMessage().getId());
 			mInputMessageReplyLayout.setVisibility(View.GONE);
@@ -724,7 +733,7 @@ public class ConversationActivity extends PermissionActivity implements
 			}
 		}
 		if (message.isText()) {
-			message.setShowNonTranslated(!message.isShowNonTranslated());
+			message.userClickAction();
 			mMessagesAdapter.update(message);
 		}
 		else if (message.isImage()) {
@@ -1796,6 +1805,16 @@ public class ConversationActivity extends PermissionActivity implements
 		return null;
 	}
 
+	private void setMagicButtonLanguage(String participantLang, boolean highlightBorder) {
+		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(participantLang);
+		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
+		if (highlightBorder)
+			mMessageInput.setMagicButtonBorders(Color.BLUE, Utils.dp2px(this, 3));
+		else
+			mMessageInput.setMagicButtonBorders(Color.GRAY, Utils.dp2px(this, 2));
+	}
+
+
 	private void highlightMessage(String messageId) {
 		mMessagesAdapter.selectMessage(messageId);
 		new Handler(getMainLooper()).postDelayed(() -> mMessagesAdapter.unselectAllItems(),
@@ -1803,8 +1822,19 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void magicButtonClicked() {
-		LanguageSelectorDialog dialog = new LanguageSelectorDialog();
-		dialog.showDialog(this, mSupportedLanguages);
+		if (mMagicButtonForceLanguage == null) {
+			LanguageSelectorDialog dialog = new LanguageSelectorDialog();
+			dialog.showDialog(this, mSupportedLanguages, supportedLanguage -> {
+				mMagicButtonForceLanguage = supportedLanguage.getLanguageCode();
+				mMagicButtonForceCountry = supportedLanguage.getCountryCode();
+				setMagicButtonLanguage(mMagicButtonForceLanguage, true);
+			});
+		}
+		else {
+			setMagicButtonLanguage(mParticipantLang, false);
+			mMagicButtonForceLanguage = null;
+			mMagicButtonForceCountry = null;
+		}
 
 
 	}
