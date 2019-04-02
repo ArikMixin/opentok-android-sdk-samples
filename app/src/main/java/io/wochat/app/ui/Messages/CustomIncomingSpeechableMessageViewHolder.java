@@ -31,6 +31,7 @@ public class CustomIncomingSpeechableMessageViewHolder
 
 	private static final String TAG = "InSpeechMsgViewHldr" ;
 	private final Contact mParticipantContact;
+	private final CircleImageView mMagicIndicator;
 	private String mPictureUrl;
 	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
@@ -62,6 +63,8 @@ public class CustomIncomingSpeechableMessageViewHolder
 		});
 		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
 //		mPictureUrl = (String)payload;
+
+		mMagicIndicator = (CircleImageView) itemView.findViewById(R.id.magicIndicatorCIV);
 
 		mParticipantContact = (Contact)payload;
 		mAvatarCIV.setContact(mParticipantContact);
@@ -128,6 +131,16 @@ public class CustomIncomingSpeechableMessageViewHolder
 		}
 
 
+
+		if (message.isMagic()){
+			mMagicIndicator.setVisibility(View.VISIBLE);
+			int country = Utils.getCountryFlagDrawableFromLang(message.getDisplayedLang());
+			mMagicIndicator.setImageDrawable(itemView.getResources().getDrawable(country));
+		}
+		else {
+			mMagicIndicator.setVisibility(View.GONE);
+		}
+
     }
 
 
@@ -142,7 +155,7 @@ public class CustomIncomingSpeechableMessageViewHolder
 
 
     private void play(){
-		mSpeechUtils.startTextToSpeech(mMessageText);
+		mSpeechUtils.startTextToSpeech(mMessageText, "he");
 		mIsPlaying = true;
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_pause_orange));
 	}

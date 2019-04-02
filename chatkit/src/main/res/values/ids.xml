@@ -9,6 +9,8 @@
     <item name="image" type="id" />
     <item name="imageOverlay" type="id" />
     <item name="image_wrapper_fl" type="id" />
+    <item name="magicIndicatorCIV" type="id" />
+
 
     <!-- MESSAGE INPUT -->
     <item name="attachmentButton" type="id" />

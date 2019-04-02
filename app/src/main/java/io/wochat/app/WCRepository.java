@@ -57,6 +57,7 @@ import io.wochat.app.model.NotificationData;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
 import io.wochat.app.utils.ImagePickerUtil;
+import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
 
 /**
@@ -168,6 +169,21 @@ public class WCRepository {
 		mMessageDao = mDatabase.messageDao();
 		mNotifDao = mDatabase.notifDao();
 		mSelfUser = mUserDao.getFirstUser();
+
+
+		TextToSpeechUtil ttsu = TextToSpeechUtil.getInstance();
+		ttsu.setTextToSpeechInitListener(new TextToSpeechUtil.TextToSpeechInitListener() {
+			@Override
+			public void onTextToSpeechInitOK() {
+				Log.e("TextToSpeechUtil", "onTextToSpeechInitOK");
+			}
+
+			@Override
+			public void onTextToSpeechInitFAIL() {
+				Log.e("TextToSpeechUtil", "onTextToSpeechInitFAIL");
+			}
+		});
+		ttsu.init(application, mSharedPreferences.getUserLang());
 
 	}
 
@@ -1305,8 +1321,8 @@ public class WCRepository {
 				message.getDuration());
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
-				String selfLang = mSharedPreferences.getUserLang();
 
+				String selfLang = mSharedPreferences.getUserLang();
 				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
 				boolean needTranslationMagic = message.isMagic();
 
@@ -1315,6 +1331,13 @@ public class WCRepository {
 
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)) {
+
+				String selfLang = mSharedPreferences.getUserLang();
+				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
+				boolean needTranslationMagic = message.isMagic();
+
+				if (needTranslation1 || needTranslationMagic)
+					translate(message, false);
 
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {

@@ -490,6 +490,19 @@ public class Message implements IMessage,
 		return messageType.equals(MSG_TYPE_TEXT);
 	}
 
+	public String getDisplayedLang(){
+		switch (showTranslationFlag){
+			case SHOW_TRANSLATION_MAGIC:
+				return forceTranslatedLanguage;
+			case SHOW_TRANSLATION_FALSE:
+				return messageLanguage;
+			case SHOW_TRANSLATION_TRUE:
+				return translatedLanguage;
+			default:
+				return messageLanguage;
+		}
+	}
+
 	@Override
     public String getText() {
 		if (showTranslationFlag == null){
