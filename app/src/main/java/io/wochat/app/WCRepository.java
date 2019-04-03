@@ -1004,6 +1004,115 @@ public class WCRepository {
 		}
 	}
 
+	private interface TranslationResultListener{
+		void onTranslationResult(Message message);
+	}
+
+	private void translate(Message message, boolean isIncoming, final TranslationResultListener listener) {
+		mAppExecutors.networkIO().execute(() -> {
+			boolean needTranslation1, needTranslationMagic;
+			String selfLang = mSharedPreferences.getUserLang();
+			String fromLanguage;
+			String toLanguage;
+			if (isIncoming) {
+				fromLanguage = message.getMessageLanguage();
+				toLanguage = selfLang;
+			}
+			else {
+				fromLanguage = message.getMessageLanguage();
+				toLanguage = message.getTranslatedLanguage();
+			}
+
+			needTranslation1 = (!fromLanguage.equals(toLanguage));
+			needTranslationMagic = message.isMagic();
+
+			if (needTranslation1 && needTranslationMagic) {  // translate to 2 language, regular and magic
+				mWochatApi.translate2(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
+					message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText1 = response.getString("message");
+								message.setTranslatedText(translatedText1);
+								String translatedText2 = response.getString("message2");
+								message.setForceTranslatedText(translatedText2);
+
+								message.displayMessageAfterTranslation();
+
+								listener.onTranslationResult(message);
+
+							} catch (JSONException e) {
+								e.printStackTrace();
+								listener.onTranslationResult(message);
+							}
+
+						}
+						else {
+							Log.e(TAG, "translate res: error");
+							listener.onTranslationResult(message);
+						}
+					});
+			}
+
+			else if (needTranslation1) {  // regular translation only
+				mWochatApi.translate(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								message.setTranslatedText(translatedText);
+								message.displayMessageAfterTranslation();
+
+								listener.onTranslationResult(message);
+
+							} catch (JSONException e) {
+								e.printStackTrace();
+								listener.onTranslationResult(message);
+							}
+
+						}
+						else {
+							Log.e(TAG, "translate res: error");
+							listener.onTranslationResult(message);
+						}
+					});
+			}
+
+
+			else {  // for magic only
+				mWochatApi.translate(message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								message.setForceTranslatedText(translatedText);
+								message.displayMessageAfterTranslation();
+
+								listener.onTranslationResult(message);
+
+							} catch (JSONException e) {
+								e.printStackTrace();
+								listener.onTranslationResult(message);
+							}
+
+						}
+						else {
+							Log.e(TAG, "translate res: error");
+							listener.onTranslationResult(message);
+						}
+					});
+			}
+
+
+
+		});
+
+	}
+
+
 	private void translate(Message message, boolean isIncoming) {
 		mAppExecutors.networkIO().execute(() -> {
 			boolean needTranslation1, needTranslationMagic;
@@ -1034,7 +1143,9 @@ public class WCRepository {
 								String translatedText2 = response.getString("message2");
 								message.setForceTranslatedText(translatedText2);
 
-								message.setTranslatedLanguage(selfLang);
+								if (isIncoming)
+									message.setTranslatedLanguage(selfLang);
+
 								message.displayMessageAfterTranslation();
 
 								if (isIncoming)
@@ -1061,7 +1172,10 @@ public class WCRepository {
 							try {
 								String translatedText = response.getString("message");
 								message.setTranslatedText(translatedText);
-								message.setTranslatedLanguage(selfLang);
+
+								if (isIncoming)
+									message.setTranslatedLanguage(selfLang);
+
 								message.displayMessageAfterTranslation();
 
 								if (isIncoming)
@@ -1090,7 +1204,9 @@ public class WCRepository {
 								String translatedText = response.getString("message");
 								message.setForceTranslatedText(translatedText);
 
-								message.setTranslatedLanguage(selfLang);
+								if (isIncoming)
+									message.setTranslatedLanguage(selfLang);
+
 								message.displayMessageAfterTranslation();
 
 								if (isIncoming)
@@ -1114,7 +1230,6 @@ public class WCRepository {
 		});
 
 	}
-
 
 	private boolean handleIncomingMessageImage(Message message) {
 		boolean res;
@@ -1222,7 +1337,7 @@ public class WCRepository {
 			mConversationDao.updateIncoming(
 				message.getConversationId(),
 				message.getMessageId(),
-				message.getTimestamp(),
+				message.getTimestampMilli(),
 				messageText,
 				message.getSenderId(),
 				message.getAckStatus(),
@@ -1277,6 +1392,19 @@ public class WCRepository {
 		});
 	}
 
+	private void insertMessageAndConversation(Message message){
+		mMessageDao.insert(message);
+		mConversationDao.updateOutgoing(
+			message.getConversationId(),
+			message.getMessageId(),
+			message.getTimestampMilli(),
+			message.getMessageText(),
+			message.getSenderId(),
+			message.getAckStatus(),
+			message.getMessageType(),
+			message.getDuration());
+	}
+
 	public void addNewOutgoingMessage(Message message) {
 		Log.e(TAG, "addNewOutgoingMessage: " + message.getMessageType() + " , id: " + message.getId());
 
@@ -1293,16 +1421,7 @@ public class WCRepository {
 
 			message.showOriginalMessage();
 			message.setShouldBeDisplayed(true);
-			mMessageDao.insert(message);
-			mConversationDao.updateOutgoing(
-				message.getConversationId(),
-				message.getMessageId(),
-				message.getTimestamp(),
-				message.getMessageText(),
-				message.getSenderId(),
-				message.getAckStatus(),
-				message.getMessageType(),
-				message.getDuration());
+
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
 				String selfLang = mSharedPreferences.getUserLang();
@@ -1310,11 +1429,23 @@ public class WCRepository {
 				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
 				boolean needTranslationMagic = message.isMagic();
 
-				if (needTranslation1 || needTranslationMagic)
-					translate(message, false);
+				if (needTranslation1 || needTranslationMagic) {
+					translate(message, false, messageTranslated -> {
+						mAppExecutors.diskIO().execute(() -> {
+							insertMessageAndConversation(messageTranslated);
+						});
+					});
+				}
+				else {
+					insertMessageAndConversation(message);
+				}
 
 			}
-			else if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)) {
+			else {
+				insertMessageAndConversation(message);
+			}
+
+			if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)) {
 
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
@@ -1359,7 +1490,7 @@ public class WCRepository {
 					mConversationDao.updateOutgoing(
 						conversationId,
 						lastMessage.getMessageId(),
-						lastMessage.getTimestamp(),
+						lastMessage.getTimestampMilli(),
 						lastMessage.getMessageText(),
 						lastMessage.getSenderId(),
 						lastMessage.getAckStatus(),
@@ -1370,7 +1501,7 @@ public class WCRepository {
 					mConversationDao.updateIncoming(
 						conversationId,
 						lastMessage.getMessageId(),
-						lastMessage.getTimestamp(),
+						lastMessage.getTimestampMilli(),
 						lastMessage.getText(),
 						lastMessage.getSenderId(),
 						lastMessage.getAckStatus(),
@@ -1387,7 +1518,7 @@ public class WCRepository {
 	public void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
 		mAppExecutors.diskIO().execute(() -> {
 
-			Collections.sort(messages, (m1, m2) -> (int) (m1.getTimestamp() - m2.getTimestamp()));
+			Collections.sort(messages, (m1, m2) -> (int) (m1.getTimestampMilli() - m2.getTimestampMilli()));
 
 			for (int i = 0; i < contacts.length; i++) {
 				for (Message message : messages) {

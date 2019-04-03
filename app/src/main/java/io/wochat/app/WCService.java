@@ -92,6 +92,14 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				return;
 			}
 
+			/*****************************************************************************************/
+			// ios patches
+			message.setDuration(message.getDuration()*1000);
+			message.setConversationId(conversationId);
+			if (message.getTimestampMilli() == 0)
+				message.setTimestampMilli(message.getTimestamp()*1000);
+
+			/*****************************************************************************************/
 
 			boolean res = mRepository.handleIncomingMessage(message, new WCRepository.OnSaveMessageToDBListener() {
 				@Override
@@ -271,6 +279,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 	public void sendMessage(Message message){
+		message.setDuration(message.getDuration()/1000);
 		Log.e(TAG, "sendMessage: " + message.toJson());
 		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
 	}

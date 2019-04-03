@@ -180,11 +180,11 @@ public class Message implements IMessage,
 //	@Expose
 //    private String[] groups;
 	/**********************************************/
-//	@SerializedName("timestamp")
-//	@ColumnInfo(name = "timestamp")
-//	@Expose
-//	private long timestamp;
-
+	@SerializedName("timestamp")
+	@ColumnInfo(name = "timestamp")
+	@Expose
+	private long timestamp;
+	/**********************************************/
 	@SerializedName("timestamp_milliseconds")
 	@ColumnInfo(name = "timestamp_milli")
 	@Expose
@@ -754,7 +754,7 @@ public class Message implements IMessage,
 //	}
 
 	public long getTimestamp() {
-		return timestampMilli;
+		return timestamp;
 	}
 
 //	public long getTimestampInSec() {
@@ -762,8 +762,7 @@ public class Message implements IMessage,
 //	}
 
 	public void setTimestamp(long timestamp) {
-		//this.timestamp = timestamp;
-		this.timestampMilli = timestamp;
+		this.timestamp = timestamp;
 	}
 
 	public String getMessageText() {

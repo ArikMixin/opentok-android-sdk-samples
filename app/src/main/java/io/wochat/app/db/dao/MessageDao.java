@@ -99,7 +99,8 @@ public interface MessageDao {
 	@Insert
     void insert(Message message);
 
-	@Update(onConflict = OnConflictStrategy.IGNORE)
+	//@Update(onConflict = OnConflictStrategy.IGNORE)
+	@Update(onConflict = OnConflictStrategy.REPLACE)
 	void update(Message message);
 
 	@Query("UPDATE message_table " +

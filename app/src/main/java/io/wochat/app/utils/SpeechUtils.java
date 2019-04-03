@@ -33,8 +33,10 @@ public class SpeechUtils extends Transaction.Listener implements
 	AudioPlayer.Listener {
 
 
-	public static final String NUANCE_APP_KEY = "b19e0af4fc299dda72ec6960f44975d4945171e2be8b84243dc309b5f41842a5b74c9ab375378de723f648173fbdebd30e5cb5cce839f025fcfadaf0121c96c9";
-	public static final Uri NUANCE_SERVER_URI = Uri.parse("nmsps://NMDPTRIAL_valentin_valiprod_com20151212050805@sslsandbox-nmdp.nuancemobility.net:443");
+	// old public static final String NUANCE_APP_KEY = "b19e0af4fc299dda72ec6960f44975d4945171e2be8b84243dc309b5f41842a5b74c9ab375378de723f648173fbdebd30e5cb5cce839f025fcfadaf0121c96c9";
+	public static final String NUANCE_APP_KEY = "b4ee9c8d0461ff6b6d2eb0c3b00d7c7aeefa9fc81bb58877c49149483d804df26ee97f724a7edeb7ad8e7a5d9bf6d789f077520c2cda83f16bcc39a94d869bbb";
+	// old public static final Uri NUANCE_SERVER_URI = Uri.parse("nmsps://NMDPTRIAL_valentin_valiprod_com20151212050805@sslsandbox-nmdp.nuancemobility.net:443");
+	public static final Uri NUANCE_SERVER_URI = Uri.parse("nmsps://NMDPTRIAL_steeve_wochat_io20190402085630@sslsandbox-nmdp.nuancemobility.net:443");
 	private TextToSpeech mTextToSpeech;
 	private Session mNuanceSpeechSession;
 	private Transaction.Options mNuanceSpeechOptions;

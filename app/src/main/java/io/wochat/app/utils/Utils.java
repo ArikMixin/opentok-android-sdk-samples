@@ -399,4 +399,13 @@ public class Utils {
 
 		return output;
 	}
+
+	public static boolean isNullOrEmpty(String string) {
+		return (string == null)||(string.trim().isEmpty());
+	}
+
+	public static boolean isNotNullAndNotEmpty(String string) {
+		return (string != null)&&(!string.trim().isEmpty());
+	}
+
 }

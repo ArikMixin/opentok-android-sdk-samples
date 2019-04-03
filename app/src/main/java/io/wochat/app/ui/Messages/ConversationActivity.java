@@ -714,7 +714,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onMessageClick(Message message) {
-		if (message.getRepliedMessageId() != null){
+		if (Utils.isNotNullAndNotEmpty(message.getRepliedMessageId())){
 			int pos = mMessagesAdapter.getMessagePositionById(message.getRepliedMessageId());
 			if (pos > -1) {
 				mMessagesListRV.smoothScrollToPosition(pos);
