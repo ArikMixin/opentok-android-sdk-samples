@@ -64,8 +64,9 @@ public class LanguageSelectorAdapter extends RecyclerView.Adapter<LanguageSelect
 	@Override
 	public void onBindViewHolder(@NonNull LanguageSelectorViewHolder holder, int position) {
 		try {
-			holder.mLanguageTV.setText(mLanguagesFiltered.get(position).getLanguageNameFromISO());
-			Picasso.get().load(mLanguagesFiltered.get(position).getFlagResID()).into(holder.mCountryFlagIV);
+			SupportedLanguage lang = mLanguagesFiltered.get(position);
+			holder.mLanguageTV.setText(lang.getLanguageNameFromISO());
+			Picasso.get().load(lang.getFlagResID()).into(holder.mCountryFlagIV);
 		} catch (Exception e) {
 			e.printStackTrace();
 			Log.e(TAG, "Error onBindViewHolder, lang: " + mLanguagesFiltered.get(position).toString());
@@ -74,7 +75,7 @@ public class LanguageSelectorAdapter extends RecyclerView.Adapter<LanguageSelect
 
 	@Override
 	public int getItemCount() {
-		return mLanguagesFiltered.size();
+		return (mLanguagesFiltered==null)? 0: mLanguagesFiltered.size();
 	}
 
 	public void setLanguages(List<SupportedLanguage> supportedLanguages) {
@@ -139,7 +140,7 @@ public class LanguageSelectorAdapter extends RecyclerView.Adapter<LanguageSelect
 
 			@Override
 			protected void publishResults(CharSequence constraint, FilterResults filterResults) {
-				mLanguagesFiltered = (ArrayList<SupportedLanguage>) filterResults.values;
+				//mLanguagesFiltered = (ArrayList<SupportedLanguage>) filterResults.values;
 				notifyDataSetChanged();
 			}
 		};

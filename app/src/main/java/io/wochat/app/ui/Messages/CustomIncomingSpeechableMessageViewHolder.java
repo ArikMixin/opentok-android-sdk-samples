@@ -22,15 +22,17 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.utils.DateFormatter;
 import io.wochat.app.utils.SpeechUtils;
+import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
 
 
 public class CustomIncomingSpeechableMessageViewHolder
         extends MessageHolders.IncomingTextMessageViewHolder<Message>
-		implements View.OnClickListener, SpeechUtils.SpeechUtilsTTSListener {
+		implements View.OnClickListener, TextToSpeechUtil.TextToSpeechPlayingListener {
 
 	private static final String TAG = "InSpeechMsgViewHldr" ;
 	private final Contact mParticipantContact;
+	private final CircleImageView mMagicIndicator;
 	private String mPictureUrl;
 	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
@@ -43,10 +45,11 @@ public class CustomIncomingSpeechableMessageViewHolder
 	private int mUserSelectedPosition;
 	private boolean mUserIsSeeking;
 	private Handler mHandler = new Handler(Looper.getMainLooper());
-	private SpeechUtils mSpeechUtils;
+	//private SpeechUtils mSpeechUtils;
 	private String mMessageText;
 	private int mMessageDuration;
 	private SeekBarTimer mSeekBarTimer;
+	private String mDisplayedLang;
 
 	public CustomIncomingSpeechableMessageViewHolder(View itemView, Object payload) {
         super(itemView, payload);
@@ -62,6 +65,8 @@ public class CustomIncomingSpeechableMessageViewHolder
 		});
 		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
 //		mPictureUrl = (String)payload;
+
+		mMagicIndicator = (CircleImageView) itemView.findViewById(R.id.magicIndicatorCIV);
 
 		mParticipantContact = (Contact)payload;
 		mAvatarCIV.setContact(mParticipantContact);
@@ -86,6 +91,8 @@ public class CustomIncomingSpeechableMessageViewHolder
         super.onBind(message);
 
         mMessageText = message.getText();
+		mDisplayedLang = message.getDisplayedLang();
+
 		mMessageDuration = message.getDuration();
 
 		if (mSeekBarTimer != null)
@@ -95,10 +102,10 @@ public class CustomIncomingSpeechableMessageViewHolder
 
 
 
-		mSpeechUtils = new SpeechUtils();
-		mSpeechUtils.setSpeechUtilsTTSListener(this);
+//		mSpeechUtils = new SpeechUtils();
+//		mSpeechUtils.setSpeechUtilsTTSListener(this);
 		String selfLang = WCSharedPreferences.getInstance(this.itemView.getContext()).getUserLang();
-		mSpeechUtils.initSpeech(this.itemView.getContext(), this.itemView.getContext().getPackageName(), selfLang);
+//		mSpeechUtils.initSpeech(this.itemView.getContext(), this.itemView.getContext().getPackageName(), selfLang);
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
 		mSeekBar.setProgress(0);
 		mSeekBar.setMax(message.getDuration());
@@ -128,6 +135,16 @@ public class CustomIncomingSpeechableMessageViewHolder
 		}
 
 
+
+		if (message.isMagic()){
+			mMagicIndicator.setVisibility(View.VISIBLE);
+			int country = Utils.getCountryFlagDrawableFromLang(message.getDisplayedLang());
+			mMagicIndicator.setImageDrawable(itemView.getResources().getDrawable(country));
+		}
+		else {
+			mMagicIndicator.setVisibility(View.GONE);
+		}
+
     }
 
 
@@ -142,14 +159,17 @@ public class CustomIncomingSpeechableMessageViewHolder
 
 
     private void play(){
-		mSpeechUtils.startTextToSpeech(mMessageText);
+		TextToSpeechUtil.getInstance().setLanguage(mDisplayedLang);
+		TextToSpeechUtil.getInstance().startTextToSpeech(mMessageText, this);
+
+//		mSpeechUtils.startTextToSpeech(mMessageText, "he");
 		mIsPlaying = true;
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_pause_orange));
 	}
 
 	private void pause(){
-		if (mSpeechUtils.isPlaying()){
-			mSpeechUtils.pauseTextToSpeech();
+		if (TextToSpeechUtil.getInstance().isPlaying()){
+			TextToSpeechUtil.getInstance().pauseTextToSpeech();
 			//mCurrentPosition = mMediaPlayer.getCurrentPosition();
 			mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
 		}
@@ -159,7 +179,7 @@ public class CustomIncomingSpeechableMessageViewHolder
 	@Override
 	public void onClick(View v) {
 		try {
-			if (mSpeechUtils.isPlaying()){
+			if (TextToSpeechUtil.getInstance().isPlaying()){
 				pause();
 			}
 			else {
@@ -171,10 +191,7 @@ public class CustomIncomingSpeechableMessageViewHolder
 
 	}
 
-	@Override
-	public void onTextToSpeechInitOK() {
 
-	}
 
 	@Override
 	public void onBeginPlaying() {

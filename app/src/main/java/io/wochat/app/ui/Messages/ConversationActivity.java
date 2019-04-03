@@ -454,8 +454,7 @@ public class ConversationActivity extends PermissionActivity implements
 				CustomOutcomingSpeechableMessageViewHolder.class,
 				mSelfContact,
 				R.layout.item_custom_outcoming_audio_message_new,
-				this)
-			;
+				this);
 
 		mMessagesAdapter = new MessagesListAdapter<>(mSelfId, holdersConfig, mImageLoader);
 		mMessagesAdapter.setOnMessageLongClickListener(this);
@@ -605,7 +604,7 @@ public class ConversationActivity extends PermissionActivity implements
 		String msgText = input.toString();
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
-		if (mMagicButtonForceLanguage != null) {
+		if (isMagicButtonOn()) {
 			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
 			message.setForceTranslatedCountry(mMagicButtonForceCountry);
 		}
@@ -733,6 +732,10 @@ public class ConversationActivity extends PermissionActivity implements
 			}
 		}
 		if (message.isText()) {
+			message.userClickAction();
+			mMessagesAdapter.update(message);
+		}
+		else if (message.isSpeechable()){
 			message.userClickAction();
 			mMessagesAdapter.update(message);
 		}
@@ -1389,6 +1392,12 @@ public class ConversationActivity extends PermissionActivity implements
 	private void submitTempSpeechableMessage(String text, int duration) {
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, text, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
+
+		if (isMagicButtonOn()) {
+			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
+			message.setForceTranslatedCountry(mMagicButtonForceCountry);
+		}
+
 		message.setMessageType(Message.MSG_TYPE_SPEECHABLE);
 		message.setDuration(duration);
 		mConversationViewModel.addNewOutcomingMessage(message);
@@ -1501,7 +1510,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 	private void startRecordOrSpeech(){
-		if (mSameLanguageWithParticipant){
+		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
 			startRecord();
 		}
 		else  {
@@ -1512,7 +1521,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 	private void cancelRecordOrSpeech(){
-		if (mSameLanguageWithParticipant){
+		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
 			cancelRecord();
 		}
 		else  {
@@ -1526,7 +1535,7 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void finishRecordOrSpeech(){
-		if (mSameLanguageWithParticipant){
+		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
 			finishRecord();
 		}
 		else  {
@@ -1822,7 +1831,7 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void magicButtonClicked() {
-		if (mMagicButtonForceLanguage == null) {
+		if (!isMagicButtonOn()) {
 			LanguageSelectorDialog dialog = new LanguageSelectorDialog();
 			dialog.showDialog(this, mSupportedLanguages, supportedLanguage -> {
 				mMagicButtonForceLanguage = supportedLanguage.getLanguageCode();
@@ -1837,6 +1846,10 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 
+	}
+
+	private boolean isMagicButtonOn(){
+		return (mMagicButtonForceLanguage != null);
 	}
 
 }

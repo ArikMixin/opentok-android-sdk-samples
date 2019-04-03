@@ -22,15 +22,17 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.utils.DateFormatter;
 import io.wochat.app.utils.SpeechUtils;
+import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
 
 
 public class CustomOutcomingSpeechableMessageViewHolder
         extends MessageHolders.OutcomingTextMessageViewHolder<Message>
-		implements View.OnClickListener, SpeechUtils.SpeechUtilsTTSListener{
+		implements View.OnClickListener, TextToSpeechUtil.TextToSpeechPlayingListener{
 
 	private static final String TAG = "OutSpeechMsgViewHldr" ;
 	private final Contact mSelfContact;
+	private final CircleImageView mMagicIndicator;
 	private String mPictureUrl;
 	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
@@ -43,10 +45,11 @@ public class CustomOutcomingSpeechableMessageViewHolder
 	private int mUserSelectedPosition;
 	private boolean mUserIsSeeking;
 	private Handler mHandler = new Handler(Looper.getMainLooper());
-	private SpeechUtils mSpeechUtils;
+	//private SpeechUtils mSpeechUtils;
 	private String mMessageText;
 	private int mMessageDuration;
 	private SeekBarTimer mSeekBarTimer;
+	private String mDisplayedLang;
 
 	public CustomOutcomingSpeechableMessageViewHolder(View itemView, Object payload) {
         super(itemView, payload);
@@ -62,6 +65,9 @@ public class CustomOutcomingSpeechableMessageViewHolder
 		});
 
 		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
+
+		mMagicIndicator = (CircleImageView) itemView.findViewById(R.id.magicIndicatorCIV);
+
 		mSelfContact = (Contact)payload;
 		mAvatarCIV.setContact(mSelfContact);
 
@@ -89,6 +95,7 @@ public class CustomOutcomingSpeechableMessageViewHolder
 
 
         mMessageText = message.getText();
+		mDisplayedLang = message.getDisplayedLang();
 		mMessageDuration = message.getDuration();
 
 		if (mSeekBarTimer != null)
@@ -98,10 +105,10 @@ public class CustomOutcomingSpeechableMessageViewHolder
 
 
 
-		mSpeechUtils = new SpeechUtils();
-		mSpeechUtils.setSpeechUtilsTTSListener(this);
+
+		//mSpeechUtils.setSpeechUtilsTTSListener(this);
 		String selfLang = WCSharedPreferences.getInstance(this.itemView.getContext()).getUserLang();
-		mSpeechUtils.initSpeech(this.itemView.getContext(), this.itemView.getContext().getPackageName(), selfLang);
+		//mSpeechUtils.initSpeech(this.itemView.getContext(), this.itemView.getContext().getPackageName(), selfLang);
 
 
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
@@ -132,6 +139,15 @@ public class CustomOutcomingSpeechableMessageViewHolder
 				break;
 		}
 
+		if (message.isMagic()){
+			mMagicIndicator.setVisibility(View.VISIBLE);
+			int country = Utils.getCountryFlagDrawableFromLang(message.getDisplayedLang());
+			mMagicIndicator.setImageDrawable(itemView.getResources().getDrawable(country));
+		}
+		else {
+			mMagicIndicator.setVisibility(View.GONE);
+		}
+
 
     }
 
@@ -147,14 +163,16 @@ public class CustomOutcomingSpeechableMessageViewHolder
 
 
     private void play(){
-		mSpeechUtils.startTextToSpeech(mMessageText);
+		TextToSpeechUtil.getInstance().setLanguage(mDisplayedLang);
+		TextToSpeechUtil.getInstance().startTextToSpeech(mMessageText, this);
+		//mSpeechUtils.startTextToSpeech(mMessageText, mDisplayedLang);
 		mIsPlaying = true;
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_pause_orange));
 	}
 
 	private void pause(){
-		if (mSpeechUtils.isPlaying()){
-			mSpeechUtils.pauseTextToSpeech();
+		if (TextToSpeechUtil.getInstance().isPlaying()){
+			TextToSpeechUtil.getInstance().pauseTextToSpeech();
 			//mCurrentPosition = mMediaPlayer.getCurrentPosition();
 			mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
 		}
@@ -164,7 +182,7 @@ public class CustomOutcomingSpeechableMessageViewHolder
 	@Override
 	public void onClick(View v) {
 		try {
-			if (mSpeechUtils.isPlaying()){
+			if (TextToSpeechUtil.getInstance().isPlaying()){
 				pause();
 			}
 			else {
@@ -176,10 +194,6 @@ public class CustomOutcomingSpeechableMessageViewHolder
 
 	}
 
-	@Override
-	public void onTextToSpeechInitOK() {
-
-	}
 
 	@Override
 	public void onBeginPlaying() {

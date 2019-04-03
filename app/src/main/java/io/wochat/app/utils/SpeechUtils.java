@@ -271,9 +271,34 @@ public class SpeechUtils extends Transaction.Listener implements
 			Log.e(TAG, "TextToSpeech speak: " + text + ", result: " + res);
 		}
 		else {
+
 			mNuanceSpeechSession.speakString(text, mNuanceSpeechOptions, this);
 		}
 	}
+
+
+	public void startTextToSpeech(String text, String lang){
+		mSelfLang = lang;
+		onInit(TextToSpeech.SUCCESS);
+		if (mGoogleTextToSpeachSupported) {
+			String rand = UUID.randomUUID().toString();
+			int res = mTextToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, rand);
+			Log.e(TAG, "TextToSpeech speak: " + text + ", result: " + res);
+		}
+		else {
+			if(Utils.isHebrew(mSelfLang))
+				mNuanceSpeechOptions.setLanguage(new Language("heb-ISR"));
+
+			else if(mSelfLang.toLowerCase().equals("ar"))
+				mNuanceSpeechOptions.setLanguage(new Language("ara-XWW"));
+
+			mNuanceSpeechSession.setDefaultOptions(mNuanceSpeechOptions);
+
+			mNuanceSpeechSession.speakString(text, mNuanceSpeechOptions, this);
+		}
+	}
+
+
 
 	public void stopTextToSpeech(){
 		if (mGoogleTextToSpeachSupported) {
