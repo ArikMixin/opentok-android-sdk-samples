@@ -292,6 +292,12 @@ public class Message implements IMessage,
 	@ColumnInfo(name = "duration")
 	@Expose
 	private int duration;
+
+	/**********************************************/
+	@SerializedName("duration_mili")
+	@ColumnInfo(name = "duration_mili")
+	@Expose
+	private int durationMili;
 	/**********************************************/
 	@Ignore
 	private Contact contact;
@@ -396,7 +402,7 @@ public class Message implements IMessage,
 		return message;
 	}
 
-	public static Message CreateVideoMessage(String participantId, String selfId, String conversationId, Uri localMediaUri, Uri localThumbUri, String messageLang, int duration){
+	public static Message CreateVideoMessage(String participantId, String selfId, String conversationId, Uri localMediaUri, Uri localThumbUri, String messageLang, int durationMili){
 		Message message = new Message();
 		message.showNonTranslated = null;
 		message.showTranslationFlag = null;
@@ -409,7 +415,8 @@ public class Message implements IMessage,
 		message.mediaUrl = "";
 		message.mediaThumbnailUrl = "";
 		message.mediaLocalUri = localMediaUri.toString();
-		message.duration = duration;
+		message.durationMili = durationMili;
+		message.duration = durationMili / 1000;
 		message.mediaThumbnailLocalUri = localThumbUri.toString();
 		message.messageLanguage = messageLang;
 		//message.timestamp = System.currentTimeMillis()/1000;
@@ -418,7 +425,7 @@ public class Message implements IMessage,
 		return message;
 	}
 
-	public static Message CreateAudioMessage(String participantId, String selfId, String conversationId, Uri localMediaUri, int duration){
+	public static Message CreateAudioMessage(String participantId, String selfId, String conversationId, Uri localMediaUri, int durationMili){
 		Message message = new Message();
 		message.messageId = UUID.randomUUID().toString();
 		message.conversationId = conversationId;
@@ -429,7 +436,9 @@ public class Message implements IMessage,
 		message.mediaUrl = "";
 		message.mediaThumbnailUrl = "";
 		message.mediaLocalUri = localMediaUri.toString();
-		message.duration = duration;
+		message.durationMili = durationMili;
+		message.duration = durationMili / 1000;
+
 		//message.timestamp = System.currentTimeMillis()/1000;
 		message.timestampMilli = System.currentTimeMillis();
 		message.ackStatus = ACK_STATUS_PENDING;
@@ -550,6 +559,14 @@ public class Message implements IMessage,
     }
 
 	public void userClickAction(){
+		if (showTranslationFlag == null){
+			if (isMagic())
+				showTranslationFlag = SHOW_TRANSLATION_MAGIC;
+			else if (isOutgoing())
+				showTranslationFlag = SHOW_TRANSLATION_FALSE;
+			else
+				showTranslationFlag = SHOW_TRANSLATION_TRUE;
+		}
 		if (isMagic() && isTranslated()){
 			if(showTranslationFlag.equals(SHOW_TRANSLATION_MAGIC))
 				showTranslationFlag = SHOW_TRANSLATION_TRUE;
@@ -847,6 +864,17 @@ public class Message implements IMessage,
 	public void setDuration(int duration) {
 		this.duration = duration;
 	}
+
+
+	public int getDurationMili() {
+		return durationMili;
+	}
+
+	public void setDurationMili(int durationMili) {
+		this.durationMili = durationMili;
+	}
+
+
 
 	public void setContact(Contact contact) {
 		this.contact = contact;

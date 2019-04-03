@@ -21,6 +21,7 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.logic.NotificationHelper;
+import io.wochat.app.utils.Utils;
 
 
 public class WCService extends Service implements XMPPProvider.OnChatMessageListener {
@@ -94,7 +95,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			/*****************************************************************************************/
 			// ios patches
-			message.setDuration(message.getDuration()*1000);
+			if (message.getDurationMili() == 0){
+				message.setDurationMili(message.getDurationMili()*1000);
+			}
 			message.setConversationId(conversationId);
 			if (message.getTimestampMilli() == 0)
 				message.setTimestampMilli(message.getTimestamp()*1000);
@@ -279,7 +282,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 	public void sendMessage(Message message){
-		message.setDuration(message.getDuration()/1000);
+		//message.setDuration(message.getDuration()/1000);
 		Log.e(TAG, "sendMessage: " + message.toJson());
 		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
 	}

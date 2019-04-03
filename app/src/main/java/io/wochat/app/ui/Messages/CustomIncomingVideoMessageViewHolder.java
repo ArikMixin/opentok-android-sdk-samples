@@ -27,7 +27,7 @@ public class CustomIncomingVideoMessageViewHolder
     @Override
     public void onBind(Message message) {
         super.onBind(message);
-		mVideoDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDuration()));
+		mVideoDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDurationMili()));
 
         //boolean isOnline = message.getContact().isOnline();
     }

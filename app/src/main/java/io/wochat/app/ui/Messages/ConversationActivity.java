@@ -1325,22 +1325,31 @@ public class ConversationActivity extends PermissionActivity implements
 		@Override
 		public void onChanged(@Nullable Message message) {
 			if (message != null) {
-				if ((!message.getMediaUrl().equals(""))&&(message.getAckStatus().equals(Message.ACK_STATUS_PENDING))) { // need to upload - one time
-					//mConversationViewModel.getMessage(message.getMessageId()).removeObserver(mMessageObserver);
-					if ((mService != null) && (mService.isXmppConnected())) {
-						mService.sendMessage(message);
-					}
-					else {
-						new Handler(getMainLooper()).postDelayed(new Runnable() {
-							@Override
-							public void run() {
+				if (message.isAudio() || message.isVideo() || message.isImage()) {
+					if ((Utils.isNotNullAndNotEmpty(message.getMediaUrl())) && (message.getAckStatus().equals(Message.ACK_STATUS_PENDING))) { // need to upload - one time
+						//mConversationViewModel.getMessage(message.getMessageId()).removeObserver(mMessageObserver);
+						if ((mService != null) && (mService.isXmppConnected())) {
+							mService.sendMessage(message);
+						}
+						else {
+							new Handler(getMainLooper()).postDelayed(() -> {
 								if ((mService != null) && (mService.isXmppConnected())) {
 									mService.sendMessage(message);
 								}
+							}, 1500);
+						}
+						//mMessagesAdapter.update(message);
+					}
+				}
+				else if (message.isSpeechable()||message.isText()){
+					if (message.getAckStatus().equals(Message.ACK_STATUS_PENDING)) {
+						new Handler(getMainLooper()).postDelayed(() -> {
+							if ((mService != null) && (mService.isXmppConnected())) {
+								Log.e("GIL", "call sendMessage: " + message.toJson());
+								mService.sendMessage(message);
 							}
 						}, 1500);
 					}
-					//mMessagesAdapter.update(message);
 				}
 			}
 		}
@@ -1399,9 +1408,10 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 		message.setMessageType(Message.MSG_TYPE_SPEECHABLE);
-		message.setDuration(duration);
+		message.setDurationMili(duration);
+		message.setDuration(duration/1000);
+		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
-		mService.sendMessage(message);
 	}
 
 

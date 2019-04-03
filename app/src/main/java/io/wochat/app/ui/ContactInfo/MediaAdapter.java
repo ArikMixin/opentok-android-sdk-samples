@@ -48,7 +48,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ImageViewHol
 		if (mMessages.get(position).getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
 			holder.playIV.setVisibility(View.VISIBLE);
 			holder.durationTV.setVisibility(View.VISIBLE);
-			holder.durationTV.setText(Utils.convertSecondsToHMmSs(mMessages.get(position).getDuration()));
+			holder.durationTV.setText(Utils.convertSecondsToHMmSs(mMessages.get(position).getDurationMili()));
 		}
 	}
 

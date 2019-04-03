@@ -93,7 +93,7 @@ public class CustomIncomingSpeechableMessageViewHolder
         mMessageText = message.getText();
 		mDisplayedLang = message.getDisplayedLang();
 
-		mMessageDuration = message.getDuration();
+		mMessageDuration = message.getDurationMili();
 
 		if (mSeekBarTimer != null)
 			mSeekBarTimer.cancel();
@@ -108,8 +108,8 @@ public class CustomIncomingSpeechableMessageViewHolder
 //		mSpeechUtils.initSpeech(this.itemView.getContext(), this.itemView.getContext().getPackageName(), selfLang);
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
 		mSeekBar.setProgress(0);
-		mSeekBar.setMax(message.getDuration());
-        mDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDuration()));
+		mSeekBar.setMax(message.getDurationMili());
+        mDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDurationMili()));
         mTimeTV.setText(DateFormatter.format(message.getCreatedAt(), DateFormatter.Template.TIME));
 
 		mUserSelectedPosition = 0;

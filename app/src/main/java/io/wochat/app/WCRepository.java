@@ -1026,6 +1026,7 @@ public class WCRepository {
 
 	private void translate(Message message, boolean isIncoming, final TranslationResultListener listener) {
 		mAppExecutors.networkIO().execute(() -> {
+			Log.e("GIL", "translate: " + message.toJson());
 			boolean needTranslation1, needTranslationMagic;
 			String selfLang = mSharedPreferences.getUserLang();
 			String fromLanguage;
@@ -1055,17 +1056,19 @@ public class WCRepository {
 								message.setForceTranslatedText(translatedText2);
 
 								message.displayMessageAfterTranslation();
-
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 
 							} catch (JSONException e) {
 								e.printStackTrace();
+								Log.e("GIL", "translate result error: " + message.toJson());
 								listener.onTranslationResult(message);
 							}
 
 						}
 						else {
 							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
 							listener.onTranslationResult(message);
 						}
 					});
@@ -1080,17 +1083,19 @@ public class WCRepository {
 								String translatedText = response.getString("message");
 								message.setTranslatedText(translatedText);
 								message.displayMessageAfterTranslation();
-
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 
 							} catch (JSONException e) {
 								e.printStackTrace();
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 							}
 
 						}
 						else {
 							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
 							listener.onTranslationResult(message);
 						}
 					});
@@ -1106,17 +1111,19 @@ public class WCRepository {
 								String translatedText = response.getString("message");
 								message.setForceTranslatedText(translatedText);
 								message.displayMessageAfterTranslation();
-
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 
 							} catch (JSONException e) {
 								e.printStackTrace();
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 							}
 
 						}
 						else {
 							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
 							listener.onTranslationResult(message);
 						}
 					});
@@ -1358,7 +1365,7 @@ public class WCRepository {
 				message.getSenderId(),
 				message.getAckStatus(),
 				message.getMessageType(),
-				message.getDuration(),
+				message.getDurationMili(),
 				unreadMessagesCount);
 			return true;
 		} catch (Exception e) {
@@ -1409,6 +1416,7 @@ public class WCRepository {
 	}
 
 	private void insertMessageAndConversation(Message message){
+		Log.e("GIL", "insertMessageAndConversation: " + message.toJson());
 		mMessageDao.insert(message);
 		mConversationDao.updateOutgoing(
 			message.getConversationId(),
@@ -1418,10 +1426,11 @@ public class WCRepository {
 			message.getSenderId(),
 			message.getAckStatus(),
 			message.getMessageType(),
-			message.getDuration());
+			message.getDurationMili());
 	}
 
 	public void addNewOutgoingMessage(Message message) {
+		Log.e("GIL", "addNewOutgoingMessage: " + message.toJson());
 		Log.e(TAG, "addNewOutgoingMessage: " + message.getMessageType() + " , id: " + message.getId());
 
 		try {
@@ -1518,7 +1527,7 @@ public class WCRepository {
 						lastMessage.getSenderId(),
 						lastMessage.getAckStatus(),
 						lastMessage.getMessageType(),
-						lastMessage.getDuration());
+						lastMessage.getDurationMili());
 				}
 				else {
 					mConversationDao.updateIncoming(
@@ -1529,7 +1538,7 @@ public class WCRepository {
 						lastMessage.getSenderId(),
 						lastMessage.getAckStatus(),
 						lastMessage.getMessageType(),
-						lastMessage.getDuration(),
+						lastMessage.getDurationMili(),
 						0);
 				}
 			}

@@ -102,8 +102,8 @@ public class CustomParentAudioMessageViewHolder
 
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
 		mSeekBar.setProgress(0);
-		mSeekBar.setMax(message.getDuration());
-        mDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDuration()));
+		mSeekBar.setMax(message.getDurationMili());
+        mDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDurationMili()));
         mTimeTV.setText(DateFormatter.format(message.getCreatedAt(), DateFormatter.Template.TIME));
 
         try {
