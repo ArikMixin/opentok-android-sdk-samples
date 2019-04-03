@@ -490,6 +490,12 @@ public class Message implements IMessage,
 		return messageType.equals(MSG_TYPE_TEXT);
 	}
 
+	@Override
+	public boolean isSpeechable() {
+		return messageType.equals(MSG_TYPE_SPEECHABLE);
+	}
+
+
 	public String getDisplayedLang(){
 		switch (showTranslationFlag){
 			case SHOW_TRANSLATION_MAGIC:

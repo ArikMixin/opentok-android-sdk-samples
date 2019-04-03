@@ -735,6 +735,10 @@ public class ConversationActivity extends PermissionActivity implements
 			message.userClickAction();
 			mMessagesAdapter.update(message);
 		}
+		else if (message.isSpeechable()){
+			message.userClickAction();
+			mMessagesAdapter.update(message);
+		}
 		else if (message.isImage()) {
 			if ((message.getImageURL() != null) && (!message.getImageURL().equals(""))) {
 				mPreviewImagesIV.setVisibility(View.VISIBLE);
