@@ -4,11 +4,14 @@ import android.view.View;
 import android.widget.ImageView;
 
 
+import com.hbb20.CCPCountry;
 import com.stfalcon.chatkit.messages.MessageHolders;
 
 import io.wochat.app.R;
+import io.wochat.app.components.CircleImageView;
 import io.wochat.app.components.MessageReplyLayout;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.utils.Utils;
 
 public class CustomOutcomingTextMessageViewHolder
         extends MessageHolders.OutcomingTextMessageViewHolder<Message> {
@@ -16,6 +19,7 @@ public class CustomOutcomingTextMessageViewHolder
     private final ImageView mCocheIV;
     private final MessageReplyLayout mMessageReplyLayout;
     private final Payload mPayload;
+    private final CircleImageView mMagicIndicator;
 
 
     public CustomOutcomingTextMessageViewHolder(View itemView, Object payload) {
@@ -23,6 +27,7 @@ public class CustomOutcomingTextMessageViewHolder
         mCocheIV = (ImageView) itemView.findViewById(R.id.coche_iv);
         mMessageReplyLayout = (MessageReplyLayout) itemView.findViewById(R.id.reply_layout);
         mMessageReplyLayout.showCloseBtn(false);
+        mMagicIndicator = (CircleImageView)itemView.findViewById(R.id.magicIndicatorCIV);
         mPayload = (Payload) payload;
 
     }
@@ -60,6 +65,16 @@ public class CustomOutcomingTextMessageViewHolder
 			String name = mPayload.onPayloadListener.getSenderName(message.getRepliedMessageId());
 			mMessageReplyLayout.showReplyMessage(replyMessage, name);
 		}
+
+
+		if (message.isMagic()){
+            mMagicIndicator.setVisibility(View.VISIBLE);
+			int country = Utils.getCountryFlagDrawableFromLang(message.getDisplayedLang());
+			mMagicIndicator.setImageDrawable(itemView.getResources().getDrawable(country));
+        }
+        else {
+            mMagicIndicator.setVisibility(View.GONE);
+        }
 
 
     }

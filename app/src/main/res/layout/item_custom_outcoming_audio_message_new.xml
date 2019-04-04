@@ -22,15 +22,25 @@
             android:layout_height="wrap_content"
             android:background="@color/audio_msg_back_outgoing"
             android:orientation="horizontal"
-            android:paddingBottom="4dp"
-            android:paddingTop="4dp">
+            android:paddingBottom="0dp"
+            android:paddingTop="0dp">
 
+
+            <io.wochat.app.components.CircleImageView
+                android:id="@id/magicIndicatorCIV"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:src="@drawable/flag_israel"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:visibility="visible"/>
 
             <ImageView
                 android:id="@+id/play_pause_iv"
                 android:layout_width="40dp"
                 android:layout_height="0dp"
                 android:layout_gravity="center_vertical"
+                android:layout_marginLeft="10dp"
                 android:scaleType="center"
                 android:src="@drawable/msg_audio_play_orange"
                 android:tint="@color/app_blue"
@@ -41,7 +51,7 @@
 
             <SeekBar
                 android:id="@+id/seekbar"
-                android:layout_width="170dp"
+                android:layout_width="160dp"
                 android:layout_height="wrap_content"
                 android:paddingLeft="6dp"
                 android:paddingRight="6dp"

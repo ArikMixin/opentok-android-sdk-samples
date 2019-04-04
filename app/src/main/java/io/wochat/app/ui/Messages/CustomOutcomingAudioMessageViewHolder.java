@@ -26,8 +26,9 @@ public class CustomOutcomingAudioMessageViewHolder
         extends MessageHolders.OutcomingTextMessageViewHolder<Message>
 		implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
-	private static final String TAG = "ParentAudioMsgViewHldr" ;
+	private static final String TAG = "CustomOutcomingAudioMessageViewHolder" ;
 	private final Contact mSelfContact;
+	private final CircleImageView mMagicIndicator;
 	private String mPictureUrl;
 	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
@@ -57,6 +58,8 @@ public class CustomOutcomingAudioMessageViewHolder
 		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
 		mSelfContact = (Contact)payload;
 		mAvatarCIV.setContact(mSelfContact);
+		mMagicIndicator = (CircleImageView) itemView.findViewById(R.id.magicIndicatorCIV);
+		mMagicIndicator.setVisibility(View.GONE);
 
 
 //		mPictureUrl = (String)payload;
@@ -112,8 +115,8 @@ public class CustomOutcomingAudioMessageViewHolder
 
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
 		mSeekBar.setProgress(0);
-		mSeekBar.setMax(message.getDuration());
-        mDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDuration()));
+		mSeekBar.setMax(message.getDurationMili());
+        mDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDurationMili()));
         mTimeTV.setText(DateFormatter.format(message.getCreatedAt(), DateFormatter.Template.TIME));
 
         try {

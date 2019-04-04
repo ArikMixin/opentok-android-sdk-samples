@@ -5,7 +5,6 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -27,14 +26,12 @@ import org.json.JSONObject;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import io.wochat.app.com.WochatApi;
 import io.wochat.app.db.WCDatabase;
@@ -57,6 +54,8 @@ import io.wochat.app.model.NotificationData;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
 import io.wochat.app.utils.ImagePickerUtil;
+import io.wochat.app.utils.SpeechToTextUtil;
+import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
 
 /**
@@ -169,6 +168,24 @@ public class WCRepository {
 		mNotifDao = mDatabase.notifDao();
 		mSelfUser = mUserDao.getFirstUser();
 
+
+		TextToSpeechUtil ttsu = TextToSpeechUtil.getInstance();
+		ttsu.setTextToSpeechInitListener(new TextToSpeechUtil.TextToSpeechInitListener() {
+			@Override
+			public void onTextToSpeechInitOK() {
+				Log.e("TextToSpeechUtil", "onTextToSpeechInitOK");
+			}
+
+			@Override
+			public void onTextToSpeechInitFAIL() {
+				Log.e("TextToSpeechUtil", "onTextToSpeechInitFAIL");
+			}
+		});
+		ttsu.init(application, mSharedPreferences.getUserLang());
+
+
+		SpeechToTextUtil speechToTextUtil =  SpeechToTextUtil.getInstance();
+		speechToTextUtil.init(application, application.getPackageName(), mSharedPreferences.getUserLang());
 	}
 
 
@@ -1010,6 +1027,7 @@ public class WCRepository {
 
 	private void translate(Message message, boolean isIncoming, final TranslationResultListener listener) {
 		mAppExecutors.networkIO().execute(() -> {
+			Log.e("GIL", "translate: " + message.toJson());
 			boolean needTranslation1, needTranslationMagic;
 			String selfLang = mSharedPreferences.getUserLang();
 			String fromLanguage;
@@ -1039,17 +1057,19 @@ public class WCRepository {
 								message.setForceTranslatedText(translatedText2);
 
 								message.displayMessageAfterTranslation();
-
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 
 							} catch (JSONException e) {
 								e.printStackTrace();
+								Log.e("GIL", "translate result error: " + message.toJson());
 								listener.onTranslationResult(message);
 							}
 
 						}
 						else {
 							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
 							listener.onTranslationResult(message);
 						}
 					});
@@ -1064,17 +1084,19 @@ public class WCRepository {
 								String translatedText = response.getString("message");
 								message.setTranslatedText(translatedText);
 								message.displayMessageAfterTranslation();
-
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 
 							} catch (JSONException e) {
 								e.printStackTrace();
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 							}
 
 						}
 						else {
 							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
 							listener.onTranslationResult(message);
 						}
 					});
@@ -1090,17 +1112,19 @@ public class WCRepository {
 								String translatedText = response.getString("message");
 								message.setForceTranslatedText(translatedText);
 								message.displayMessageAfterTranslation();
-
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 
 							} catch (JSONException e) {
 								e.printStackTrace();
+								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 							}
 
 						}
 						else {
 							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
 							listener.onTranslationResult(message);
 						}
 					});
@@ -1342,7 +1366,7 @@ public class WCRepository {
 				message.getSenderId(),
 				message.getAckStatus(),
 				message.getMessageType(),
-				message.getDuration(),
+				message.getDurationMili(),
 				unreadMessagesCount);
 			return true;
 		} catch (Exception e) {
@@ -1393,6 +1417,7 @@ public class WCRepository {
 	}
 
 	private void insertMessageAndConversation(Message message){
+		Log.e("GIL", "insertMessageAndConversation: " + message.toJson());
 		mMessageDao.insert(message);
 		mConversationDao.updateOutgoing(
 			message.getConversationId(),
@@ -1402,10 +1427,11 @@ public class WCRepository {
 			message.getSenderId(),
 			message.getAckStatus(),
 			message.getMessageType(),
-			message.getDuration());
+			message.getDurationMili());
 	}
 
 	public void addNewOutgoingMessage(Message message) {
+		Log.e("GIL", "addNewOutgoingMessage: " + message.toJson());
 		Log.e(TAG, "addNewOutgoingMessage: " + message.getMessageType() + " , id: " + message.getId());
 
 		try {
@@ -1424,8 +1450,8 @@ public class WCRepository {
 
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
-				String selfLang = mSharedPreferences.getUserLang();
 
+				String selfLang = mSharedPreferences.getUserLang();
 				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
 				boolean needTranslationMagic = message.isMagic();
 
@@ -1446,6 +1472,13 @@ public class WCRepository {
 			}
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)) {
+
+				String selfLang = mSharedPreferences.getUserLang();
+				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
+				boolean needTranslationMagic = message.isMagic();
+
+				if (needTranslation1 || needTranslationMagic)
+					translate(message, false);
 
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
@@ -1495,7 +1528,7 @@ public class WCRepository {
 						lastMessage.getSenderId(),
 						lastMessage.getAckStatus(),
 						lastMessage.getMessageType(),
-						lastMessage.getDuration());
+						lastMessage.getDurationMili());
 				}
 				else {
 					mConversationDao.updateIncoming(
@@ -1506,7 +1539,7 @@ public class WCRepository {
 						lastMessage.getSenderId(),
 						lastMessage.getAckStatus(),
 						lastMessage.getMessageType(),
-						lastMessage.getDuration(),
+						lastMessage.getDurationMili(),
 						0);
 				}
 			}
@@ -1838,6 +1871,18 @@ public class WCRepository {
 
 	public LiveData<List<Message>> getMediaMessagesConversation(String conversationId) {
 		return mMessageDao.getMediaMessagesConversation(conversationId);
+	}
+
+
+	public void updateMagicButtonLangCode(String conversationId, String langCode){
+		mAppExecutors.diskIO().execute(() -> {
+			mConversationDao.updateMagicButtonLangCode(conversationId, langCode);
+		});
+	}
+
+
+	public LiveData<String> getMagicButtonLangCode(String conversationId){
+		return mConversationDao.getMagicButtonLangCode(conversationId);
 	}
 
 }

@@ -35,9 +35,19 @@
             android:id="@+id/reply_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
             android:minWidth="250dp">
 
         </io.wochat.app.components.MessageReplyLayout>
+
+
+        <io.wochat.app.components.CircleImageView
+            android:id="@id/magicIndicatorCIV"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_marginBottom="4dp"
+            android:src="@drawable/flag_israel"/>
+
 
         <TextView
             android:id="@id/messageText"

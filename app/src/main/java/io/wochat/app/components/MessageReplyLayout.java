@@ -112,7 +112,7 @@ public class MessageReplyLayout extends LinearLayout {
 				setMinimumWidth(Utils.dp2px(getContext(), 250));
 				break;
 			case Message.MSG_TYPE_VIDEO:
-				mMessageTxtTV.setText(String.format(getContext().getString(R.string.reply_video_msg_text), Utils.convertSecondsToHMmSs(message.getDuration())));
+				mMessageTxtTV.setText(String.format(getContext().getString(R.string.reply_video_msg_text), Utils.convertSecondsToHMmSs(message.getDurationMili())));
 				mMessageTxtTV.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.ic_action_video) , null, null, null);
 				mMessageImageFL.setVisibility(VISIBLE);
 				mMessageImageVideoIconIV.setVisibility(VISIBLE);
@@ -125,7 +125,7 @@ public class MessageReplyLayout extends LinearLayout {
 				break;
 			case Message.MSG_TYPE_AUDIO:
 			case Message.MSG_TYPE_SPEECHABLE:
-				mMessageTxtTV.setText(String.format(getContext().getString(R.string.reply_audio_msg_text), Utils.convertSecondsToHMmSs(message.getDuration())));
+				mMessageTxtTV.setText(String.format(getContext().getString(R.string.reply_audio_msg_text), Utils.convertSecondsToHMmSs(message.getDurationMili())));
 				mMessageTxtTV.setCompoundDrawablesWithIntrinsicBounds(getResources().getDrawable(R.drawable.msg_in_mic_light) , null, null, null);
 				mMessageImageFL.setVisibility(GONE);
 				break;

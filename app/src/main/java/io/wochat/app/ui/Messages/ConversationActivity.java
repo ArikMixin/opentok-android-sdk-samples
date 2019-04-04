@@ -82,7 +82,8 @@ import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
 import io.wochat.app.ui.Languages.LanguageSelectorDialog;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
-import io.wochat.app.utils.SpeechUtils;
+import io.wochat.app.utils.SpeechToTextUtil;
+//import io.wochat.app.utils.SpeechUtils;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.utils.videocompression.MediaController;
 import io.wochat.app.viewmodel.ConversationViewModel;
@@ -104,7 +105,7 @@ public class ConversationActivity extends PermissionActivity implements
 	DateFormatter.Formatter,
 	MessageInput.ButtonClickListener,
 	MessageHolders.ContentChecker<Message>,
-	SpeechUtils.SpeechUtilsSTTListener, MessagesListAdapter.SelectionListener {
+	MessagesListAdapter.SelectionListener, SpeechToTextUtil.SpeechUtilsSTTListener {
 
 	private static final String TAG = "ConversationActivity";
 	private static final int REQUEST_SELECT_IMAGE_VIDEO 	= 1;
@@ -159,7 +160,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private boolean mSameLanguageWithParticipant;
 	private SpeechRecognizer mSpeechRecognizer;
 	private Intent mSpeechRecognizerIntent;
-	private SpeechUtils mSpeechUtils;
+	//private SpeechUtils mSpeechUtils;
 	private String mSelfName;
 	private Contact mSelfContact;
 	private Contact mParticipantContact;
@@ -318,8 +319,27 @@ public class ConversationActivity extends PermissionActivity implements
 
 		mSupportedLanguagesViewModel.getSupportedLanguages().observe(this, supportedLanguages -> {
 			mSupportedLanguages = supportedLanguages;
+			mConversationViewModel.getMagicButtonLangCode(mConversationId).observe(this, langCode -> {
+				if (langCode != null) {
+					for (SupportedLanguage supportedLanguage : mSupportedLanguages) {
+						if (supportedLanguage.getLanguageCode().equals(langCode)) {
+							mMagicButtonForceLanguage = supportedLanguage.getLanguageCode();
+							mMagicButtonForceCountry = supportedLanguage.getCountryCode();
+							setMagicButtonLanguage(mMagicButtonForceLanguage, true);
+
+						}
+					}
+				}
+				else {
+					setMagicButtonLanguage(mParticipantLang, false);
+					mMagicButtonForceLanguage = null;
+					mMagicButtonForceCountry = null;
+				}
+			});
+
 		});
 		mSupportedLanguagesViewModel.loadLanguages(Locale.getDefault().getLanguage());
+
 
 
 		mConversationViewModel.getConversationAndMessages(mConversationId,
@@ -342,8 +362,10 @@ public class ConversationActivity extends PermissionActivity implements
 		mRecordingBigIV.setImageDrawable(getDrawable(R.drawable.mic_recording_empty));
 		mRecordingBigIV.setOnTouchListener(mRecordingOnTouchListener);
 
-		mSpeechUtils = new SpeechUtils();
-		mSpeechUtils.setSpeechUtilsSTTListener(this);
+//		mSpeechUtils = new SpeechUtils();
+//		mSpeechUtils.setSpeechUtilsSTTListener(this);
+
+		SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
 
 
 		if (mClickedFromNotifivation){
@@ -454,8 +476,7 @@ public class ConversationActivity extends PermissionActivity implements
 				CustomOutcomingSpeechableMessageViewHolder.class,
 				mSelfContact,
 				R.layout.item_custom_outcoming_audio_message_new,
-				this)
-			;
+				this);
 
 		mMessagesAdapter = new MessagesListAdapter<>(mSelfId, holdersConfig, mImageLoader);
 		mMessagesAdapter.setOnMessageLongClickListener(this);
@@ -605,19 +626,22 @@ public class ConversationActivity extends PermissionActivity implements
 		String msgText = input.toString();
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
-		if (mMagicButtonForceLanguage != null) {
+		if (isMagicButtonOn()) {
 			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
 			message.setForceTranslatedCountry(mMagicButtonForceCountry);
+			mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		}
 
 		if (mInputMessageReplyLayout.getVisibility() == View.VISIBLE){
 			message.setRepliedMessageId(mInputMessageReplyLayout.getMessage().getId());
 			mInputMessageReplyLayout.setVisibility(View.GONE);
 		}
+
 		mConversationViewModel.addNewOutcomingMessage(message);
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mIsInputInTextMode = false;
-		mService.sendMessage(message);
+		if (!message.isMagic())
+			mService.sendMessage(message);
 		returnRecordingButtonToPlace(false);
 		return true;
 
@@ -733,6 +757,10 @@ public class ConversationActivity extends PermissionActivity implements
 			}
 		}
 		if (message.isText()) {
+			message.userClickAction();
+			mMessagesAdapter.update(message);
+		}
+		else if (message.isSpeechable()){
 			message.userClickAction();
 			mMessagesAdapter.update(message);
 		}
@@ -1322,22 +1350,43 @@ public class ConversationActivity extends PermissionActivity implements
 		@Override
 		public void onChanged(@Nullable Message message) {
 			if (message != null) {
-				if ((!message.getMediaUrl().equals(""))&&(message.getAckStatus().equals(Message.ACK_STATUS_PENDING))) { // need to upload - one time
-					//mConversationViewModel.getMessage(message.getMessageId()).removeObserver(mMessageObserver);
-					if ((mService != null) && (mService.isXmppConnected())) {
-						mService.sendMessage(message);
-					}
-					else {
-						new Handler(getMainLooper()).postDelayed(new Runnable() {
-							@Override
-							public void run() {
+				if (message.isAudio() || message.isVideo() || message.isImage()) {
+					if ((Utils.isNotNullAndNotEmpty(message.getMediaUrl())) && (message.getAckStatus().equals(Message.ACK_STATUS_PENDING))) { // need to upload - one time
+						//mConversationViewModel.getMessage(message.getMessageId()).removeObserver(mMessageObserver);
+						if ((mService != null) && (mService.isXmppConnected())) {
+							mService.sendMessage(message);
+						}
+						else {
+							new Handler(getMainLooper()).postDelayed(() -> {
 								if ((mService != null) && (mService.isXmppConnected())) {
 									mService.sendMessage(message);
 								}
+							}, 1500);
+						}
+						//mMessagesAdapter.update(message);
+					}
+				}
+				else if (message.isMagic()){
+					if (Utils.isNotNullAndNotEmpty(message.getForceTranslatedText())){
+						if (message.getAckStatus().equals(Message.ACK_STATUS_PENDING)) {
+							new Handler(getMainLooper()).postDelayed(() -> {
+								if ((mService != null) && (mService.isXmppConnected())) {
+									Log.e("GIL", "call sendMessage: " + message.toJson());
+									mService.sendMessage(message);
+								}
+							}, 1500);
+						}
+					}
+				}
+				else if (message.isSpeechable()||message.isText()){
+					if (message.getAckStatus().equals(Message.ACK_STATUS_PENDING)) {
+						new Handler(getMainLooper()).postDelayed(() -> {
+							if ((mService != null) && (mService.isXmppConnected())) {
+								Log.e("GIL", "call sendMessage: " + message.toJson());
+								mService.sendMessage(message);
 							}
 						}, 1500);
 					}
-					//mMessagesAdapter.update(message);
 				}
 			}
 		}
@@ -1389,10 +1438,17 @@ public class ConversationActivity extends PermissionActivity implements
 	private void submitTempSpeechableMessage(String text, int duration) {
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, text, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
+
+		if (isMagicButtonOn()) {
+			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
+			message.setForceTranslatedCountry(mMagicButtonForceCountry);
+		}
+
 		message.setMessageType(Message.MSG_TYPE_SPEECHABLE);
-		message.setDuration(duration);
+		message.setDurationMili(duration);
+		message.setDuration(duration/1000);
+		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
-		mService.sendMessage(message);
 	}
 
 
@@ -1501,22 +1557,24 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 	private void startRecordOrSpeech(){
-		if (mSameLanguageWithParticipant){
+		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
 			startRecord();
 		}
 		else  {
-			mSpeechUtils.initSpeech(this, this.getPackageName(), mSelfLang);
-			mSpeechUtils.startSpeechToText();
+//			mSpeechUtils.initSpeech(this, this.getPackageName(), mSelfLang);
+//			mSpeechUtils.startSpeechToText();
+			SpeechToTextUtil.getInstance().startSpeechToText();
 		}
 	}
 
 
 	private void cancelRecordOrSpeech(){
-		if (mSameLanguageWithParticipant){
+		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
 			cancelRecord();
 		}
 		else  {
-			mSpeechUtils.cancelSpeechToText();
+			//mSpeechUtils.cancelSpeechToText();
+			SpeechToTextUtil.getInstance().cancelSpeechToText();
 			mRecordingTimer.cancel();
 			mRecordingStarted = false;
 			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
@@ -1526,11 +1584,12 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void finishRecordOrSpeech(){
-		if (mSameLanguageWithParticipant){
+		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
 			finishRecord();
 		}
 		else  {
-			mSpeechUtils.stopSpeechToText();
+			//mSpeechUtils.stopSpeechToText();
+			SpeechToTextUtil.getInstance().stopSpeechToText();
 			mRecordingTimer.cancel();
 			mRecordingStarted = false;
 			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
@@ -1542,7 +1601,7 @@ public class ConversationActivity extends PermissionActivity implements
 	@Override
 	public void onSpeechToTextResult(String text, int duration) {
 		//Log.e(TAG, "onSpeechResult: " + text);
-		mSpeechUtils.destroy();
+		//mSpeechUtils.destroy();
 		submitTempSpeechableMessage(text, duration);
 	}
 
@@ -1822,21 +1881,27 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void magicButtonClicked() {
-		if (mMagicButtonForceLanguage == null) {
+		if (!isMagicButtonOn()) {
 			LanguageSelectorDialog dialog = new LanguageSelectorDialog();
 			dialog.showDialog(this, mSupportedLanguages, supportedLanguage -> {
 				mMagicButtonForceLanguage = supportedLanguage.getLanguageCode();
 				mMagicButtonForceCountry = supportedLanguage.getCountryCode();
 				setMagicButtonLanguage(mMagicButtonForceLanguage, true);
+				mConversationViewModel.updateMagicButtonLangCode(mConversationId, mMagicButtonForceLanguage);
 			});
 		}
 		else {
 			setMagicButtonLanguage(mParticipantLang, false);
 			mMagicButtonForceLanguage = null;
 			mMagicButtonForceCountry = null;
+			mConversationViewModel.updateMagicButtonLangCode(mConversationId, null);
 		}
 
 
+	}
+
+	private boolean isMagicButtonOn(){
+		return (mMagicButtonForceLanguage != null);
 	}
 
 }

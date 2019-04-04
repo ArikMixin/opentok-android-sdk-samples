@@ -136,12 +136,23 @@
                     app:incomingDefaultBubblePressedColor="@color/incoming_bubble"
                     app:incomingDefaultBubbleSelectedColor="@color/blue_semi_transparent"
 
+                    app:incomingBubblePaddingLeft="10dp"
+                    app:incomingBubblePaddingTop="10dp"
+                    app:incomingBubblePaddingBottom="10dp"
+                    app:incomingBubblePaddingRight="10dp"
+
+
                     app:outcomingImageTimeTextColor="@color/white"
                     app:outcomingTextColor="@color/black"
                     app:outcomingTimeTextColor="@color/black"
                     app:outcomingDefaultBubbleColor="@color/outcoming_bubble"
                     app:outcomingDefaultBubblePressedColor="@color/outcoming_bubble"
                     app:outcomingDefaultBubbleSelectedColor="@color/blue_semi_transparent"
+
+                    app:outcomingBubblePaddingLeft="10dp"
+                    app:outcomingBubblePaddingTop="10dp"
+                    app:outcomingBubblePaddingBottom="10dp"
+                    app:outcomingBubblePaddingRight="10dp"
                      />
 
 

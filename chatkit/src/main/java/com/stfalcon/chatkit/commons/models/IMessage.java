@@ -63,6 +63,6 @@ public interface IMessage {
     boolean isText();
     boolean isAudio();
     boolean isGif();
-
+    boolean isSpeechable();
 
 }

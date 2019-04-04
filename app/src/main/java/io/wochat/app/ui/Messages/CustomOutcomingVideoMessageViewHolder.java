@@ -32,7 +32,7 @@ public class CustomOutcomingVideoMessageViewHolder
         super.onBind(message);
 
         time.setText(time.getText());
-		mVideoDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDuration()));
+		mVideoDurationTV.setText(Utils.convertSecondsToHMmSs(message.getDurationMili()));
         switch (message.getStatus()){
             case Message.ACK_STATUS_PENDING:
                 mCocheIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.coche_pending));

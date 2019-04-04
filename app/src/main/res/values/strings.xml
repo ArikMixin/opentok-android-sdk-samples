@@ -63,8 +63,8 @@
     <string name="search_frwrd_to">Forward to...</string>
     <string name="reply_contact_self_name">You</string>
     <string name="reply_image_msg_text">Image</string>
-    <string name="reply_video_msg_text">Video</string>
-    <string name="reply_audio_msg_text">Audio</string>
+    <string name="reply_video_msg_text">Video %s</string>
+    <string name="reply_audio_msg_text">Audio %s</string>
     <string name="settings_translation_language">Translation Language</string>
     <string name="settings_default_translation_language">English (USA)</string>
     <string name="settings_bug_report">Bug Report</string>
