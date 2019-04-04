@@ -96,7 +96,7 @@
                 android:layout_width="45dp"
                 android:layout_height="45dp"
                 android:layout_gravity="center_vertical|left"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="13dp"
                 android:src="@drawable/ic_action_empty_contact"
                 app:civ_border_color="@color/app_blue"
                 app:civ_border_width="2dp"
@@ -107,8 +107,8 @@
 
             <io.wochat.app.components.CircleImageView
                 android:id="@id/magicIndicatorCIV"
-                android:layout_width="10dp"
-                android:layout_height="10dp"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
                 android:src="@drawable/flag_israel"
                 android:visibility="visible"
                 app:layout_constraintStart_toStartOf="parent"

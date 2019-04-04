@@ -26,7 +26,7 @@ public class CustomOutcomingAudioMessageViewHolder
         extends MessageHolders.OutcomingTextMessageViewHolder<Message>
 		implements View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
-	private static final String TAG = "ParentAudioMsgViewHldr" ;
+	private static final String TAG = "CustomOutcomingAudioMessageViewHolder" ;
 	private final Contact mSelfContact;
 	private final CircleImageView mMagicIndicator;
 	private String mPictureUrl;

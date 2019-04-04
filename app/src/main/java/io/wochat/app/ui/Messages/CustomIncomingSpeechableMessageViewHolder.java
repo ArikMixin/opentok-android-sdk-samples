@@ -26,7 +26,7 @@ public class CustomIncomingSpeechableMessageViewHolder
         extends MessageHolders.IncomingTextMessageViewHolder<Message>
 		implements View.OnClickListener, TextToSpeechUtil.TextToSpeechPlayingListener {
 
-	private static final String TAG = "InSpeechMsgViewHldr" ;
+	private static final String TAG = "CustomIncomingSpeechableMessageViewHolder" ;
 	private final Contact mParticipantContact;
 	private final CircleImageView mMagicIndicator;
 	private String mPictureUrl;
