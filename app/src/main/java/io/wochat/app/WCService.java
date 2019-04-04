@@ -129,6 +129,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		Message message = Message.fromJson(msg);
 		switch (message.getMessageType()){
 			case Message.MSG_TYPE_TEXT:
+			case Message.MSG_TYPE_SPEECHABLE:
 			case Message.MSG_TYPE_IMAGE:
 			case Message.MSG_TYPE_AUDIO:
 			case Message.MSG_TYPE_GIF:

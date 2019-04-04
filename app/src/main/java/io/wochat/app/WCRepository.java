@@ -54,6 +54,7 @@ import io.wochat.app.model.NotificationData;
 import io.wochat.app.model.StateData;
 import io.wochat.app.utils.ContactsUtil;
 import io.wochat.app.utils.ImagePickerUtil;
+import io.wochat.app.utils.SpeechToTextUtil;
 import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
 
@@ -182,6 +183,9 @@ public class WCRepository {
 		});
 		ttsu.init(application, mSharedPreferences.getUserLang());
 
+
+		SpeechToTextUtil speechToTextUtil =  SpeechToTextUtil.getInstance();
+		speechToTextUtil.init(application, application.getPackageName(), mSharedPreferences.getUserLang());
 	}
 
 

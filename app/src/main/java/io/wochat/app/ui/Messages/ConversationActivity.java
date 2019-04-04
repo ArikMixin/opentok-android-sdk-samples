@@ -82,7 +82,8 @@ import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
 import io.wochat.app.ui.Languages.LanguageSelectorDialog;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
-import io.wochat.app.utils.SpeechUtils;
+import io.wochat.app.utils.SpeechToTextUtil;
+//import io.wochat.app.utils.SpeechUtils;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.utils.videocompression.MediaController;
 import io.wochat.app.viewmodel.ConversationViewModel;
@@ -104,7 +105,7 @@ public class ConversationActivity extends PermissionActivity implements
 	DateFormatter.Formatter,
 	MessageInput.ButtonClickListener,
 	MessageHolders.ContentChecker<Message>,
-	SpeechUtils.SpeechUtilsSTTListener, MessagesListAdapter.SelectionListener {
+	MessagesListAdapter.SelectionListener, SpeechToTextUtil.SpeechUtilsSTTListener {
 
 	private static final String TAG = "ConversationActivity";
 	private static final int REQUEST_SELECT_IMAGE_VIDEO 	= 1;
@@ -159,7 +160,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private boolean mSameLanguageWithParticipant;
 	private SpeechRecognizer mSpeechRecognizer;
 	private Intent mSpeechRecognizerIntent;
-	private SpeechUtils mSpeechUtils;
+	//private SpeechUtils mSpeechUtils;
 	private String mSelfName;
 	private Contact mSelfContact;
 	private Contact mParticipantContact;
@@ -361,8 +362,10 @@ public class ConversationActivity extends PermissionActivity implements
 		mRecordingBigIV.setImageDrawable(getDrawable(R.drawable.mic_recording_empty));
 		mRecordingBigIV.setOnTouchListener(mRecordingOnTouchListener);
 
-		mSpeechUtils = new SpeechUtils();
-		mSpeechUtils.setSpeechUtilsSTTListener(this);
+//		mSpeechUtils = new SpeechUtils();
+//		mSpeechUtils.setSpeechUtilsSTTListener(this);
+
+		SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
 
 
 		if (mClickedFromNotifivation){
@@ -626,16 +629,19 @@ public class ConversationActivity extends PermissionActivity implements
 		if (isMagicButtonOn()) {
 			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
 			message.setForceTranslatedCountry(mMagicButtonForceCountry);
+			mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		}
 
 		if (mInputMessageReplyLayout.getVisibility() == View.VISIBLE){
 			message.setRepliedMessageId(mInputMessageReplyLayout.getMessage().getId());
 			mInputMessageReplyLayout.setVisibility(View.GONE);
 		}
+
 		mConversationViewModel.addNewOutcomingMessage(message);
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mIsInputInTextMode = false;
-		mService.sendMessage(message);
+		if (!message.isMagic())
+			mService.sendMessage(message);
 		returnRecordingButtonToPlace(false);
 		return true;
 
@@ -1360,6 +1366,18 @@ public class ConversationActivity extends PermissionActivity implements
 						//mMessagesAdapter.update(message);
 					}
 				}
+				else if (message.isMagic()){
+					if (Utils.isNotNullAndNotEmpty(message.getForceTranslatedText())){
+						if (message.getAckStatus().equals(Message.ACK_STATUS_PENDING)) {
+							new Handler(getMainLooper()).postDelayed(() -> {
+								if ((mService != null) && (mService.isXmppConnected())) {
+									Log.e("GIL", "call sendMessage: " + message.toJson());
+									mService.sendMessage(message);
+								}
+							}, 1500);
+						}
+					}
+				}
 				else if (message.isSpeechable()||message.isText()){
 					if (message.getAckStatus().equals(Message.ACK_STATUS_PENDING)) {
 						new Handler(getMainLooper()).postDelayed(() -> {
@@ -1543,8 +1561,9 @@ public class ConversationActivity extends PermissionActivity implements
 			startRecord();
 		}
 		else  {
-			mSpeechUtils.initSpeech(this, this.getPackageName(), mSelfLang);
-			mSpeechUtils.startSpeechToText();
+//			mSpeechUtils.initSpeech(this, this.getPackageName(), mSelfLang);
+//			mSpeechUtils.startSpeechToText();
+			SpeechToTextUtil.getInstance().startSpeechToText();
 		}
 	}
 
@@ -1554,7 +1573,8 @@ public class ConversationActivity extends PermissionActivity implements
 			cancelRecord();
 		}
 		else  {
-			mSpeechUtils.cancelSpeechToText();
+			//mSpeechUtils.cancelSpeechToText();
+			SpeechToTextUtil.getInstance().cancelSpeechToText();
 			mRecordingTimer.cancel();
 			mRecordingStarted = false;
 			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
@@ -1568,7 +1588,8 @@ public class ConversationActivity extends PermissionActivity implements
 			finishRecord();
 		}
 		else  {
-			mSpeechUtils.stopSpeechToText();
+			//mSpeechUtils.stopSpeechToText();
+			SpeechToTextUtil.getInstance().stopSpeechToText();
 			mRecordingTimer.cancel();
 			mRecordingStarted = false;
 			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
@@ -1580,7 +1601,7 @@ public class ConversationActivity extends PermissionActivity implements
 	@Override
 	public void onSpeechToTextResult(String text, int duration) {
 		//Log.e(TAG, "onSpeechResult: " + text);
-		mSpeechUtils.destroy();
+		//mSpeechUtils.destroy();
 		submitTempSpeechableMessage(text, duration);
 	}
 

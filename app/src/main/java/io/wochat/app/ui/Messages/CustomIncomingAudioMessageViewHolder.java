@@ -28,6 +28,7 @@ public class CustomIncomingAudioMessageViewHolder
 
 	private static final String TAG = "ParentAudioMsgViewHldr" ;
 	private final Contact mParticipantContact;
+	private final CircleImageView mMagicIndicator;
 	private String mPictureUrl;
 	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
@@ -53,7 +54,8 @@ public class CustomIncomingAudioMessageViewHolder
         mSeekBar = (SeekBar) itemView.findViewById(R.id.seekbar);
 		mSeekBar.setOnSeekBarChangeListener(this);
 		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
-
+		mMagicIndicator = (CircleImageView) itemView.findViewById(R.id.magicIndicatorCIV);
+		mMagicIndicator.setVisibility(View.GONE);
 
 		mParticipantContact = (Contact)payload;
 		mAvatarCIV.setContact(mParticipantContact);

@@ -1,17 +1,14 @@
 package io.wochat.app.ui.Messages;
 
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.messages.MessageHolders;
 
 import io.wochat.app.R;
@@ -21,7 +18,6 @@ import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.utils.DateFormatter;
-import io.wochat.app.utils.SpeechUtils;
 import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
 

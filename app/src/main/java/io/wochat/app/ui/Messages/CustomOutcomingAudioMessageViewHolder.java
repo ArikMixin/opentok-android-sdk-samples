@@ -28,6 +28,7 @@ public class CustomOutcomingAudioMessageViewHolder
 
 	private static final String TAG = "ParentAudioMsgViewHldr" ;
 	private final Contact mSelfContact;
+	private final CircleImageView mMagicIndicator;
 	private String mPictureUrl;
 	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
@@ -57,6 +58,8 @@ public class CustomOutcomingAudioMessageViewHolder
 		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
 		mSelfContact = (Contact)payload;
 		mAvatarCIV.setContact(mSelfContact);
+		mMagicIndicator = (CircleImageView) itemView.findViewById(R.id.magicIndicatorCIV);
+		mMagicIndicator.setVisibility(View.GONE);
 
 
 //		mPictureUrl = (String)payload;

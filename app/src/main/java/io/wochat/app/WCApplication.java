@@ -5,7 +5,6 @@ import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Intent;
 
 import io.wochat.app.db.WCDatabase;
-import io.wochat.app.utils.TextToSpeechUtil;
 
 public class WCApplication extends Application {
 
