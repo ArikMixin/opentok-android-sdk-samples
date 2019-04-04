@@ -175,4 +175,14 @@ public class ConversationViewModel extends AndroidViewModel {
 	public LiveData<List<Message>> getMediaMessagesConversation(String conversationId) {
 		return mRepository.getMediaMessagesConversation(conversationId);
 	}
+
+
+	public void updateMagicButtonLangCode(String conversationId, String langCode){
+		mRepository.updateMagicButtonLangCode(conversationId, langCode);
+	}
+
+
+	public LiveData<String> getMagicButtonLangCode(String conversationId){
+		return mRepository.getMagicButtonLangCode(conversationId);
+	}
 }

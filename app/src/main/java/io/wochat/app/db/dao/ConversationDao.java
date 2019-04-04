@@ -135,4 +135,16 @@ public interface ConversationDao {
 		"last_message_ack_status = :ackStatus " +
 		"WHERE conversation_id =:conversationId AND last_message_id =:messageId")
 	void updateLastMessageAck(String conversationId, String messageId, String ackStatus);
+
+
+	@Query("SELECT magic_button_lang_code " +
+		"FROM conversation_table " +
+		"WHERE conversation_id =:conversationId")
+	LiveData<String> getMagicButtonLangCode(String conversationId);
+
+
+	@Query("UPDATE conversation_table SET  " +
+		"magic_button_lang_code = :langCode " +
+		"WHERE conversation_id =:conversationId")
+	void updateMagicButtonLangCode(String conversationId, String langCode);
 }

@@ -5,7 +5,6 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -27,14 +26,12 @@ import org.json.JSONObject;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import io.wochat.app.com.WochatApi;
 import io.wochat.app.db.WCDatabase;
@@ -1870,6 +1867,18 @@ public class WCRepository {
 
 	public LiveData<List<Message>> getMediaMessagesConversation(String conversationId) {
 		return mMessageDao.getMediaMessagesConversation(conversationId);
+	}
+
+
+	public void updateMagicButtonLangCode(String conversationId, String langCode){
+		mAppExecutors.diskIO().execute(() -> {
+			mConversationDao.updateMagicButtonLangCode(conversationId, langCode);
+		});
+	}
+
+
+	public LiveData<String> getMagicButtonLangCode(String conversationId){
+		return mConversationDao.getMagicButtonLangCode(conversationId);
 	}
 
 }

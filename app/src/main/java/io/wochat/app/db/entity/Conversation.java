@@ -6,6 +6,7 @@ import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -122,6 +123,14 @@ public class Conversation implements IDialog{
 	private int numOfUnreadMessages;
 
 	/***************************************************/
+	@Nullable
+	@SerializedName("magic_button_lang_code")
+	@ColumnInfo(name = "magic_button_lang_code")
+	@Expose
+	private String magicButtonLangCode;
+
+	/***************************************************/
+
 	@SerializedName("is_group")
 	@ColumnInfo(name = "is_group")
 	@Expose
@@ -326,6 +335,13 @@ public class Conversation implements IDialog{
 		mLastMessageDuration = lastMessageDuration;
 	}
 
+	public String getMagicButtonLangCode() {
+		return magicButtonLangCode;
+	}
+
+	public void setMagicButtonLangCode(String magicButtonLangCode) {
+		this.magicButtonLangCode = magicButtonLangCode;
+	}
 
 	@Override
 	public String toString() {

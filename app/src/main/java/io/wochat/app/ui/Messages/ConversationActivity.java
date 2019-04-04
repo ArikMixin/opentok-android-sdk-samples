@@ -318,8 +318,27 @@ public class ConversationActivity extends PermissionActivity implements
 
 		mSupportedLanguagesViewModel.getSupportedLanguages().observe(this, supportedLanguages -> {
 			mSupportedLanguages = supportedLanguages;
+			mConversationViewModel.getMagicButtonLangCode(mConversationId).observe(this, langCode -> {
+				if (langCode != null) {
+					for (SupportedLanguage supportedLanguage : mSupportedLanguages) {
+						if (supportedLanguage.getLanguageCode().equals(langCode)) {
+							mMagicButtonForceLanguage = supportedLanguage.getLanguageCode();
+							mMagicButtonForceCountry = supportedLanguage.getCountryCode();
+							setMagicButtonLanguage(mMagicButtonForceLanguage, true);
+
+						}
+					}
+				}
+				else {
+					setMagicButtonLanguage(mParticipantLang, false);
+					mMagicButtonForceLanguage = null;
+					mMagicButtonForceCountry = null;
+				}
+			});
+
 		});
 		mSupportedLanguagesViewModel.loadLanguages(Locale.getDefault().getLanguage());
+
 
 
 		mConversationViewModel.getConversationAndMessages(mConversationId,
@@ -1847,12 +1866,14 @@ public class ConversationActivity extends PermissionActivity implements
 				mMagicButtonForceLanguage = supportedLanguage.getLanguageCode();
 				mMagicButtonForceCountry = supportedLanguage.getCountryCode();
 				setMagicButtonLanguage(mMagicButtonForceLanguage, true);
+				mConversationViewModel.updateMagicButtonLangCode(mConversationId, mMagicButtonForceLanguage);
 			});
 		}
 		else {
 			setMagicButtonLanguage(mParticipantLang, false);
 			mMagicButtonForceLanguage = null;
 			mMagicButtonForceCountry = null;
+			mConversationViewModel.updateMagicButtonLangCode(mConversationId, null);
 		}
 
 
