@@ -53,6 +53,49 @@ public class CircleFlagImageView extends LinearLayout {
 		mContactInitialsTV = (TextView)findViewById(R.id.contact_initials_tv);
 	}
 
+
+	public void setInfoNoResize(String picUrl, String language, String initials){
+		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(language);
+
+
+		if((picUrl != null)&& (!picUrl.trim().equals(""))){
+			mContactInitialsTV.setVisibility(GONE);
+			Picasso.get().
+				load(picUrl).
+				placeholder(R.drawable.ic_empty_contact).
+				into(mContactPicCIV);
+		}
+		else {
+			mContactInitialsTV.setVisibility(VISIBLE);
+			mContactInitialsTV.setText(initials);
+			Picasso.get().
+				load(R.drawable.ic_empty_contact).
+				into(mContactPicCIV);
+			mContactInitialsTV.bringToFront();
+		}
+
+		if ((flagDrawable != 0) && (!mIsChecked) && (!mIsCanceled)){
+			Picasso.get().
+				load(flagDrawable).
+				into(mContactFlagCIV);
+		}
+		else if (mIsChecked){
+//			mContactFlagCIV.setImageDrawable(getResources().getDrawable(R.drawable.ic_contact_checked));
+			Picasso.get().
+				load(R.drawable.ic_contact_checked).
+				into(mContactFlagCIV);
+
+			//mContactFlagCIV.setBackgroundColor(getResources().getColor(R.color.white));
+		}
+		else if (mIsCanceled){
+			//mContactFlagCIV.setImageDrawable(getResources().getDrawable(R.drawable.ic_cancel));
+			Picasso.get().
+				load(R.drawable.ic_contact_cancel).
+				into(mContactFlagCIV);
+		}
+	}
+
+
 	public void setInfo(String picUrl, String language, String initials){
 		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(language);
 

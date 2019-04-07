@@ -89,7 +89,7 @@ public class SettingsProfileEditActivity extends AppCompatActivity
 			String initials = Contact.getInitialsFromName(mName);
 			String language = user.getLanguage();
 
-			mCircleFlagIV.setInfo(urlPic, language, initials);
+			mCircleFlagIV.setInfoNoResize(urlPic, language, initials);
 
 			//name
 			mNameTV.setText(mName);

@@ -45,7 +45,7 @@ public class SettingsUserFragment extends Fragment {
 			String initials = Contact.getInitialsFromName(name);
 			String language = user.getLanguage();
 
-			mCircleFlagImageView.setInfo(urlPic, language, initials);
+			mCircleFlagImageView.setInfoNoResize(urlPic, language, initials);
 
 			mNameTV.setText(name);
 
