@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -29,6 +30,7 @@ public class CustomOutcomingAudioMessageViewHolder
 	private static final String TAG = "CustomOutcomingAudioMessageViewHolder" ;
 	private final Contact mSelfContact;
 	private final CircleImageView mMagicIndicator;
+	private final ImageButton mForwardIB;
 	private String mPictureUrl;
 	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
@@ -60,7 +62,7 @@ public class CustomOutcomingAudioMessageViewHolder
 		mAvatarCIV.setContact(mSelfContact);
 		mMagicIndicator = (CircleImageView) itemView.findViewById(R.id.magicIndicatorCIV);
 		mMagicIndicator.setVisibility(View.GONE);
-
+		mForwardIB = (ImageButton) itemView.findViewById(R.id.forwardIV);
 
 //		mPictureUrl = (String)payload;
 //

@@ -5,6 +5,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -29,6 +30,7 @@ public class CustomIncomingSpeechableMessageViewHolder
 	private static final String TAG = "CustomIncomingSpeechableMessageViewHolder" ;
 	private final Contact mParticipantContact;
 	private final CircleImageView mMagicIndicator;
+	private final ImageButton mForwardIB;
 	private String mPictureUrl;
 	private CircleFlagImageView mAvatarCIV;
 	private ImageView mCocheIV;
@@ -60,6 +62,7 @@ public class CustomIncomingSpeechableMessageViewHolder
 			return true;
 		});
 		mAvatarCIV = (CircleFlagImageView)itemView.findViewById(R.id.messageUserAvatar);
+		mForwardIB = (ImageButton) itemView.findViewById(R.id.forwardIV);
 //		mPictureUrl = (String)payload;
 
 		mMagicIndicator = (CircleImageView) itemView.findViewById(R.id.magicIndicatorCIV);

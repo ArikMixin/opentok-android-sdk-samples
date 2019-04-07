@@ -23,6 +23,7 @@ import android.support.annotation.DrawableRes;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -42,6 +43,8 @@ import io.wochat.app.R;
 
 public class Utils {
 
+
+	private static final String TAG = "Utils";
 
 	public static boolean isIntentAvailable(Context context, Intent intent) {
 		final PackageManager packageManager = context.getPackageManager();
@@ -252,21 +255,26 @@ public class Utils {
 
 
 	public static String dateFormatter(Context context, Date date) {
-		if (com.stfalcon.chatkit.utils.DateFormatter.isToday(date)) {
-			return com.stfalcon.chatkit.utils.DateFormatter.format(date, com.stfalcon.chatkit.utils.DateFormatter.Template.TIME);
+
+		String res;
+		String theTime = DateFormatter.format(date, DateFormatter.Template.TIME);
+		if (DateFormatter.isToday(date)) {
+			res = theTime;
 		}
-		else if (com.stfalcon.chatkit.utils.DateFormatter.isYesterday(date)) {
-			return context.getString(R.string.date_header_yesterday);
+		else if (DateFormatter.isYesterday(date)) {
+			res = context.getString(R.string.date_header_yesterday) + " " + theTime;
 		}
-		else if(com.stfalcon.chatkit.utils.DateFormatter.isPastWeek(date)){
-			return com.stfalcon.chatkit.utils.DateFormatter.format(date, DateFormatter.Template.STRING_DAY_OF_WEEK);
+		else if(DateFormatter.isPastWeek(date)){
+			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_OF_WEEK)+ " " + theTime;
 		}
-		else if (com.stfalcon.chatkit.utils.DateFormatter.isCurrentYear(date)) {
-			return com.stfalcon.chatkit.utils.DateFormatter.format(date, com.stfalcon.chatkit.utils.DateFormatter.Template.STRING_DAY_MONTH);
+		else if (DateFormatter.isCurrentYear(date)) {
+			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_MONTH)+ " " + theTime;
 		}
 		else {
-			return com.stfalcon.chatkit.utils.DateFormatter.format(date, DateFormatter.Template.STRING_DAY_MONTH_YEAR);
+			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_MONTH_YEAR)+ " " + theTime;
 		}
+		Log.e(TAG, "dateFormatter for: " + date.toString() + "  ,  long: " + date.getTime() + "  ,  result: " + res);
+		return res;
 	}
 
 

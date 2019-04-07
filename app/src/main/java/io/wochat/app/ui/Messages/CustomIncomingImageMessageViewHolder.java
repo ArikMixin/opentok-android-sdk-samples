@@ -1,9 +1,11 @@
 package io.wochat.app.ui.Messages;
 
 import android.view.View;
+import android.widget.ImageButton;
 
 import com.stfalcon.chatkit.messages.MessageHolders;
 
+import io.wochat.app.R;
 import io.wochat.app.db.entity.Message;
 
 
@@ -14,8 +16,11 @@ public class CustomIncomingImageMessageViewHolder
         extends MessageHolders.IncomingImageMessageViewHolder<Message> {
 
 
+    private final ImageButton mForwardIB;
+
     public CustomIncomingImageMessageViewHolder(View itemView, Object payload) {
         super(itemView, payload);
+        mForwardIB = (ImageButton) itemView.findViewById(R.id.forwardIV);
     }
 
     @Override

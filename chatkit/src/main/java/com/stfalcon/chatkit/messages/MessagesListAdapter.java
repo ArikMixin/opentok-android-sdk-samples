@@ -52,7 +52,8 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
         extends RecyclerView.Adapter<ViewHolder>
         implements RecyclerScrollMoreListener.OnLoadMoreListener {
 
-    protected static boolean isSelectionModeEnabled;
+	private static final String TAG = "MessagesListAdapter";
+	protected static boolean isSelectionModeEnabled;
 
     protected List<Wrapper> items;
     private MessageHolders holders;
@@ -63,6 +64,7 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
 
     private OnLoadMoreListener loadMoreListener;
     private OnMessageClickListener<MESSAGE> onMessageClickListener;
+    private OnMessageForwardListener<MESSAGE> onMessageForwardListener;
     private OnMessageViewClickListener<MESSAGE> onMessageViewClickListener;
     private OnMessageLongClickListener<MESSAGE> onMessageLongClickListener;
     private OnMessageViewLongClickListener<MESSAGE> onMessageViewLongClickListener;
@@ -109,6 +111,7 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
         Wrapper wrapper = items.get(position);
         holders.bind(holder, wrapper.item, wrapper.isSelected, imageLoader,
                 getMessageClickListener(wrapper),
+				getMessageForwardListener(wrapper),
                 getMessageLongClickListener(wrapper),
                 dateHeadersFormatter,
                 viewClickListenersArray);
@@ -472,6 +475,10 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
         this.onMessageClickListener = onMessageClickListener;
     }
 
+    public void setOnMessageForwardListener(OnMessageForwardListener<MESSAGE> onMessageForwardListener) {
+        this.onMessageForwardListener = onMessageForwardListener;
+    }
+
     /**
      * Sets click listener for message view. Fires ONLY if list is not in selection mode.
      *
@@ -625,6 +632,13 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
         }
     }
 
+    private void notifyMessageForward(MESSAGE message) {
+    	Log.e(TAG, "notifyMessageForward: " + message.getId());
+        if (onMessageForwardListener != null) {
+            onMessageForwardListener.onMessageForward(message);
+        }
+    }
+
     private void notifyMessageViewClicked(View view, MESSAGE message) {
         if (onMessageViewClickListener != null) {
             onMessageViewClickListener.onMessageViewClick(view, message);
@@ -649,7 +663,14 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
 		}
 	}
 
-
+	private View.OnClickListener getMessageForwardListener(final Wrapper<MESSAGE> wrapper) {
+		return new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				notifyMessageForward(wrapper.item);
+			}
+		};
+	}
 
     private View.OnClickListener getMessageClickListener(final Wrapper<MESSAGE> wrapper) {
         return new View.OnClickListener() {
@@ -773,6 +794,16 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
          * @param message clicked message.
          */
         void onMessageClick(MESSAGE message);
+    }
+
+    public interface OnMessageForwardListener<MESSAGE extends IMessage> {
+
+        /**
+         * Fires when message is clicked.
+         *
+         * @param message clicked message.
+         */
+        void onMessageForward(MESSAGE message);
     }
 
     /**

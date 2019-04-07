@@ -105,13 +105,14 @@ public class ConversationActivity extends PermissionActivity implements
 	DateFormatter.Formatter,
 	MessageInput.ButtonClickListener,
 	MessageHolders.ContentChecker<Message>,
-	MessagesListAdapter.SelectionListener, SpeechToTextUtil.SpeechUtilsSTTListener {
+	MessagesListAdapter.SelectionListener, SpeechToTextUtil.SpeechUtilsSTTListener, MessagesListAdapter.OnMessageForwardListener<Message> {
 
 	private static final String TAG = "ConversationActivity";
 	private static final int REQUEST_SELECT_IMAGE_VIDEO 	= 1;
 	private static final int REQUEST_SELECT_CAMERA_PHOTO 	= 2;
 	private static final int REQUEST_SELECT_CAMERA_VIDEO 	= 3;
 	private static final int REQUEST_SELECT_CONTACTS 		= 4;
+	private static final int REQUEST_SELECT_CONTACTS_W_MSG	= 5;
 	private MessagesList mMessagesListRV;
 	protected MessagesListAdapter<Message> mMessagesAdapter;
 	protected ImageLoader mImageLoader;
@@ -484,6 +485,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessagesAdapter.setLoadMoreListener(this);
 		mMessagesAdapter.setOnMessageViewClickListener(this);
 		mMessagesAdapter.setOnMessageClickListener(this);
+		mMessagesAdapter.setOnMessageForwardListener(this);
 		mMessagesAdapter.setOnBindViewHolder(this);
 		mMessagesAdapter.setDateHeadersFormatter(this);
 		mMessagesAdapter.enableSelectionMode(this);
@@ -735,6 +737,17 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 	}
+
+
+	@Override
+	public void onMessageForward(Message message) {
+		Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+		intent.putExtra(Consts.INTENT_MESSAGE_OBJ, message.toJson());
+		startActivityForResult(intent, REQUEST_SELECT_CONTACTS_W_MSG);
+		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
+
+	}
+
 
 	@Override
 	public void onMessageClick(Message message) {
@@ -1104,6 +1117,7 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 
+
 	private class TypingSignalBR extends BroadcastReceiver {
 
 		@Override
@@ -1282,6 +1296,16 @@ public class ConversationActivity extends PermissionActivity implements
 			if (resultCode == Activity.RESULT_OK) {
 				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
 				ArrayList<Message> selectedMessages = mMessagesAdapter.getSelectedMessages();
+				forwardMessagesToContacts(contacts, selectedMessages);
+			}
+		}
+		else if (requestCode == REQUEST_SELECT_CONTACTS_W_MSG){
+			if (resultCode == Activity.RESULT_OK) {
+				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
+				String messageString = intent.getStringExtra(Consts.INTENT_MESSAGE_OBJ);
+				Message message = Message.fromJson(messageString);
+				ArrayList<Message> selectedMessages = new ArrayList<>();
+				selectedMessages.add(message);
 				forwardMessagesToContacts(contacts, selectedMessages);
 			}
 		}

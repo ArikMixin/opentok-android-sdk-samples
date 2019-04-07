@@ -1,6 +1,7 @@
 package io.wochat.app.ui.Messages;
 
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.stfalcon.chatkit.messages.MessageHolders;
@@ -18,10 +19,12 @@ public class CustomIncomingVideoMessageViewHolder
 
 
     private final TextView mVideoDurationTV;
+    private final ImageButton mForwardIB;
 
     public CustomIncomingVideoMessageViewHolder(View itemView, Object payload) {
         super(itemView, payload);
         mVideoDurationTV = (TextView)itemView.findViewById(R.id.videoDuration);
+        mForwardIB = (ImageButton) itemView.findViewById(R.id.forwardIV);
     }
 
     @Override

@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -664,6 +665,7 @@ public class MessageHolders {
     protected void bind(final ViewHolder holder, final Object item, boolean isSelected,
                         final ImageLoader imageLoader,
                         final View.OnClickListener onMessageClickListener,
+						final View.OnClickListener onMessageForwardListener,
                         final View.OnLongClickListener onMessageLongClickListener,
                         final DateFormatter.Formatter dateHeadersFormatter,
                         final SparseArray<MessagesListAdapter.OnMessageViewClickListener> clickListenersArray) {
@@ -671,6 +673,10 @@ public class MessageHolders {
         if (item instanceof IMessage) {
             ((MessageHolders.BaseMessageViewHolder) holder).isSelected = isSelected;
             ((MessageHolders.BaseMessageViewHolder) holder).imageLoader = imageLoader;
+
+            if (((BaseMessageViewHolder) holder).forwardIB != null)
+				((BaseMessageViewHolder) holder).forwardIB.setOnClickListener(onMessageForwardListener);
+
             holder.itemView.setOnLongClickListener(onMessageLongClickListener);
             holder.itemView.setOnClickListener(onMessageClickListener);
 
@@ -790,6 +796,7 @@ public class MessageHolders {
          */
         protected Object payload;
 
+		protected ImageButton forwardIB;
         /**
          * Callback for implementing images loading in message list
          */
@@ -798,11 +805,13 @@ public class MessageHolders {
         @Deprecated
         public BaseMessageViewHolder(View itemView) {
             super(itemView);
+			forwardIB = (ImageButton) itemView.findViewById(R.id.forwardIV);
         }
 
         public BaseMessageViewHolder(View itemView, Object payload) {
             super(itemView);
             this.payload = payload;
+			forwardIB = (ImageButton) itemView.findViewById(R.id.forwardIV);
         }
 
         /**
@@ -1314,7 +1323,8 @@ public class MessageHolders {
             extends BaseMessageViewHolder<MESSAGE> implements DefaultMessageViewHolder {
 
         protected TextView time;
-        //protected ImageView userAvatar;
+
+		//protected ImageView userAvatar;
 
         @Deprecated
         public BaseIncomingMessageViewHolder(View itemView) {
@@ -1362,7 +1372,9 @@ public class MessageHolders {
 
         private void init(View itemView) {
             time = (TextView) itemView.findViewById(R.id.messageTime);
-            //userAvatar = (ImageView) itemView.findViewById(R.id.messageUserAvatar);
+
+
+			//userAvatar = (ImageView) itemView.findViewById(R.id.messageUserAvatar);
         }
     }
 

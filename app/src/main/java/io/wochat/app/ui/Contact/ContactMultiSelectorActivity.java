@@ -64,6 +64,7 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 	private SelectedAdapter mHeaderAdapter;
 	private View mHeaderLL;
 	private FloatingActionButton mSendFab;
+	private String mSelectedMessageIntent;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +74,8 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 		mIsForCall = getIntent().getBooleanExtra("CALL", false);
 		mIsForChat = getIntent().getBooleanExtra("CHAT", false);
 
+
+		mSelectedMessageIntent = getIntent().getStringExtra(Consts.INTENT_MESSAGE_OBJ);
 
 		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
@@ -169,6 +172,7 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
 			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
 			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contact.toJson());
+			resultIntent.putExtra(Consts.INTENT_MESSAGE_OBJ, mSelectedMessageIntent);
 			setResult(RESULT_OK, resultIntent);
 		}
 		else
@@ -365,6 +369,7 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 			String[] stringArray = stringList.toArray(new String[stringList.size()]);
 			Intent intent = new Intent();
 			intent.putExtra(SELECTED_CONTACTS_RESULT, stringArray);
+			intent.putExtra(Consts.INTENT_MESSAGE_OBJ, mSelectedMessageIntent);
 			setResult(RESULT_OK, intent);
 		}
 		finish();

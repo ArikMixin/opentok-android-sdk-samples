@@ -2,6 +2,7 @@ package io.wochat.app.ui.Messages;
 
 import android.util.Pair;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,11 +21,13 @@ public class CustomOutcomingVideoMessageViewHolder
 
     private final ImageView mCocheIV;
     private final TextView mVideoDurationTV;
+    private final ImageButton mForwardIB;
 
     public CustomOutcomingVideoMessageViewHolder(View itemView, Object payload) {
         super(itemView, payload);
         mCocheIV = (ImageView) itemView.findViewById(R.id.coche_iv);
         mVideoDurationTV = (TextView)itemView.findViewById(R.id.videoDuration);
+        mForwardIB = (ImageButton) itemView.findViewById(R.id.forwardIV);
     }
 
     @Override

@@ -99,8 +99,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				message.setDurationMili(message.getDurationMili()*1000);
 			}
 			message.setConversationId(conversationId);
-			if (message.getTimestampMilli() == 0)
-				message.setTimestampMilli(message.getTimestamp()*1000);
+//			if (message.getTimestampMilli() == 0)
+//				message.setTimestampMilli(message.getTimestamp()*1000);
 
 			/*****************************************************************************************/
 

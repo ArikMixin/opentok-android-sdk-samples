@@ -507,9 +507,11 @@ public class RegistrationActivity extends PermissionActivity {
 		//mPicCardView = (CardView) layout.findViewById(R.id.reg_pic_card_view);
 		mPicFlagIV = (ImageView) layout.findViewById(R.id.reg_pic_flag_iv);
 		mPicUserNameET = (AppCompatEditText) layout.findViewById(R.id.reg_pic_username_et);
-		mPicPhoneNumTV = (TextView) layout.findViewById(R.id.reg_pic_phone_num_tv);
-		mPicFinishBtn = (AppCompatButton) layout.findViewById(R.id.reg_pic_finish_btn);
 
+		mPicPhoneNumTV = (TextView) layout.findViewById(R.id.reg_pic_phone_num_tv);
+		mPicPhoneNumTV.setText(mUserNiceFormattedPhone);
+
+		mPicFinishBtn = (AppCompatButton) layout.findViewById(R.id.reg_pic_finish_btn);
 		mPicFlagIV.setImageDrawable(getResources().getDrawable(mCountryCodePicker.getSelectedCountry().getFlagID()));
 
 		mPicFinishBtn.setOnClickListener(mPicFinishBtnClick);

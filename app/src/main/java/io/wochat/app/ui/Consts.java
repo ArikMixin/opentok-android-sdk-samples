@@ -7,6 +7,7 @@ public class Consts {
 	public static final String INTENT_PARTICIPANT_PIC = "INTENT_PARTICIPANT_PIC";
 	public static final String INTENT_CONVERSATION_ID = "INTENT_CONVERSATION_ID";
 	public static final String INTENT_PARTICIPANT_CONTACT_OBJ = "INTENT_PARTICIPANT_CONTACT_OBJ";
+	public static final String INTENT_MESSAGE_OBJ = "INTENT_MESSAGE_OBJ";
 	public static final String INTENT_SELF_ID = "INTENT_SELF_ID";
 	public static final String INTENT_SELF_LANG = "INTENT_SELF_LANG";
 	public static final String INTENT_SELF_PIC_URL = "INTENT_SELF_PIC_URL";

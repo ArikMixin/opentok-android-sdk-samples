@@ -265,7 +265,7 @@ public class Conversation implements IDialog{
 
 	@Override
 	public Date getLastMessageCreatedDate() {
-		return new Date(lastMessageTimeStamp*1000);
+		return new Date(lastMessageTimeStamp);
 	}
 
 	public String getLastMessageText() {
