@@ -4,6 +4,7 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -97,6 +98,10 @@ public class ConversationViewModel extends AndroidViewModel {
 
 	public void addNewOutcomingMessage(Message message){
 		mRepository.addNewOutgoingMessageInIOThread(message);
+	}
+
+	public void sendImageToContacts(String[] contacts, Uri cameraPhotoFileUri){
+		mRepository.sendImageToContacts(contacts, cameraPhotoFileUri);
 	}
 
 	public void markAllMessagesAsRead(String conversationId){

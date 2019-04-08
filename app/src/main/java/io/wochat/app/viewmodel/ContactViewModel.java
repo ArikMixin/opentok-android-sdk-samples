@@ -50,9 +50,9 @@ public class ContactViewModel extends AndroidViewModel {
 		mRepository.syncContactsLocalAndServer();
 	}
 
-
-
-
+	public LiveData<Contact> refreshContact(String participantId) {
+		return mRepository.refreshContact(participantId);
+	}
 
 
 //	public void updateInvited(String contactId){

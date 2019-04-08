@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -106,7 +107,11 @@ public class NotificationHelper {
 			.setSmallIcon(R.drawable.ic_notif)
 			.setGroupSummary(true)
 			.setGroup(data.conversationId)
-			.setContentIntent(pendingIntent);
+			.setPriority(NotificationCompat.PRIORITY_HIGH)
+			//.setDefaults(Notification.DEFAULT_ALL)
+			.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
+			.setContentIntent(pendingIntent)
+			.setFullScreenIntent(pendingIntent, true);
 		if (data.largeIcon != null)
 			summaryBuilder.setLargeIcon(data.largeIcon);
 
@@ -129,7 +134,11 @@ public class NotificationHelper {
 			.setContentText(data.body)
 			.setSmallIcon(R.drawable.ic_notif)
 			.setStyle(new NotificationCompat.BigTextStyle().bigText(data.body))
+			.setPriority(NotificationCompat.PRIORITY_HIGH)
+			//.setDefaults(Notification.DEFAULT_ALL)
+			.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
 			.setGroup(data.conversationId)
+			.setFullScreenIntent(pendingIntent, true)
 			.setContentIntent(pendingIntent);
 
 		if (data.largeIcon != null)
@@ -160,11 +169,16 @@ public class NotificationHelper {
 		// Create the NotificationChannel, but only on API 26+ because
 		// the NotificationChannel class is new and not in the support library
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			CharSequence name = "wochat channel";
-			String description = "wochat channel desc";
-			int importance = NotificationManager.IMPORTANCE_DEFAULT;
+			CharSequence name = "wochat notification channel";
+			String description = "wochat notification preferences";
+			int importance = NotificationManager.IMPORTANCE_HIGH;
 			NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
 			channel.setDescription(description);
+			channel.enableLights(true);
+			channel.setLightColor(Color.BLUE);
+			channel.setShowBadge(false);
+			channel.enableVibration(true);
+			channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
 			// Register the channel with the system; you can't change the importance
 			// or other notification behaviors after this
 			NotificationManager notificationManager = context.getSystemService(NotificationManager.class);

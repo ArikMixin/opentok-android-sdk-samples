@@ -147,4 +147,19 @@ public interface ConversationDao {
 		"magic_button_lang_code = :langCode " +
 		"WHERE conversation_id =:conversationId")
 	void updateMagicButtonLangCode(String conversationId, String langCode);
+
+
+	@Query("UPDATE conversation_table SET  " +
+		"participant_profile_pic_url = :participantProfilePicUrl, " +
+		"participant_language = :participantLanguage " +
+		"WHERE participant_id =:participantId")
+	void updateParticipantData(String participantId, String participantProfilePicUrl, String participantLanguage);
+
+
+	@Query("UPDATE conversation_table SET  " +
+		"participant_name = :participantName " +
+		"WHERE participant_id =:participantId")
+	void updateParticipantName(String participantId, String participantName);
+
+
 }

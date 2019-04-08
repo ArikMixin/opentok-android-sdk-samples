@@ -6,9 +6,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -29,15 +31,20 @@ import android.widget.TextView;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import java.util.ArrayList;
+
 import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.BadgedTabLayout;
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.User;
+import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.RecentChats.RecentChatsFragment;
+import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
 import io.wochat.app.viewmodel.UserViewModel;
@@ -56,8 +63,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 	private static final String TAG = "MainActivity";
-	private static final int CONTACT_SELECTOR_REQUEST_CODE = 1;
-	static final int REQUEST_IMAGE_CAPTURE = 2;
+	private static final int REQUEST_CONTACT_SELECTOR = 1;
+	private static final int REQUEST_SELECT_CAMERA_PHOTO = 2;
+	private static final int REQUEST_SELECT_CONTACTS_MULTI = 3;
+
 	private SectionsPagerAdapter mSectionsPagerAdapter;
 
 	private ViewPager mViewPager;
@@ -75,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
 	private UserViewModel mUserViewModel;
 	private User mSelfUser;
 	private String mIntentConversationId;
+	private Uri mCameraPhotoFileUri;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -201,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
 					intent.putExtra("CALL", true);
 					intent.putExtra("CHAT", false);
 				}
-				startActivityForResult(intent, CONTACT_SELECTOR_REQUEST_CODE);
+				startActivityForResult(intent, REQUEST_CONTACT_SELECTOR);
 			}
 		});
 
@@ -425,58 +435,88 @@ public class MainActivity extends AppCompatActivity {
 
 
 	private void dispatchTakePictureIntent() {
+
+		StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+		StrictMode.setVmPolicy(builder.build());
+
 		Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		mCameraPhotoFileUri = ImagePickerUtil.getCaptureImageOutputUri(this);
+		takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCameraPhotoFileUri);
+		takePictureIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
 		if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-			startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+			startActivityForResult(takePictureIntent, REQUEST_SELECT_CAMERA_PHOTO);
 		}
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == REQUEST_IMAGE_CAPTURE){
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+		if (requestCode == REQUEST_SELECT_CAMERA_PHOTO){
 			if (resultCode == RESULT_OK) {
-				Bundle extras = data.getExtras();
-				Bitmap imageBitmap = (Bitmap) extras.get("data");
-				//mImageView.setImageBitmap(imageBitmap);
+				//mCameraPhotoFileUri // the image result
+				Intent intent2 = new Intent(this, ContactMultiSelectorActivity.class);
+				startActivityForResult(intent2, REQUEST_SELECT_CONTACTS_MULTI);
+				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 			}
 		}
-		else if (requestCode == CONTACT_SELECTOR_REQUEST_CODE){
+		else if (requestCode == REQUEST_SELECT_CONTACTS_MULTI){
+			if (resultCode == RESULT_OK) {
+				//mCameraPhotoFileUri // the image result
+				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
+				sendImageToContacts(contacts, mCameraPhotoFileUri);
+
+			}
+		}
+		else if (requestCode == REQUEST_CONTACT_SELECTOR){
 			if (resultCode == RESULT_OK){
-				String id = data.getStringExtra(Consts.INTENT_PARTICIPANT_ID);
-				String name = data.getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
-				String lang = data.getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
-				String pic = data.getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
-				String contactString = data.getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
+				String id = intent.getStringExtra(Consts.INTENT_PARTICIPANT_ID);
+				String name = intent.getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
+				String lang = intent.getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
+				String pic = intent.getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
+				String contactString = intent.getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
 				String conversationId = Conversation.getConversationId(id, mSelfUserId);
 
-				Intent intent = new Intent(this, ConversationActivity.class);
-				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, id);
-				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, name);
-				intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, lang);
-				intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, pic);
-				intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contactString);
-				intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
-				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
-				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
-				intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
-				startActivity(intent);
+				Intent intent1 = new Intent(this, ConversationActivity.class);
+				intent1.putExtra(Consts.INTENT_PARTICIPANT_ID, id);
+				intent1.putExtra(Consts.INTENT_PARTICIPANT_NAME, name);
+				intent1.putExtra(Consts.INTENT_PARTICIPANT_LANG, lang);
+				intent1.putExtra(Consts.INTENT_PARTICIPANT_PIC, pic);
+				intent1.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contactString);
+				intent1.putExtra(Consts.INTENT_CONVERSATION_ID, conversationId);
+				intent1.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+				intent1.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+				intent1.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+				startActivity(intent1);
 
 			}
 		}
 	}
+
 
 	public WCService getService(){
 		return mService;
 	}
 
+	private void sendImageToContacts(String[] contacts, Uri cameraPhotoFileUri) {
+		Log.e(TAG, "sendImageToContacts: " + contacts.toString() + " , " + cameraPhotoFileUri);
+		int totalMessagesToSend = contacts.length;
+		mConversationViewModel.sendImageToContacts(contacts, cameraPhotoFileUri);
+		mConversationViewModel.getOutgoingPendingMessagesLD().observe(this, pendingMessages -> {
+			Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() result: " + pendingMessages.size());
 
-//	private class MYTabLayoutOnPageChangeListener extends TabLayout.TabLayoutOnPageChangeListener{
-//
-//		public MYTabLayoutOnPageChangeListener(TabLayout tabLayout) {
-//			super(tabLayout);
-//		}
-//
-//
-//	}
+			if ((pendingMessages != null)&&(pendingMessages.size()>= totalMessagesToSend)) {
+				mService.sendMessages(pendingMessages);
+//				if (mForwardContactId != null) {
+//					String conversationId = Conversation.getConversationId(mSelfId, mForwardContactId);
+//					Log.e(TAG, "forwardMessagesToContacts, new conversationId: " + conversationId);
+//					mConversationViewModel.getConversationLD(conversationId).observe(this, conversation -> {
+//						OpenConversationActivity(conversation);
+//					});
+//				}
+			}
+		});
+
+
+	}
+
 
 }

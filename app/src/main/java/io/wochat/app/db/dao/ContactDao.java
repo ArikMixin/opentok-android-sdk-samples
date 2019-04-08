@@ -146,13 +146,16 @@ public interface ContactDao {
 				String appVersion);
 
 
-//	@Insert(onConflict = OnConflictStrategy.REPLACE)
-//	void insert(ContactInvitation contactInvitation);
 
-//	@Query("SELECT * FROM contact_invitation_table")
-//	public ContactInvitation[] getAllContactInvitations();
-//
-//	@Query("SELECT * from contact_invitation_table")
-//	LiveData<List<ContactInvitation>> getContactInvitations();
+	@Query("UPDATE contact_table SET  " +
+		"cntct_local_display_name = :displayName, " +
+		"cntct_local_os_id = :osId, " +
+		"cntct_local_phone_num_iso = :phoneNumIso, " +
+		"cntct_local_phone_num_stripped = :phoneNumStripped " +
+		"WHERE contact_id =:phoneNumStripped ")
+	void updateLocalData(String displayName, String osId, String phoneNumIso, String phoneNumStripped);
+
+
+
 
 }

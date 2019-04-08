@@ -86,6 +86,7 @@ import io.wochat.app.utils.SpeechToTextUtil;
 //import io.wochat.app.utils.SpeechUtils;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.utils.videocompression.MediaController;
+import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
 import io.wochat.app.viewmodel.SupportedLanguagesViewModel;
 
@@ -174,6 +175,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private List<SupportedLanguage> mSupportedLanguages;
 	private String mMagicButtonForceLanguage;
 	private String mMagicButtonForceCountry;
+	private ContactViewModel mContactViewModel;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -316,6 +318,13 @@ public class ConversationActivity extends PermissionActivity implements
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
+		mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
+		mContactViewModel.refreshContact(mParticipantId).observe(this, contact -> {
+			mParticipantPic = contact.getAvatar();
+			mParticipantLang = contact.getLanguage();
+			mParticipantName = contact.getName();
+			mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
+		});
 
 
 		mSupportedLanguagesViewModel.getSupportedLanguages().observe(this, supportedLanguages -> {
@@ -683,6 +692,8 @@ public class ConversationActivity extends PermissionActivity implements
 		//photoPickerIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
 		startActivityForResult(photoPickerIntent, REQUEST_SELECT_IMAGE_VIDEO);
 	}
+
+
 
 	private void selectPhotoCamera(){
 		StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
@@ -1840,7 +1851,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mConversationViewModel.forwardMessagesToContacts(contacts, messages);
 		mMessagesAdapter.unselectAllItems();
 
-		Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages().observe");
+		Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() observe");
 		mConversationViewModel.getOutgoingPendingMessagesLD().observe(this, pendingMessages -> {
 			Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() result: " + pendingMessages.size());
 

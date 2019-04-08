@@ -96,7 +96,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			/*****************************************************************************************/
 			// ios patches
 			if (message.getDurationMili() == 0){
-				message.setDurationMili(message.getDurationMili()*1000);
+				message.setDurationMili(message.getDuration()*1000);
 			}
 			message.setConversationId(conversationId);
 //			if (message.getTimestampMilli() == 0)

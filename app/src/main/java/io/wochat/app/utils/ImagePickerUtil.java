@@ -40,10 +40,10 @@ public class ImagePickerUtil {
 	public static final String MIME_TYPE_VIDEO = "MIME_TYPE_VIDEO";
 	private static final String TAG = "ImagePickerUtil";
 
-	public static Intent getPickImageChooserIntent(Context context) {
+	public static Intent getPickImageChooserIntent(Context context, Uri outputFileUri) {
 
 		// Determine Uri of camera image to save.
-		Uri outputFileUri = getCaptureImageOutputUri(context);
+		//Uri outputFileUri = getCaptureImageOutputUri(context);
 
 		List<Intent> allIntents = new ArrayList<>();
 		PackageManager packageManager = context.getPackageManager();

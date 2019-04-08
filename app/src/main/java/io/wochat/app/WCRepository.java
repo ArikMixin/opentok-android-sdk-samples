@@ -568,6 +568,13 @@ public class WCRepository {
 	}
 
 
+	public LiveData<Contact> refreshContact(String participantId) {
+		getContactFromServer(participantId);
+		return mContactDao.getContactLD(participantId);
+	}
+
+
+
 	private Contact[] updateContactsWithLocals(Map<String, ContactServer> contactServers, Map<String, ContactLocal> localContacts) {
 		Contact[] contacts = new Contact[localContacts.size()];
 		int i = 0;
@@ -750,7 +757,92 @@ public class WCRepository {
 	}
 
 
+
 	public void syncContactsWithServer() {
+		Log.e(TAG, "syncContactsWithServer called");
+
+		String[] contactArray = new String[mLocalContact.size()];
+		int i = 0;
+
+		for (String contact : mLocalContact.keySet()) {
+			contactArray[i++] = contact;
+		}
+		mWochatApi.userGetContacts(contactArray, new WochatApi.OnServerResponseListener() {
+			@Override
+			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+				if (isSuccess) {
+					JSONArray jsonContactArray = null;
+					try {
+						jsonContactArray = response.getJSONArray("contacts");
+						Map<String, ContactServer> contactServersMap = new HashMap<>();
+						int j = 0;
+						for (int i = 0; i < jsonContactArray.length(); i++) {
+							JSONObject jsonContactObj = jsonContactArray.getJSONObject(i);
+							Gson gson = new Gson();
+							ContactServer contactServer = gson.fromJson(jsonContactObj.toString(), ContactServer.class);
+							contactServersMap.put(contactServer.getUserId(), contactServer);
+						}
+
+						synchronized (mLocalContactSyncObject) {
+							mAppExecutors.diskIO().execute(() -> {
+								UpdateContactLocalsToDB(mLocalContact);
+								UpdateContactServerToDB(contactServersMap);
+								updateConversationWithContactData(contactServersMap);
+							});
+
+//							Contact[] contacts = updateContactsWithLocals(contactServersMap, mLocalContact);
+//							insert(contacts);
+//							updateConversationWithContactData(contactServersMap);
+						}
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+						mIsDuringRefreshContacts.setValue(false);
+					}
+				}
+				else
+					mIsDuringRefreshContacts.setValue(false);
+
+			}
+		});
+
+	}
+
+	private void UpdateContactServerToDB(Map<String, ContactServer> contactServersMap) {
+		Log.e(TAG, "UpdateContactServerToDB - start");
+		for (ContactServer contactServer : contactServersMap.values()) {
+			mContactDao.update(contactServer.getUserId(),
+				contactServer.getUserName(),
+				contactServer.getStatus(),
+				contactServer.getCountryCode(),
+				contactServer.getLanguage(),
+				contactServer.getProfilePicUrl(),
+				contactServer.getLocation(),
+				contactServer.getGender(),
+				contactServer.getBirthdate(),
+				contactServer.getLastUpdateDate(),
+				contactServer.getDiscoverable(),
+				contactServer.getOs(),
+				contactServer.getLanguageLocale(),
+				contactServer.getAppVersion());
+		}
+		Log.e(TAG, "UpdateContactServerToDB - end");
+
+	}
+
+	private void UpdateContactLocalsToDB(Map<String, ContactLocal> localContact) {
+		Log.e(TAG, "UpdateContactLocalsToDB - start");
+		for(ContactLocal contactLocal : localContact.values()){
+			Contact contact = mContactDao.getContact(contactLocal.getPhoneNumStripped());
+			if (contact != null)
+				mContactDao.updateLocalData(contactLocal.getDisplayName(), contactLocal.getOSId(), contactLocal.getPhoneNumIso(), contactLocal.getPhoneNumStripped());
+		}
+		Log.e(TAG, "UpdateContactLocalsToDB - end");
+
+	}
+
+
+	public void syncContactsWithServerOld() {
 		Log.e(TAG, "syncContactsWithServer called");
 
 		String[] contactArray = new String[mLocalContact.size()];
@@ -778,6 +870,7 @@ public class WCRepository {
 						synchronized (mLocalContactSyncObject) {
 							Contact[] contacts = updateContactsWithLocals(contactServersMap, mLocalContact);
 							insert(contacts);
+							updateConversationWithContactData(contactServersMap);
 						}
 
 					} catch (JSONException e) {
@@ -791,6 +884,16 @@ public class WCRepository {
 			}
 		});
 
+	}
+
+	private void updateConversationWithContactData(Map<String, ContactServer> contactServersMap) {
+//		mAppExecutors.diskIO().execute(() -> {
+		Log.e(TAG, "updateConversationWithContactData - start");
+		for(ContactServer contactServer : contactServersMap.values()){
+			mConversationDao.updateParticipantData(contactServer.getUserId(), contactServer.getProfilePicUrl(), contactServer.getLanguage());
+		}
+		Log.e(TAG, "updateConversationWithContactData - end");
+		//});
 	}
 
 
@@ -1766,7 +1869,14 @@ public class WCRepository {
 				conversation.setParticipantName(contact.getName());
 				conversation.setParticipantLanguage(contact.getLanguage());
 				conversation.setParticipantProfilePicUrl(contact.getAvatar());
-				mConversationDao.insert(conversation);
+				try {
+					Log.e(TAG, "ERROR getNotificationData: message.getConversationId: " +  message.getConversationId());
+					Log.e(TAG, "ERROR getNotificationData: insert conversation: " +  conversation.toString());
+					mConversationDao.insert(conversation);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			else {
 				conversation = mConversationDao.getConversation(message.getConversationId());
@@ -1883,6 +1993,36 @@ public class WCRepository {
 
 	public LiveData<String> getMagicButtonLangCode(String conversationId){
 		return mConversationDao.getMagicButtonLangCode(conversationId);
+	}
+
+
+	public void sendImageToContacts(String[] contacts, Uri photoFileUri) {
+		byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, photoFileUri);
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					try {
+						String imageUrl = response.getString("url");
+						String imageThumbUrl = response.getString("thumb_url");
+						String selfId = mSharedPreferences.getUserId();
+						String selfLang = mSharedPreferences.getUserLang();
+
+						String convId = Conversation.getConversationId(contacts[0], selfId);
+						Message message = Message.CreateImageMessage(contacts[0], selfId, convId, photoFileUri, selfLang);
+						message.setMediaThumbnailUrl(imageThumbUrl);
+						message.setMediaUrl(imageUrl);
+						ArrayList<Message> messages = new ArrayList<>();
+						messages.add(message);
+						forwardMessagesToContacts(contacts, messages);
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+		});
+
+
 	}
 
 }

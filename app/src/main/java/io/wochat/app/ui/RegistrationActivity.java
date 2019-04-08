@@ -14,6 +14,8 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -52,6 +54,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
 
@@ -73,6 +76,7 @@ public class RegistrationActivity extends PermissionActivity {
 
 	private static final int REQUEST_SELECT_PHOTO = 100;
 	private static final int REQUEST_TAKE_PHOTO = 101;
+	private static final int REQUEST_IMAGE_PICKER = 102;
 
 	private String[] PERMISSIONS = {
 		Manifest.permission.RECEIVE_SMS
@@ -530,8 +534,7 @@ public class RegistrationActivity extends PermissionActivity {
 		mPicGalleryIB.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK,
-				android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 				photoPickerIntent.setType("image/*");
 				photoPickerIntent.putExtra("crop", "true");
 				photoPickerIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
@@ -559,7 +562,14 @@ public class RegistrationActivity extends PermissionActivity {
 		mPicProfileIV.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				startActivityForResult(ImagePickerUtil.getPickImageChooserIntent(RegistrationActivity.this), 200);
+				StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+				StrictMode.setVmPolicy(builder.build());
+
+				mCameraPhotoFileUri = ImagePickerUtil.getCaptureImageOutputUri(RegistrationActivity.this);
+				Intent intent = ImagePickerUtil.getPickImageChooserIntent(RegistrationActivity.this, mCameraPhotoFileUri);
+				intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+
+				startActivityForResult(intent, REQUEST_IMAGE_PICKER);
 			}
 		});
 
@@ -696,12 +706,51 @@ public class RegistrationActivity extends PermissionActivity {
 				setBitmapAsProfilePic(mCameraPhotoFileUri);
 			}
 		}
+		else if (requestCode == REQUEST_SELECT_PHOTO) {
+			if (resultCode == Activity.RESULT_OK) {
+				Uri selectedImage = data.getData();
+				mProfilePicByte = ImagePickerUtil.getImageBytes(getContentResolver(), selectedImage);
+				setBitmapAsProfilePic(selectedImage);
+			}
+		}
+		else if (requestCode == REQUEST_IMAGE_PICKER){
+			if (resultCode == Activity.RESULT_OK) {
+				if (data != null) {
+					Uri selectedImage = data.getData();
+					mProfilePicByte = ImagePickerUtil.getImageBytes(getContentResolver(), selectedImage);
+					setBitmapAsProfilePic(selectedImage);
+				}
+				else {
+					setBitmapAsProfilePic(mCameraPhotoFileUri);
+				}
+			}
+		}
 
 
 	}
 
 	private void setBitmapAsProfilePic(Uri selectedImage){
 		try {
+
+
+			Matrix matrix = null;
+			try {
+				ExifInterface exif = new ExifInterface(selectedImage.getPath());
+				int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+				Log.d("EXIF", "Exif: " + orientation);
+				matrix = new Matrix();
+				if (orientation == 6) {
+					matrix.postRotate(90);
+				} else if (orientation == 3) {
+					matrix.postRotate(180);
+				} else if (orientation == 8) {
+					matrix.postRotate(270);
+				}
+			} catch (IOException e) {
+
+			}
+
+
 			InputStream imageStream;
 			Bitmap imageBitmap = null;
 			try {
@@ -715,21 +764,7 @@ public class RegistrationActivity extends PermissionActivity {
 			int height = imageBitmap.getHeight();
 			String newPath = null;
 
-//			File outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-//			FileOutputStream out = null;
 			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-			File outputFile = null;
-
-//			try {
-//				outputFile = File.createTempFile("image", ".png", outputDir);
-//				newPath = outputFile.getAbsolutePath();
-//				out = new FileOutputStream(newPath);
-//
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-
 
 			if (width > 1300){
 				int newWidth, newHeight;
@@ -738,14 +773,15 @@ public class RegistrationActivity extends PermissionActivity {
 
 				imageBitmap = Bitmap.createScaledBitmap(imageBitmap, newWidth, newHeight, false);
 
+				if (matrix != null)
+					imageBitmap = Bitmap.createBitmap(imageBitmap, 0, 0, newWidth, newHeight, matrix, true);
 			}
 
-			//imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, out);
+
+
 			imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
 			mPicProfileIV.setImageBitmap(imageBitmap);
 			mProfilePicByte = byteArrayOutputStream.toByteArray();
-
-
 
 		} catch (Exception e) {
 			e.printStackTrace();
