@@ -7,10 +7,14 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.RemoteInput;
+import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.util.Map;
@@ -98,8 +102,8 @@ public class NotificationHelper {
 
 
 		/****************************************************************************************************/
-
-		NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
+		String cid = createNotificationChannel1(context);
+		NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(context, cid)
 //			.setContentTitle("Group Summary")
 //			.setContentText("This is the group summary")
 			.setContentTitle(data.title)
@@ -115,7 +119,7 @@ public class NotificationHelper {
 		if (data.largeIcon != null)
 			summaryBuilder.setLargeIcon(data.largeIcon);
 
-		notificationManager.notify(data.conversationId, NOTIFICATION_BUNDLED_BASE_ID, summaryBuilder.build());
+		//notificationManager.notify(data.conversationId, NOTIFICATION_BUNDLED_BASE_ID, summaryBuilder.build());
 
 		/****************************************************************************************************/
 //		NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(context, CHANNEL_ID);
@@ -128,52 +132,58 @@ public class NotificationHelper {
 //		notificationManager.notify(data.conversationId, NOTIFICATION_BUNDLED_BASE_ID, summaryBuilder.build());
 
 
+		/******************************************************************************************************/
+
+
+
 		/****************************************************************************************************/
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, cid);
+		GlobalNotificationBuilder.setNotificationCompatBuilderInstance(builder);
+
+		builder
+			.setStyle(new NotificationCompat.BigTextStyle().bigText(data.body))
 			.setContentTitle(data.title)
 			.setContentText(data.body)
+			.setTicker(data.title)
 			.setSmallIcon(R.drawable.ic_notif)
-			.setStyle(new NotificationCompat.BigTextStyle().bigText(data.body))
+			.setDefaults(NotificationCompat.DEFAULT_ALL)
 			.setPriority(NotificationCompat.PRIORITY_HIGH)
-			//.setDefaults(Notification.DEFAULT_ALL)
-			.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
+			//.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
+			.setColor(ContextCompat.getColor(context.getApplicationContext(), R.color.colorPrimary))
+			//.setSubText("3")
+			.setCategory(Notification.CATEGORY_MESSAGE)
+			.setVisibility(Notification.VISIBILITY_PUBLIC)
 			.setGroup(data.conversationId)
-			.setFullScreenIntent(pendingIntent, true)
+			.addPerson(data.contactName)
+			//.setFullScreenIntent(pendingIntent, true)
 			.setContentIntent(pendingIntent);
+
 
 		if (data.largeIcon != null)
 			builder.setLargeIcon(data.largeIcon);
 
-		notificationManager.notify(data.messageId, NOTIFICATION_ID, builder.build());
+		Notification notification = builder.build();
+
+		//notificationManager.notify(data.messageId, NOTIFICATION_ID, notification);
+		notificationManager.notify(data.conversationId, NOTIFICATION_ID, notification);
+
+		//generateMessagingStyleNotification(context);
 		/****************************************************************************************************/
 
 
 
 
 
-//		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-//			.setSmallIcon(R.drawable.ic_notif)
-//			.setContentTitle(data.title)
-//			.setContentText(data.body)
-//			.setLargeIcon(data.largeIcon)
-//			.setGroup(data.conversationId)
-//			.setGroupSummary(true)
-//			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-//			.setContentIntent(pendingIntent)
-//			.setAutoCancel(true);
-
-
 	}
 
-	private static void createNotificationChannel(Context context) {
+	private static String createNotificationChannel(Context context) {
 		// Create the NotificationChannel, but only on API 26+ because
 		// the NotificationChannel class is new and not in the support library
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			CharSequence name = "wochat notification channel";
-			String description = "wochat notification preferences";
 			int importance = NotificationManager.IMPORTANCE_HIGH;
 			NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-			channel.setDescription(description);
+			channel.setDescription("wochat notification preferences");
 			channel.enableLights(true);
 			channel.setLightColor(Color.BLUE);
 			channel.setShowBadge(false);
@@ -181,9 +191,14 @@ public class NotificationHelper {
 			channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
 			// Register the channel with the system; you can't change the importance
 			// or other notification behaviors after this
-			NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+
+			NotificationManager notificationManager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+			//NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
 			notificationManager.createNotificationChannel(channel);
+			return CHANNEL_ID;
 		}
+		else
+			return null;
 	}
 
 	public static void deleteNotification(Context context,  Message message) {
@@ -191,4 +206,119 @@ public class NotificationHelper {
 		notificationManager.cancel(message.getId(), NOTIFICATION_ID);
 		notificationManager.cancel(message.getConversationId(), NOTIFICATION_BUNDLED_BASE_ID);
 	}
+
+
+
+
+
+
+
+	/*^%*&^%&^%*&^%(&*%(&^%(&*^*)(^&(*&%(&*^%(*&^%^%&%^&%(*&^%*&(^%*&^%^&%&*(%&*^%*&^%(*&%(&*^%*%*(*/
+
+	private static void generateMessagingStyleNotification(Context context) {
+
+		String notificationChannelId = createNotificationChannel1(context);
+
+
+		Intent notifyIntent = new Intent(context, MainActivity.class);
+
+
+
+		TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+		// Adds the back stack
+		stackBuilder.addParentStack(MainActivity.class);
+		// Adds the Intent to the top of the stack
+		stackBuilder.addNextIntent(notifyIntent);
+		// Gets a PendingIntent containing the entire back stack
+		PendingIntent mainPendingIntent =
+			PendingIntent.getActivity(
+				context,
+				0,
+				notifyIntent,
+				PendingIntent.FLAG_UPDATE_CURRENT
+			);
+
+
+
+
+
+
+		NotificationCompat.Builder notificationCompatBuilder =
+			new NotificationCompat.Builder(context.getApplicationContext(), notificationChannelId);
+
+		GlobalNotificationBuilder.setNotificationCompatBuilderInstance(notificationCompatBuilder);
+
+		notificationCompatBuilder
+			.setStyle(new NotificationCompat.BigTextStyle().bigText("fdsasdf sdaf sdaf dsaf sdf sda fsda f "))
+			.setContentTitle("contentTitle")
+			.setContentText("getContentText")
+			.setSmallIcon(R.drawable.ic_action_call)
+			.setLargeIcon(BitmapFactory.decodeResource(
+				context.getResources(),
+				R.drawable.ic_action_add_group))
+			.setContentIntent(mainPendingIntent)
+			.setDefaults(NotificationCompat.DEFAULT_ALL)
+			.setColor(ContextCompat.getColor(context.getApplicationContext(), R.color.colorPrimary))
+			.setSubText("3")
+			.setCategory(Notification.CATEGORY_MESSAGE)
+			.setPriority(NotificationCompat.PRIORITY_HIGH)
+			.setVisibility(Notification.VISIBILITY_PUBLIC);
+			notificationCompatBuilder.addPerson("moshe");
+
+		Notification notification = notificationCompatBuilder.build();
+		NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+		notificationManager.notify(NOTIFICATION_ID, notification);
+	}
+
+
+
+	public static String createNotificationChannel1(Context context) {
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+			String channelId = "chid";
+			CharSequence channelName = "channelName";
+			String channelDescription = "channelDescription";
+			int channelImportance = NotificationManager.IMPORTANCE_HIGH;
+			boolean channelEnableVibrate = true;
+			int channelLockscreenVisibility = Notification.VISIBILITY_PUBLIC;
+
+			NotificationChannel notificationChannel =
+				new NotificationChannel(channelId, channelName, channelImportance);
+
+			notificationChannel.setDescription(channelDescription);
+			notificationChannel.enableVibration(channelEnableVibrate);
+			notificationChannel.setLockscreenVisibility(channelLockscreenVisibility);
+
+			NotificationManager notificationManager =
+				(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+			notificationManager.createNotificationChannel(notificationChannel);
+
+			return channelId;
+		} else {
+			// Returns null for pre-O (26) devices.
+			return null;
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

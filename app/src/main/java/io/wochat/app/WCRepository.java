@@ -785,13 +785,13 @@ public class WCRepository {
 
 						synchronized (mLocalContactSyncObject) {
 							mAppExecutors.diskIO().execute(() -> {
+								Contact[] contacts = updateContactsWithLocals(contactServersMap, mLocalContact);
+								insert(contacts);
 								UpdateContactLocalsToDB(mLocalContact);
 								UpdateContactServerToDB(contactServersMap);
 								updateConversationWithContactData(contactServersMap);
 							});
 
-//							Contact[] contacts = updateContactsWithLocals(contactServersMap, mLocalContact);
-//							insert(contacts);
 //							updateConversationWithContactData(contactServersMap);
 						}
 
