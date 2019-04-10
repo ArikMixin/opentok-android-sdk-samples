@@ -42,8 +42,10 @@ class XMPPProvider {
 
 	private static final String TAG = "XMPPProvider";
 
-	private static final String XMPP_DOMAIN = "ejabberd-dev.wochat.io";
-	//private static final String XMPP_DOMAIN = "ejabberd.wochat.io";
+	//private static final String XMPP_DOMAIN = "ejabberd-dev.wochat.io";
+	private static final String XMPP_DOMAIN = "ejabberd.wochat.io";
+
+
 	private static final String XMPP_RESOURCE = "android";
 	private static final int XMPP_PORT = 5222;
 
