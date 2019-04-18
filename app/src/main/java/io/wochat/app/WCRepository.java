@@ -629,20 +629,6 @@ public class WCRepository {
 					contact = mContactDao.getContact(contactServer.getUserId());
 					contact.setContactServer(contactServer);
 					mContactDao.updateForce(contact);
-//					mContactDao.update(contactServer.getUserId(),
-//						contactServer.getUserName(),
-//						contactServer.getStatus(),
-//						contactServer.getCountryCode(),
-//						contactServer.getLanguage(),
-//						contactServer.getProfilePicUrl(),
-//						contactServer.getLocation(),
-//						contactServer.getGender(),
-//						contactServer.getBirthdate(),
-//						contactServer.getLastUpdateDate(),
-//						contactServer.getDiscoverable(),
-//						contactServer.getOs(),
-//						contactServer.getLanguageLocale(),
-//						contactServer.getAppVersion());
 				}
 				else {
 					contact = new Contact(contactServer);

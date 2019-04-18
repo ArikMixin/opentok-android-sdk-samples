@@ -5,6 +5,7 @@ import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Intent;
 
 import io.wochat.app.db.WCDatabase;
+import io.wochat.app.logic.NotificationHelper;
 
 public class WCApplication extends Application {
 
@@ -15,6 +16,9 @@ public class WCApplication extends Application {
 		super.onCreate();
 
 		mAppExecutors = new AppExecutors();
+
+		NotificationHelper.createNotificationChannel1(this);
+
 		ProcessLifecycleOwner.get().getLifecycle().addObserver(new ApplicationObserver(this));
 
 		try {

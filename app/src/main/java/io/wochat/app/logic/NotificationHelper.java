@@ -67,7 +67,7 @@ public class NotificationHelper {
 
 	private static void showNotification(Context context, NotificationData data){
 
-		createNotificationChannel(context);
+		//createNotificationChannel(context);
 
 		NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
@@ -102,8 +102,8 @@ public class NotificationHelper {
 
 
 		/****************************************************************************************************/
-		String cid = createNotificationChannel1(context);
-		NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(context, cid)
+		//String cid = createNotificationChannel1(context);
+		NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(context, getChanggelId())
 //			.setContentTitle("Group Summary")
 //			.setContentText("This is the group summary")
 			.setContentTitle(data.title)
@@ -137,7 +137,7 @@ public class NotificationHelper {
 
 
 		/****************************************************************************************************/
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, cid);
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(context, getChanggelId());
 		GlobalNotificationBuilder.setNotificationCompatBuilderInstance(builder);
 
 		builder
@@ -175,7 +175,7 @@ public class NotificationHelper {
 
 
 	}
-
+/*
 	private static String createNotificationChannel(Context context) {
 		// Create the NotificationChannel, but only on API 26+ because
 		// the NotificationChannel class is new and not in the support library
@@ -199,12 +199,13 @@ public class NotificationHelper {
 		}
 		else
 			return null;
-	}
+	}*/
 
 	public static void deleteNotification(Context context,  Message message) {
 		NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-		notificationManager.cancel(message.getId(), NOTIFICATION_ID);
-		notificationManager.cancel(message.getConversationId(), NOTIFICATION_BUNDLED_BASE_ID);
+//		notificationManager.cancel(message.getId(), NOTIFICATION_ID);
+//		notificationManager.cancel(message.getConversationId(), NOTIFICATION_BUNDLED_BASE_ID);
+		notificationManager.cancel(message.getConversationId(), NOTIFICATION_ID);
 	}
 
 
@@ -270,21 +271,27 @@ public class NotificationHelper {
 		notificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
+	public static String getChanggelId(){
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+			return CHANNEL_ID;
+		else
+			return null;
+	}
 
 
 	public static String createNotificationChannel1(Context context) {
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-			String channelId = "chid";
-			CharSequence channelName = "channelName";
-			String channelDescription = "channelDescription";
+			//String channelId = "chid";
+			CharSequence channelName = "Notifications";
+			String channelDescription = "Notification Preferences";
 			int channelImportance = NotificationManager.IMPORTANCE_HIGH;
 			boolean channelEnableVibrate = true;
 			int channelLockscreenVisibility = Notification.VISIBILITY_PUBLIC;
 
 			NotificationChannel notificationChannel =
-				new NotificationChannel(channelId, channelName, channelImportance);
+				new NotificationChannel(CHANNEL_ID, channelName, channelImportance);
 
 			notificationChannel.setDescription(channelDescription);
 			notificationChannel.enableVibration(channelEnableVibrate);
@@ -294,7 +301,7 @@ public class NotificationHelper {
 				(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 			notificationManager.createNotificationChannel(notificationChannel);
 
-			return channelId;
+			return CHANNEL_ID;
 		} else {
 			// Returns null for pre-O (26) devices.
 			return null;
