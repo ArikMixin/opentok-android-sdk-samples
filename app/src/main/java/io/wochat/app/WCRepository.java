@@ -1902,6 +1902,7 @@ public class WCRepository {
 					data.body = "\uD83D\uDCF9 Video";
 					break;
 				case Message.MSG_TYPE_AUDIO:
+				case Message.MSG_TYPE_SPEECHABLE:
 					data.body = "\uD83C\uDFA4 Audio";
 					break;
 				case Message.MSG_TYPE_IMAGE:
