@@ -42,37 +42,39 @@
 
         <LinearLayout
             android:id="@+id/center_layout"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="2dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginStart="10dp"
+            android:layout_marginTop="2dp"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toStartOf="@+id/phone_ib"
             app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
             app:layout_constraintTop_toBottomOf="@+id/dialogName">
 
-        <ImageView
-            android:id="@+id/dialogCocheIV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/coche_seen"
-            />
+            <ImageView
+                android:id="@+id/dialogCocheIV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/coche_seen"
+                />
 
 
-
-        <ImageView
-            android:id="@+id/dialogMsgTypeIV"
-            android:layout_marginStart="5dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/msg_in_video_dark"
-            />
+            <ImageView
+                android:id="@+id/dialogMsgTypeIV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/msg_in_video_dark"
+                />
 
 
             <TextView
                 android:id="@id/dialogLastMessage"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
                 android:layout_marginStart="5dp"
                 android:ellipsize="end"
                 android:gravity="top"
@@ -80,8 +82,7 @@
                 android:maxWidth="200dp"
                 android:text="Hi how are you my friend Hi how are you my friend Hi how are you my friend"
                 android:textColor="@color/font_gray_1"
-                android:textSize="13sp"
-                />
+                android:textSize="13sp"/>
 
         </LinearLayout>
 
@@ -121,7 +122,7 @@
             app:layout_constraintTop_toBottomOf="@+id/center_layout"/>
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/camera_ib"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
@@ -132,14 +133,13 @@
             app:srcCompat="@drawable/video_camera"/>
 
         <ImageButton
-            android:id="@+id/imageButton1"
+            android:id="@+id/phone_ib"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
-
             android:background="@color/transparent"
             app:layout_constraintBottom_toBottomOf="@+id/dialogAvatar"
-            app:layout_constraintEnd_toStartOf="@+id/imageButton"
+            app:layout_constraintEnd_toStartOf="@+id/camera_ib"
             app:layout_constraintTop_toTopOf="@+id/dialogAvatar"
             app:layout_constraintVertical_bias="0.476"
             app:srcCompat="@drawable/phone"/>
