@@ -169,8 +169,8 @@ public class WochatApi {
 						   String messageId2, String fromLanguage2 , String toLanguage2 , String text2,
 						   final OnServerResponseListener lsnr) {
 
-		Log.e(TAG, "API translate2 fromLanguage1: " + messageId1 + ", toLanguage1: " + toLanguage1 + " , text1: " + text1 + " , messageId1: " + messageId1);
-		Log.e(TAG, "API translate2 fromLanguage2: " + messageId2 + ", toLanguage2: " + toLanguage2 + " , text2: " + text2 + " , messageId2: " + messageId2);
+		Log.e(TAG, "API translate2 fromLanguage1: " + fromLanguage1 + ", toLanguage1: " + toLanguage1 + " , text1: " + text1 + " , messageId1: " + messageId1);
+		Log.e(TAG, "API translate2 fromLanguage2: " + fromLanguage2 + ", toLanguage2: " + toLanguage2 + " , text2: " + text2 + " , messageId2: " + messageId2);
 
 
 		String url = BASE_URL + "/translate/";

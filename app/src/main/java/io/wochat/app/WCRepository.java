@@ -1134,7 +1134,7 @@ public class WCRepository {
 			needTranslationMagic = message.isMagic();
 
 			if (needTranslation1 && needTranslationMagic) {  // translate to 2 language, regular and magic
-				mWochatApi.translate2(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
+				mWochatApi.translate2(message.getMessageId(), fromLanguage, toLanguage, message.getMessageText(),
 					message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
 					(isSuccess, errorLogic, errorComm, response) -> {
 						if ((isSuccess) && (response != null)) {
@@ -1245,7 +1245,7 @@ public class WCRepository {
 			needTranslationMagic = message.isMagic();
 
 			if (needTranslation1 && needTranslationMagic) {  // translate to 2 language, regular and magic
-				mWochatApi.translate2(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
+				mWochatApi.translate2(message.getMessageId(), fromLanguage, toLanguage, message.getMessageText(),
 					message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
 					(isSuccess, errorLogic, errorComm, response) -> {
 						if ((isSuccess) && (response != null)) {
