@@ -13,3 +13,5 @@
 /app/debug/output.json
 /app/release/app-release.apk
 /app/release/output.json
+/.idea/assetWizardSettings.xml
+/.idea/caches/gradle_models.ser
