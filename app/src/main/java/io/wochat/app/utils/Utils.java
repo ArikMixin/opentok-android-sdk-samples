@@ -36,6 +36,7 @@ import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.utils.DateFormatter;
 
 import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -423,6 +424,22 @@ public class Utils {
 
 	public static boolean isNotNullAndNotEmpty(String string) {
 		return (string != null)&&(!string.trim().isEmpty());
+	}
+
+
+	public static Date stringToDate(String dateString, String formatString){
+		//String dtStart = "2010-10-15T09:27:37Z";
+		//2019-04-23 07:46:03
+		//SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		Date date = null;
+		SimpleDateFormat format = new SimpleDateFormat(formatString);
+		try {
+			date = format.parse(dateString);
+			return date;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return date;
+		}
 	}
 
 }

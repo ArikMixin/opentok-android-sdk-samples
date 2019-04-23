@@ -54,27 +54,30 @@ public class Conversation implements IDialog{
 	private String conversationId;
 
 	/***************************************************/
-	@NonNull
 	@SerializedName("participant_id")
 	@ColumnInfo(name = "participant_id")
+	@Nullable
 	@Expose
 	private String participantId;
 
 	/***************************************************/
 	@SerializedName("participant_profile_pic_url")
 	@ColumnInfo(name = "participant_profile_pic_url")
+	@Nullable
 	@Expose
 	private String participantProfilePicUrl;
 
 	/***************************************************/
 	@SerializedName("participant_name")
 	@ColumnInfo(name = "participant_name")
+	@Nullable
 	@Expose
 	private String participantName;
 
 	/***************************************************/
 	@SerializedName("participant_language")
 	@ColumnInfo(name = "participant_language")
+	@Nullable
 	@Expose
 	private String participantLanguage;
 
@@ -139,7 +142,7 @@ public class Conversation implements IDialog{
 	@SerializedName("group_name")
 	@ColumnInfo(name = "group_name")
 	@Expose
-	private String GroupName;
+	private String groupName;
 	/***************************************************/
 	@SerializedName("group_description")
 	@ColumnInfo(name = "group_description")
@@ -154,7 +157,7 @@ public class Conversation implements IDialog{
 	@SerializedName("group_created_date")
 	@ColumnInfo(name = "group_created_date")
 	@Expose
-	private String groupCreatedDate;
+	private Date groupCreatedDate;
 	/***************************************************/
 	@SerializedName("group_created_by")
 	@ColumnInfo(name = "group_created_by")
@@ -164,6 +167,24 @@ public class Conversation implements IDialog{
 
 
 	/***************************************************/
+	// for group //***********************/
+	public Conversation(String conversationId,
+						String groupName,
+						String groupDescription,
+						String groupImageUrl,
+						String groupCreatedBy,
+						String groupCreatedDate){
+
+		this.conversationId = conversationId;
+		this.participantId = null;
+		this.isGroup = true;
+		this.groupName = groupName;
+		this.groupDescription = groupDescription;
+		this.groupImageUrl = groupImageUrl;
+		this.groupCreatedDate = Utils.stringToDate(groupCreatedDate, "yyyy-MM-dd HH:mm:ss");
+		this.groupCreatedBy = groupCreatedBy;
+
+	}
 
 
 	public Conversation(String participantId, String selfId){
@@ -233,20 +254,23 @@ public class Conversation implements IDialog{
 
 	}
 
-	public void setGroup(boolean group) {
-		isGroup = group;
+	public void setGroup(boolean isGroup) {
+		this.isGroup = isGroup;
 	}
 
 	public String getGroupName() {
-		return GroupName;
+		return groupName;
 	}
 
 	public void setGroupName(String groupName) {
-		GroupName = groupName;
+		this.groupName = groupName;
 	}
 
 	public String getParticipantProfilePicUrl() {
-		return participantProfilePicUrl;
+		if (isGroup)
+			return groupImageUrl;
+		else
+			return participantProfilePicUrl;
 	}
 
 	public void setParticipantProfilePicUrl(String participantProfilePicUrl) {
@@ -284,7 +308,10 @@ public class Conversation implements IDialog{
 
 	@Override
 	public String getDialogName() {
-		return participantName;
+		if (isGroup)
+			return groupName;
+		else
+			return participantName;
 	}
 
 	@Override
@@ -384,11 +411,11 @@ public class Conversation implements IDialog{
 		this.groupImageUrl = groupImageUrl;
 	}
 
-	public String getGroupCreatedDate() {
+	public Date getGroupCreatedDate() {
 		return groupCreatedDate;
 	}
 
-	public void setGroupCreatedDate(String groupCreatedDate) {
+	public void setGroupCreatedDate(Date groupCreatedDate) {
 		this.groupCreatedDate = groupCreatedDate;
 	}
 
@@ -413,7 +440,7 @@ public class Conversation implements IDialog{
 			append("lastMessageTimeStamp", lastMessageTimeStamp).
 			append("numOfUnreadMessages", numOfUnreadMessages).
 			append("isGroup", isGroup).
-			append("GroupName", GroupName).
+			append("GroupName", groupName).
 			toString();
 	}
 

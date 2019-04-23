@@ -48,6 +48,7 @@ import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
+import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.Notif;
 import io.wochat.app.model.SupportedLanguage;
@@ -532,7 +533,7 @@ public class WCRepository {
 	public void createNewGroup(String groupName, byte[] bytes, List<Contact> contactList){
 		mAppExecutors.networkIO().execute(() -> {
 
-			String[] contactArray = new String[3];
+			String[] contactArray = new String[contactList.size()];
 			int i=0;
 			for (Contact contact : contactList){
 				contactArray[i++] = contact.getContactId();
@@ -544,6 +545,33 @@ public class WCRepository {
 						String imageUrl = response.getString("url");
 						mWochatApi.createNewGroup(groupName, imageUrl, contactArray, (isSuccess1, errorLogic1, errorComm1, response1) -> {
 							if (isSuccess1){
+								try {
+									String name = response1.getString("name");
+									String description = response1.getString("description");
+									String image_url = response1.getString("image_url");
+									String id = response1.getString("id");
+									String created_date = response1.getString("created_date");
+									String created_by = response1.getString("created_by");
+									JSONArray participantsArray = response1.getJSONArray("participants");
+									ArrayList<GroupMember> gml = new ArrayList<>();
+									Gson gson = new Gson();
+
+									for (int j=0; j< participantsArray.length(); j++){
+										String p = participantsArray.getString(j);
+										GroupMember gm = gson.fromJson(p, GroupMember.class);
+										gm.setGroupId(id);
+										gml.add(gm);
+									}
+
+									Conversation conversation = new Conversation(id, name, description, image_url, created_by, created_date);
+									mAppExecutors.diskIO().execute(() -> {
+										mConversationDao.insert(conversation);
+										mGroupDao.insert(gml);
+									});
+									Log.e(TAG, "gml: " + gml.toString());
+								} catch (JSONException e) {
+									e.printStackTrace();
+								}
 								Log.e(TAG, "createNewGroup: " + response1.toString());
 							}
 						});
