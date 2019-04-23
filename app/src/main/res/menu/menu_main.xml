@@ -9,6 +9,13 @@
           android:orderInCategory="101"
           android:title="Settings" />
 
+    <item android:id="@+id/action_create_group"
+          android:icon="@drawable/ic_action_dots_vert"
+          app:showAsAction="never"
+          android:orderInCategory="102"
+          android:title="New Group" />
+
+
     <item
         android:id="@+id/action_search"
         android:title="search"

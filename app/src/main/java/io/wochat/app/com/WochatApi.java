@@ -250,6 +250,31 @@ public class WochatApi {
 
 	}
 
+
+
+	public void createNewGroup(String name, String imageUrl, String[] contacts, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API createGroup - contactIdList count: " + contacts.length);
+
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray(Arrays.asList(contacts));
+		try {
+			jsonObject.put("name", name);
+			jsonObject.put("description", "");
+			jsonObject.put("image_url", imageUrl);
+			jsonObject.put("participants", jsonArray);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+
+
+	}
+
+
 	public static final int UPLOAD_MIME_TYPE_IAMGE = 1;
 	public static final int UPLOAD_MIME_TYPE_VIDEO = 2;
 	public static final int UPLOAD_MIME_TYPE_GIF = 3;

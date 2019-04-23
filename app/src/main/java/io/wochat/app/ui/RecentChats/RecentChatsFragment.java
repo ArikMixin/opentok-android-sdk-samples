@@ -1,6 +1,7 @@
 package io.wochat.app.ui.RecentChats;
 
 
+import android.app.Activity;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -11,6 +12,7 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -42,6 +44,7 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.UnreadMessagesConversation;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
@@ -56,7 +59,9 @@ public class RecentChatsFragment extends Fragment  implements
 	DialogsListAdapter.OnDialogLongClickListener<Conversation>,
 	DateFormatter.Formatter{
 
-	private static final int CONTACT_SELECTOR_REQUEST_CODE = 1;
+	private static final int REQUEST_SELECT_CONTACT = 1;
+	private static final int REQUEST_SELECT_CONTACTS_MULTY = 2;
+	private static final String TAG = "RecentChatsFragment";
 	//private RecentChatsViewModel mViewModel;
 	private UserViewModel mUserViewModel;
 	private String mSelfUserId;
@@ -223,6 +228,10 @@ public class RecentChatsFragment extends Fragment  implements
 			startActivity(intent);
 			return true;
 		}
+		if (id == R.id.action_create_group) {
+			((MainActivity)getActivity()).createGroup();
+			return true;
+		}
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -230,13 +239,13 @@ public class RecentChatsFragment extends Fragment  implements
 
 	private void selectContact(){
 		Intent intent = new Intent(getContext(), ContactSelectorActivity.class);
-		startActivityForResult(intent, CONTACT_SELECTOR_REQUEST_CODE);
+		startActivityForResult(intent, REQUEST_SELECT_CONTACT);
 	}
 
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == CONTACT_SELECTOR_REQUEST_CODE){
+		if (requestCode == REQUEST_SELECT_CONTACT){
 			if (resultCode == AppCompatActivity.RESULT_OK){
 				String id = data.getStringExtra(Consts.INTENT_PARTICIPANT_ID);
 				String name = data.getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
@@ -260,6 +269,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 			}
 		}
+
 	}
 
 	@Override

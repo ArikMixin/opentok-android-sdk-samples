@@ -144,6 +144,15 @@ public class ContactMultiListAdapter <CONTACT extends IContact> extends Recycler
 		notifyDataSetChanged();
 	}
 
+	public void selectContact(CONTACT contact) {
+		Wrapper wrapper = mWrapperMap.get(contact.getId());
+		wrapper.isSelected = true;
+		wrapper = mWrapperMapFiltered.get(contact.getId());
+		wrapper.isSelected = true;
+		mWrapperListFiltered = new ArrayList<Wrapper>(mWrapperMapFiltered.values());
+		notifyDataSetChanged();
+	}
+
 
 	public void setContacts(List<CONTACT> contacts) {
 

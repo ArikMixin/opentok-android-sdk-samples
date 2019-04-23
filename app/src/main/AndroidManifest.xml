@@ -25,6 +25,16 @@
         android:theme="@style/AppTheme"
         tools:replace="android:supportsRtl">
         <activity
+            android:name=".ui.NewGroupActivity"
+            android:label="@string/title_activity_new_group"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.Contact.ContactMultiSelectorActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="io.wochat.app.ui.Contact.ContactMultiSelectorActivity"/>
+        </activity>
+        <activity
             android:name=".ui.settings.SupportedLanguagesActivity"
             android:screenOrientation="portrait">
         </activity>
@@ -64,6 +74,7 @@
         </activity>
         <activity
             android:name=".ui.Contact.ContactSelectorActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/NoActionBarAppTheme">
             <meta-data
                 android:name="android.app.searchable"
@@ -75,6 +86,7 @@
         </activity>
         <activity
             android:name=".ui.Contact.ContactMultiSelectorActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/NoActionBarAppTheme">
             <meta-data
                 android:name="android.app.searchable"

@@ -569,6 +569,8 @@ public class ConversationActivity extends PermissionActivity implements
 				break;
 			case R.id.action_frwrd:
 				Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+				intent.putExtra(Consts.INTENT_TITLE, getString(R.string.search_frwrd_to));
+				intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_send);
 				startActivityForResult(intent, REQUEST_SELECT_CONTACTS);
 				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 				break;
@@ -753,7 +755,9 @@ public class ConversationActivity extends PermissionActivity implements
 	@Override
 	public void onMessageForward(Message message) {
 		Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+		intent.putExtra(Consts.INTENT_TITLE, getString(R.string.search_frwrd_to));
 		intent.putExtra(Consts.INTENT_MESSAGE_OBJ, message.toJson());
+		intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_send);
 		startActivityForResult(intent, REQUEST_SELECT_CONTACTS_W_MSG);
 		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 

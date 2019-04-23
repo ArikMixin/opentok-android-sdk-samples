@@ -19,6 +19,7 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,6 +39,7 @@ import io.wochat.app.db.WCDatabase;
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ConversationDao;
+import io.wochat.app.db.dao.GroupDao;
 import io.wochat.app.db.dao.MessageDao;
 import io.wochat.app.db.dao.NotifDao;
 import io.wochat.app.db.dao.UserDao;
@@ -95,6 +97,7 @@ public class WCRepository {
 	private MutableLiveData<StateData<String>> mUploadProfilePicResult;
 	private MutableLiveData<StateData<String>> mUserConfirmRegistrationResult;
 	private MutableLiveData<StateData<Message>> mUploadImageResult;
+	private MutableLiveData<StateData<String>> mUploadOnlyImageResult;
 	private MutableLiveData<Boolean> mIsDuringRefreshContacts;
 	private MutableLiveData<List<Message>> mMarkAsReadAffectedMessages;
 	private Map<String, ContactLocal> mLocalContact;
@@ -105,6 +108,7 @@ public class WCRepository {
 
 	private UserDao mUserDao;
 	private ContactDao mContactDao;
+	private GroupDao mGroupDao;
 	private ConversationDao mConversationDao;
 	private MessageDao mMessageDao;
 	private NotifDao mNotifDao;
@@ -152,6 +156,7 @@ public class WCRepository {
 		mUserVerificationResult = new MutableLiveData<>();
 		mUploadProfilePicResult = new MutableLiveData<>();
 		mUploadImageResult = new MutableLiveData<>();
+		mUploadOnlyImageResult = new MutableLiveData<>();
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
 		mIsDuringRefreshContacts = new MutableLiveData<>();
 		mIsDuringRefreshContacts.setValue(false);
@@ -163,6 +168,8 @@ public class WCRepository {
 		//mAllWords = mWordDao.getAlphabetizedWords();
 		mUserDao = mDatabase.userDao();
 		mContactDao = mDatabase.contactDao();
+		mGroupDao = mDatabase.groupDao();
+
 		mConversationDao = mDatabase.conversationDao();
 		mMessageDao = mDatabase.messageDao();
 		mNotifDao = mDatabase.notifDao();
@@ -376,6 +383,12 @@ public class WCRepository {
 		return mUploadImageResult;
 	}
 
+	public MutableLiveData<StateData<String>> getUploadOnlyImageResult() {
+		return mUploadOnlyImageResult;
+	}
+
+
+
 	public MutableLiveData<StateData<String>> getUserConfirmRegistrationResult() {
 		return mUserConfirmRegistrationResult;
 	}
@@ -476,46 +489,111 @@ public class WCRepository {
 
 	public void uploadImage(Message message, byte[] bytes) {
 		mAppExecutors.networkIO().execute(() -> {
-			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, new WochatApi.OnServerResponseListener() {
-				@Override
-				public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
-					Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
-					if (isSuccess) {
-						try {
-							String imageUrl = response.getString("url");
-							String imageThumbUrl = response.getString("thumb_url");
-							message.setMediaThumbnailUrl(imageThumbUrl);
-							message.setMediaUrl(imageUrl);
-							Picasso.get().load(imageThumbUrl).fetch(new Callback() { // pre load it
-								@Override
-								public void onSuccess() {
-									updateMessageOnly(message);
-									mUploadImageResult.setValue(new StateData<Message>().success(message));
-								}
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+				Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+				if (isSuccess) {
+					try {
+						String imageUrl = response.getString("url");
+						String imageThumbUrl = response.getString("thumb_url");
+						message.setMediaThumbnailUrl(imageThumbUrl);
+						message.setMediaUrl(imageUrl);
+						Picasso.get().load(imageThumbUrl).fetch(new Callback() { // pre load it
+							@Override
+							public void onSuccess() {
+								updateMessageOnly(message);
+								mUploadImageResult.setValue(new StateData<Message>().success(message));
+							}
 
-								@Override
-								public void onError(Exception e) {
-									mUploadImageResult.setValue(new StateData<Message>().errorComm(e));
-								}
-							});
+							@Override
+							public void onError(Exception e) {
+								mUploadImageResult.setValue(new StateData<Message>().errorComm(e));
+							}
+						});
 //							updateMessageOnly(message);
 //							mUploadImageResult.setValue(new StateData<Message>().success(message));
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-
-					}
-					else if (errorLogic != null) {
-						mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+					} catch (JSONException e) {
+						e.printStackTrace();
 					}
 
-					else if (errorComm != null) {
-						mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
-					}
+				}
+				else if (errorLogic != null) {
+					mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+				}
+
+				else if (errorComm != null) {
+					mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
 				}
 			});
 
 		});
+	}
+
+
+	public void createNewGroup(String groupName, byte[] bytes, List<Contact> contactList){
+		mAppExecutors.networkIO().execute(() -> {
+
+			String[] contactArray = new String[3];
+			int i=0;
+			for (Contact contact : contactList){
+				contactArray[i++] = contact.getContactId();
+			}
+
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					try {
+						String imageUrl = response.getString("url");
+						mWochatApi.createNewGroup(groupName, imageUrl, contactArray, (isSuccess1, errorLogic1, errorComm1, response1) -> {
+							if (isSuccess1){
+								Log.e(TAG, "createNewGroup: " + response1.toString());
+							}
+						});
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+
+
+
+		});
+	}
+
+	public MutableLiveData<StateData<String>> uploadImage(byte[] bytes) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+				Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+				if (isSuccess) {
+					try {
+						String imageUrl = response.getString("url");
+						String imageThumbUrl = response.getString("thumb_url");
+						Picasso.get().load(imageThumbUrl).fetch(new Callback() { // pre load it
+							@Override
+							public void onSuccess() {
+								mUploadOnlyImageResult.setValue(new StateData<String>().success(imageUrl));
+							}
+
+							@Override
+							public void onError(Exception e) {
+								mUploadOnlyImageResult.setValue(new StateData<String>().errorComm(e));
+							}
+						});
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+
+				}
+				else if (errorLogic != null) {
+					mUploadOnlyImageResult.setValue(new StateData<String>().errorLogic(errorLogic));
+				}
+
+				else if (errorComm != null) {
+					mUploadOnlyImageResult.setValue(new StateData<String>().errorComm(errorComm));
+				}
+			});
+
+		});
+		return mUploadOnlyImageResult;
 	}
 
 	public void insert(User user) {

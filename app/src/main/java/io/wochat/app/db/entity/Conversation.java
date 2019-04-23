@@ -141,6 +141,30 @@ public class Conversation implements IDialog{
 	@Expose
 	private String GroupName;
 	/***************************************************/
+	@SerializedName("group_description")
+	@ColumnInfo(name = "group_description")
+	@Expose
+	private String groupDescription;
+	/***************************************************/
+	@SerializedName("group_image_url")
+	@ColumnInfo(name = "group_image_url")
+	@Expose
+	private String groupImageUrl;
+	/***************************************************/
+	@SerializedName("group_created_date")
+	@ColumnInfo(name = "group_created_date")
+	@Expose
+	private String groupCreatedDate;
+	/***************************************************/
+	@SerializedName("group_created_by")
+	@ColumnInfo(name = "group_created_by")
+	@Expose
+	private String groupCreatedBy;
+
+
+
+	/***************************************************/
+
 
 	public Conversation(String participantId, String selfId){
 		this.conversationId = getConversationId(participantId, selfId);
@@ -341,6 +365,39 @@ public class Conversation implements IDialog{
 
 	public void setMagicButtonLangCode(String magicButtonLangCode) {
 		this.magicButtonLangCode = magicButtonLangCode;
+	}
+
+
+	public String getGroupDescription() {
+		return groupDescription;
+	}
+
+	public void setGroupDescription(String groupDescription) {
+		this.groupDescription = groupDescription;
+	}
+
+	public String getGroupImageUrl() {
+		return groupImageUrl;
+	}
+
+	public void setGroupImageUrl(String groupImageUrl) {
+		this.groupImageUrl = groupImageUrl;
+	}
+
+	public String getGroupCreatedDate() {
+		return groupCreatedDate;
+	}
+
+	public void setGroupCreatedDate(String groupCreatedDate) {
+		this.groupCreatedDate = groupCreatedDate;
+	}
+
+	public String getGroupCreatedBy() {
+		return groupCreatedBy;
+	}
+
+	public void setGroupCreatedBy(String groupCreatedBy) {
+		this.groupCreatedBy = groupCreatedBy;
 	}
 
 	@Override
