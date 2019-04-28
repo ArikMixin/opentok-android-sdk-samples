@@ -52,7 +52,7 @@ public class GroupMember {
     @Expose
     private String userName;
 
-
+	private int groupColor;
 
 	@SerializedName("is_admin")
 	@ColumnInfo(name = "is_admin")

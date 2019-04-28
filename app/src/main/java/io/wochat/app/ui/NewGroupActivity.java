@@ -240,8 +240,13 @@ public class NewGroupActivity extends AppCompatActivity implements View.OnClickL
 	public void onClick(View v) {
 		switch (v.getId()){
 			case R.id.ok_action_iv:
-				if (mGroupNameET.getText().toString().trim().equals("")){
-					Toast.makeText(this, "Please enter group name.", Toast.LENGTH_SHORT).show();
+				String name = mGroupNameET.getText().toString().trim();
+				if (name.equals("")){
+					Toast.makeText(this, R.string.msg_enter_group_name, Toast.LENGTH_SHORT).show();
+					return;
+				}
+				else if (name.length() < 2){
+					Toast.makeText(this, R.string.msg_group_name_2_chars, Toast.LENGTH_SHORT).show();
 					return;
 				}
 				finishAction();

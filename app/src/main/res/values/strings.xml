@@ -92,5 +92,7 @@
     <string name="title_activity_new_group">New Group</string>
     <string name="persons_in_this_group_title">%d persons in this group</string>
     <string name="person_in_this_group_title">1 person in this group</string>
+    <string name="msg_enter_group_name">Please enter group name.</string>
+    <string name="msg_group_name_2_chars">Group name must be at least 2 characters.</string>
 
 </resources>

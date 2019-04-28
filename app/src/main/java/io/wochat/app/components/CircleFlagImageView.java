@@ -6,6 +6,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -74,6 +75,12 @@ public class CircleFlagImageView extends LinearLayout {
 			mContactInitialsTV.bringToFront();
 		}
 
+		if (flagDrawable == 0)
+			mContactFlagCIV.setVisibility(View.INVISIBLE);
+		else
+			mContactFlagCIV.setVisibility(View.VISIBLE);
+
+
 		if ((flagDrawable != 0) && (!mIsChecked) && (!mIsCanceled)){
 			Picasso.get().
 				load(flagDrawable).
@@ -121,6 +128,11 @@ public class CircleFlagImageView extends LinearLayout {
 				into(mContactPicCIV);
 			mContactInitialsTV.bringToFront();
 		}
+
+		if (flagDrawable == 0)
+			mContactFlagCIV.setVisibility(View.INVISIBLE);
+		else
+			mContactFlagCIV.setVisibility(View.VISIBLE);
 
 		if ((flagDrawable != 0) && (!mIsChecked) && (!mIsCanceled)){
 			Picasso.get().

@@ -280,6 +280,7 @@ public class RecentChatsFragment extends Fragment  implements
 		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
 		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+		intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
 		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);

@@ -8,6 +8,7 @@ import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.stfalcon.chatkit.commons.models.IContact;
@@ -442,6 +443,18 @@ public class Conversation implements IDialog{
 			append("isGroup", isGroup).
 			append("GroupName", groupName).
 			toString();
+	}
+
+
+	public String toJson(){
+		Gson gson = new Gson();
+		return gson.toJson(this);
+	}
+
+
+	public static Conversation fromJson(String jsonString){
+		Gson gson = new Gson();
+		return gson.fromJson(jsonString, Conversation.class);
 	}
 
 

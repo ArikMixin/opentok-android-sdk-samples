@@ -176,6 +176,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private String mMagicButtonForceLanguage;
 	private String mMagicButtonForceCountry;
 	private ContactViewModel mContactViewModel;
+	private boolean mIsGroup;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -234,6 +235,15 @@ public class ConversationActivity extends PermissionActivity implements
 		mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
 		mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
 		mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+		String conversationString = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_OBJ);
+		if (Utils.isNotNullAndNotEmpty(conversationString)){
+			mConversation = Conversation.fromJson(conversationString);
+			mIsGroup = mConversation.isGroup();
+			if (mIsGroup){
+				mParticipantPic = mConversation.getGroupImageUrl();
+				mParticipantName = mConversation.getGroupName();
+			}
+		}
 
 		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 		mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
@@ -267,7 +277,7 @@ public class ConversationActivity extends PermissionActivity implements
 		if ((Utils.isHebrew(mParticipantLang)) && (Utils.isHebrew(mSelfLang)))
 			mSameLanguageWithParticipant = true;
 		else
-			mSameLanguageWithParticipant = mParticipantLang.equals(mSelfLang);
+			mSameLanguageWithParticipant = (mParticipantLang == null) || (mParticipantLang.equals(mSelfLang));
 
 		mContactAvatarCIV = (CircleFlagImageView) findViewById(R.id.contact_avatar_civ);
 		mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
@@ -318,13 +328,15 @@ public class ConversationActivity extends PermissionActivity implements
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
-		mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
-		mContactViewModel.refreshContact(mParticipantId).observe(this, contact -> {
-			mParticipantPic = contact.getAvatar();
-			mParticipantLang = contact.getLanguage();
-			mParticipantName = contact.getName();
-			mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
-		});
+		if (mParticipantId != null) {
+			mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
+			mContactViewModel.refreshContact(mParticipantId).observe(this, contact -> {
+				mParticipantPic = contact.getAvatar();
+				mParticipantLang = contact.getLanguage();
+				mParticipantName = contact.getName();
+				mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
+			});
+		}
 
 
 		mSupportedLanguagesViewModel.getSupportedLanguages().observe(this, supportedLanguages -> {
@@ -1162,13 +1174,15 @@ public class ConversationActivity extends PermissionActivity implements
 				long time = intent.getLongExtra(WCService.LAST_ONLINE_TIME_EXTRA, 0);
 				boolean isOnline = intent.getBooleanExtra(WCService.LAST_ONLINE_IS_AVAILABLE_EXTRA, false);
 
-				if (mParticipantId.equals(contactId)){
-					mIsOnline = isOnline;
-					mLastOnlineTime = time;
-					if (mIsOnline)
-						mContactDetailsTV.setText(R.string.online);
-					else
-						mContactDetailsTV.setText(getDisplayOnlineDateTime());
+				if (mParticipantId != null) {
+					if (mParticipantId.equals(contactId)) {
+						mIsOnline = isOnline;
+						mLastOnlineTime = time;
+						if (mIsOnline)
+							mContactDetailsTV.setText(R.string.online);
+						else
+							mContactDetailsTV.setText(getDisplayOnlineDateTime());
+					}
 				}
 			}
 		}
@@ -1904,6 +1918,10 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void setMagicButtonLanguage(String participantLang, boolean highlightBorder) {
+
+		if (participantLang == null)
+			return;
+
 		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(participantLang);
 		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
 		if (highlightBorder)
