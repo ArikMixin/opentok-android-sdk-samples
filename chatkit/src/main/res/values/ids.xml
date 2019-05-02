@@ -38,5 +38,9 @@
     <item name="dialogLastMessageUserAvatar" type="id" />
     <item name="dialogDividerContainer" type="id" />
     <item name="dialogDivider" type="id" />
+    <item name="camera_ib" type="id" />
+    <item name="phone_ib" type="id" />
+
+
 
 </resources>

@@ -25,6 +25,7 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -61,6 +62,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     private OnDialogLongClickListener<DIALOG> onLongItemClickListener;
     private OnDialogViewLongClickListener<DIALOG> onDialogViewLongClickListener;
     private DialogListStyle dialogStyle;
+    private OnCameraOrPhoneClickListener<DIALOG> mOnCameraOrPhoneClickListener;
     private DateFormatter.Formatter datesFormatter;
 
     /**
@@ -103,6 +105,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
         holder.setOnDialogClickListener(onDialogClickListener);
         holder.setOnDialogViewClickListener(onDialogViewClickListener);
         holder.setOnLongItemClickListener(onLongItemClickListener);
+        holder.setOnCameraOrPhoneClickListener(mOnCameraOrPhoneClickListener);
         holder.setOnDialogViewLongClickListener(onDialogViewLongClickListener);
         holder.setDatesFormatter(datesFormatter);
         holder.onBind(items.get(position));
@@ -432,6 +435,15 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     }
 
     /**
+     * Register a callback to be invoked when item is clicked.
+     *
+     * @param onCameraOrPhoneClickListener on click item callback
+     */
+    public void setOnCameraOrPhoneClickListener(OnCameraOrPhoneClickListener<DIALOG> onCameraOrPhoneClickListener) {
+        this.mOnCameraOrPhoneClickListener = onCameraOrPhoneClickListener;
+    }
+
+    /**
      * Sets custom {@link DateFormatter.Formatter} for text representation of last message date.
      */
     public void setDatesFormatter(DateFormatter.Formatter datesFormatter) {
@@ -469,6 +481,11 @@ public class DialogsListAdapter<DIALOG extends IDialog>
         void onDialogViewLongClick(View view, DIALOG dialog);
     }
 
+    public interface OnCameraOrPhoneClickListener<DIALOG extends IDialog> {
+        void onCameraClick(DIALOG dialog, boolean b);
+    }
+
+
     /*
     * HOLDERS
     * */
@@ -480,6 +497,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
         protected OnDialogLongClickListener<DIALOG> onLongItemClickListener;
         protected OnDialogViewClickListener<DIALOG> onDialogViewClickListener;
         protected OnDialogViewLongClickListener<DIALOG> onDialogViewLongClickListener;
+        protected OnCameraOrPhoneClickListener<DIALOG> onCameraOrPhoneClickListener;
         protected DateFormatter.Formatter datesFormatter;
 
         public BaseDialogViewHolder(View itemView) {
@@ -506,6 +524,10 @@ public class DialogsListAdapter<DIALOG extends IDialog>
             this.onDialogViewLongClickListener = onDialogViewLongClickListener;
         }
 
+        protected void setOnCameraOrPhoneClickListener(OnCameraOrPhoneClickListener<DIALOG> onCameraOrPhoneClickListener) {
+            this.onCameraOrPhoneClickListener = onCameraOrPhoneClickListener;
+        }
+
         public void setDatesFormatter(DateFormatter.Formatter dateHeadersFormatter) {
             this.datesFormatter = dateHeadersFormatter;
         }
@@ -514,6 +536,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     public static class DialogViewHolder<DIALOG extends IDialog> extends BaseDialogViewHolder<DIALOG> {
         protected DialogListStyle dialogStyle;
         protected ViewGroup container;
+        protected ImageButton mCameraIB,mPhoneIB;
         protected ViewGroup root;
         protected TextView tvName;
         protected TextView tvDate;
@@ -528,6 +551,8 @@ public class DialogsListAdapter<DIALOG extends IDialog>
             super(itemView);
             root = (ViewGroup) itemView.findViewById(R.id.dialogRootLayout);
             container = (ViewGroup) itemView.findViewById(R.id.dialogContainer);
+            mCameraIB = (ImageButton) itemView.findViewById(R.id.camera_ib);
+            mPhoneIB = (ImageButton) itemView.findViewById(R.id.phone_ib);
             tvName = (TextView) itemView.findViewById(R.id.dialogName);
             tvDate = (TextView) itemView.findViewById(R.id.dialogDate);
             tvLastMessage = (TextView) itemView.findViewById(R.id.dialogLastMessage);
@@ -696,7 +721,6 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                 }
             });
 
-
             container.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
@@ -704,9 +728,27 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                         onLongItemClickListener.onDialogLongClick(dialog);
                     }
                     if (onDialogViewLongClickListener != null) {
-                        onDialogViewLongClickListener.onDialogViewLongClick(view, dialog);
+                            onDialogViewLongClickListener.onDialogViewLongClick(view, dialog);
                     }
                     return onLongItemClickListener != null || onDialogViewLongClickListener != null;
+                }
+            });
+
+            mCameraIB.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(onCameraOrPhoneClickListener != null){
+                           onCameraOrPhoneClickListener.onCameraClick(dialog, true);
+                    }
+                }
+            });
+
+            mPhoneIB.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(onCameraOrPhoneClickListener != null){
+                        onCameraOrPhoneClickListener.onCameraClick(dialog, false);
+                    }
                 }
             });
         }

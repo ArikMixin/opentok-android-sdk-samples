@@ -15,4 +15,7 @@ public class Consts {
 	public static final String INTENT_CLICK_FROM_NOTIFICATION = "INTENT_CLICK_FROM_NOTIFICATION";
 	public static final String INTENT_LAST_ONLINE = "INTENT_LAST_ONLINE";
 	public static final String INTENT_IS_ONLINE = "INTENT_IS_ONLINE";
+	public static final String INTENT_IS_VIDEO_CALL = "INTENT_IS_VIDEO_CALL";
+
+
 }

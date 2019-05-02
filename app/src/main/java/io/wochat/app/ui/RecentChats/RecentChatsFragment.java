@@ -1,13 +1,9 @@
 package io.wochat.app.ui.RecentChats;
 
 
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -25,22 +21,19 @@ import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
-import com.stfalcon.chatkit.commons.models.IDialog;
 import com.stfalcon.chatkit.dialogs.DialogsList;
 
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 import com.stfalcon.chatkit.utils.DateFormatter;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.R;
-import io.wochat.app.WCService;
-import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.UnreadMessagesConversation;
 import io.wochat.app.db.entity.User;
+import io.wochat.app.ui.AudioVideoCall.AudioVideoCallActivity;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.MainActivity;
@@ -54,6 +47,7 @@ import io.wochat.app.viewmodel.UserViewModel;
 public class RecentChatsFragment extends Fragment  implements
 	DialogsListAdapter.OnDialogClickListener<Conversation>,
 	DialogsListAdapter.OnDialogLongClickListener<Conversation>,
+        DialogsListAdapter.OnCameraOrPhoneClickListener<Conversation>,
 	DateFormatter.Formatter{
 
 	private static final int CONTACT_SELECTOR_REQUEST_CODE = 1;
@@ -277,6 +271,24 @@ public class RecentChatsFragment extends Fragment  implements
 		startActivity(intent);
 	}
 
+
+	@Override
+	public void onCameraClick(Conversation conversation, boolean isVideoCall) {
+		Log.d("arikc", "onCameraClick: " + isVideoCall);
+		Intent intent = new Intent(getContext(), AudioVideoCallActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideoCall);
+		startActivity(intent);
+	}
+
 	@Override
 	public void onDialogLongClick(Conversation dialog) {
 
@@ -298,7 +310,11 @@ public class RecentChatsFragment extends Fragment  implements
 		dialogsAdapter.setItems(mConversation);
 
 		dialogsAdapter.setOnDialogClickListener(this);
+
 		dialogsAdapter.setOnDialogLongClickListener(this);
+
+		dialogsAdapter.setOnCameraOrPhoneClickListener(this);
+
 		dialogsAdapter.setDatesFormatter(this);
 
 		dialogsList.setAdapter(dialogsAdapter);
