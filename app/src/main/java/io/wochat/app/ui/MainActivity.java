@@ -28,17 +28,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
-
-import java.util.ArrayList;
 
 import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.BadgedTabLayout;
-import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Conversation;
-import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
@@ -85,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
 	private User mSelfUser;
 	private String mIntentConversationId;
 	private Uri mCameraPhotoFileUri;
+	private boolean doubleBackPressedFlag = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -518,5 +516,22 @@ public class MainActivity extends AppCompatActivity {
 
 	}
 
+	@Override
+	public void onBackPressed(){
+		if (doubleBackPressedFlag) {
+			super.onBackPressed();
+			return;
+		}
 
+		this.doubleBackPressedFlag = true;
+		Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+
+		new Handler().postDelayed(new Runnable() {
+
+			@Override
+			public void run() {
+				doubleBackPressedFlag = false;
+			}
+		}, 2000);
+	}
 }
