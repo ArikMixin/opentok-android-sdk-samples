@@ -94,7 +94,6 @@ public class SplashActivity extends PermissionActivity {
 				}
 			},500);
 		}
-
 	}
 
 
