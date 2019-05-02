@@ -107,7 +107,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			/*****************************************************************************************/
 
-			boolean res = mRepository.handleIncomingMessage(message, new WCRepository.OnSaveMessageToDBListener() {
+			boolean res = mRepository.handleIncomingMessage(message, getResources(), new WCRepository.OnSaveMessageToDBListener() {
 				@Override
 				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
 					sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);

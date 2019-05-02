@@ -1165,7 +1165,7 @@ public class Message implements IMessage,
 
 
 	public boolean isGroupMessage(){
-		return (this.participantId == null)&& (this.groups != null) && (this.groups.length > 0);
+		return (this.groups != null) && (this.groups.length > 0);
 	}
 
 	public String getFirstGroupId(){

@@ -21,7 +21,7 @@ public interface GroupDao {
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	void insert(GroupMember groupMember);
 
-	@Insert(onConflict = OnConflictStrategy.IGNORE)
+	@Insert(onConflict = OnConflictStrategy.REPLACE)
 	void insert(List<GroupMember> groupMembers);
 
 
