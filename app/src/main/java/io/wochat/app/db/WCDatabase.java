@@ -45,6 +45,7 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.GroupMember;
+import io.wochat.app.db.entity.GroupMemberMessage;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.Notif;
 import io.wochat.app.db.entity.User;
@@ -57,7 +58,8 @@ import io.wochat.app.db.entity.User;
 	Conversation.class,
 	Message.class,
 	Notif.class,
-	GroupMember.class}, version = 2)
+	GroupMember.class,
+	GroupMemberMessage.class}, version = 2)
 
 @TypeConverters({LocationConverter.class, DateConverter.class, StringArrayConverter.class})
 public abstract class WCDatabase extends RoomDatabase {

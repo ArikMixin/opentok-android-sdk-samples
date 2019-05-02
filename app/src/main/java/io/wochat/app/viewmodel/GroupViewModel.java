@@ -10,6 +10,7 @@ import java.util.List;
 import io.wochat.app.WCApplication;
 import io.wochat.app.WCRepository;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.model.StateData;
 
 
@@ -29,7 +30,12 @@ public class GroupViewModel extends AndroidViewModel {
 	}
 
 	public void createNewGroup(String groupName, byte[] bytes, List<Contact> contactList){
-		mRepository.createNewGroup(groupName, bytes, contactList);
+		mRepository.createNewGroup(groupName, bytes, contactList, getApplication().getResources());
+	}
+
+
+	public MutableLiveData<StateData<Conversation>> getCreateGroupResult(){
+		return mRepository.getCreateGroupResult();
 	}
 
 

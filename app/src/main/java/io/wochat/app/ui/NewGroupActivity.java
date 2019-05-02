@@ -1,8 +1,10 @@
 package io.wochat.app.ui;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -17,6 +19,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -46,6 +49,7 @@ import java.util.List;
 import io.wochat.app.R;
 import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.model.StateData;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.utils.ImagePickerUtil;
@@ -70,6 +74,7 @@ public class NewGroupActivity extends AppCompatActivity implements View.OnClickL
 	private byte[] mProfilePicByte;
 	private GroupViewModel mGroupViewModel;
 	private List<Contact> mContactList;
+	private ProgressDialog mProgressDialog;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -371,11 +376,49 @@ public class NewGroupActivity extends AppCompatActivity implements View.OnClickL
 
 	}
 	private void createGroup(String groupName) {
+		mGroupViewModel.getCreateGroupResult().observe(this, conversationStateData -> {
+			mProgressDialog.dismiss();
+			if (conversationStateData.isSuccess()){
+				Conversation conversation = conversationStateData.getData();
+				if(conversation.getGroupName().equals(groupName)){
+					Intent intent = new Intent();
+					intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
+					setResult(Activity.RESULT_OK, intent);
+					finish();
+				}
+			}
+
+			else if (conversationStateData.isErrorComm()){
+				showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_comm_body));
+			}
+			else if (conversationStateData.isErrorLogic()){
+				showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_general_body));
+			}
+
+		});
+
+		mProgressDialog = ProgressDialog.show(NewGroupActivity.this,
+			null,
+			"Creating group...",
+			true,
+			false);
+
 		mGroupViewModel.createNewGroup(groupName, mProfilePicByte, mContactList);
 	}
 	private void createGroup(String imageUrl, String groupName, List<Contact> contactList) {
 		Log.e(TAG, "createGroup: imageUrl: " + imageUrl + " , groupName: " + groupName + " , contactList count: " + contactList.size() );
 
 	}
-
+	private void showUserErrorMessage(String title, String body){
+		new AlertDialog.Builder(NewGroupActivity.this)
+			.setTitle(title)
+			.setMessage(body)
+			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			})
+			.show();
+	}
 }

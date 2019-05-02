@@ -13,14 +13,17 @@ import android.util.Log;
 
 import org.jivesoftware.smack.packet.Presence;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.logic.NotificationHelper;
+import io.wochat.app.model.ConversationAndItsGroupMembers;
 import io.wochat.app.utils.Utils;
 
 
@@ -146,7 +149,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void onConnectionChange(boolean connected, boolean authenticated) {
 		if(connected && authenticated) {
 			((WCApplication) getApplication()).getAppExecutors().diskIO().execute(() -> {
-				List<Conversation> convList = mRepository.getAllConversations();
+				List<ConversationAndItsGroupMembers> convList = mRepository.getAllConversationsAndItsMembers();
 				List<Message> msgs = mRepository.getOutgoingPendingMessages();
 				mAppExecutors.networkIO().execute(() -> {
 					subscribe(convList);
@@ -167,9 +170,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		broadcastPresenceChange(isAvailable, contactId);
 	}
 
-	public void subscribe(List<Conversation> conversations) {
-		for(Conversation conversation : conversations){
-			subscribe(conversation.getParticipantId(), conversation.getParticipantName());
+	public void subscribe(List<ConversationAndItsGroupMembers> conversations) {
+		for(ConversationAndItsGroupMembers cgm : conversations){
+			subscribe(cgm);
 		}
 	}
 
@@ -177,6 +180,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		Log.e(TAG, "CurrentConversationId: " + conversationId);
 		mCurrentConversationId = conversationId;
 	}
+
+
 
 
 	public class WCBinder extends Binder {
@@ -247,6 +252,18 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		mXMPPProvider.unSubscribeContact(contactId);
 	}
 
+	public void subscribe(ConversationAndItsGroupMembers convAndMembers){
+		if (convAndMembers.getConversation().isGroup()) {
+			for (GroupMember groupMember : convAndMembers.getGroupMembers()) {
+				mXMPPProvider.subscribeContact(groupMember.getUserId(), groupMember.getUserName());
+			}
+		}
+		else {
+			mXMPPProvider.subscribeContact(convAndMembers.getConversation().getParticipantId(), convAndMembers.getConversation().getParticipantName());
+		}
+	}
+
+
 	public void subscribe(String contactId, String name){
 		mXMPPProvider.subscribeContact(contactId, name);
 	}
@@ -287,6 +304,16 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		Log.e(TAG, "sendMessage: " + message.toJson());
 		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
 	}
+
+
+	public void sendGroupMessage(Message message, List<GroupMember> groupMembers) {
+		List<String> participantIds = new ArrayList<>();
+		for (GroupMember groupMember : groupMembers){
+			participantIds.add(groupMember.getUserId());
+		}
+		mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
+	}
+
 
 	private void sendAckStatusForIncomingMessage(Message message, @Message.ACK_STATUS String ackStatus) {
 		Message msg = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(), "", "EN");

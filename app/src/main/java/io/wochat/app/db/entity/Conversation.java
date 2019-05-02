@@ -193,6 +193,10 @@ public class Conversation implements IDialog{
 		this.participantId = participantId;
 	}
 
+	public Conversation(String conversationId, String participantId, String selfId){
+		this.conversationId = conversationId;
+		this.participantId = participantId;
+	}
 
 	public Conversation(){
 

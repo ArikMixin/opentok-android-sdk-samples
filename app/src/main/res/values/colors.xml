@@ -129,4 +129,31 @@
 
     <color name="settings_divider">#E7E7E7</color>
     <color name="linear_layout_unselected">#FAFAFA</color>
+
+
+    <color name="group_member_0">#ff9ff3</color>
+    <color name="group_member_1">#feca57</color>
+    <color name="group_member_2">#ff6b6b</color>
+    <color name="group_member_3">#48dbfb</color>
+    <color name="group_member_4">#1dd1a1</color>
+    <color name="group_member_5">#00d2d3</color>
+    <color name="group_member_6">#54a0ff</color>
+    <color name="group_member_7">#5f27cd</color>
+    <color name="group_member_8">#c8d6e5</color>
+    <color name="group_member_9">#576574</color>
+
+
+    <array name="group_member_array">
+        <item>@color/group_member_0</item>
+        <item>@color/group_member_1</item>
+        <item>@color/group_member_2</item>
+        <item>@color/group_member_3</item>
+        <item>@color/group_member_4</item>
+        <item>@color/group_member_5</item>
+        <item>@color/group_member_6</item>
+        <item>@color/group_member_7</item>
+        <item>@color/group_member_8</item>
+        <item>@color/group_member_9</item>
+    </array>
+
 </resources>

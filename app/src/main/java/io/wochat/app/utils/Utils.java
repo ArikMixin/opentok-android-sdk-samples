@@ -442,4 +442,28 @@ public class Utils {
 		}
 	}
 
+	public static String LogList(int priority, String tag, List<String> list) {
+		String msg = null;
+		for (String s : list){
+			msg = (msg==null?s:(msg + ", " + s));
+		}
+		switch (priority){
+			case Log.VERBOSE:
+				Log.v(tag, msg);
+				break;
+			case Log.DEBUG:
+				Log.d(tag, msg);
+				break;
+			case Log.INFO:
+				Log.i(tag, msg);
+				break;
+			case Log.ERROR:
+				Log.e(tag, msg);
+				break;
+			case Log.WARN:
+				Log.w(tag, msg);
+				break;
+		}
+		return msg;
+	}
 }

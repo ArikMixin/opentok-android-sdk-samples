@@ -512,12 +512,15 @@ public class MainActivity extends AppCompatActivity {
 		}
 		else if (requestCode == REQUEST_NEW_GROUP_PIC_NAME){
 			if (resultCode == RESULT_OK) {
+				Conversation conversation = Conversation.fromJson(intent.getStringExtra(Consts.INTENT_CONVERSATION_OBJ));
+				openConversationActivity(conversation);
 			}
 			else {
 				createGroup(mLastSelectedContactsObj);
 			}
 		}
 	}
+
 
 
 	public WCService getService(){
@@ -563,6 +566,23 @@ public class MainActivity extends AppCompatActivity {
 		intent.putExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT, contactsObj);
 		startActivityForResult(intent, REQUEST_NEW_GROUP_CONTACTS_SELECT);
 		overridePendingTransition(R.anim.trans_right_in, R.anim.trans_right_out);
+	}
+
+
+	private void openConversationActivity(Conversation conversation) {
+		Intent intent = new Intent(this, ConversationActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+		intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
+		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+		startActivity(intent);
+
 	}
 
 }

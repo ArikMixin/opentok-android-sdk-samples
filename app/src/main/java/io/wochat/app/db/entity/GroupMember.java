@@ -5,6 +5,10 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.content.Context;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 
 import com.google.gson.annotations.Expose;
@@ -14,6 +18,9 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import io.wochat.app.R;
+import io.wochat.app.utils.Utils;
 
 import static android.arch.persistence.room.ForeignKey.CASCADE;
 
@@ -52,7 +59,10 @@ public class GroupMember {
     @Expose
     private String userName;
 
-	private int groupColor;
+    @SerializedName("color")
+	@ColumnInfo(name = "color")
+	@Expose
+	private @ColorInt int color;
 
 	@SerializedName("is_admin")
 	@ColumnInfo(name = "is_admin")
@@ -102,6 +112,17 @@ public class GroupMember {
 		return userName;
 	}
 
+	public String getUserFirstName() {
+		if (Utils.isNullOrEmpty(userName))
+			return "";
+		userName = userName.trim();
+		if (userName.contains(" "))
+			return userName.split(" ")[0];
+		else
+			return userName;
+	}
+
+
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
@@ -116,4 +137,26 @@ public class GroupMember {
 	}
 
 
+	public int getColor() {
+		return color;
+	}
+
+	public void setColor(int color) {
+		this.color = color;
+	}
+
+
+	private static int mMemberColorIndex;
+
+	public static void initMemberColorIndex(){
+		mMemberColorIndex = 0;
+	}
+
+	public static @ColorInt int getNextMemberColor(Resources resources){
+		TypedArray colorsArray = resources.obtainTypedArray(R.array.group_member_array);
+		int color = colorsArray.getColor(mMemberColorIndex++,0);
+		if (mMemberColorIndex >= colorsArray.length())
+			mMemberColorIndex = 0;
+		return color;
+	}
 }

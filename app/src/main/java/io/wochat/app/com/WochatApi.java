@@ -275,6 +275,18 @@ public class WochatApi {
 	}
 
 
+
+	public void getGroupDetails(String groupId, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API getGroupDetails: " + groupId);
+
+		String url = BASE_URL + "group/" + groupId + "/";
+
+		sendRequestAndHandleResult(Request.Method.GET, url, null, lsnr);
+
+
+	}
+
 	public static final int UPLOAD_MIME_TYPE_IAMGE = 1;
 	public static final int UPLOAD_MIME_TYPE_VIDEO = 2;
 	public static final int UPLOAD_MIME_TYPE_GIF = 3;

@@ -21,6 +21,7 @@ import com.stfalcon.chatkit.commons.models.MessageContentType;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -56,6 +57,35 @@ public class Message implements IMessage,
     public static final String ACK_STATUS_RECEIVED = "RECEIVED";
     public static final String ACK_STATUS_READ = "READ";
 
+    public static Comparator<String> getAckStatusComperator(){
+    	return (status1, status2) -> getAckStatusValue(status1).compareTo(getAckStatusValue(status2));
+	}
+
+	public static Integer getAckStatusValue(@ACK_STATUS String ackStatus){
+    	switch (ackStatus){
+			case ACK_STATUS_PENDING: return 1;
+			case ACK_STATUS_SENT: return 2;
+			case ACK_STATUS_RECEIVED: return 3;
+			case ACK_STATUS_READ: return 4;
+			default: return 1;
+		}
+	}
+
+	public Boolean getShowNonTranslated() {
+		return showNonTranslated;
+	}
+
+	public void setShowNonTranslated(Boolean showNonTranslated) {
+		this.showNonTranslated = showNonTranslated;
+	}
+
+	public String getEventCode() {
+		return eventCode;
+	}
+
+	public void setEventCode(String eventCode) {
+		this.eventCode = eventCode;
+	}
 
 
 	@StringDef({
@@ -175,15 +205,10 @@ public class Message implements IMessage,
 	@Expose
     private String[] recipients;
 	/**********************************************/
-//	@SerializedName("groups")
-//	@ColumnInfo(name = "groups")
-//	@Expose
-//    private String[] groups;
-	/**********************************************/
-//	@SerializedName("timestamp")
-//	@ColumnInfo(name = "timestamp")
-//	@Expose
-//	private long timestamp;
+	@SerializedName("groups")
+	@ColumnInfo(name = "groups")
+	@Expose
+    private String[] groups;
 	/**********************************************/
 	@SerializedName("timestamp_milliseconds")
 	@ColumnInfo(name = "timestamp_milli")
@@ -324,11 +349,32 @@ public class Message implements IMessage,
 	private @SHOW_TRANSLATION_FLAG String showTranslationFlag;
 	/**********************************************/
 
-//	private Image image;
-//  private int status;
-//  private String text;
-//  private Date createdAt;
-
+	/****************** for GroupEvent **********************/
+	@SerializedName("event_code")
+	@ColumnInfo(name = "event_code")
+	@Expose
+	private @EVENT_CODE String eventCode;
+	/**********************************************/
+	@SerializedName("acting_user")
+	@ColumnInfo(name = "acting_user")
+	@Expose
+	private String actingUser;
+	/**********************************************/
+	@SerializedName("other_user")
+	@ColumnInfo(name = "other_user")
+	@Expose
+	private String otherUser;
+	/**********************************************/
+	@SerializedName("group_id")
+	@ColumnInfo(name = "group_id")
+	@Expose
+	private String groupId;
+	/**********************************************/
+	@SerializedName("group_name")
+	@ColumnInfo(name = "group_name")
+	@Expose
+	private String groupName;
+	/**********************************************/
 
 	// for outgoing message
 	public Message(String participantId, String selfId, String conversationId, String messageText, String messageLang) {
@@ -336,8 +382,16 @@ public class Message implements IMessage,
 		this.showTranslationFlag = null;
 		this.messageId = UUID.randomUUID().toString();
 		this.conversationId = conversationId;
-		this.participantId = participantId;
-		this.recipients = new String[]{participantId};
+		if (participantId != null) {
+			this.participantId = participantId;
+			this.recipients = new String[]{participantId};
+			this.groups = new String[]{};
+		}
+		else {
+			this.participantId = null;
+			this.recipients = new String[]{};
+			this.groups = new String[]{conversationId};
+		}
 		this.senderId = selfId;
 		this.messageType = MSG_TYPE_TEXT;
 		this.messageText = messageText;
@@ -781,25 +835,21 @@ public class Message implements IMessage,
 		this.recipients = recipients;
 	}
 
-//	public String[] getGroups() {
-//		return groups;
-//	}
-//
-//	public void setGroups(String[] groups) {
-//		this.groups = groups;
-//	}
+	public String[] getGroups() {
+		return groups;
+	}
 
-//	public long getTimestamp() {
-//		return timestamp;
-//	}
+	public String getGroup() {
+		if ((groups != null) && (groups.length > 0))
+			return groups[0];
+		else
+			return null;
+	}
 
-//	public long getTimestampInSec() {
-//		return timestamp*1000;
-//	}
 
-//	public void setTimestamp(long timestamp) {
-//		this.timestamp = timestamp;
-//	}
+	public void setGroups(String[] groups) {
+		this.groups = groups;
+	}
 
 	public String getMessageText() {
 		return messageText;
@@ -1042,7 +1092,7 @@ public class Message implements IMessage,
 
 
 	public boolean isOutgoing(){
-		return (!participantId.equals(senderId));
+		return (participantId == null)||(!participantId.equals(senderId));
 	}
 
 
@@ -1080,5 +1130,47 @@ public class Message implements IMessage,
 	public boolean isTranslated(){
 		return (translatedText != null) && (!translatedText.isEmpty());
 	}
+
+	public String getActingUser() {
+		return actingUser;
+	}
+
+	public void setActingUser(String actingUser) {
+		this.actingUser = actingUser;
+	}
+
+	public String getOtherUser() {
+		return otherUser;
+	}
+
+	public void setOtherUser(String otherUser) {
+		this.otherUser = otherUser;
+	}
+
+	public String getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
+	}
+
+	public String getGroupName() {
+		return groupName;
+	}
+
+	public void setGroupName(String groupName) {
+		this.groupName = groupName;
+	}
+
+
+	public boolean isGroupMessage(){
+		return (this.participantId == null)&& (this.groups != null) && (this.groups.length > 0);
+	}
+
+	public String getFirstGroupId(){
+		return isGroupMessage()? this.groups[0]:null;
+	}
+
 
 }

@@ -1,9 +1,12 @@
 package io.wochat.app;
 
 import android.app.Application;
+import android.arch.core.util.Function;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Transformations;
 import android.content.ContentResolver;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -29,6 +32,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +55,7 @@ import io.wochat.app.db.entity.ConversationAndItsMessages;
 import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.Notif;
+import io.wochat.app.model.ConversationAndItsGroupMembers;
 import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.NotificationData;
@@ -98,6 +103,7 @@ public class WCRepository {
 	private MutableLiveData<StateData<String>> mUploadProfilePicResult;
 	private MutableLiveData<StateData<String>> mUserConfirmRegistrationResult;
 	private MutableLiveData<StateData<Message>> mUploadImageResult;
+	private MutableLiveData<StateData<Conversation>> mCreateGroupResult;
 	private MutableLiveData<StateData<String>> mUploadOnlyImageResult;
 	private MutableLiveData<Boolean> mIsDuringRefreshContacts;
 	private MutableLiveData<List<Message>> mMarkAsReadAffectedMessages;
@@ -157,6 +163,7 @@ public class WCRepository {
 		mUserVerificationResult = new MutableLiveData<>();
 		mUploadProfilePicResult = new MutableLiveData<>();
 		mUploadImageResult = new MutableLiveData<>();
+		mCreateGroupResult = new MutableLiveData<>();
 		mUploadOnlyImageResult = new MutableLiveData<>();
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
 		mIsDuringRefreshContacts = new MutableLiveData<>();
@@ -388,6 +395,9 @@ public class WCRepository {
 		return mUploadOnlyImageResult;
 	}
 
+	public MutableLiveData<StateData<Conversation>> getCreateGroupResult() {
+		return mCreateGroupResult;
+	}
 
 
 	public MutableLiveData<StateData<String>> getUserConfirmRegistrationResult() {
@@ -530,7 +540,7 @@ public class WCRepository {
 	}
 
 
-	public void createNewGroup(String groupName, byte[] bytes, List<Contact> contactList){
+	public void createNewGroup(String groupName, byte[] bytes, List<Contact> contactList, Resources resources){
 		mAppExecutors.networkIO().execute(() -> {
 
 			String[] contactArray = new String[contactList.size()];
@@ -556,10 +566,13 @@ public class WCRepository {
 									ArrayList<GroupMember> gml = new ArrayList<>();
 									Gson gson = new Gson();
 
+									GroupMember.initMemberColorIndex();
+
 									for (int j=0; j< participantsArray.length(); j++){
 										String p = participantsArray.getString(j);
 										GroupMember gm = gson.fromJson(p, GroupMember.class);
 										gm.setGroupId(id);
+										gm.setColor(GroupMember.getNextMemberColor(resources));
 										gml.add(gm);
 									}
 
@@ -567,6 +580,9 @@ public class WCRepository {
 									mAppExecutors.diskIO().execute(() -> {
 										mConversationDao.insert(conversation);
 										mGroupDao.insert(gml);
+										mAppExecutors.mainThread().execute(() -> {
+											mCreateGroupResult.setValue(new StateData<Conversation>().success(conversation));
+										});
 									});
 									Log.e(TAG, "gml: " + gml.toString());
 								} catch (JSONException e) {
@@ -574,6 +590,14 @@ public class WCRepository {
 								}
 								Log.e(TAG, "createNewGroup: " + response1.toString());
 							}
+							else if (errorLogic != null) {
+								mCreateGroupResult.setValue(new StateData<Conversation>().errorLogic(errorLogic));
+							}
+
+							else if (errorComm != null) {
+								mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm));
+							}
+
 						});
 					} catch (JSONException e) {
 						e.printStackTrace();
@@ -1020,6 +1044,10 @@ public class WCRepository {
 		ConversationAndItsMessages caim = new ConversationAndItsMessages();
 		caim.setConversation(mConversationDao.getConversation(conversationId));
 		caim.setMessages(mMessageDao.getMessagesForConversation(conversationId));
+		if (caim.getConversation().isGroup()) {
+			List<GroupMember> members = mGroupDao.getMembers(conversationId);
+			caim.setGroupMembers(members);
+		}
 		return caim;
 	}
 
@@ -1039,8 +1067,22 @@ public class WCRepository {
 		return mConversationDao.getConversation(conversationId);
 	}
 
-	public List<Conversation> getAllConversations() {
-		return mConversationDao.getAllConversations();
+	public List<ConversationAndItsGroupMembers> getAllConversationsAndItsMembers() {
+		List<ConversationAndItsGroupMembers> res = new ArrayList<>();
+		List<Conversation> convs = mConversationDao.getAllConversations();
+		for(Conversation conversation : convs){
+			ConversationAndItsGroupMembers caigm = new ConversationAndItsGroupMembers();
+			caigm.setConversation(conversation);
+			if(conversation.isGroup()){
+				List<GroupMember> fml = mGroupDao.getMembers(conversation.getId());
+				caigm.setGroupMembers(fml);
+			}
+			else
+				caigm.setGroupMembers(null);
+
+			res.add(caigm);
+		}
+		return res;
 	}
 
 
@@ -1087,17 +1129,21 @@ public class WCRepository {
 
 				if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
 					contact = mContactDao.getContact(participantId);
-					Conversation conversation = new Conversation(participantId, selfId);
+					Conversation conversation = new Conversation(message.getConversationId(), participantId, selfId);
 					conversation.setParticipantName(contact.getName());
 					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
+					if(message.isGroupMessage()){
+						conversation.setGroup(true);
+						conversation.setgr
+					}
 					mConversationDao.insert(conversation);
 				}
 				else { // no contact, no conversation
 					contact = new Contact(participantId);
 					mContactDao.insert(contact);
 					getContactFromServer(participantId);
-					Conversation conversation = new Conversation(participantId, selfId);
+					Conversation conversation = new Conversation(message.getConversationId(), participantId, selfId);
 					mConversationDao.insert(conversation);
 				}
 			}
@@ -1647,7 +1693,7 @@ public class WCRepository {
 			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
 
 				String selfLang = mSharedPreferences.getUserLang();
-				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
+				boolean needTranslation1 = (message.getTranslatedLanguage() != null)&&(!message.getTranslatedLanguage().equals(selfLang));
 				boolean needTranslationMagic = message.isMagic();
 
 				if (needTranslation1 || needTranslationMagic) {
@@ -2116,6 +2162,17 @@ public class WCRepository {
 		});
 
 
+	}
+
+
+	public LiveData<String> getMessageGroupStatus(String messageId){
+		LiveData<List<String>> ld = mGroupDao.getMembersMessagesAckStatusLD(messageId);
+
+		LiveData<String> res = Transformations.map(ld, input -> {
+			Collections.sort(input, Message.getAckStatusComperator());
+			return input.get(0);
+		});
+		return res;
 	}
 
 }

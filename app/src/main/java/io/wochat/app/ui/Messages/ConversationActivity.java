@@ -74,6 +74,7 @@ import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.components.MessageReplyLayout;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.ui.Consts;
@@ -177,6 +178,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private String mMagicButtonForceCountry;
 	private ContactViewModel mContactViewModel;
 	private boolean mIsGroup;
+	private List<GroupMember> mGroupMembers;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -373,6 +375,8 @@ public class ConversationActivity extends PermissionActivity implements
 			conversationAndItsMessages -> {
 				mConversation = conversationAndItsMessages.getConversation();
 				mMessages = conversationAndItsMessages.getMessages();
+				mGroupMembers = conversationAndItsMessages.getGroupMembers();
+				displayUITypingSignal(false);
 				startListenToMessagesChanges();
 		});
 
@@ -649,7 +653,12 @@ public class ConversationActivity extends PermissionActivity implements
 	@Override
 	public boolean onSubmit(CharSequence input) {
 		String msgText = input.toString();
-		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
+		Message message;
+		if (mIsGroup)
+			message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
+		else
+			message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
+
 		message.setTranslatedLanguage(mParticipantLang);
 		if (isMagicButtonOn()) {
 			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
@@ -665,8 +674,13 @@ public class ConversationActivity extends PermissionActivity implements
 		mConversationViewModel.addNewOutcomingMessage(message);
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mIsInputInTextMode = false;
-		if (!message.isMagic())
-			mService.sendMessage(message);
+		if (mIsGroup){
+			mService.sendGroupMessage(message, mGroupMembers);
+		}
+		else {
+			if (!message.isMagic())
+				mService.sendMessage(message);
+		}
 		returnRecordingButtonToPlace(false);
 		return true;
 
@@ -1081,7 +1095,8 @@ public class ConversationActivity extends PermissionActivity implements
 			mBound = true;
 			mService.setCurrentConversationId(mConversationId);
 			initMarkAsReadMessagesHandling();
-			mService.getLastOnline(mParticipantId);
+			if (mParticipantId != null)
+				mService.getLastOnline(mParticipantId);
 			if (mSelectedImageForDelayHandlingUri != null) {
 				submitTempImageMessage(mSelectedImageForDelayHandlingUri);
 				mSelectedImageForDelayHandlingUri = null;
@@ -1229,10 +1244,15 @@ public class ConversationActivity extends PermissionActivity implements
 			mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
 		}
 		else {
-			if (mIsOnline)
-				mContactDetailsTV.setText("Online");
-			else
-				mContactDetailsTV.setText(getDisplayOnlineDateTime());
+			if(mIsGroup){
+				mContactDetailsTV.setText(getGroupNameList());
+			}
+			else {
+				if (mIsOnline)
+					mContactDetailsTV.setText("Online");
+				else
+					mContactDetailsTV.setText(getDisplayOnlineDateTime());
+			}
 			mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
 		}
 	}
@@ -1631,7 +1651,6 @@ public class ConversationActivity extends PermissionActivity implements
 			mRecordingTimer.cancel();
 			mRecordingStarted = false;
 			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
-
 		}
 
 	}
@@ -1959,6 +1978,20 @@ public class ConversationActivity extends PermissionActivity implements
 
 	private boolean isMagicButtonOn(){
 		return (mMagicButtonForceLanguage != null);
+	}
+
+
+	private String getGroupNameList(){
+		String res = "";
+		if ((mGroupMembers != null) && (!mGroupMembers.isEmpty())){
+			for (GroupMember groupMember : mGroupMembers){
+				if (res.equals(""))
+					res = groupMember.getUserFirstName();
+				else
+					res = res + ", " + groupMember.getUserFirstName();
+			}
+		}
+		return res;
 	}
 
 }
