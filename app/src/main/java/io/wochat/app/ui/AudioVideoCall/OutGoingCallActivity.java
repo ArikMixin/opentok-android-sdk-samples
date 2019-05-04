@@ -3,6 +3,8 @@ package io.wochat.app.ui.AudioVideoCall;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
+
 import io.wochat.app.R;
 import io.wochat.app.components.CircleImageView;
 import io.wochat.app.ui.Consts;
@@ -11,6 +13,7 @@ import io.wochat.app.utils.Utils;
 public class OutGoingCallActivity extends AppCompatActivity {
 
     private CircleImageView mMicFlagCIV;
+    private TextView mTitleTV;
     private boolean mIsVideoCall;
     private String mParticipantId, mParticipantName, mParticipantLang, mParticipantPic, mConversationId;
 
@@ -25,6 +28,7 @@ public class OutGoingCallActivity extends AppCompatActivity {
     private void initViews() {
 
         mMicFlagCIV = (CircleImageView) findViewById(R.id.mic_flag_civ);
+        mTitleTV = (TextView) findViewById(R.id.title_tv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -45,13 +49,14 @@ public class OutGoingCallActivity extends AppCompatActivity {
     }
 
     private void videoCall(){
-
+        mTitleTV.setText(R.string.in_a_video_call);
     }
 
     private void audioCall(){
 
         int flagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
 
+         mTitleTV.setText(R.string.in_a_voice_call);
          mMicFlagCIV.setImageResource(flagDrawable);
     }
 

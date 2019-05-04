@@ -87,6 +87,9 @@
     <string name="settings_invite_friends_download_link">‏http://wochat.io/download</string>
     <string name="settings_help_link">http://wochat.io/</string>
     <string name="title_activity_info">InfoActivity</string>
-   
+
+    <string name="in_a_voice_call">In a WoChat Voice Call</string>
+    <string name="in_a_video_call">In a WoChat Video Call</string>
+
 
 </resources>
