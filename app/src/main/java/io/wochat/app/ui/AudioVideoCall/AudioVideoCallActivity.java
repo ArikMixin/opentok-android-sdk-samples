@@ -30,6 +30,5 @@ public class AudioVideoCallActivity extends AppCompatActivity {
           Toast.makeText(this, "This is video", Toast.LENGTH_LONG).show();
       else
           Toast.makeText(this, "This is audio", Toast.LENGTH_LONG).show();
-
     }
 }
