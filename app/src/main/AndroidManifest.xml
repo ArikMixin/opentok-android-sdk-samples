@@ -24,7 +24,7 @@
         android:supportsRtl="false"
         android:theme="@style/AppTheme"
         tools:replace="android:supportsRtl">
-        <activity android:name=".ui.AudioVideoCall.AudioVideoCallActivity"
+        <activity android:name=".ui.AudioVideoCall.OutGoingCallActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity

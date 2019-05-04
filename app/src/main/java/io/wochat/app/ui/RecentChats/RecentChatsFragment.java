@@ -33,7 +33,7 @@ import io.wochat.app.R;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.UnreadMessagesConversation;
 import io.wochat.app.db.entity.User;
-import io.wochat.app.ui.AudioVideoCall.AudioVideoCallActivity;
+import io.wochat.app.ui.AudioVideoCall.OutGoingCallActivity;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.MainActivity;
@@ -273,9 +273,9 @@ public class RecentChatsFragment extends Fragment  implements
 
 
 	@Override
-	public void onCameraClick(Conversation conversation, boolean isVideoCall) {
+	public void onCameraOrPhoneClic(Conversation conversation, boolean isVideoCall) {
 		Log.d("arikc", "onCameraClick: " + isVideoCall);
-		Intent intent = new Intent(getContext(), AudioVideoCallActivity.class);
+		Intent intent = new Intent(getContext(), OutGoingCallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());

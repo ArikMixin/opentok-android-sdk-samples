@@ -482,7 +482,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     }
 
     public interface OnCameraOrPhoneClickListener<DIALOG extends IDialog> {
-        void onCameraClick(DIALOG dialog, boolean b);
+        void onCameraOrPhoneClic(DIALOG dialog, boolean b);
     }
 
 
@@ -738,7 +738,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                 @Override
                 public void onClick(View view) {
                     if(onCameraOrPhoneClickListener != null){
-                           onCameraOrPhoneClickListener.onCameraClick(dialog, true);
+                           onCameraOrPhoneClickListener.onCameraOrPhoneClic(dialog, true);
                     }
                 }
             });
@@ -747,7 +747,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                 @Override
                 public void onClick(View view) {
                     if(onCameraOrPhoneClickListener != null){
-                        onCameraOrPhoneClickListener.onCameraClick(dialog, false);
+                        onCameraOrPhoneClickListener.onCameraOrPhoneClic(dialog, false);
                     }
                 }
             });

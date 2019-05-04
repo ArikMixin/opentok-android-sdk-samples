@@ -5,5 +5,49 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.AudioVideoCall.AudioVideoCallActivity">
+    android:background="@drawable/call_background"
+    tools:context=".ui.AudioVideoCall.OutGoingCallActivity">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/hang_up_iv"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="50dp">
+
+
+
+        <io.wochat.app.components.CircleImageView
+            android:alpha="0.2"
+            android:layout_centerInParent="true"
+            android:id="@+id/mic_flag_civ"
+            android:layout_width="67dp"
+            android:layout_height="67dp"
+            android:src="@drawable/flag_united_states_of_america"
+            />
+
+        <ImageView
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="3dp"
+            android:id="@+id/translator_mic_iv"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/translator_disabled" />
+
+    </RelativeLayout>
+
+
+
+    <ImageView
+        android:id="@+id/hang_up_iv"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="35dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/hang_up"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 </android.support.constraint.ConstraintLayout>
