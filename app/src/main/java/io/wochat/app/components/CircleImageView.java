@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -73,6 +74,7 @@ public class CircleImageView extends ImageView {
 	private int mBorderWidth = DEFAULT_BORDER_WIDTH;
 	private int mCircleBackgroundColor = DEFAULT_CIRCLE_BACKGROUND_COLOR;
 
+	private Canvas canvas;
 	private Bitmap mBitmap;
 	private BitmapShader mBitmapShader;
 	private int mBitmapWidth;
@@ -164,11 +166,11 @@ public class CircleImageView extends ImageView {
 		if (mBitmap == null) {
 			return;
 		}
-
+this. canvas = canvas;
 		if (mCircleBackgroundColor != Color.TRANSPARENT) {
 			canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius, mCircleBackgroundPaint);
 		}
-		canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius, mBitmapPaint);
+			canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius, mBitmapPaint);
 		if (mBorderWidth > 0) {
 			canvas.drawCircle(mBorderRect.centerX(), mBorderRect.centerY(), mBorderRadius, mBorderPaint);
 		}
