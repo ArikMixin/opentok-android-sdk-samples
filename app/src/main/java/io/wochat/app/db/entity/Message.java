@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -66,7 +67,6 @@ public class Message implements IMessage,
 
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface ACK_STATUS {}
-
 
 
 	public static final String MSG_TYPE_ACKNOWLEDGMENT = "ACKNOWLEGMENT";
@@ -139,8 +139,27 @@ public class Message implements IMessage,
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface SHOW_TRANSLATION_FLAG {}
 
+	// WebRtcCall (rtc_code)
+	public static final String RTC_CODE_OFFER = "OFFER";
+	public static final String RTC_CODE_ANSWER = "ANSWER";
+	public static final String RTC_CODE_TEXT = "TEXT";
+	public static final String RTC_CODE_CLOSE = "CLOSE";
+	public static final String RTC_CODE_REJECTED = "REJECTED";
+	public static final String RTC_CODE_BUSY = "BUSY";
+	public static final String RTC_CODE_UPDATE_SESSION = "UPDATE_SESSION";
 
+	@StringDef({
+			RTC_CODE_OFFER,
+			RTC_CODE_ANSWER,
+			RTC_CODE_TEXT,
+			RTC_CODE_CLOSE,
+			RTC_CODE_REJECTED,
+			RTC_CODE_BUSY,
+			RTC_CODE_UPDATE_SESSION,
+	})
 
+	@Retention(RetentionPolicy.SOURCE)
+	public @interface RTC_CODE {}
 	/**********************************************/
 	@PrimaryKey
 	@NonNull
@@ -324,6 +343,38 @@ public class Message implements IMessage,
 	private @SHOW_TRANSLATION_FLAG String showTranslationFlag;
 	/**********************************************/
 
+
+	//WebRtcCall
+	@SerializedName("rtc_code")
+	@ColumnInfo(name = "rtc_code")
+	@Expose
+	private @RTC_CODE String rtcCode;
+	/**********************************************/
+	@SerializedName("session_id")
+	@ColumnInfo(name = "session_id")
+	@Expose
+	private String sessionID;
+	/**********************************************/
+	@SerializedName("message")
+	@ColumnInfo(name = "message")
+	@Expose
+	private String message;
+	/**********************************************/
+//	@SerializedName("message_language")
+//	@ColumnInfo(name = "message_language")
+//	@Expose
+//	private String messagelanguage;
+	/**********************************************/
+	@SerializedName("is_video")
+	@ColumnInfo(name = "is_video")
+	@Expose
+	private boolean isVideoRTC;
+	/**********************************************/
+	@SerializedName("is_recording")
+	@ColumnInfo(name = "is_recording")
+	@Expose
+	private boolean isRecording;
+
 //	private Image image;
 //  private int status;
 //  private String text;
@@ -364,6 +415,27 @@ public class Message implements IMessage,
 		this.timestampMilli = System.currentTimeMillis();
 		this.ackStatus = ACK_STATUS_PENDING;
 	}
+
+	// for outgoing WebRtcCall
+	public Message(String participantId, String selfId, String sessionID, String message, String messageLanguage, boolean isVideoRTC, boolean isRecording) {
+		//Base:
+		this.messageId = UUID.randomUUID().toString();
+		this.messageType = MSG_TYPE_WEBRTC_CALL;
+		this.senderId = selfId;
+		this.recipients = new String[]{participantId};
+		this.timestampMilli = System.currentTimeMillis();
+
+		//WebRtcCall
+		this.rtcCode = RTC_CODE_OFFER;
+		this.sessionID = sessionID; //  api call from server
+  		this.message = message;
+		this.messageLanguage = messageLanguage;
+		this.isVideoRTC = isVideoRTC;
+		this.isRecording = isRecording;
+	}
+
+
+
 
 //	public Message(String participantId, String selfId, String conversationId, Uri localUri, String messageLang) {
 //		this.showNonTranslated = null;
@@ -949,6 +1021,47 @@ public class Message implements IMessage,
 		this.forceTranslatedCountry = forceTranslatedCountry;
 	}
 
+	//WebRtcCall Getter & Setters
+	public String getRtcCode() {
+		return rtcCode;
+	}
+	public void setRtcCode(String rtcCode) {
+		this.rtcCode = rtcCode;
+	}
+
+	public String getSessionID() {
+		return sessionID;
+	}
+	public void setSessionID(String sessionID) {
+		this.sessionID = sessionID;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public boolean getIsVideoRTC() {
+		return isVideoRTC;
+	}
+
+	public void setVideoRTC(boolean isVideoRTC) {
+		this.isVideoRTC = isVideoRTC;
+	}
+
+	public boolean isRecording() {
+		return isRecording;
+	}
+
+	public void setIsRecording(boolean isRecording) {
+		this.isRecording = isRecording;
+	}
+
+
+
+
 	public void hideMessageForTranslation(){
 		shouldBeDisplayed = false;
 	}
@@ -966,7 +1079,7 @@ public class Message implements IMessage,
 		this.shouldBeDisplayed = shouldBeDisplayed;
 	}
 
-//	public boolean isShowNonTranslated() {
+	//	public boolean isShowNonTranslated() {
 //		return showNonTranslated;
 //	}
 //

@@ -57,13 +57,12 @@ import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.SpeechToTextUtil;
 import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
+import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 
 /**
  * Repository handling the work with products and comments.
  */
 public class WCRepository {
-
-
 
 	public interface OnSaveMessageToDBListener {
 		void OnSaved(boolean success, Message savedMessage, Contact participant);
@@ -93,6 +92,8 @@ public class WCRepository {
 	private MutableLiveData<StateData<String>> mUserRegistrationResult;
 	private MutableLiveData<StateData<String>> mUserVerificationResult;
 	private MutableLiveData<StateData<String>> mUploadProfilePicResult;
+	private MutableLiveData<StateData<String>> mVideoSessionResult;
+
 	private MutableLiveData<StateData<String>> mUserConfirmRegistrationResult;
 	private MutableLiveData<StateData<Message>> mUploadImageResult;
 	private MutableLiveData<Boolean> mIsDuringRefreshContacts;
@@ -151,6 +152,8 @@ public class WCRepository {
 		mUserRegistrationResult = new MutableLiveData<>();
 		mUserVerificationResult = new MutableLiveData<>();
 		mUploadProfilePicResult = new MutableLiveData<>();
+		mVideoSessionResult = new MutableLiveData<>();
+
 		mUploadImageResult = new MutableLiveData<>();
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
 		mIsDuringRefreshContacts = new MutableLiveData<>();
@@ -370,6 +373,11 @@ public class WCRepository {
 
 	public MutableLiveData<StateData<String>> getUploadProfilePicResult() {
 		return mUploadProfilePicResult;
+	}
+
+
+	public MutableLiveData<StateData<String>> getVideoSessionResult() {
+		return mVideoSessionResult;
 	}
 
 	public MutableLiveData<StateData<Message>> getUploadImageResult() {
@@ -2011,5 +2019,61 @@ public class WCRepository {
 
 
 	}
+
+	//TokBox
+	public void createSession(String sessionType) {
+
+		mWochatApi.getCallSessionId(sessionType, new WochatApi.OnServerResponseListener() {
+			@Override
+			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+					Log.e(TAG, "OnServerResponse createSession - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+					if (isSuccess) {
+								try {
+									String session_id = response.getString("session_id");
+											Log.d("session_id", "session_id: " + session_id);
+									createToken(session_id,"SUBSCRIBER");
+
+								} catch (JSONException e) {
+									e.printStackTrace();
+								}
+						//mVideoSessionResult.setValue(new StateData<String>().success(null));
+					}
+					else if (errorLogic != null)
+						mVideoSessionResult.setValue(new StateData<String>().errorLogic(errorLogic));
+
+					else if (errorComm != null)
+						mVideoSessionResult.setValue(new StateData<String>().errorComm(errorComm));
+
+				}
+			});
+	}
+
+	public void createToken(String sessionId, String tokenRoleType) {
+		Log.d("stringStateData", "111111111");
+		mWochatApi.getToken(sessionId, tokenRoleType, new WochatApi.OnServerResponseListener() {
+			@Override
+			public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
+				Log.e(TAG, "OnServerResponse createToken - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+				if (isSuccess) {
+
+						try {
+							String token = response.getString("token");
+							Log.d("session_id", "token: " + token);
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+								mVideoSessionResult.setValue(new StateData<String>().success(null));
+					Log.d("stringStateData", "2222222222");
+				}
+						else if (errorLogic != null)
+								mVideoSessionResult.setValue(new StateData<String>().errorLogic(errorLogic));
+
+						else if (errorComm != null)
+								mVideoSessionResult.setValue(new StateData<String>().errorComm(errorComm));
+			}
+		});
+
+	}
+
 
 }

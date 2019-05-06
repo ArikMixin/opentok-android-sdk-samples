@@ -102,10 +102,36 @@ public class WochatApi {
 		String url = BASE_URL + "user/register/";
 
 		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+	}
+	//TokBox session id
+	public void getCallSessionId(String sessionType,  final OnServerResponseListener lsnr){
 
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("session_type", sessionType);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 
+		String url = BASE_URL + "calls/sessions/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
 	}
 
+	public void getToken(String sessionId, String tokenRoleType,  final OnServerResponseListener lsnr){
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("session_id", sessionId);
+			jsonObject.put("token_role_type",tokenRoleType);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "calls/tokens/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+	}
 
 
 	public void userVerification(String userId, String code, final OnServerResponseListener lsnr) {

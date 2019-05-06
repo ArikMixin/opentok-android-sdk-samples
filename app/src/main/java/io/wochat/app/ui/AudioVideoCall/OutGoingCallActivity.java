@@ -1,6 +1,9 @@
 package io.wochat.app.ui.AudioVideoCall;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
@@ -10,15 +13,15 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import com.squareup.picasso.Picasso;
-
 import java.util.Locale;
-
 import io.wochat.app.R;
+import io.wochat.app.WCRepository;
 import io.wochat.app.components.CircleImageView;
+import io.wochat.app.model.StateData;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.utils.Utils;
+import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 
 public class OutGoingCallActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -27,21 +30,21 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private ImageView mCameraSwitchIV;
     private FrameLayout mBackNavigationFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL;
-
     private String mFixedParticipantId;
     private Locale loc;
     private int mFlagDrawable;
     private String mFullLangName;
-
     private boolean mIsVideoCall;
     private String mParticipantId, mParticipantName, mParticipantLang, mParticipantPic, mConversationId;
+    private VideoAudioCallViewModel videoAudioCallViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_outgoing_call);
 
-        initViews();
+            initViews();
+            createSessionAndToken(); // TokBox
     }
 
     private void initViews() {
@@ -79,19 +82,15 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
 
         //Set lang flag , language display name and pic
         mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
-
-        Log.d("mParticipantPic", "mParticipantPic: " + mParticipantPic);
-
-
         loc = new Locale(mParticipantLang);
         mFullLangName = loc.getDisplayLanguage();
+
+        mBackNavigationFL.setOnClickListener(this);
 
         if (mIsVideoCall)
             videoCall();
         else
             audioCall();
-
-        mBackNavigationFL.setOnClickListener(this);
     }
 
     private void videoCall() {
@@ -157,5 +156,22 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
             else
                  Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicAudioCIV);
         }
+    }
+
+    public void createSessionAndToken(){
+         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+         videoAudioCallViewModel.createSessionsAndToken("RELAYED");
+
+         videoAudioCallViewModel.getVideoSessionResult().observe(this, new Observer<StateData<String>>() {
+             @Override
+             public void onChanged(@Nullable StateData<String> res) {
+                 if(res.isSuccess())
+                        Log.d("stringStateData", "stringStateData: " + res.isSuccess());
+                 else if(res.getErrorLogic() != null)
+                        Log.d("stringStateData", "notttttttttt: " + res.getErrorLogic());
+                 else if(res.getErrorCom() != null)
+                         Log.d("stringStateData", "notttttttttt: " + res.getErrorCom());
+             }
+         });
     }
 }
