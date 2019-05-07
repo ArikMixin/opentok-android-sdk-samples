@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +13,8 @@ import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -33,8 +36,8 @@ import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 public class OutGoingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener {
 
     private static final String TAG = "OutGoingCallActivity";
-    private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV, mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV;
-    private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,  mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV;
+    private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV, mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mHangUpCIV;
+    private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,  mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV,mStatusTV;
     private ImageView mCameraSwitchIV;
     private FrameLayout mBackNavigationFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL;
@@ -50,6 +53,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private String errorMsg;
     private boolean mVideoFlag;
     private WCService mService;
+    private MediaPlayer mSoundsPlayer;
+    private AlphaAnimation mCallTXTanimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,18 +71,17 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mTitleTV = (TextView) findViewById(R.id.title_tv);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
         mBackNavigationFL = (FrameLayout) findViewById(R.id.back_navigation_fl);
-
         mParticipantNameAudioTV = (TextView) findViewById(R.id.participant_name_audio_tv);
         mParticipantLangAudioTV = (TextView) findViewById(R.id.participant_lang_audio_tv);
         mParticipantNumberTV = (TextView) findViewById(R.id.participant_number_audio_tv);
-
         mParticipantNameVideoTV = (TextView) findViewById(R.id.participant_name_video_tv);
         mParticipantLangVideoTV = (TextView) findViewById(R.id.participant_lang_video_tv);
-
+        mStatusTV = (TextView) findViewById(R.id.status_tv);
         mParticipantPicAudioCIV = (CircleImageView) findViewById(R.id.participant_pic_audio_civ);
         mParticipantPicAudioFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_audio_civ);
         mParticipantPicVideoCIV = (CircleImageView) findViewById(R.id.participant_pic_video_civ);
         mParticipantPicVideoFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_video_civ);
+        mHangUpCIV = (CircleImageView) findViewById(R.id.hang_up_civ);
         mMainAudioRL = (RelativeLayout) findViewById(R.id.main_audio_rl);
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
 
@@ -86,7 +90,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mParticipantName = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
         mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
         mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
-        mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
 
         mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 //        mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
@@ -98,7 +101,20 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         loc = new Locale(mParticipantLang);
         mFullLangName = loc.getDisplayLanguage();
 
+        //Play calling sound in first
+        mSoundsPlayer = MediaPlayer.create(this, R.raw.phone_calling_tone);
+        mSoundsPlayer.setLooping(true);
+        mSoundsPlayer.start();
+
+        //Init calling animation
+        mCallTXTanimation = new AlphaAnimation(0.0f, 1.0f);
+        mCallTXTanimation.setDuration(1000);
+        mCallTXTanimation.setRepeatCount(Animation.INFINITE);
+        mCallTXTanimation.setRepeatMode(Animation.REVERSE);
+        mStatusTV.startAnimation(mCallTXTanimation);
+
         mBackNavigationFL.setOnClickListener(this);
+        mHangUpCIV.setOnClickListener(this);
 
         if (mIsVideoCall)
             videoCall();
@@ -153,7 +169,12 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
             case R.id.back_navigation_fl:
                 finish();
                 break;
+
+            case R.id.hang_up_civ:
+                finish();
+                break;
         }
+
     }
 
     public void setPhotoByUrl(boolean videoCallFlag){
@@ -206,11 +227,16 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
-
     @Override
     protected void onStop() {
         super.onStop();
         unbindService(mServiceConnection);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mSoundsPlayer.stop();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {

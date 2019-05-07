@@ -274,7 +274,6 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public void onCameraOrPhoneClic(Conversation conversation, boolean isVideoCall) {
-		Log.d("arikc", "onCameraClick: " + isVideoCall);
 		Intent intent = new Intent(getContext(), OutGoingCallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
