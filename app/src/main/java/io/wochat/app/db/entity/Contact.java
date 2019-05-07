@@ -169,7 +169,7 @@ public class Contact implements IContact {
 			return contactLocal.getDisplayName();
 		else if (contactServer != null)
 			return contactServer.getUserName();
-		else return null;
+		else return "";
 	}
 
 	public static String getInitialsFromName(String name){

@@ -50,6 +50,7 @@ public interface ConversationDao {
 		"last_message_timestamp = :lastMessageTimeStamp ," +
 		"last_message_text = :lastMessageText ," +
 		"last_message_sender_id = :lastMessageSenderId ," +
+		"last_message_sender_name = :lastMessageSenderName ," +
 		"last_message_ack_status = :lastMessageAckStatus ," +
 		"last_message_type = :lastMessageType ," +
 		"last_message_duration = :lastMessageDuration " +
@@ -59,6 +60,7 @@ public interface ConversationDao {
 						long lastMessageTimeStamp,
 						String lastMessageText,
 						String lastMessageSenderId,
+						String lastMessageSenderName,
 						String lastMessageAckStatus,
 						String lastMessageType,
 						int lastMessageDuration);
@@ -69,6 +71,7 @@ public interface ConversationDao {
 		"last_message_timestamp = :lastMessageTimeStamp ," +
 		"last_message_text = :lastMessageText ," +
 		"last_message_sender_id = :lastMessageSenderId ," +
+		"last_message_sender_name = :lastMessageSenderName ," +
 		"num_of_unread_messages = :numOfUnreadMessages ," +
 		"last_message_ack_status = :lastMessageAckStatus ," +
 		"last_message_type = :lastMessageType ," +
@@ -79,6 +82,7 @@ public interface ConversationDao {
 						long lastMessageTimeStamp,
 						String lastMessageText,
 						String lastMessageSenderId,
+						String lastMessageSenderName,
 						String lastMessageAckStatus,
 						String lastMessageType,
 						int lastMessageDuration,

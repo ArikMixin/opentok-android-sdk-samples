@@ -90,6 +90,7 @@ public class GroupMemberMessage {
 			append("userId", userId).
 			append("groupId", groupId).
 			append("messageId", messageId).
+			append("ackStatus", ackStatus).
 			toString();
     }
 

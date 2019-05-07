@@ -107,8 +107,12 @@ public class Conversation implements IDialog{
 	@SerializedName("last_message_sender_id")
 	@ColumnInfo(name = "last_message_sender_id")
 	@Expose
-	String mLastMessageSenderId;
-
+	private String mLastMessageSenderId;
+	/***************************************************/
+	@SerializedName("last_message_sender_name")
+	@ColumnInfo(name = "last_message_sender_name")
+	@Expose
+	private String mLastMessageSenderName;
 	/***************************************************/
 	@SerializedName("last_message_duration")
 	@ColumnInfo(name = "last_message_duration")
@@ -118,7 +122,7 @@ public class Conversation implements IDialog{
 	@SerializedName("last_message_ack_status")
 	@ColumnInfo(name = "last_message_ack_status")
 	@Expose
-	@Message.ACK_STATUS String mLastMessageAckStatus;
+	private @Message.ACK_STATUS String mLastMessageAckStatus;
 	/***************************************************/
 
 	@SerializedName("num_of_unread_messages")
@@ -330,6 +334,18 @@ public class Conversation implements IDialog{
 
 	@Override
 	public String getLastMessageTextToDisplay() {
+		if (isGroup()){
+			String firstName = Utils.getUserFirstName(mLastMessageSenderName);
+			return firstName + ": " + getLastMessageTextToDisplayInner();
+		}
+		else {
+			return getLastMessageTextToDisplayInner();
+		}
+	}
+
+
+
+	public String getLastMessageTextToDisplayInner() {
 		if (lastMessageType.equals(Message.MSG_TYPE_VIDEO)) {
 			return "Video (" + Utils.convertSecondsToHMmSs(mLastMessageDuration) + ") ";
 		}
@@ -432,6 +448,14 @@ public class Conversation implements IDialog{
 		this.groupCreatedBy = groupCreatedBy;
 	}
 
+	public String getLastMessageSenderName() {
+		return mLastMessageSenderName;
+	}
+
+	public void setLastMessageSenderName(String lastMessageSenderName) {
+		mLastMessageSenderName = lastMessageSenderName;
+	}
+
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this).
@@ -460,6 +484,7 @@ public class Conversation implements IDialog{
 		Gson gson = new Gson();
 		return gson.fromJson(jsonString, Conversation.class);
 	}
+
 
 
 }

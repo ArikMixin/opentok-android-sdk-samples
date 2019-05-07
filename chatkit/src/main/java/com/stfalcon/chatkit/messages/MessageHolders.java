@@ -4,6 +4,7 @@ import android.os.Build;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
+import android.text.Html;
 import android.text.Spannable;
 import android.text.method.LinkMovementMethod;
 import android.util.SparseArray;
@@ -896,7 +897,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                text.setText(message.getText());
+                text.setText(Html.fromHtml(message.getTextWithNameHeader()));
             }
         }
 

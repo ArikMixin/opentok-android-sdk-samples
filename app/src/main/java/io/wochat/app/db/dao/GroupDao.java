@@ -31,7 +31,10 @@ public interface GroupDao {
 	@Query("SELECT * FROM group_memeber_table WHERE group_id =:groupId")
 	List<GroupMember> getMembers(String groupId);
 
-/**************************************************************************************************/
+	@Query("SELECT color FROM group_memeber_table WHERE group_id =:groupId AND user_id =:userId")
+	int getMemberColor(String groupId, String userId);
+
+	/**************************************************************************************************/
 
 	@Query("SELECT * FROM group_member_message_table WHERE message_id =:messageId")
 	List<GroupMemberMessage> getMembersMessages(String messageId);
@@ -44,7 +47,8 @@ public interface GroupDao {
 	LiveData<List<String>> getMembersMessagesAckStatusLD(String messageId);
 
 
-	@Insert(onConflict = OnConflictStrategy.IGNORE)
+	@Insert(onConflict = OnConflictStrategy.REPLACE)
 	void insert(GroupMemberMessage groupMemberMessage);
+
 
 }

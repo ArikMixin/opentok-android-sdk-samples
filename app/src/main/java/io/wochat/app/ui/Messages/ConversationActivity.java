@@ -324,7 +324,12 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessageInput.setTypingListener(this);
 		mMessageInput.setInputListener(this);
 		mMessageInput.setButtonClickListener(this);
-		setMagicButtonLanguage(mParticipantLang, false);
+
+		if (mIsGroup)
+			setMagicButtonLanguage("UN", false);
+		else
+			setMagicButtonLanguage(mParticipantLang, false);
+
 //		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
 //		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
 
@@ -355,7 +360,11 @@ public class ConversationActivity extends PermissionActivity implements
 					}
 				}
 				else {
-					setMagicButtonLanguage(mParticipantLang, false);
+					if (mIsGroup)
+						setMagicButtonLanguage("UN", false);
+					else
+						setMagicButtonLanguage(mParticipantLang, false);
+
 					mMagicButtonForceLanguage = null;
 					mMagicButtonForceCountry = null;
 				}
@@ -376,7 +385,7 @@ public class ConversationActivity extends PermissionActivity implements
 				mConversation = conversationAndItsMessages.getConversation();
 				mMessages = conversationAndItsMessages.getMessages();
 				mGroupMembers = conversationAndItsMessages.getGroupMembers();
-				displayUITypingSignal(false);
+				displayUITypingSignal(false, null);
 				startListenToMessagesChanges();
 		});
 
@@ -605,6 +614,12 @@ public class ConversationActivity extends PermissionActivity implements
 			mContactNameTV.setText(mSelectedMessageCount + "");
 			mContactDetailsTV.setVisibility(View.GONE);
 		}
+		else if (mIsGroup){
+			inflater.inflate(R.menu.menu_conversation_group, menu);
+			mContactAvatarCIV.setVisibility(View.VISIBLE);
+			mContactDetailsTV.setVisibility(View.VISIBLE);
+			//mContactNameTV.setText(mParticipantName);
+		}
 		else {
 			inflater.inflate(R.menu.menu_conversation, menu);
 			mContactAvatarCIV.setVisibility(View.VISIBLE);
@@ -675,7 +690,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mIsInputInTextMode = false;
 		if (mIsGroup){
-			mService.sendGroupMessage(message, mGroupMembers);
+			mService.sendGroupMessage(message, mGroupMembers, mSelfId);
 		}
 		else {
 			if (!message.isMagic())
@@ -891,7 +906,10 @@ public class ConversationActivity extends PermissionActivity implements
 			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_send_light));
 			mIsInputInTextMode = true;
 		}
-		mService.sendTypingSignal(mParticipantId, mConversationId, true);
+		if (mIsGroup)
+			mService.sendTypingSignalForGroup(mConversationId, true, mGroupMembers, mSelfId);
+		else
+			mService.sendTypingSignal(mParticipantId, mConversationId, true);
 	}
 
 	@Override
@@ -901,7 +919,10 @@ public class ConversationActivity extends PermissionActivity implements
 			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 			mIsInputInTextMode = false;
 		}
-		mService.sendTypingSignal(mParticipantId, mConversationId, false);
+		if (mIsGroup)
+			mService.sendTypingSignalForGroup(mConversationId, false, mGroupMembers, mSelfId);
+		else
+			mService.sendTypingSignal(mParticipantId, mConversationId, false);
 	}
 
 
@@ -1168,7 +1189,8 @@ public class ConversationActivity extends PermissionActivity implements
 				String conversationId = intent.getStringExtra(WCService.CONVERSATION_ID_EXTRA);
 				if ((conversationId != null)&&(conversationId.equals(mConversationId))){
 					boolean isTyping = intent.getBooleanExtra(WCService.IS_TYPING_EXTRA, false);
-					displayUITypingSignal(isTyping);
+					String participantId = intent.getStringExtra(WCService.PARTICIPANT_ID_EXTRA);
+					displayUITypingSignal(isTyping, participantId);
 				}
 			}
 			else if(intent.getAction().equals(WCService.PRESSENCE_ACTION)) {
@@ -1237,23 +1259,31 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 
-	private void displayUITypingSignal(boolean isTyping) {
+	private void displayUITypingSignal(boolean isTyping, String participantId) {
+		if (mIsGroup){
+			if (isTyping){
+				String firstName = getGroupMemberFirstName(participantId);
+				mContactDetailsTV.setText(firstName + " is typing...");
+				mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
+			}
+			else {
+				mContactDetailsTV.setText(getGroupNameList());
+				mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
+			}
 
-		if (isTyping){
-			mContactDetailsTV.setText("Typing...");
-			mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
 		}
 		else {
-			if(mIsGroup){
-				mContactDetailsTV.setText(getGroupNameList());
+			if (isTyping) {
+				mContactDetailsTV.setText("Typing...");
+				mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
 			}
 			else {
 				if (mIsOnline)
 					mContactDetailsTV.setText("Online");
 				else
 					mContactDetailsTV.setText(getDisplayOnlineDateTime());
+				mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
 			}
-			mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
 		}
 	}
 
@@ -1628,9 +1658,13 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 	};
 
+	private boolean isRecordConditionOfRecordOrSpeach(){
+		return mSameLanguageWithParticipant && (!isMagicButtonOn()) && (!mIsGroup);
+	}
+
 
 	private void startRecordOrSpeech(){
-		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
+		if (isRecordConditionOfRecordOrSpeach()){
 			startRecord();
 		}
 		else  {
@@ -1642,7 +1676,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 	private void cancelRecordOrSpeech(){
-		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
+		if (isRecordConditionOfRecordOrSpeach()){
 			cancelRecord();
 		}
 		else  {
@@ -1656,7 +1690,7 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void finishRecordOrSpeech(){
-		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
+		if (isRecordConditionOfRecordOrSpeach()){
 			finishRecord();
 		}
 		else  {
@@ -1967,7 +2001,10 @@ public class ConversationActivity extends PermissionActivity implements
 			});
 		}
 		else {
-			setMagicButtonLanguage(mParticipantLang, false);
+			if (mIsGroup)
+				setMagicButtonLanguage("UN", false);
+			else
+				setMagicButtonLanguage(mParticipantLang, false);
 			mMagicButtonForceLanguage = null;
 			mMagicButtonForceCountry = null;
 			mConversationViewModel.updateMagicButtonLangCode(mConversationId, null);
@@ -1985,13 +2022,29 @@ public class ConversationActivity extends PermissionActivity implements
 		String res = "";
 		if ((mGroupMembers != null) && (!mGroupMembers.isEmpty())){
 			for (GroupMember groupMember : mGroupMembers){
+
+				String firstName = groupMember.getUserFirstName();
+				if (groupMember.getUserId().equals(mSelfId))
+					firstName = "You";
+
 				if (res.equals(""))
-					res = groupMember.getUserFirstName();
+					res = firstName;
 				else
-					res = res + ", " + groupMember.getUserFirstName();
+					res = res + ", " + firstName;
 			}
 		}
 		return res;
+	}
+
+
+	private String getGroupMemberFirstName(String id){
+		for(GroupMember groupMember : mGroupMembers){
+			if(groupMember.getUserId().equals(id)){
+				return groupMember.getUserFirstName();
+			}
+		}
+		return "";
+
 	}
 
 }

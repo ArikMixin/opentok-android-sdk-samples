@@ -587,7 +587,7 @@ class XMPPProvider {
 
 
 							MultipleRecipientManager.send(mConnection, message, jidList, null, null);
-
+							mOnChatMessageListener.onNewOutgoingMessage(message.getBody(), message.getThread());
 						}
 					}
 					else {

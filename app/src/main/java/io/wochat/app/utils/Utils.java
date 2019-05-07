@@ -287,6 +287,8 @@ public class Utils {
 			case "HE":
 				return R.drawable.flag_israel;
 
+			case "UN":
+				return R.drawable.flag_un;
 			case "DE":
 				return R.drawable.flag_germany;
 			case "EN":
@@ -466,4 +468,18 @@ public class Utils {
 		}
 		return msg;
 	}
+
+
+
+	public static String getUserFirstName(String fullName) {
+		String firstName;
+		if (Utils.isNullOrEmpty(fullName))
+			return "";
+		firstName = fullName.trim();
+		if (firstName.contains(" "))
+			return firstName.split(" ")[0];
+		else
+			return firstName;
+	}
+
 }

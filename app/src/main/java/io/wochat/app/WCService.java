@@ -32,6 +32,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	public static final String TYPING_SIGNAL_ACTION = "TYPING_SIGNAL_ACTION";
 	public static final String CONVERSATION_ID_EXTRA = "CONVERSATION_ID_EXTRA";
+	public static final String PARTICIPANT_ID_EXTRA = "PARTICIPANT_ID_EXTRA";
 
 	public static final String PRESSENCE_ACTION = "PRESSENCE_ACTION";
 	public static final String PRESSENCE_IS_AVAILABLE_EXTRA = "PRESSENCE_IS_AVAILABLE_EXTRA";
@@ -92,7 +93,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			Message message = Message.fromJson(msg);
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
-				broadcastTypingSignal(conversationId, message.isTyping());
+				broadcastTypingSignal(conversationId, message.getSenderId(), message.isTyping());
 				return;
 			}
 
@@ -306,10 +307,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 
-	public void sendGroupMessage(Message message, List<GroupMember> groupMembers) {
+	public void sendGroupMessage(Message message, List<GroupMember> groupMembers, String selfId) {
 		List<String> participantIds = new ArrayList<>();
 		for (GroupMember groupMember : groupMembers){
-			participantIds.add(groupMember.getUserId());
+			if(!groupMember.getUserId().equals(selfId))
+				participantIds.add(groupMember.getUserId());
 		}
 		mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
 	}
@@ -333,6 +335,18 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		mXMPPProvider.sendStringMessage(msg.toJson(), participantId, conversationId);
 	}
 
+	public void sendTypingSignalForGroup(String conversationId, boolean isTyping, List<GroupMember> groupMembers, String selfId) {
+		Message msg = new Message(null, mSelfUserId, conversationId, "", "EN");
+		msg.setMessageType(Message.MSG_TYPE_TYPING_SIGNAL);
+		msg.setIsTyping(isTyping);
+
+		List<String> participantIds = new ArrayList<>();
+		for (GroupMember groupMember : groupMembers){
+			if(!groupMember.getUserId().equals(selfId))
+				participantIds.add(groupMember.getUserId());
+		}
+		mXMPPProvider.sendGroupStringMessage(msg.toJson(), participantIds, conversationId);
+	}
 
 
 	public void sendAckStatusForIncomingMessages(List<Message> messages, String ackStatus) {
@@ -378,10 +392,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 
-	private void broadcastTypingSignal(String conversationId, boolean isTyping) {
+	private void broadcastTypingSignal(String conversationId, String senderId, boolean isTyping) {
 		Intent intent = new Intent();
 		intent.setAction(TYPING_SIGNAL_ACTION);
 		intent.putExtra(CONVERSATION_ID_EXTRA, conversationId);
+		intent.putExtra(PARTICIPANT_ID_EXTRA, senderId);
 		intent.putExtra(IS_TYPING_EXTRA, isTyping);
 		sendBroadcast(intent);
 	}

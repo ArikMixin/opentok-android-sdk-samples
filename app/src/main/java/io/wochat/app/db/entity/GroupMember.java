@@ -113,13 +113,7 @@ public class GroupMember {
 	}
 
 	public String getUserFirstName() {
-		if (Utils.isNullOrEmpty(userName))
-			return "";
-		userName = userName.trim();
-		if (userName.contains(" "))
-			return userName.split(" ")[0];
-		else
-			return userName;
+		return Utils.getUserFirstName(userName);
 	}
 
 

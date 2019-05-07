@@ -6,10 +6,13 @@ import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
+import android.text.Html;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -25,6 +28,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import io.wochat.app.utils.Utils;
 
 
 @Entity(tableName = "message_table",
@@ -69,22 +74,6 @@ public class Message implements IMessage,
 			case ACK_STATUS_READ: return 4;
 			default: return 1;
 		}
-	}
-
-	public Boolean getShowNonTranslated() {
-		return showNonTranslated;
-	}
-
-	public void setShowNonTranslated(Boolean showNonTranslated) {
-		this.showNonTranslated = showNonTranslated;
-	}
-
-	public String getEventCode() {
-		return eventCode;
-	}
-
-	public void setEventCode(String eventCode) {
-		this.eventCode = eventCode;
 	}
 
 
@@ -194,6 +183,14 @@ public class Message implements IMessage,
 	@ColumnInfo(name = "sender")
 	@Expose
     private String senderId;
+	/**********************************************/
+	@ColumnInfo(name = "sender_name")
+	@Expose
+	private String senderName;
+	/**********************************************/
+	@ColumnInfo(name = "sender_color")
+	@Expose
+	private int senderColor;
 	/**********************************************/
 	@SerializedName("conversation_id")
 	@ColumnInfo(name = "conversation_id")
@@ -573,6 +570,23 @@ public class Message implements IMessage,
 	}
 
 	@Override
+	public String getTextWithNameHeader(){
+		if (isGroupMessage() && !isOutgoing()){
+			String сolorString = Integer.toString(senderColor, 16);
+			//String сolorString = String.format("%X", Color.GREEN).substring(2);
+			String title = "<font color=\"#%s\">" + Utils.getUserFirstName(getSenderName()) + "</font><BR>";
+			//String title = "<font color='#EE0000'>" + Utils.getUserFirstName(getSenderName()) + "</font><BR>";
+			return String.format(title + getText(), сolorString);
+
+			//return Utils.getUserFirstName(getSenderName()) + "\n" + getText();
+		}
+		else {
+			return getText();
+		}
+
+	}
+
+	@Override
     public String getText() {
 		if (showTranslationFlag == null){
 			if (isMagic())
@@ -591,6 +605,7 @@ public class Message implements IMessage,
 			return translatedText;
 		else
 			return messageText;
+
 
 
 
@@ -1121,6 +1136,21 @@ public class Message implements IMessage,
 		return newMessage;
 	}
 
+	public Boolean getShowNonTranslated() {
+		return showNonTranslated;
+	}
+
+	public void setShowNonTranslated(Boolean showNonTranslated) {
+		this.showNonTranslated = showNonTranslated;
+	}
+
+	public String getEventCode() {
+		return eventCode;
+	}
+
+	public void setEventCode(String eventCode) {
+		this.eventCode = eventCode;
+	}
 
 
 	public boolean isMagic(){
@@ -1172,5 +1202,20 @@ public class Message implements IMessage,
 		return isGroupMessage()? this.groups[0]:null;
 	}
 
+	public String getSenderName() {
+		return senderName;
+	}
+
+	public void setSenderName(String senderName) {
+		this.senderName = senderName;
+	}
+
+	public int getSenderColor() {
+		return senderColor;
+	}
+
+	public void setSenderColor(int senderColor) {
+		this.senderColor = senderColor;
+	}
 
 }
