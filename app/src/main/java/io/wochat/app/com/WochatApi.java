@@ -28,8 +28,8 @@ import io.wochat.app.BuildConfig;
 
 public class WochatApi {
 
-	//private static final String BASE_URL = "https://api-dev.wochat.io/";
-	private static final String BASE_URL = "https://api.wochat.io/";
+	private static final String BASE_URL = "https://api-dev.wochat.io/";
+	//private static final String BASE_URL = "https://api.wochat.io/";
 
 	private static final String TAG = "WochatApi";
 	private final Context mContext;
