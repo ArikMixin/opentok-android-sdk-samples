@@ -90,6 +90,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mParticipantName = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
         mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
         mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
+        mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
 
         mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 //        mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
@@ -167,11 +168,11 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                finish();
+                    finish();
                 break;
 
             case R.id.hang_up_civ:
-                finish();
+                    finish();
                 break;
         }
     }
@@ -196,7 +197,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     @Override
-    public void onSucceedCreateSession(StateData<String> joke) {
+    public void onSucceedCreateSession(StateData<String> success){
         Log.d(TAG, "ServiceConnection: Session and token received ");
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
         //Send Massage to the receiver - let the receiver know that video/audio call is coming

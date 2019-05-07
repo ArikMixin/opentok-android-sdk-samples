@@ -77,7 +77,7 @@ public class WCRepository {
 	}
 
 	public interface OnSessionResultListener {
-		public void onSucceedCreateSession(StateData<String> joke);
+		public void onSucceedCreateSession(StateData<String> success);
 		public void onFailedCreateSession(StateData<String> errorMsg);
 	}
 
