@@ -283,6 +283,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 	public void sendMessage(Message message){
+		Log.d("ariktest", "json: " + message.toJson() + "\n" + "getParticipant: " + message.getParticipantId() + "\n getConversationId: " + message.getConversationId());
 		//message.setDuration(message.getDuration()/1000);
 		Log.e(TAG, "sendMessage: " + message.toJson());
 		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());

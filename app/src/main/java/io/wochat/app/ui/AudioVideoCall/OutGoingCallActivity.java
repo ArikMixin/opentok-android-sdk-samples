@@ -201,7 +201,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         Log.d(TAG, "ServiceConnection: Session and token received ");
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
         //Send Massage to the receiver - let the receiver know that video/audio call is coming
-        Message message = new Message(mParticipantId, mSelfId, mVideoAudioCall.getSessionID(), "", "", Message.RTC_CODE_OFFER, mVideoFlag, false);
+        Message message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "", "", Message.RTC_CODE_OFFER, mVideoFlag, false);
         if ((mService != null) && (mService.isXmppConnected())) {
             mService.sendMessage(message);
             Log.d(TAG, "ServiceConnection: massage sent ");

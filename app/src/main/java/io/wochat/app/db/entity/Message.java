@@ -417,11 +417,13 @@ public class Message implements IMessage,
 	}
 
 	// for outgoing WebRtcCall
-	public Message(String participantId, String selfId, String sessionID, String message, String messageLanguage, String rtcCode, boolean isVideoRTC, boolean isRecording) {
+	public Message(String participantId, String selfId, String conversationId, String sessionID, String message, String messageLanguage, String rtcCode, boolean isVideoRTC, boolean isRecording) {
 		//Base:
 		this.messageId = UUID.randomUUID().toString();
 		this.messageType = MSG_TYPE_WEBRTC_CALL;
+		this.conversationId = conversationId;
 		this.senderId = selfId;
+		this.participantId = participantId;
 		this.recipients = new String[]{participantId};
 		this.timestampMilli = System.currentTimeMillis();
 
