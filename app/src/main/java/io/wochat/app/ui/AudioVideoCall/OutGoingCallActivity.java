@@ -174,7 +174,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
                 finish();
                 break;
         }
-
     }
 
     public void setPhotoByUrl(boolean videoCallFlag){
