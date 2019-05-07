@@ -1,9 +1,12 @@
 package io.wochat.app.ui.AudioVideoCall;
 
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Build;
-import android.support.annotation.Nullable;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
@@ -13,18 +16,23 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.squareup.picasso.Picasso;
 import java.util.Locale;
 import io.wochat.app.R;
 import io.wochat.app.WCRepository;
+import io.wochat.app.WCService;
 import io.wochat.app.components.CircleImageView;
+import io.wochat.app.db.entity.Message;
 import io.wochat.app.model.StateData;
+import io.wochat.app.model.VideoAudioCall;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 
-public class OutGoingCallActivity extends AppCompatActivity implements View.OnClickListener {
+public class OutGoingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener {
 
+    private static final String TAG = "OutGoingCallActivity";
     private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV, mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,  mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV;
     private ImageView mCameraSwitchIV;
@@ -36,7 +44,12 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private String mFullLangName;
     private boolean mIsVideoCall;
     private String mParticipantId, mParticipantName, mParticipantLang, mParticipantPic, mConversationId;
+    private String mSelfId;
     private VideoAudioCallViewModel videoAudioCallViewModel;
+    private VideoAudioCall mVideoAudioCall;
+    private String errorMsg;
+    private boolean mVideoFlag;
+    private WCService mService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +88,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
         mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
 
-//        mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
+        mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 //        mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
 //        mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //        mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
@@ -94,6 +107,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void videoCall() {
+        mVideoFlag = true;
         mMainVideoRL.setVisibility(View.VISIBLE);
 
         mParticipantNameVideoTV.setText(mParticipantName);
@@ -110,17 +124,17 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void audioCall() {
+        mVideoFlag = false;
         mMainAudioRL.setVisibility(View.VISIBLE);
 
         mCameraSwitchIV.setVisibility(View.GONE); // No need camera switch button in audio call
         mParticipantNameAudioTV.setText(mParticipantName);
         mParticipantLangAudioTV.setText(mFullLangName);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             mFixedParticipantId = PhoneNumberUtils.formatNumber(mParticipantId);
-        } else {
+        else
             mFixedParticipantId = PhoneNumberUtils.formatNumber("+" + mParticipantId, mParticipantLangAudioTV.toString());
-        }
 
         //Set Participant Flags
         mParticipantPicAudioFlagCIV.setImageResource(mFlagDrawable);
@@ -128,11 +142,9 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
 
         //Set Participant Pic
         setPhotoByUrl(false);
-//        mParticipantPicAudioCIV.addShadow();
 
         mParticipantNumberTV.setText(mFixedParticipantId);
         mTitleTV.setText(R.string.in_a_voice_call);
-
     }
 
     @Override
@@ -146,32 +158,73 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
 
     public void setPhotoByUrl(boolean videoCallFlag){
         if ((mParticipantPic != null) && (!mParticipantPic.trim().equals(""))) {
-            if(videoCallFlag)
-                  Picasso.get().load(mParticipantPic).into(mParticipantPicVideoCIV);
-            else
-                  Picasso.get().load(mParticipantPic).into(mParticipantPicAudioCIV);
-        }else {
-            if(videoCallFlag)
-                 Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicVideoCIV);
-            else
-                 Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicAudioCIV);
+                if(videoCallFlag)
+                       Picasso.get().load(mParticipantPic).into(mParticipantPicVideoCIV);
+                else
+                       Picasso.get().load(mParticipantPic).into(mParticipantPicAudioCIV);
+        }else{
+                if(videoCallFlag)
+                       Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicVideoCIV);
+                else
+                       Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicAudioCIV);
         }
     }
 
     public void createSessionAndToken(){
          videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
-         videoAudioCallViewModel.createSessionsAndToken("RELAYED");
-
-         videoAudioCallViewModel.getVideoSessionResult().observe(this, new Observer<StateData<String>>() {
-             @Override
-             public void onChanged(@Nullable StateData<String> res) {
-                 if(res.isSuccess())
-                        Log.d("stringStateData", "stringStateData: " + res.isSuccess());
-                 else if(res.getErrorLogic() != null)
-                        Log.d("stringStateData", "notttttttttt: " + res.getErrorLogic());
-                 else if(res.getErrorCom() != null)
-                         Log.d("stringStateData", "notttttttttt: " + res.getErrorCom());
-             }
-         });
+         videoAudioCallViewModel.createSessionsAndToken(this,"RELAYED");
     }
+
+    @Override
+    public void onSucceedCreateSession(StateData<String> joke) {
+        Log.d(TAG, "ServiceConnection: Session and token received ");
+        mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
+        //Send Massage to the receiver - let the receiver know that video/audio call is coming
+        Message message = new Message(mParticipantId, mSelfId, mVideoAudioCall.getSessionID(), "", "", Message.RTC_CODE_OFFER, mVideoFlag, false);
+        if ((mService != null) && (mService.isXmppConnected())) {
+            mService.sendMessage(message);
+            Log.d(TAG, "ServiceConnection: massage sent ");
+        }
+    }
+
+    @Override
+    public void onFailedCreateSession(StateData<String> errorMsg) {
+        if(errorMsg.getErrorLogic() != null)
+              this.errorMsg = errorMsg.getErrorLogic().toString();
+        else if(errorMsg.getErrorCom() != null)
+              this.errorMsg = errorMsg.getErrorCom().toString();
+
+        Toast.makeText(this, "Failed to make a call: " + this.errorMsg, Toast.LENGTH_LONG).show();
+         this.finish();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart, call bindService WCService");
+        Intent intent = new Intent(this, WCService.class);
+        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(mServiceConnection);
+    }
+
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            Log.d(TAG, "ServiceConnection: onServiceConnected");
+            WCService.WCBinder binder = (WCService.WCBinder) service;
+            mService = binder.getService();
+            mService.setCurrentConversationId(null);
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            Log.d(TAG, "ServiceConnection: onServiceDisconnected");
+            mService = null;
+        }
+    };
 }

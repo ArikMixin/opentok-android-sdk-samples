@@ -417,7 +417,7 @@ public class Message implements IMessage,
 	}
 
 	// for outgoing WebRtcCall
-	public Message(String participantId, String selfId, String sessionID, String message, String messageLanguage, boolean isVideoRTC, boolean isRecording) {
+	public Message(String participantId, String selfId, String sessionID, String message, String messageLanguage, String rtcCode, boolean isVideoRTC, boolean isRecording) {
 		//Base:
 		this.messageId = UUID.randomUUID().toString();
 		this.messageType = MSG_TYPE_WEBRTC_CALL;
@@ -426,7 +426,7 @@ public class Message implements IMessage,
 		this.timestampMilli = System.currentTimeMillis();
 
 		//WebRtcCall
-		this.rtcCode = RTC_CODE_OFFER;
+		this.rtcCode = rtcCode;
 		this.sessionID = sessionID; //  api call from server
   		this.message = message;
 		this.messageLanguage = messageLanguage;

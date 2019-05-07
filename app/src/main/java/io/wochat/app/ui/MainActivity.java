@@ -267,7 +267,6 @@ public class MainActivity extends AppCompatActivity {
 		Log.e(TAG, "onStart, call bindService WCService");
 		Intent intent = new Intent(this, WCService.class);
 		bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
-
 	}
 
 

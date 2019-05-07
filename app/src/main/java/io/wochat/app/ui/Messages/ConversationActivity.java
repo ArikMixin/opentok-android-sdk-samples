@@ -1039,6 +1039,7 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 	}
+
 	@Override
 	protected void onStart() {
 		super.onStart();
