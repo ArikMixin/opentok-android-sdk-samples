@@ -21,6 +21,8 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.logic.NotificationHelper;
+import io.wochat.app.ui.AudioVideoCall.OutGoingCallActivity;
+import io.wochat.app.ui.Consts;
 import io.wochat.app.utils.Utils;
 
 
@@ -87,6 +89,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void onNewIncomingMessage(String msg, String conversationId) {
 		try {
 			Message message = Message.fromJson(msg);
+			Log.d("arik", "!!!!!!!!!!: " + message.getMessageType());
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
 				broadcastTypingSignal(conversationId, message.isTyping());
@@ -379,5 +382,4 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			sendBroadcast(intent);
 		});
 	}
-
 }

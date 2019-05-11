@@ -93,14 +93,19 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
 
         mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
-//        mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
-//        mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
-//        mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
+//      mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
+//      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
+//      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
 
         //Set lang flag , language display name and pic
         mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
-        loc = new Locale(mParticipantLang);
-        mFullLangName = loc.getDisplayLanguage();
+        try {
+            loc = new Locale(mParticipantLang);
+            mFullLangName = loc.getDisplayLanguage();
+        } catch (Exception e) {
+            Log.d(TAG,"OutGoingCallActivity - " + e.getMessage());
+                e.printStackTrace();
+        }
 
         //Play calling sound in first
         mSoundsPlayer = MediaPlayer.create(this, R.raw.phone_calling_tone);

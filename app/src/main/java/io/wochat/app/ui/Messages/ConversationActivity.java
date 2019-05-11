@@ -390,8 +390,8 @@ public class ConversationActivity extends PermissionActivity implements
 	private void startListenToMessagesChanges() {
 		mConversationViewModel.getMessagesLD(mConversationId).observe(this,
 			messages -> {
-				Log.d("testttttt", "!: ");
 				mMessages = messages;
+				Log.d("arik", "startListenToMessagesChanges: ");
 				updateUIWithMessages();
 			});
 
