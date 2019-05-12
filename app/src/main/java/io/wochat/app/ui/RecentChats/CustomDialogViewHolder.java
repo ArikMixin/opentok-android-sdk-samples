@@ -1,7 +1,10 @@
 package io.wochat.app.ui.RecentChats;
 
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
@@ -23,8 +26,8 @@ public class CustomDialogViewHolder
     private final ImageView mCocheIV;
 	private final CircleFlagImageView mAvatarcfiv;
 	private final ImageView mMsgTypeIV;
-
-	//private View onlineIndicator;
+	private final ImageButton mCameraIB, mPhoneIB;
+    //private View onlineIndicator;
 
     public CustomDialogViewHolder(View itemView) {
         super(itemView);
@@ -32,6 +35,8 @@ public class CustomDialogViewHolder
         mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
 		mMsgTypeIV = (ImageView)itemView.findViewById(R.id.dialogMsgTypeIV);
 		mAvatarcfiv = (CircleFlagImageView) itemView.findViewById(R.id.dialogAvatar);
+		mCameraIB = (ImageButton) itemView.findViewById(com.stfalcon.chatkit.R.id.camera_ib);
+		mPhoneIB = (ImageButton) itemView.findViewById(com.stfalcon.chatkit.R.id.phone_ib);
     }
 
     @Override
@@ -105,5 +110,24 @@ public class CustomDialogViewHolder
 //                onlineIndicator.setBackgroundResource(R.drawable.shape_bubble_offline);
 //            }
 //        }
+
+		mCameraIB.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				if(onCameraOrPhoneClickListener != null){
+					onCameraOrPhoneClickListener.onCameraOrPhoneClic(conversation, true);
+				}
+			}
+		});
+
+		mPhoneIB.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				if(onCameraOrPhoneClickListener != null){
+					onCameraOrPhoneClickListener.onCameraOrPhoneClic(conversation, false);
+				}
+			}
+		});
+
     }
 }

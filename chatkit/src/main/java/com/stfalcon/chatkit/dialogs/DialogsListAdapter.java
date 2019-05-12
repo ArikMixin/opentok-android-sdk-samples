@@ -25,7 +25,6 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -536,7 +535,6 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     public static class DialogViewHolder<DIALOG extends IDialog> extends BaseDialogViewHolder<DIALOG> {
         protected DialogListStyle dialogStyle;
         protected ViewGroup container;
-        protected ImageButton mCameraIB,mPhoneIB;
         protected ViewGroup root;
         protected TextView tvName;
         protected TextView tvDate;
@@ -551,8 +549,6 @@ public class DialogsListAdapter<DIALOG extends IDialog>
             super(itemView);
             root = (ViewGroup) itemView.findViewById(R.id.dialogRootLayout);
             container = (ViewGroup) itemView.findViewById(R.id.dialogContainer);
-            mCameraIB = (ImageButton) itemView.findViewById(R.id.camera_ib);
-            mPhoneIB = (ImageButton) itemView.findViewById(R.id.phone_ib);
             tvName = (TextView) itemView.findViewById(R.id.dialogName);
             tvDate = (TextView) itemView.findViewById(R.id.dialogDate);
             tvLastMessage = (TextView) itemView.findViewById(R.id.dialogLastMessage);
@@ -721,6 +717,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                 }
             });
 
+
             container.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
@@ -731,24 +728,6 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                         onDialogViewLongClickListener.onDialogViewLongClick(view, dialog);
                     }
                     return onLongItemClickListener != null || onDialogViewLongClickListener != null;
-                }
-            });
-
-            mCameraIB.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if(onCameraOrPhoneClickListener != null){
-                           onCameraOrPhoneClickListener.onCameraOrPhoneClic(dialog, true);
-                    }
-                }
-            });
-
-            mPhoneIB.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if(onCameraOrPhoneClickListener != null){
-                        onCameraOrPhoneClickListener.onCameraOrPhoneClic(dialog, false);
-                    }
                 }
             });
         }
