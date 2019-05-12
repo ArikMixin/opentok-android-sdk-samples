@@ -36,8 +36,10 @@ import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 public class OutGoingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener {
 
     private static final String TAG = "OutGoingCallActivity";
-    private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV, mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mHangUpCIV;
-    private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,  mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV,mStatusTV;
+    private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
+            mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mHangUpCIV;
+    private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
+            mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV,mStatusTV;
     private ImageView mCameraSwitchIV;
     private FrameLayout mBackNavigationFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL;
@@ -206,7 +208,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         Log.d(TAG, "ServiceConnection: Session and token received ");
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
         //Send Massage to the receiver - let the receiver know that video/audio call is coming
-        Message message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "", "", Message.RTC_CODE_OFFER, mVideoFlag, false);
+        Message message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "",
+                "", Message.RTC_CODE_OFFER, mVideoFlag, false);
         if ((mService != null) && (mService.isXmppConnected())) {
             mService.sendMessage(message);
             Log.d(TAG, "ServiceConnection: massage sent ");
