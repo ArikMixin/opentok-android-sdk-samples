@@ -21,6 +21,7 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.logic.NotificationHelper;
+import io.wochat.app.ui.AudioVideoCall.IncomingCallActivity;
 import io.wochat.app.ui.AudioVideoCall.OutGoingCallActivity;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.utils.Utils;
@@ -96,6 +97,12 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				return;
 			}
 
+			Log.d("testttttttttt", "boom: " + message.getMessageType());
+			//Open IncomingCallActivity Activity
+			if (message.getMessageType().equals(Message.MSG_TYPE_WEBRTC_CALL)){
+					OpenIncomingCallActivity(message);
+			}
+
 			/*****************************************************************************************/
 			// ios patches
 			if (message.getDurationMili() == 0){
@@ -123,8 +130,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		}
 
 	}
-
-
 
 
 	@Override
@@ -381,5 +386,21 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			intent.putExtra(LAST_ONLINE_CONTACT_ID_EXTRA, contactId);
 			sendBroadcast(intent);
 		});
+	}
+
+	private void OpenIncomingCallActivity(Message message) {
+		Intent intent = new Intent(this, IncomingCallActivity.class);
+		//message.isVideo();
+//		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
+//		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
+//		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
+//		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
+//		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+//		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+//		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+//		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+//		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+//		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideoCall);
+		startActivity(intent);
 	}
 }
