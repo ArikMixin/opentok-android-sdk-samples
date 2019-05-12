@@ -3,6 +3,7 @@ package io.wochat.app;
 import android.app.Service;
 import android.arch.lifecycle.Lifecycle;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -97,10 +98,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				return;
 			}
 
-			Log.d("testttttttttt", "boom: " + message.getMessageType());
 			//Open IncomingCallActivity Activity
 			if (message.getMessageType().equals(Message.MSG_TYPE_WEBRTC_CALL)){
-					OpenIncomingCallActivity(message);
+				OpenIncomingCallActivity(message);
 			}
 
 			/*****************************************************************************************/
@@ -389,8 +389,12 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 	private void OpenIncomingCallActivity(Message message) {
+
+		Log.d("testttttttttt", "boom: " + message.getIsVideoRTC());
+
+
 		Intent intent = new Intent(this, IncomingCallActivity.class);
-		//message.isVideo();
+
 //		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 //		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
 //		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
@@ -400,7 +404,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 //		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 //		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 //		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
-//		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideoCall);
-		startActivity(intent);
+		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, message.getIsVideoRTC());
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		getApplication().startActivity(intent);
 	}
 }

@@ -27,6 +27,9 @@
         <activity android:name=".ui.AudioVideoCall.OutGoingCallActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity android:name=".ui.AudioVideoCall.IncomingCallActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".ui.settings.SupportedLanguagesActivity"
             android:screenOrientation="portrait">

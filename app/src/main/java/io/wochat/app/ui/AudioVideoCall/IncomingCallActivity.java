@@ -1,16 +1,13 @@
 package io.wochat.app.ui.AudioVideoCall;
 
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
-import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
@@ -63,10 +60,11 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("testttttttttt", "!!!!!!!!!!!!!!!!!!!!!!!!");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_incoming_call);
 
-         //   initViews();
+           initViews();
           //  createSessionAndToken(); // TokBox
     }
 
@@ -91,6 +89,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
+        Log.d("mIsVideoCall", "mIsVideoCall: " + mIsVideoCall);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
         mParticipantName = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
         mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
@@ -113,9 +112,9 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         }
 
         //Play calling sound in first
-        mSoundsPlayer = MediaPlayer.create(this, R.raw.phone_calling_tone);
-        mSoundsPlayer.setLooping(true);
-        mSoundsPlayer.start();
+//        mSoundsPlayer = MediaPlayer.create(this, R.raw.phone_calling_tone);
+//        mSoundsPlayer.setLooping(true);
+//        mSoundsPlayer.start();
 
         //Init calling animation
         mCallTXTanimation = new AlphaAnimation(0.0f, 1.0f);
@@ -134,44 +133,44 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void videoCall() {
-        mVideoFlag = true;
-        mMainVideoRL.setVisibility(View.VISIBLE);
+//        mVideoFlag = true;
+//        mMainVideoRL.setVisibility(View.VISIBLE);
+//
+//        mParticipantNameVideoTV.setText(mParticipantName);
+//        mParticipantLangVideoTV.setText(mFullLangName);
+//
+//        //Set Participant Flags
+//        mParticipantPicVideoFlagCIV.setImageResource(mFlagDrawable);
+//        mMicFlagCIV.setImageResource(mFlagDrawable);
+//
+//        //Set Participant Pic
+//        setPhotoByUrl(true);
 
-        mParticipantNameVideoTV.setText(mParticipantName);
-        mParticipantLangVideoTV.setText(mFullLangName);
-
-        //Set Participant Flags
-        mParticipantPicVideoFlagCIV.setImageResource(mFlagDrawable);
-        mMicFlagCIV.setImageResource(mFlagDrawable);
-
-        //Set Participant Pic
-        setPhotoByUrl(true);
-
-        mTitleTV.setText(R.string.in_a_video_call);
+        mTitleTV.setText(R.string.in_video_call);
     }
 
     private void audioCall() {
-        mVideoFlag = false;
-        mMainAudioRL.setVisibility(View.VISIBLE);
-
-        mCameraSwitchIV.setVisibility(View.GONE); // No need camera switch button in audio call
-        mParticipantNameAudioTV.setText(mParticipantName);
-        mParticipantLangAudioTV.setText(mFullLangName);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-            mFixedParticipantId = PhoneNumberUtils.formatNumber(mParticipantId);
-        else
-            mFixedParticipantId = PhoneNumberUtils.formatNumber("+" + mParticipantId, mParticipantLangAudioTV.toString());
-
-        //Set Participant Flags
-        mParticipantPicAudioFlagCIV.setImageResource(mFlagDrawable);
-        mMicFlagCIV.setImageResource(mFlagDrawable);
-
-        //Set Participant Pic
-        setPhotoByUrl(false);
-
-        mParticipantNumberTV.setText(mFixedParticipantId);
-        mTitleTV.setText(R.string.in_a_voice_call);
+//        mVideoFlag = false;
+//        mMainAudioRL.setVisibility(View.VISIBLE);
+//
+//        mCameraSwitchIV.setVisibility(View.GONE); // No need camera switch button in audio call
+//        mParticipantNameAudioTV.setText(mParticipantName);
+//        mParticipantLangAudioTV.setText(mFullLangName);
+//
+//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
+//            mFixedParticipantId = PhoneNumberUtils.formatNumber(mParticipantId);
+//        else
+//            mFixedParticipantId = PhoneNumberUtils.formatNumber("+" + mParticipantId, mParticipantLangAudioTV.toString());
+//
+//        //Set Participant Flags
+//        mParticipantPicAudioFlagCIV.setImageResource(mFlagDrawable);
+//        mMicFlagCIV.setImageResource(mFlagDrawable);
+//
+//        //Set Participant Pic
+//        setPhotoByUrl(false);
+//
+//        mParticipantNumberTV.setText(mFixedParticipantId);
+        mTitleTV.setText(R.string.in_audio_call);
     }
 
     @Override
@@ -247,7 +246,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSoundsPlayer.stop();
+      //  mSoundsPlayer.stop();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {

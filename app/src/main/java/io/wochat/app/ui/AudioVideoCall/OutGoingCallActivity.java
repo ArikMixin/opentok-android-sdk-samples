@@ -144,7 +144,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         //Set Participant Pic
         setPhotoByUrl(true);
 
-        mTitleTV.setText(R.string.in_a_video_call);
+        mTitleTV.setText(R.string.out_video_call);
     }
 
     private void audioCall() {
@@ -168,7 +168,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         setPhotoByUrl(false);
 
         mParticipantNumberTV.setText(mFixedParticipantId);
-        mTitleTV.setText(R.string.in_a_voice_call);
+        mTitleTV.setText(R.string.out_audio_call);
     }
 
     @Override
