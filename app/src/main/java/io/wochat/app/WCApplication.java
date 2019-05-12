@@ -26,7 +26,11 @@ public class WCApplication extends Application {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+
 	}
+
+
 
 	public AppExecutors getAppExecutors(){
 		return mAppExecutors;

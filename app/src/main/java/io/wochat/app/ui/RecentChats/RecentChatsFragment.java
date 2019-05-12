@@ -47,7 +47,7 @@ import io.wochat.app.viewmodel.UserViewModel;
 public class RecentChatsFragment extends Fragment  implements
 	DialogsListAdapter.OnDialogClickListener<Conversation>,
 	DialogsListAdapter.OnDialogLongClickListener<Conversation>,
-        DialogsListAdapter.OnCameraOrPhoneClickListener<Conversation>,
+    DialogsListAdapter.OnCameraOrPhoneClickListener<Conversation>,
 	DateFormatter.Formatter{
 
 	private static final int CONTACT_SELECTOR_REQUEST_CODE = 1;

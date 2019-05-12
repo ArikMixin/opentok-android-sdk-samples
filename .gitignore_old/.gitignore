@@ -1,5 +1,5 @@
 # Built application files
-*.apkgit c
+*.apk
 *.ap_
 
 # Files for the ART/Dalvik VM
@@ -40,7 +40,6 @@ captures/
 .idea/assetWizardSettings.xml
 .idea/dictionaries
 .idea/libraries
-.idea/codeStyles/Project.xml
 .idea/caches
 
 # Keystore files

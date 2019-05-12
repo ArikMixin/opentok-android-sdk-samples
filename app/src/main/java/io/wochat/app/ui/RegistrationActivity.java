@@ -168,7 +168,6 @@ public class RegistrationActivity extends PermissionActivity {
 		init();
 	}
 
-
 	private void init() {
 		//Toast.makeText(this, "permission ok", Toast.LENGTH_LONG).show();
 
@@ -265,6 +264,8 @@ public class RegistrationActivity extends PermissionActivity {
 					mProgressDialog = null;
 				}
 				if (stringStateData.isSuccess()){
+					Log.e(TAG, "userFinishRegistrationResult ok : Data: " + stringStateData.getData());
+
 				}
 				else if (stringStateData.isErrorLogic()){
 					showUserErrorMessage(getString(R.string.msg_error_title), getString(R.string.msg_error_general_body));

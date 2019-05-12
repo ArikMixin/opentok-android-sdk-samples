@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -67,6 +66,7 @@ public class Message implements IMessage,
 
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface ACK_STATUS {}
+
 
 
 	public static final String MSG_TYPE_ACKNOWLEDGMENT = "ACKNOWLEGMENT";
@@ -1082,7 +1082,7 @@ public class Message implements IMessage,
 		this.shouldBeDisplayed = shouldBeDisplayed;
 	}
 
-	//	public boolean isShowNonTranslated() {
+//	public boolean isShowNonTranslated() {
 //		return showNonTranslated;
 //	}
 //

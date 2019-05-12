@@ -195,7 +195,7 @@ public class WCRepository {
 		ttsu.init(application, mSharedPreferences.getUserLang());
 
 
-		SpeechToTextUtil speechToTextUtil = SpeechToTextUtil.getInstance();
+		SpeechToTextUtil speechToTextUtil =  SpeechToTextUtil.getInstance();
 		speechToTextUtil.init(application, application.getPackageName(), mSharedPreferences.getUserLang());
 	}
 
@@ -217,7 +217,8 @@ public class WCRepository {
 					}
 					mUserRegistrationResult.setValue(new StateData<String>().success(null));
 					mUserRegistrationState.setValue(new StateData<UserRegistrationState>().success(UserRegistrationState.user_reg_ok));
-				} else if (errorLogic != null)
+				}
+				else if (errorLogic != null)
 					mUserRegistrationResult.setValue(new StateData<String>().errorLogic(errorLogic));
 
 				else if (errorComm != null)
@@ -256,7 +257,8 @@ public class WCRepository {
 					}
 					mUserVerificationResult.setValue(new StateData<String>().success(token));
 					mUserRegistrationState.setValue(new StateData<UserRegistrationState>().success(UserRegistrationState.user_sms_verification_ok));
-				} else if (errorLogic != null)
+				}
+				else if (errorLogic != null)
 					mUserVerificationResult.setValue(new StateData<String>().errorLogic(errorLogic));
 
 				else if (errorComm != null)
@@ -291,9 +293,12 @@ public class WCRepository {
 						e.printStackTrace();
 					}
 					mUploadProfilePicResult.setValue(new StateData<String>().success("upload ok"));
-				} else if (errorLogic != null) {
+				}
+				else if (errorLogic != null) {
 					mUploadProfilePicResult.setValue(new StateData<String>().errorLogic(errorLogic));
-				} else if (errorComm != null) {
+				}
+
+				else if (errorComm != null) {
 					mUploadProfilePicResult.setValue(new StateData<String>().errorComm(errorComm));
 				}
 			}
@@ -350,7 +355,8 @@ public class WCRepository {
 						e.printStackTrace();
 					}
 					mUserConfirmRegistrationResult.setValue(new StateData<String>().success("reg confirmation ok"));
-				} else if (errorLogic != null)
+				}
+				else if (errorLogic != null)
 					mUserConfirmRegistrationResult.setValue(new StateData<String>().errorLogic(errorLogic));
 
 				else if (errorComm != null)
@@ -424,9 +430,12 @@ public class WCRepository {
 							e.printStackTrace();
 						}
 
-					} else if (errorLogic != null) {
+					}
+					else if (errorLogic != null) {
 						mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
-					} else if (errorComm != null) {
+					}
+
+					else if (errorComm != null) {
 						mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
 					}
 				}
@@ -465,9 +474,12 @@ public class WCRepository {
 							e.printStackTrace();
 						}
 
-					} else if (errorLogic != null) {
+					}
+					else if (errorLogic != null) {
 						mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
-					} else if (errorComm != null) {
+					}
+
+					else if (errorComm != null) {
 						mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
 					}
 				}
@@ -507,9 +519,12 @@ public class WCRepository {
 							e.printStackTrace();
 						}
 
-					} else if (errorLogic != null) {
+					}
+					else if (errorLogic != null) {
 						mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
-					} else if (errorComm != null) {
+					}
+
+					else if (errorComm != null) {
 						mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
 					}
 				}
@@ -628,7 +643,8 @@ public class WCRepository {
 					contact = mContactDao.getContact(contactServer.getUserId());
 					contact.setContactServer(contactServer);
 					mContactDao.updateForce(contact);
-				} else {
+				}
+				else {
 					contact = new Contact(contactServer);
 					mContactDao.insert(contact);
 				}
@@ -725,7 +741,8 @@ public class WCRepository {
 		synchronized (mLocalContactSyncObject) {
 			if (mLocalContact != null) {
 				syncContactsWithServer();
-			} else {
+			}
+			else {
 				Log.e(TAG, "initSyncContactsWithServer, Local Contact empty, wait 10 sec...");
 				new Handler().postDelayed(new Runnable() {
 					@Override
@@ -781,7 +798,8 @@ public class WCRepository {
 						e.printStackTrace();
 						mIsDuringRefreshContacts.setValue(false);
 					}
-				} else
+				}
+				else
 					mIsDuringRefreshContacts.setValue(false);
 
 			}
@@ -793,19 +811,19 @@ public class WCRepository {
 		Log.e(TAG, "UpdateContactServerToDB - start");
 		for (ContactServer contactServer : contactServersMap.values()) {
 			mContactDao.update(contactServer.getUserId(),
-					contactServer.getUserName(),
-					contactServer.getStatus(),
-					contactServer.getCountryCode(),
-					contactServer.getLanguage(),
-					contactServer.getProfilePicUrl(),
-					contactServer.getLocation(),
-					contactServer.getGender(),
-					contactServer.getBirthdate(),
-					contactServer.getLastUpdateDate(),
-					contactServer.getDiscoverable(),
-					contactServer.getOs(),
-					contactServer.getLanguageLocale(),
-					contactServer.getAppVersion());
+				contactServer.getUserName(),
+				contactServer.getStatus(),
+				contactServer.getCountryCode(),
+				contactServer.getLanguage(),
+				contactServer.getProfilePicUrl(),
+				contactServer.getLocation(),
+				contactServer.getGender(),
+				contactServer.getBirthdate(),
+				contactServer.getLastUpdateDate(),
+				contactServer.getDiscoverable(),
+				contactServer.getOs(),
+				contactServer.getLanguageLocale(),
+				contactServer.getAppVersion());
 		}
 		Log.e(TAG, "UpdateContactServerToDB - end");
 
@@ -813,7 +831,7 @@ public class WCRepository {
 
 	private void UpdateContactLocalsToDB(Map<String, ContactLocal> localContact) {
 		Log.e(TAG, "UpdateContactLocalsToDB - start");
-		for (ContactLocal contactLocal : localContact.values()) {
+		for(ContactLocal contactLocal : localContact.values()){
 			Contact contact = mContactDao.getContact(contactLocal.getPhoneNumStripped());
 			if (contact != null)
 				mContactDao.updateLocalData(contactLocal.getDisplayName(), contactLocal.getOSId(), contactLocal.getPhoneNumIso(), contactLocal.getPhoneNumStripped());
@@ -858,7 +876,8 @@ public class WCRepository {
 						e.printStackTrace();
 						mIsDuringRefreshContacts.setValue(false);
 					}
-				} else
+				}
+				else
 					mIsDuringRefreshContacts.setValue(false);
 
 			}
@@ -869,7 +888,7 @@ public class WCRepository {
 	private void updateConversationWithContactData(Map<String, ContactServer> contactServersMap) {
 //		mAppExecutors.diskIO().execute(() -> {
 		Log.e(TAG, "updateConversationWithContactData - start");
-		for (ContactServer contactServer : contactServersMap.values()) {
+		for(ContactServer contactServer : contactServersMap.values()){
 			mConversationDao.updateParticipantData(contactServer.getUserId(), contactServer.getProfilePicUrl(), contactServer.getLanguage());
 		}
 		Log.e(TAG, "updateConversationWithContactData - end");
@@ -980,14 +999,16 @@ public class WCRepository {
 					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
-				} else { // no contact, no conversation
+				}
+				else { // no contact, no conversation
 					contact = new Contact(participantId);
 					mContactDao.insert(contact);
 					getContactFromServer(participantId);
 					Conversation conversation = new Conversation(participantId, selfId);
 					mConversationDao.insert(conversation);
 				}
-			} else {
+			}
+			else {
 				contact = mContactDao.getContact(participantId);
 			}
 
@@ -1068,7 +1089,8 @@ public class WCRepository {
 			String conversationId = message.getConversationId();
 			if (mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
 				res = insertMessageAndUpdateConversation(message, needTranslation1, needTranslationMagic);
-			} else {
+			}
+			else {
 				String participantId = message.getSenderId();
 				String selfId = mSharedPreferences.getUserId();
 				if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
@@ -1079,7 +1101,8 @@ public class WCRepository {
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
 					res = insertMessageAndUpdateConversation(message, needTranslation1, needTranslationMagic);
-				} else { // no contact, no conversation
+				}
+				else { // no contact, no conversation
 					Contact contact = new Contact(participantId);
 					mContactDao.insert(contact);
 					getContactFromServer(participantId);
@@ -1100,7 +1123,7 @@ public class WCRepository {
 		}
 	}
 
-	private interface TranslationResultListener {
+	private interface TranslationResultListener{
 		void onTranslationResult(Message message);
 	}
 
@@ -1114,7 +1137,8 @@ public class WCRepository {
 			if (isIncoming) {
 				fromLanguage = message.getMessageLanguage();
 				toLanguage = selfLang;
-			} else {
+			}
+			else {
 				fromLanguage = message.getMessageLanguage();
 				toLanguage = message.getTranslatedLanguage();
 			}
@@ -1124,80 +1148,88 @@ public class WCRepository {
 
 			if (needTranslation1 && needTranslationMagic) {  // translate to 2 language, regular and magic
 				mWochatApi.translate2(message.getMessageId(), fromLanguage, toLanguage, message.getMessageText(),
-						message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if ((isSuccess) && (response != null)) {
-								Log.e(TAG, "translate res: " + response.toString());
-								try {
-									String translatedText1 = response.getString("message");
-									message.setTranslatedText(translatedText1);
-									String translatedText2 = response.getString("message2");
-									message.setForceTranslatedText(translatedText2);
+					message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText1 = response.getString("message");
+								message.setTranslatedText(translatedText1);
+								String translatedText2 = response.getString("message2");
+								message.setForceTranslatedText(translatedText2);
 
-									message.displayMessageAfterTranslation();
-									Log.e("GIL", "translate result: " + message.toJson());
-									listener.onTranslationResult(message);
-
-								} catch (JSONException e) {
-									e.printStackTrace();
-									Log.e("GIL", "translate result error: " + message.toJson());
-									listener.onTranslationResult(message);
-								}
-
-							} else {
-								Log.e(TAG, "translate res: error");
+								message.displayMessageAfterTranslation();
 								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
+
+							} catch (JSONException e) {
+								e.printStackTrace();
+								Log.e("GIL", "translate result error: " + message.toJson());
+								listener.onTranslationResult(message);
 							}
-						});
-			} else if (needTranslation1) {  // regular translation only
+
+						}
+						else {
+							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
+							listener.onTranslationResult(message);
+						}
+					});
+			}
+
+			else if (needTranslation1) {  // regular translation only
 				mWochatApi.translate(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if ((isSuccess) && (response != null)) {
-								Log.e(TAG, "translate res: " + response.toString());
-								try {
-									String translatedText = response.getString("message");
-									message.setTranslatedText(translatedText);
-									message.displayMessageAfterTranslation();
-									Log.e("GIL", "translate result: " + message.toJson());
-									listener.onTranslationResult(message);
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								message.setTranslatedText(translatedText);
+								message.displayMessageAfterTranslation();
+								Log.e("GIL", "translate result: " + message.toJson());
+								listener.onTranslationResult(message);
 
-								} catch (JSONException e) {
-									e.printStackTrace();
-									Log.e("GIL", "translate result: " + message.toJson());
-									listener.onTranslationResult(message);
-								}
-
-							} else {
-								Log.e(TAG, "translate res: error");
+							} catch (JSONException e) {
+								e.printStackTrace();
 								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 							}
-						});
-			} else {  // for magic only
+
+						}
+						else {
+							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
+							listener.onTranslationResult(message);
+						}
+					});
+			}
+
+
+			else {  // for magic only
 				mWochatApi.translate(message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if ((isSuccess) && (response != null)) {
-								Log.e(TAG, "translate res: " + response.toString());
-								try {
-									String translatedText = response.getString("message");
-									message.setForceTranslatedText(translatedText);
-									message.displayMessageAfterTranslation();
-									Log.e("GIL", "translate result: " + message.toJson());
-									listener.onTranslationResult(message);
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								message.setForceTranslatedText(translatedText);
+								message.displayMessageAfterTranslation();
+								Log.e("GIL", "translate result: " + message.toJson());
+								listener.onTranslationResult(message);
 
-								} catch (JSONException e) {
-									e.printStackTrace();
-									Log.e("GIL", "translate result: " + message.toJson());
-									listener.onTranslationResult(message);
-								}
-
-							} else {
-								Log.e(TAG, "translate res: error");
+							} catch (JSONException e) {
+								e.printStackTrace();
 								Log.e("GIL", "translate result: " + message.toJson());
 								listener.onTranslationResult(message);
 							}
-						});
+
+						}
+						else {
+							Log.e(TAG, "translate res: error");
+							Log.e("GIL", "translate result: " + message.toJson());
+							listener.onTranslationResult(message);
+						}
+					});
 			}
 
 
@@ -1215,7 +1247,8 @@ public class WCRepository {
 			if (isIncoming) {
 				fromLanguage = message.getMessageLanguage();
 				toLanguage = selfLang;
-			} else {
+			}
+			else {
 				fromLanguage = message.getMessageLanguage();
 				toLanguage = message.getTranslatedLanguage();
 			}
@@ -1225,88 +1258,96 @@ public class WCRepository {
 
 			if (needTranslation1 && needTranslationMagic) {  // translate to 2 language, regular and magic
 				mWochatApi.translate2(message.getMessageId(), fromLanguage, toLanguage, message.getMessageText(),
-						message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if ((isSuccess) && (response != null)) {
-								Log.e(TAG, "translate res: " + response.toString());
-								try {
-									String translatedText1 = response.getString("message");
-									message.setTranslatedText(translatedText1);
-									String translatedText2 = response.getString("message2");
-									message.setForceTranslatedText(translatedText2);
+					message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText1 = response.getString("message");
+								message.setTranslatedText(translatedText1);
+								String translatedText2 = response.getString("message2");
+								message.setForceTranslatedText(translatedText2);
 
-									if (isIncoming)
-										message.setTranslatedLanguage(selfLang);
+								if (isIncoming)
+									message.setTranslatedLanguage(selfLang);
 
-									message.displayMessageAfterTranslation();
+								message.displayMessageAfterTranslation();
 
-									if (isIncoming)
-										updateMessageAndConversationForIncoming(message);
-									else
-										updateMessageTextOnly(message);
+								if (isIncoming)
+									updateMessageAndConversationForIncoming(message);
+								else
+									updateMessageTextOnly(message);
 
 
-								} catch (JSONException e) {
-									e.printStackTrace();
-								}
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
 
-							} else
-								Log.e(TAG, "translate res: error");
-						});
-			} else if (needTranslation1) {  // regular translation only
+						}
+						else
+							Log.e(TAG, "translate res: error");
+					});
+			}
+
+			else if (needTranslation1) {  // regular translation only
 				mWochatApi.translate(message.getMessageId(), fromLanguage, toLanguage, message.getText(),
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if ((isSuccess) && (response != null)) {
-								Log.e(TAG, "translate res: " + response.toString());
-								try {
-									String translatedText = response.getString("message");
-									message.setTranslatedText(translatedText);
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								message.setTranslatedText(translatedText);
 
-									if (isIncoming)
-										message.setTranslatedLanguage(selfLang);
+								if (isIncoming)
+									message.setTranslatedLanguage(selfLang);
 
-									message.displayMessageAfterTranslation();
+								message.displayMessageAfterTranslation();
 
-									if (isIncoming)
-										updateMessageAndConversationForIncoming(message);
-									else
-										updateMessageTextOnly(message);
+								if (isIncoming)
+									updateMessageAndConversationForIncoming(message);
+								else
+									updateMessageTextOnly(message);
 
 
-								} catch (JSONException e) {
-									e.printStackTrace();
-								}
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
 
-							} else
-								Log.e(TAG, "translate res: error");
-						});
-			} else {  // for magic only
+						}
+						else
+							Log.e(TAG, "translate res: error");
+					});
+			}
+
+
+			else {  // for magic only
 				mWochatApi.translate(message.getMessageId(), fromLanguage, message.getForceTranslatedLanguage(), message.getText(),
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if ((isSuccess) && (response != null)) {
-								Log.e(TAG, "translate res: " + response.toString());
-								try {
-									String translatedText = response.getString("message");
-									message.setForceTranslatedText(translatedText);
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								message.setForceTranslatedText(translatedText);
 
-									if (isIncoming)
-										message.setTranslatedLanguage(selfLang);
+								if (isIncoming)
+									message.setTranslatedLanguage(selfLang);
 
-									message.displayMessageAfterTranslation();
+								message.displayMessageAfterTranslation();
 
-									if (isIncoming)
-										updateMessageAndConversationForIncoming(message);
-									else
-										updateMessageTextOnly(message);
+								if (isIncoming)
+									updateMessageAndConversationForIncoming(message);
+								else
+									updateMessageTextOnly(message);
 
 
-								} catch (JSONException e) {
-									e.printStackTrace();
-								}
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
 
-							} else
-								Log.e(TAG, "translate res: error");
-						});
+						}
+						else
+							Log.e(TAG, "translate res: error");
+					});
 			}
 
 
@@ -1324,7 +1365,8 @@ public class WCRepository {
 			String conversationId = message.getConversationId();
 			if (mConversationDao.hasConversation(conversationId)) { // has conversation (and contact)
 				res = insertMessageAndUpdateConversation(message, false, false);
-			} else {
+			}
+			else {
 				String participantId = message.getSenderId();
 				String selfId = mSharedPreferences.getUserId();
 				if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
@@ -1335,7 +1377,8 @@ public class WCRepository {
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
 					mConversationDao.insert(conversation);
 					res = insertMessageAndUpdateConversation(message, false, false);
-				} else { // no contact, no conversation
+				}
+				else { // no contact, no conversation
 					Contact contact = new Contact(participantId);
 					mContactDao.insert(contact);
 					getContactFromServer(participantId);
@@ -1416,15 +1459,15 @@ public class WCRepository {
 			mMessageDao.insert(message);
 			int unreadMessagesCount = mMessageDao.getUnreadMessagesCountConversation(message.getConversationId());
 			mConversationDao.updateIncoming(
-					message.getConversationId(),
-					message.getMessageId(),
-					message.getTimestampMilli(),
-					messageText,
-					message.getSenderId(),
-					message.getAckStatus(),
-					message.getMessageType(),
-					message.getDurationMili(),
-					unreadMessagesCount);
+				message.getConversationId(),
+				message.getMessageId(),
+				message.getTimestampMilli(),
+				messageText,
+				message.getSenderId(),
+				message.getAckStatus(),
+				message.getMessageType(),
+				message.getDurationMili(),
+				unreadMessagesCount);
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1473,18 +1516,18 @@ public class WCRepository {
 		});
 	}
 
-	private void insertMessageAndConversation(Message message) {
+	private void insertMessageAndConversation(Message message){
 		Log.e("GIL", "insertMessageAndConversation: " + message.toJson());
 		mMessageDao.insert(message);
 		mConversationDao.updateOutgoing(
-				message.getConversationId(),
-				message.getMessageId(),
-				message.getTimestampMilli(),
-				message.getMessageText(),
-				message.getSenderId(),
-				message.getAckStatus(),
-				message.getMessageType(),
-				message.getDurationMili());
+			message.getConversationId(),
+			message.getMessageId(),
+			message.getTimestampMilli(),
+			message.getMessageText(),
+			message.getSenderId(),
+			message.getAckStatus(),
+			message.getMessageType(),
+			message.getDurationMili());
 	}
 
 	public void addNewOutgoingMessage(Message message) {
@@ -1518,11 +1561,13 @@ public class WCRepository {
 							insertMessageAndConversation(messageTranslated);
 						});
 					});
-				} else {
+				}
+				else {
 					insertMessageAndConversation(message);
 				}
 
-			} else {
+			}
+			else {
 				insertMessageAndConversation(message);
 			}
 
@@ -1535,19 +1580,22 @@ public class WCRepository {
 				if (needTranslation1 || needTranslationMagic)
 					translate(message, false);
 
-			} else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
+			}
+			else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
 				if (message.getMediaLocalUri() != null) {
 					byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));
 					uploadImage(message, bytes);
 				}
-			} else if (message.getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
+			}
+			else if (message.getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
 
 				if (message.getMediaLocalUri() != null) {
 					File mediaFile = new File(new URI(message.getMediaLocalUri()));
 					byte[] mediaFileBytes = Files.toByteArray(mediaFile);
 					uploadVideo(message, mediaFileBytes);
 				}
-			} else if (message.getMessageType().equals(Message.MSG_TYPE_AUDIO)) {
+			}
+			else if (message.getMessageType().equals(Message.MSG_TYPE_AUDIO)) {
 				if (message.getMediaLocalUri() != null) {
 					File mediaFile = new File(new URI(message.getMediaLocalUri()));
 					byte[] mediaFileBytes = Files.toByteArray(mediaFile);
@@ -1573,25 +1621,26 @@ public class WCRepository {
 				boolean isOutgoing = lastMessage.getSenderId().equals(mSharedPreferences.getUserId());
 				if (isOutgoing) {
 					mConversationDao.updateOutgoing(
-							conversationId,
-							lastMessage.getMessageId(),
-							lastMessage.getTimestampMilli(),
-							lastMessage.getMessageText(),
-							lastMessage.getSenderId(),
-							lastMessage.getAckStatus(),
-							lastMessage.getMessageType(),
-							lastMessage.getDurationMili());
-				} else {
+						conversationId,
+						lastMessage.getMessageId(),
+						lastMessage.getTimestampMilli(),
+						lastMessage.getMessageText(),
+						lastMessage.getSenderId(),
+						lastMessage.getAckStatus(),
+						lastMessage.getMessageType(),
+						lastMessage.getDurationMili());
+				}
+				else {
 					mConversationDao.updateIncoming(
-							conversationId,
-							lastMessage.getMessageId(),
-							lastMessage.getTimestampMilli(),
-							lastMessage.getText(),
-							lastMessage.getSenderId(),
-							lastMessage.getAckStatus(),
-							lastMessage.getMessageType(),
-							lastMessage.getDurationMili(),
-							0);
+						conversationId,
+						lastMessage.getMessageId(),
+						lastMessage.getTimestampMilli(),
+						lastMessage.getText(),
+						lastMessage.getSenderId(),
+						lastMessage.getAckStatus(),
+						lastMessage.getMessageType(),
+						lastMessage.getDurationMili(),
+						0);
 				}
 			}
 		});
@@ -1632,63 +1681,69 @@ public class WCRepository {
 
 	public void updateUserName(String name) {
 		mAppExecutors.networkIO().execute(() ->
-				mWochatApi.updateUserName(name,
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if (isSuccess) {
-								mAppExecutors.diskIO().execute(() ->
-										mUserDao.updateUserName(name));
-							} else if (errorLogic != null) {
-								mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
-							} else if (errorComm != null) {
-								mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
-							}
-						}));
+			mWochatApi.updateUserName(name,
+				(isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() ->
+						mUserDao.updateUserName(name));
+				}
+				else if (errorLogic != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
+				}
+				else if (errorComm != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
+				}
+			}));
 	}
 
 	public void updateUserStatus(String status) {
 		mAppExecutors.networkIO().execute(() ->
-				mWochatApi.updateUserStatus(status,
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if (isSuccess) {
-								mAppExecutors.diskIO().execute(() ->
-										mUserDao.updateUserStatus(status));
-							} else if (errorLogic != null) {
-								mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
-							} else if (errorComm != null) {
-								mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
-							}
-						}));
+			mWochatApi.updateUserStatus(status,
+			(isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() ->
+						mUserDao.updateUserStatus(status));
+				}
+				else if (errorLogic != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
+				}
+				else if (errorComm != null) {
+					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
+				}
+			}));
 	}
 
 	public void uploadUpdatedProfilePic(byte[] profilePicByte) {
 		mSharedPreferences.saveUserProfileImages(profilePicByte);
 		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.dataUploadFile(profilePicByte, mWochatApi.UPLOAD_MIME_TYPE_IAMGE,
-					(isSuccess, errorLogic, errorComm, response) -> {
-						if (isSuccess) {
-							try {
-								String imageUrl = response.getString("url");
-								mWochatApi.updateUserProfilePicUrl(imageUrl,
-										(isSuccess1, errorLogic1, errorComm1, response1) -> {
-											if (isSuccess1) {
-												mAppExecutors.diskIO().execute(() ->
-														mUserDao.updateUserProfilePic(imageUrl));
-											} else if (errorLogic1 != null) {
-												mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic1));
-											} else if (errorComm1 != null) {
-												mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm1));
-											}
-										});
-							} catch (JSONException e) {
-								e.printStackTrace();
-							}
+				(isSuccess, errorLogic, errorComm, response) -> {
+					if (isSuccess) {
+						try {
+							String imageUrl = response.getString("url");
+			mWochatApi.updateUserProfilePicUrl(imageUrl,
+				(isSuccess1, errorLogic1, errorComm1, response1) -> {
+					if (isSuccess1) {
+						mAppExecutors.diskIO().execute(() ->
+								mUserDao.updateUserProfilePic(imageUrl));
+					}
+					else if (errorLogic1 != null) {
+						mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic1));
+					}
+					else if (errorComm1 != null) {
+						mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm1));
+					}
+				});
+						} catch (JSONException e) {
+							e.printStackTrace();
 						}
-					});
+					}
+				});
 		});
 	}
 
 	public MutableLiveData<List<SupportedLanguage>> getSupportedLanguages() {
-		return mSupportLanguages;
+    	return  mSupportLanguages;
 	}
 
 	public void loadLanguages(String deviceLanguageCode) {
@@ -1696,25 +1751,25 @@ public class WCRepository {
 			@Override
 			public void run() {
 				mWochatApi.getSupportedLanguages(deviceLanguageCode,
-						(isSuccess, errorLogic, errorComm, response) -> {
-							if (isSuccess) {
-								try {
-									JSONArray jsonSupportLanguagesArray = response.getJSONArray("languages");
-									Gson gson = new Gson();
-									SupportedLanguage[] languagesFromJson = gson.fromJson(jsonSupportLanguagesArray.toString(), SupportedLanguage[].class);
-									List<SupportedLanguage> supportedLanguageList = Arrays.asList(languagesFromJson);
-									mSupportLanguages.setValue(supportedLanguageList);
-								} catch (JSONException e) {
-									e.printStackTrace();
-								}
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if (isSuccess) {
+							try {
+								JSONArray jsonSupportLanguagesArray = response.getJSONArray("languages");
+								Gson gson = new Gson();
+								SupportedLanguage[] languagesFromJson = gson.fromJson(jsonSupportLanguagesArray.toString(), SupportedLanguage[].class);
+								List<SupportedLanguage>supportedLanguageList = Arrays.asList(languagesFromJson);
+								mSupportLanguages.setValue(supportedLanguageList);
+							} catch (JSONException e) {
+								e.printStackTrace();
 							}
-						});
+						}
+					});
 			}
 		});
 	}
 
 	public void updateUserLanguage(String languageCode) {
-		mAppExecutors.networkIO().execute(() -> {
+    	mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.updateUserLanguage(languageCode, (isSuccess, errorLogic, errorComm, response) -> {
 				if (isSuccess) {
 					mAppExecutors.diskIO().execute(() -> {
@@ -1722,9 +1777,11 @@ public class WCRepository {
 						mSharedPreferences.saveUserLanguage(languageCode);
 					});
 
-				} else if (errorLogic != null) {
+				}
+				else if (errorLogic != null) {
 					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
-				} else if (errorComm != null) {
+				}
+				else if (errorComm != null) {
 					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
 				}
 			});
@@ -1733,22 +1790,25 @@ public class WCRepository {
 
 	public void updateUserCountryCode(String countryCode) {
 		mAppExecutors.networkIO().execute(() -> {
-			mWochatApi.updateUserCountryCode(countryCode, (isSuccess, errorLogic, errorComm, response) -> {
-				if (isSuccess) {
-					mAppExecutors.diskIO().execute(() ->
-							mUserDao.updateUserCountryCode(countryCode));
-				} else if (errorLogic != null) {
-					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
-				} else if (errorComm != null) {
-					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
-				}
-			});
+			   mWochatApi.updateUserCountryCode(countryCode, (isSuccess, errorLogic, errorComm, response) -> {
+				       if (isSuccess) {
+						   mAppExecutors.diskIO().execute(() ->
+							   mUserDao.updateUserCountryCode(countryCode));
+					   }
+					   else if (errorLogic != null) {
+						   mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
+					   }
+					   else if (errorComm != null) {
+						   mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
+					   }
+				   });
 		});
 	}
 
 	public MutableLiveData<StateData<Void>> getUserProfileEditResult() {
-		return mUserProfileEditResult;
+    	return mUserProfileEditResult;
 	}
+
 
 
 	public interface NotificationDataListener {
@@ -1764,7 +1824,7 @@ public class WCRepository {
 	}
 
 
-	public void cancelNotification(String messageId) {
+	public void cancelNotification(String messageId){
 		mAppExecutors.diskIO().execute(() -> {
 			mNotifDao.updateIsCanceled(messageId);
 		});
@@ -1772,14 +1832,14 @@ public class WCRepository {
 
 
 	public void getNotificationData(Message message, ContactServer contactServer, NotificationDataListener listener) {
-		if ((message == null) || (contactServer == null)) {
+    	if ((message == null)||(contactServer == null)) {
 			Log.e(TAG, "getNotificationData: null - exit ");
-			return;
+    		return;
 		}
-		mAppExecutors.diskIO().execute(() -> {
+    	mAppExecutors.diskIO().execute(() -> {
 
 			Notif notif = mNotifDao.getNotification(message.getId());
-			if (notif != null) {
+			if (notif != null){
 				listener.onNotificationDataResult(null);
 				return;
 			}
@@ -1788,10 +1848,11 @@ public class WCRepository {
 			NotificationData data = new NotificationData();
 			Contact contact;
 
-			if (!mContactDao.hasContact(contactServer.getUserId())) {
+			if (!mContactDao.hasContact(contactServer.getUserId())){
 				contact = new Contact(contactServer);
 				mContactDao.insert(contact);
-			} else {
+			}
+			else {
 				contact = mContactDao.getContact(contactServer.getUserId());
 			}
 			data.contact = contact;
@@ -1800,27 +1861,28 @@ public class WCRepository {
 
 			Conversation conversation;
 
-			if (!mConversationDao.hasConversation(message.getConversationId())) {
+			if(!mConversationDao.hasConversation(message.getConversationId())){
 				conversation = new Conversation(contact.getId(), mSharedPreferences.getUserId());
 				conversation.setParticipantName(contact.getName());
 				conversation.setParticipantLanguage(contact.getLanguage());
 				conversation.setParticipantProfilePicUrl(contact.getAvatar());
 				try {
-					Log.e(TAG, "ERROR getNotificationData: message.getConversationId: " + message.getConversationId());
-					Log.e(TAG, "ERROR getNotificationData: insert conversation: " + conversation.toString());
+					Log.e(TAG, "ERROR getNotificationData: message.getConversationId: " +  message.getConversationId());
+					Log.e(TAG, "ERROR getNotificationData: insert conversation: " +  conversation.toString());
 					mConversationDao.insert(conversation);
 
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-			} else {
+			}
+			else {
 				conversation = mConversationDao.getConversation(message.getConversationId());
 			}
 
 			data.conversation = conversation;
 
-			data.title = contact.getDisplayName();
-			if (data.title == null)
+    		data.title =contact.getDisplayName();
+    		if (data.title == null)
 				data.title = contactServer.getUserName();
 			if (data.title == null)
 				data.title = "";
@@ -1839,9 +1901,9 @@ public class WCRepository {
 			mNotifDao.insert(newNotif);
 
 
-			switch (message.getMessageType()) {
+			switch (message.getMessageType()){
 				case Message.MSG_TYPE_TEXT:
-					if ((message.getTranslatedText() != null) && (!message.getTranslatedText().isEmpty()))
+					if ((message.getTranslatedText() != null)&&(!message.getTranslatedText().isEmpty()))
 						data.body = message.getTranslatedText();
 					else
 						data.body = message.getMessageText();
@@ -1866,7 +1928,7 @@ public class WCRepository {
 
 			mAppExecutors.mainThread().execute(() -> {
 				Log.e(TAG, "getNotificationData, download: " + contactServer.getProfilePicUrl());
-				if (contactServer.getProfilePicUrl() == null) {
+				if (contactServer.getProfilePicUrl() == null){
 					Log.e(TAG, "getNotificationData, no profile image");
 					data.largeIcon = null;
 					listener.onNotificationDataResult(data);
@@ -1903,11 +1965,12 @@ public class WCRepository {
 			});
 
 
+
 		});
 	}
 
 
-	public void clearConversation(String conversationId) {
+	public void clearConversation(String conversationId){
 		mAppExecutors.diskIO().execute(() -> {
 			mConversationDao.removeLastMessage(conversationId);
 			mMessageDao.deleteMessagesFromConversation(conversationId);
@@ -1919,14 +1982,14 @@ public class WCRepository {
 	}
 
 
-	public void updateMagicButtonLangCode(String conversationId, String langCode) {
+	public void updateMagicButtonLangCode(String conversationId, String langCode){
 		mAppExecutors.diskIO().execute(() -> {
 			mConversationDao.updateMagicButtonLangCode(conversationId, langCode);
 		});
 	}
 
 
-	public LiveData<String> getMagicButtonLangCode(String conversationId) {
+	public LiveData<String> getMagicButtonLangCode(String conversationId){
 		return mConversationDao.getMagicButtonLangCode(conversationId);
 	}
 
@@ -1935,7 +1998,7 @@ public class WCRepository {
 		byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, photoFileUri);
 		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
-				if (isSuccess) {
+				if (isSuccess){
 					try {
 						String imageUrl = response.getString("url");
 						String imageThumbUrl = response.getString("thumb_url");

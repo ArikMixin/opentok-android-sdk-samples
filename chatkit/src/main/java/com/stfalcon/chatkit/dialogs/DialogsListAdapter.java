@@ -728,7 +728,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                         onLongItemClickListener.onDialogLongClick(dialog);
                     }
                     if (onDialogViewLongClickListener != null) {
-                            onDialogViewLongClickListener.onDialogViewLongClick(view, dialog);
+                        onDialogViewLongClickListener.onDialogViewLongClick(view, dialog);
                     }
                     return onLongItemClickListener != null || onDialogViewLongClickListener != null;
                 }
