@@ -3,16 +3,20 @@ package io.wochat.app.ui.Group;
 import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.SubtitleCollapsingToolbarLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
+
 
 import com.squareup.picasso.Picasso;
 
@@ -20,9 +24,12 @@ import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.R;
+import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
 import io.wochat.app.viewmodel.GroupViewModel;
@@ -31,7 +38,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 
 	private ContactViewModel mContactViewModel;
 	private ImageView mContactIV;
-	private CollapsingToolbarLayout mToolbarLayout;
+	private SubtitleCollapsingToolbarLayout mToolbarLayout;
 	private LinearLayout mDeleteConversationLL;
 	private LinearLayout mMediaLL;
 	private ConversationViewModel mConversationViewModel;
@@ -41,6 +48,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private String mCreatedBy;
 	private Date mCreatedDate;
 	private List<GroupMemberContact> mGroupMemberContacts;
+	private LinearLayout mGroupMembersLL;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -50,11 +58,11 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-		mToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
+		mToolbarLayout = (SubtitleCollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
 
 		mMediaLL = (LinearLayout)findViewById(R.id.media_ll);
 
-
+		mGroupMembersLL = (LinearLayout)findViewById(R.id.group_members_ll);
 
 
 
@@ -88,11 +96,21 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private void init() {
 		Picasso.get().load(mConversation.getGroupImageUrl()).into(mContactIV);
 
-		mToolbarLayout.setTitle(mConversation.getGroupName());
 
 		mCreatedBy = mConversation.getGroupCreatedBy();
 		mCreatedDate = mConversation.getGroupCreatedDate();
+		for(GroupMemberContact memberContact : mGroupMemberContacts) {
+			if(memberContact.getContact().getContactId().equals(mCreatedBy)){
+				mToolbarLayout.setSubtitle("Created By " + memberContact.getContact().getDisplayName());
+				break;
+			}
+		}
+		mToolbarLayout.setTitle(mConversation.getGroupName());
 
+
+
+
+		createViewMembers();
 	}
 
 
@@ -167,5 +185,28 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private void clearConversation() {
 		mConversationViewModel.clearConversation(mConversationId);
 		Toast.makeText(this, "Messages Deleted", Toast.LENGTH_SHORT).show();
+	}
+
+
+	private void createViewMembers(){
+		mGroupMembersLL.removeAllViews();
+		for(GroupMemberContact memberContact : mGroupMemberContacts) {
+			View view = LayoutInflater.from(this).inflate(R.layout.group_member_item, null);
+			populateMember(view, memberContact);
+			mGroupMembersLL.addView(view);
+		}
+	}
+
+	private void populateMember(View view, GroupMemberContact memberContact) {
+		TextView adminTV = view.findViewById(R.id.member_admin_tv);
+		CircleFlagImageView avatarCfiv = view.findViewById(R.id.member_cfiv);
+		TextView nameTV = view.findViewById(R.id.member_name_tv);
+
+		nameTV.setText(memberContact.getContact().getDisplayName());
+		if(memberContact.getGroupMember().isAdmin())
+			adminTV.setVisibility(View.VISIBLE);
+		else
+			adminTV.setVisibility(View.INVISIBLE);
+		avatarCfiv.setContact(memberContact.getContact());
 	}
 }
