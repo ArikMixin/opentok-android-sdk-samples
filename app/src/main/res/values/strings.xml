@@ -92,5 +92,8 @@
     <string name="out_video_call">Outgoing WoChat Video Call with</string>
     <string name="out_audio_call">Outgoing WoChat Audio Call with</string>
     <string name="calling">Calling....</string>
+    <string name="decline">Decline</string>
+    <string name="accept">Accept</string>
+
 
 </resources>
