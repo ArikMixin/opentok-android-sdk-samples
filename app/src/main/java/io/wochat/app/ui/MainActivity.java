@@ -523,7 +523,7 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 		this.doubleBackPressedFlag = true;
-		Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, getResources().getString(R.string.please_click_back), Toast.LENGTH_SHORT).show();
 
 		new Handler().postDelayed(new Runnable() {
 

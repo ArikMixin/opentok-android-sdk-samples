@@ -60,8 +60,8 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     private OnDialogViewClickListener<DIALOG> onDialogViewClickListener;
     private OnDialogLongClickListener<DIALOG> onLongItemClickListener;
     private OnDialogViewLongClickListener<DIALOG> onDialogViewLongClickListener;
+    private OnButtonClickListener<DIALOG> onButtonClickListener;
     private DialogListStyle dialogStyle;
-    private OnCameraOrPhoneClickListener<DIALOG> mOnCameraOrPhoneClickListener;
     private DateFormatter.Formatter datesFormatter;
 
     /**
@@ -104,7 +104,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
         holder.setOnDialogClickListener(onDialogClickListener);
         holder.setOnDialogViewClickListener(onDialogViewClickListener);
         holder.setOnLongItemClickListener(onLongItemClickListener);
-        holder.setOnCameraOrPhoneClickListener(mOnCameraOrPhoneClickListener);
+        holder.setOnButtonClickListener(onButtonClickListener);
         holder.setOnDialogViewLongClickListener(onDialogViewLongClickListener);
         holder.setDatesFormatter(datesFormatter);
         holder.onBind(items.get(position));
@@ -434,12 +434,12 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     }
 
     /**
-     * Register a callback to be invoked when item is clicked.
+     * Register a callback to be invoked when item view is long clicked.
      *
-     * @param onCameraOrPhoneClickListener on click item callback
+     * @param onButtonClickListener on long click item callback
      */
-    public void setOnCameraOrPhoneClickListener(OnCameraOrPhoneClickListener<DIALOG> onCameraOrPhoneClickListener) {
-        this.mOnCameraOrPhoneClickListener = onCameraOrPhoneClickListener;
+    public void setOnButtonClickListener(OnButtonClickListener<DIALOG>  onButtonClickListener) {
+        this.onButtonClickListener = onButtonClickListener;
     }
 
     /**
@@ -480,10 +480,9 @@ public class DialogsListAdapter<DIALOG extends IDialog>
         void onDialogViewLongClick(View view, DIALOG dialog);
     }
 
-    public interface OnCameraOrPhoneClickListener<DIALOG extends IDialog> {
-        void onCameraOrPhoneClic(DIALOG dialog, boolean b);
+    public interface OnButtonClickListener<DIALOG extends IDialog> {
+        void onButtonClick(DIALOG dialog, int i);
     }
-
 
     /*
     * HOLDERS
@@ -496,7 +495,8 @@ public class DialogsListAdapter<DIALOG extends IDialog>
         protected OnDialogLongClickListener<DIALOG> onLongItemClickListener;
         protected OnDialogViewClickListener<DIALOG> onDialogViewClickListener;
         protected OnDialogViewLongClickListener<DIALOG> onDialogViewLongClickListener;
-        protected OnCameraOrPhoneClickListener<DIALOG> onCameraOrPhoneClickListener;
+        protected OnButtonClickListener<DIALOG> onButtonClickListener;
+
         protected DateFormatter.Formatter datesFormatter;
 
         public BaseDialogViewHolder(View itemView) {
@@ -523,8 +523,8 @@ public class DialogsListAdapter<DIALOG extends IDialog>
             this.onDialogViewLongClickListener = onDialogViewLongClickListener;
         }
 
-        protected void setOnCameraOrPhoneClickListener(OnCameraOrPhoneClickListener<DIALOG> onCameraOrPhoneClickListener) {
-            this.onCameraOrPhoneClickListener = onCameraOrPhoneClickListener;
+        protected void setOnButtonClickListener(OnButtonClickListener<DIALOG> onButtonClickListener) {
+            this.onButtonClickListener = onButtonClickListener;
         }
 
         public void setDatesFormatter(DateFormatter.Formatter dateHeadersFormatter) {

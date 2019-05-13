@@ -47,8 +47,8 @@ import io.wochat.app.viewmodel.UserViewModel;
 public class RecentChatsFragment extends Fragment  implements
 	DialogsListAdapter.OnDialogClickListener<Conversation>,
 	DialogsListAdapter.OnDialogLongClickListener<Conversation>,
-    DialogsListAdapter.OnCameraOrPhoneClickListener<Conversation>,
-	DateFormatter.Formatter{
+	DialogsListAdapter.OnButtonClickListener<Conversation>,
+	DateFormatter.Formatter {
 
 	private static final int CONTACT_SELECTOR_REQUEST_CODE = 1;
 	//private RecentChatsViewModel mViewModel;
@@ -271,9 +271,20 @@ public class RecentChatsFragment extends Fragment  implements
 		startActivity(intent);
 	}
 
+	@Override
+	public void onDialogLongClick(Conversation dialog) {
+
+	}
 
 	@Override
-	public void onCameraOrPhoneClic(Conversation conversation, boolean isVideoCall) {
+	public void onButtonClick(Conversation conversation, int buttonID) {
+		boolean isVideoCall;
+
+		if(buttonID == 1)
+			isVideoCall = true;
+		else
+			isVideoCall = false;
+
 		Intent intent = new Intent(getContext(), OutGoingCallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
@@ -286,11 +297,6 @@ public class RecentChatsFragment extends Fragment  implements
 		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideoCall);
 		startActivity(intent);
-	}
-
-	@Override
-	public void onDialogLongClick(Conversation dialog) {
-
 	}
 
 	@Override
@@ -312,7 +318,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 		dialogsAdapter.setOnDialogLongClickListener(this);
 
-		dialogsAdapter.setOnCameraOrPhoneClickListener(this);
+		dialogsAdapter.setOnButtonClickListener(this);
 
 		dialogsAdapter.setDatesFormatter(this);
 
