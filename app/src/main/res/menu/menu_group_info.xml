@@ -1,0 +1,26 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="io.wochat.app.ui.ContactInfo.ContactInfoActivity">
+
+
+
+    <item
+        android:id="@+id/action_add_members"
+        android:title="Add"
+        android:icon="@drawable/ic_action_add_member"
+        android:orderInCategory="101"
+        android:iconTintMode="screen"
+        app:showAsAction="always"
+        />
+
+    <item
+        android:id="@+id/action_edit"
+        android:title="Edit"
+        android:icon="@drawable/ic_action_edit"
+        android:orderInCategory="100"
+        android:iconTintMode="screen"
+        app:showAsAction="always"
+        />
+
+</menu>

@@ -80,6 +80,7 @@ import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
+import io.wochat.app.ui.Group.GroupInfoActivity;
 import io.wochat.app.ui.Languages.LanguageSelectorDialog;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
@@ -265,13 +266,21 @@ public class ConversationActivity extends PermissionActivity implements
 		mContactDetailsTV.setText("");
 		mContactNameTV.setText(mParticipantName);
 		mContactNameTV.setOnClickListener(v -> {
-			Intent intent = new Intent(this, ContactInfoActivity.class);
-			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
-			intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
-			intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
-			intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
+			if (mIsGroup) {
+				Intent intent = new Intent(this, GroupInfoActivity.class);
+				intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+				startActivity(intent);
+			}
+			else {
+				Intent intent = new Intent(this, ContactInfoActivity.class);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
+				intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+				intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
+				intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
+				startActivity(intent);
+			}
 
-			startActivity(intent);
+
 		});
 
 

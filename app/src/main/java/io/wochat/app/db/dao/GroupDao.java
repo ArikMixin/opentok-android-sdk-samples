@@ -9,6 +9,7 @@ import android.arch.persistence.room.Query;
 import java.util.List;
 
 import io.wochat.app.db.entity.GroupMember;
+import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.db.entity.GroupMemberMessage;
 
 
@@ -49,6 +50,14 @@ public interface GroupDao {
 
 	@Insert(onConflict = OnConflictStrategy.REPLACE)
 	void insert(GroupMemberMessage groupMemberMessage);
+
+
+	@Query("SELECT contact_table.*, group_memeber_table.* " +
+		"FROM contact_table INNER JOIN group_memeber_table " +
+		"ON contact_table.contact_id = user_id " +
+		"WHERE group_id =:groupId")
+	LiveData<List<GroupMemberContact>> getMembersContacts(String groupId);
+
 
 
 }

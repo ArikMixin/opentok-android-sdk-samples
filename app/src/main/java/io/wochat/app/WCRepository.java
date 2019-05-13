@@ -22,7 +22,6 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,7 +31,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +55,7 @@ import io.wochat.app.db.entity.GroupMemberMessage;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.Notif;
 import io.wochat.app.model.ConversationAndItsGroupMembers;
+import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.NotificationData;
@@ -2358,5 +2357,36 @@ public class WCRepository {
 			});
 		});
 	}
+
+
+	public LiveData<List<GroupMember>> getMembersLD(String groupId){
+		return mGroupDao.getMembersLD(groupId);
+	}
+
+
+	public LiveData<List<GroupMemberContact>> getMembersContact(String groupId){
+		return mGroupDao.getMembersContacts(groupId);
+	}
+
+	public LiveData<List<GroupMemberContact>> getMembersContactOldBad(String groupId){
+		LiveData<List<GroupMember>> members = mGroupDao.getMembersLD(groupId);
+
+		LiveData<List<GroupMemberContact>> res = Transformations.map(members, input -> {
+			List<GroupMemberContact> gmcList = new ArrayList<>();
+			for(GroupMember groupMember : input){
+				GroupMemberContact gmc = new GroupMemberContact();
+				gmc.setGroupMember(groupMember);
+				Contact contact = mContactDao.getContact(groupMember.getUserId());
+				gmc.setContact(contact);
+				gmcList.add(gmc);
+			}
+			return gmcList;
+		});
+		return res;
+
+	}
+
+
+
 
 }

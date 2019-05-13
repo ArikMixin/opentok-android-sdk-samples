@@ -1,8 +1,7 @@
-package io.wochat.app.ui;
+package io.wochat.app.ui.Group;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,9 +15,6 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -50,7 +46,7 @@ import io.wochat.app.R;
 import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
-import io.wochat.app.model.StateData;
+import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.viewmodel.GroupViewModel;

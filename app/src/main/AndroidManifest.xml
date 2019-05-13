@@ -25,7 +25,7 @@
         android:theme="@style/AppTheme"
         tools:replace="android:supportsRtl">
         <activity
-            android:name=".ui.NewGroupActivity"
+            android:name=".ui.Group.NewGroupActivity"
             android:label="@string/title_activity_new_group"
             android:screenOrientation="portrait"
             android:parentActivityName=".ui.Contact.ContactMultiSelectorActivity"
@@ -131,6 +131,12 @@
 
         <activity
             android:name=".ui.ContactInfo.ContactInfoActivity"
+            android:label="@string/title_activity_info"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".ui.Group.GroupInfoActivity"
             android:label="@string/title_activity_info"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">

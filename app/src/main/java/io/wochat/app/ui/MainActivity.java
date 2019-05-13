@@ -31,17 +31,14 @@ import android.widget.TextView;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 
-import java.util.ArrayList;
-
 import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.BadgedTabLayout;
-import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Conversation;
-import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
+import io.wochat.app.ui.Group.NewGroupActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.RecentChats.RecentChatsFragment;
 import io.wochat.app.utils.ImagePickerUtil;

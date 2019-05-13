@@ -2,6 +2,7 @@ package io.wochat.app.viewmodel;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 
@@ -11,6 +12,8 @@ import io.wochat.app.WCApplication;
 import io.wochat.app.WCRepository;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.GroupMember;
+import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.model.StateData;
 
 
@@ -36,6 +39,15 @@ public class GroupViewModel extends AndroidViewModel {
 
 	public MutableLiveData<StateData<Conversation>> getCreateGroupResult(){
 		return mRepository.getCreateGroupResult();
+	}
+
+	public LiveData<List<GroupMember>> getMembersLD(String groupId){
+		return mRepository.getMembersLD(groupId);
+	}
+
+
+	public LiveData<List<GroupMemberContact>> getMembersContact(String groupId){
+		return mRepository.getMembersContact(groupId);
 	}
 
 
