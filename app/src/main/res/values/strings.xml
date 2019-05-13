@@ -89,7 +89,7 @@
     <string name="title_activity_info">InfoActivity</string>
     <string name="please_click_back">Please click BACK again to exit</string>
     <string name="in_video_call">Incoming WoChat Video Call from</string>
-    <string name="in_audio_call">Incoming WoChat Voice Call from</string>
+    <string name="in_audio_call">Incoming WoChat Audio Call from</string>
     <string name="out_video_call">Outgoing WoChat Video Call with</string>
     <string name="out_audio_call">Outgoing WoChat Audio Call with</string>
     <string name="calling">Calling....</string>

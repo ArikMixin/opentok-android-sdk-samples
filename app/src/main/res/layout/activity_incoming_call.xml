@@ -134,9 +134,9 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/speaker_iv"
+        app:layout_constraintBottom_toTopOf="@+id/hang_up_rl"
         app:layout_constraintTop_toBottomOf="@+id/title_rl"
-        app:layout_constraintVertical_bias="0.0">
+        >
 
         <RelativeLayout
             android:id="@+id/participant_name_rl"
@@ -220,28 +220,7 @@
 
         </RelativeLayout>
 
-        <TextView
-            android:id="@+id/status_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="5dp"
-            android:text="@string/calling"
-            android:textColor="@color/white"
-            android:textSize="30dp"
-            android:layout_above="@+id/participant_number_audio_tv"
-    />
 
-        <TextView
-            android:id="@+id/participant_number_audio_tv"
-            android:layout_centerHorizontal="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
-            android:textColor="@color/white"
-            android:textSize="17dp"
-            android:layout_alignParentBottom="true"
-      />
 
     </RelativeLayout>
 
@@ -289,11 +268,16 @@
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/accept_rl"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginRight="80dp"
         android:layout_marginBottom="40dp">
+
+        <RelativeLayout
+            android:layout_centerVertical="true"
+            android:id="@+id/accept_rl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
         <io.wochat.app.components.CircleImageView
             android:id="@+id/accept_civ"
             android:layout_width="62dp"
@@ -315,11 +299,12 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+        </RelativeLayout>
 
         <TextView
             android:layout_marginTop="40dp"
             android:layout_centerHorizontal="true"
-            android:layout_below="@+id/accept_civ"
+            android:layout_below="@+id/accept_rl"
             android:textColor="@color/white"
             android:text="@string/accept"
             android:layout_width="wrap_content"

@@ -10,18 +10,15 @@ import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.squareup.picasso.Picasso;
-
 import java.util.Locale;
-
 import io.wochat.app.R;
 import io.wochat.app.WCRepository;
 import io.wochat.app.WCService;
@@ -36,14 +33,12 @@ import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener {
 
     private static final String TAG = "IncomingCallActivity";
-    private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
-            mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mHangUpCIV;
+    private CircleImageView mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
+            mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mHangUpCIV, mAcceptCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
             mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV,mStatusTV;
-    private ImageView mCameraSwitchIV;
     private FrameLayout mBackNavigationFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL;
-    private String mFixedParticipantId;
     private Locale loc;
     private int mFlagDrawable;
     private String mFullLangName;
@@ -55,24 +50,21 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private String errorMsg;
     private boolean mVideoFlag;
     private WCService mService;
+    private RelativeLayout mAcceptRL;
     private MediaPlayer mSoundsPlayer;
-    private AlphaAnimation mCallTXTanimation;
+    private TranslateAnimation mAnimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("testttttttttt", "!!!!!!!!!!!!!!!!!!!!!!!!");
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_incoming_call);
+            setContentView(R.layout.activity_incoming_call);
 
-           initViews();
-          //  createSessionAndToken(); // TokBox
+             initViews();
     }
 
     private void initViews() {
 
-        mMicFlagCIV = (CircleImageView) findViewById(R.id.mic_flag_civ);
         mTitleTV = (TextView) findViewById(R.id.title_tv);
-        mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
         mBackNavigationFL = (FrameLayout) findViewById(R.id.back_navigation_fl);
         mParticipantNameAudioTV = (TextView) findViewById(R.id.participant_name_audio_tv);
         mParticipantLangAudioTV = (TextView) findViewById(R.id.participant_lang_audio_tv);
@@ -85,11 +77,13 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mParticipantPicVideoCIV = (CircleImageView) findViewById(R.id.participant_pic_video_civ);
         mParticipantPicVideoFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_video_civ);
         mHangUpCIV = (CircleImageView) findViewById(R.id.hang_up_civ);
+        mAcceptCIV = (CircleImageView) findViewById(R.id.accept_civ);
+        mAcceptRL = (RelativeLayout) findViewById(R.id.accept_rl);
         mMainAudioRL = (RelativeLayout) findViewById(R.id.main_audio_rl);
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
 
+
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
-        Log.d("mIsVideoCall", "mIsVideoCall: " + mIsVideoCall);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
         mParticipantName = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
         mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
@@ -112,16 +106,24 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         }
 
         //Play calling sound in first
-//        mSoundsPlayer = MediaPlayer.create(this, R.raw.phone_calling_tone);
-//        mSoundsPlayer.setLooping(true);
-//        mSoundsPlayer.start();
+        mSoundsPlayer = MediaPlayer.create(this, R.raw.incoming_call);
+        mSoundsPlayer.setLooping(true);
+        mSoundsPlayer.start();
 
-        //Init calling animation
-        mCallTXTanimation = new AlphaAnimation(0.0f, 1.0f);
-        mCallTXTanimation.setDuration(1000);
-        mCallTXTanimation.setRepeatCount(Animation.INFINITE);
-        mCallTXTanimation.setRepeatMode(Animation.REVERSE);
-        mStatusTV.startAnimation(mCallTXTanimation);
+//        Animation bounce = AnimationUtils.loadAnimation(this, R.anim.bounce);
+//        mAcceptCIV.startAnimation(bounce);
+
+        //Answer the call animation
+        mAnimation = new TranslateAnimation(
+                TranslateAnimation.ABSOLUTE, 0f,
+                TranslateAnimation.ABSOLUTE, 0f,
+                TranslateAnimation.RELATIVE_TO_PARENT, 0f,
+                TranslateAnimation.RELATIVE_TO_PARENT, 0.2f);
+        mAnimation.setDuration(800);
+        mAnimation.setRepeatCount(Animation.INFINITE);
+        mAnimation.setRepeatMode(Animation.REVERSE);
+        mAnimation.setInterpolator(new LinearInterpolator());
+        mAcceptRL .setAnimation(mAnimation);
 
         mBackNavigationFL.setOnClickListener(this);
         mHangUpCIV.setOnClickListener(this);
@@ -133,41 +135,33 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void videoCall() {
-//        mVideoFlag = true;
-//        mMainVideoRL.setVisibility(View.VISIBLE);
-//
-//        mParticipantNameVideoTV.setText(mParticipantName);
-//        mParticipantLangVideoTV.setText(mFullLangName);
-//
-//        //Set Participant Flags
-//        mParticipantPicVideoFlagCIV.setImageResource(mFlagDrawable);
-//        mMicFlagCIV.setImageResource(mFlagDrawable);
-//
-//        //Set Participant Pic
-//        setPhotoByUrl(true);
+        mVideoFlag = true;
+        mMainVideoRL.setVisibility(View.VISIBLE);
+
+        mParticipantNameVideoTV.setText(mParticipantName);
+        mParticipantLangVideoTV.setText(mFullLangName);
+
+        //Set Participant Flags
+        mParticipantPicVideoFlagCIV.setImageResource(mFlagDrawable);
+
+        //Set Participant Pic
+        setPhotoByUrl(true);
 
         mTitleTV.setText(R.string.in_video_call);
     }
 
     private void audioCall() {
-//        mVideoFlag = false;
-//        mMainAudioRL.setVisibility(View.VISIBLE);
-//
-//        mCameraSwitchIV.setVisibility(View.GONE); // No need camera switch button in audio call
-//        mParticipantNameAudioTV.setText(mParticipantName);
-//        mParticipantLangAudioTV.setText(mFullLangName);
-//
-//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-//            mFixedParticipantId = PhoneNumberUtils.formatNumber(mParticipantId);
-//        else
-//            mFixedParticipantId = PhoneNumberUtils.formatNumber("+" + mParticipantId, mParticipantLangAudioTV.toString());
-//
-//        //Set Participant Flags
-//        mParticipantPicAudioFlagCIV.setImageResource(mFlagDrawable);
-//        mMicFlagCIV.setImageResource(mFlagDrawable);
-//
-//        //Set Participant Pic
-//        setPhotoByUrl(false);
+        mVideoFlag = false;
+        mMainAudioRL.setVisibility(View.VISIBLE);
+
+        mParticipantNameAudioTV.setText(mParticipantName);
+        mParticipantLangAudioTV.setText(mFullLangName);
+
+        //Set Participant Flags
+        mParticipantPicAudioFlagCIV.setImageResource(mFlagDrawable);
+
+        //Set Participant Pic
+        setPhotoByUrl(false);
 //
 //        mParticipantNumberTV.setText(mFixedParticipantId);
         mTitleTV.setText(R.string.in_audio_call);
@@ -198,11 +192,6 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                 else
                        Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicAudioCIV);
         }
-    }
-
-    public void createSessionAndToken(){
-/*        videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
-        videoAudioCallViewModel.createSessionsAndToken(this,"RELAYED");*/
     }
 
     @Override
@@ -246,7 +235,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     @Override
     protected void onDestroy() {
         super.onDestroy();
-      //  mSoundsPlayer.stop();
+         mSoundsPlayer.stop();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {

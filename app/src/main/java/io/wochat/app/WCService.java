@@ -91,16 +91,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void onNewIncomingMessage(String msg, String conversationId) {
 		try {
 			Message message = Message.fromJson(msg);
-			Log.d("arik", "!!!!!!!!!!: " + message.getMessageType());
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
 				broadcastTypingSignal(conversationId, message.isTyping());
 				return;
-			}
-
-			//Open IncomingCallActivity Activity
-			if (message.getMessageType().equals(Message.MSG_TYPE_WEBRTC_CALL)){
-				OpenIncomingCallActivity(message);
 			}
 
 			/*****************************************************************************************/
@@ -114,7 +108,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			/*****************************************************************************************/
 
-			boolean res = mRepository.handleIncomingMessage(message, new WCRepository.OnSaveMessageToDBListener() {
+			boolean res = mRepository.handleIncomingMessage(this, message, new WCRepository.OnSaveMessageToDBListener() {
 				@Override
 				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
 					sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
@@ -122,6 +116,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 						if (!message.getConversationId().equals(mCurrentConversationId)){
 							NotificationHelper.handleNotificationIncomingMessage(getApplication(), savedMessage, contact);
 						}
+					}
+
+					//Open IncomingCallActivity Activity if video call received
+					if (message.getMessageType().equals(Message.MSG_TYPE_WEBRTC_CALL)){
+						OpenIncomingCallActivity(message,contact);
 					}
 				}
 			});
@@ -388,17 +387,13 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		});
 	}
 
-	private void OpenIncomingCallActivity(Message message) {
-
-		Log.d("testttttttttt", "boom: " + message.getIsVideoRTC());
-
+	private void OpenIncomingCallActivity(Message message, Contact contact) {
 
 		Intent intent = new Intent(this, IncomingCallActivity.class);
-
-//		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
-//		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
-//		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
-//		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getParticipantId());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
+        intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
 //		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
 //		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 //		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
@@ -406,6 +401,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 //		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, message.getIsVideoRTC());
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		getApplication().startActivity(intent);
+		this.startActivity(intent);
 	}
 }

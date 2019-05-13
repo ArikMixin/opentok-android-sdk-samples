@@ -278,12 +278,12 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public void onButtonClick(Conversation conversation, int buttonID) {
-		boolean isVideoCall;
+		boolean isVideoCall = false;
 
-		if(buttonID == 1)
-			isVideoCall = true;
-		else
-			isVideoCall = false;
+		if(buttonID == CustomDialogViewHolder.BTN_CAMERA)
+				isVideoCall = true;
+		else if(buttonID == CustomDialogViewHolder.BTN_PHONE)
+				isVideoCall = false;
 
 		Intent intent = new Intent(getContext(), OutGoingCallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());

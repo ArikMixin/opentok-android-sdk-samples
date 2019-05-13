@@ -3,19 +3,15 @@ package io.wochat.app;
 import android.app.Application;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
-import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.text.format.DateUtils;
 import android.util.Log;
-import android.view.View;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -68,6 +64,8 @@ import io.wochat.app.utils.Utils;
  */
 public class WCRepository {
 
+
+
 	public interface OnSaveMessageToDBListener {
 		void OnSaved(boolean success, Message savedMessage, Contact participant);
 	}
@@ -100,7 +98,6 @@ public class WCRepository {
 	private MutableLiveData<StateData<String>> mUserRegistrationResult;
 	private MutableLiveData<StateData<String>> mUserVerificationResult;
 	private MutableLiveData<StateData<String>> mUploadProfilePicResult;
-
 	private MutableLiveData<StateData<String>> mUserConfirmRegistrationResult;
 	private MutableLiveData<StateData<Message>> mUploadImageResult;
 	private MutableLiveData<Boolean> mIsDuringRefreshContacts;
@@ -109,7 +106,6 @@ public class WCRepository {
 	private Object mLocalContactSyncObject = new Object();
 	private MutableLiveData<List<SupportedLanguage>> mSupportLanguages;
 	private MutableLiveData<StateData<Void>> mUserProfileEditResult;
-
 	private MutableLiveData<VideoAudioCall> mSessionsAndToken;
 
 
@@ -980,7 +976,8 @@ public class WCRepository {
 		});
 	}
 
-	public boolean handleIncomingMessage(Message message, final OnSaveMessageToDBListener listener) {
+	public boolean handleIncomingMessage(WCService wcService, Message message, final OnSaveMessageToDBListener listener) {
+		Log.d("arikkkkk", "handleIncomingMessage: " + message);
 		if (message == null)
 			return false;
 
@@ -1011,6 +1008,8 @@ public class WCRepository {
 			else {
 				contact = mContactDao.getContact(participantId);
 			}
+
+			Log.d("arikBBBB","********" + contact.getName());
 
 
 			boolean res = true;
@@ -1051,6 +1050,11 @@ public class WCRepository {
 					break;
 				case Message.MSG_TYPE_GIF:
 					break;
+                case Message.MSG_TYPE_WEBRTC_CALL:
+				// message.setAckStatus(Message.ACK_STATUS_RECEIVED); NOT RELEVANT TO WEBRTC CALLS
+				//	res = handleIncomingWEBRTC_Call(wcService,message);
+					listener.OnSaved(res, message, contact);
+                    break;
 			}
 
 
