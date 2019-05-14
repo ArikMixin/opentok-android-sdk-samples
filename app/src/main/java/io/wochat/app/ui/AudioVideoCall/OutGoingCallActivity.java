@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -57,6 +58,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private WCService mService;
     private MediaPlayer mSoundsPlayer;
     private AlphaAnimation mCallTXTanimation;
+    private Message message;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,7 +212,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
                                                                      + " , token is: " + mVideoAudioCall.getToken() );
 
         //Send Massage to the receiver - let the receiver know that video/audio call is coming
-        Message message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "",
+         message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "",
                 "", Message.RTC_CODE_OFFER, mVideoFlag, false);
         if ((mService != null) && (mService.isXmppConnected())) {
             mService.sendMessage(message);
@@ -263,4 +265,13 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
             mService = null;
         }
     };
+
+    private void callRejected(){
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                    finish();
+            }
+        }, 2000);   //5 seconds
+    }
 }

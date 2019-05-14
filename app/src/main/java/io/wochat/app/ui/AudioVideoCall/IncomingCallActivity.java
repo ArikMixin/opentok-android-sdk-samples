@@ -55,6 +55,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private MediaPlayer mSoundsPlayer;
     private TranslateAnimation mAnimation;
     private String mSessionId;
+    private Message message;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,13 +177,25 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
+                    rejectCall();
                     finish();
                 break;
 
             case R.id.hang_up_civ:
+                    rejectCall();
                     finish();
                 break;
         }
+    }
+
+    public void rejectCall(){
+        //Send Massage to the receiver - let the receiver know that video/audio call is coming
+        message = new Message(mParticipantId, mSelfId, mConversationId, mSessionId, "",
+                "", Message.RTC_CODE_REJECTED, mVideoFlag, false);
+
+        if ((mService != null) && (mService.isXmppConnected()))
+            mService.sendMessage(message);
+            Log.d(TAG, "ServiceConnection: call was rejected");
     }
 
     public void setPhotoByUrl(boolean videoCallFlag){
