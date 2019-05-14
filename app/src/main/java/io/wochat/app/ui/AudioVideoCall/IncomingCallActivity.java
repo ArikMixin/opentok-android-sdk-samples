@@ -118,8 +118,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                 TranslateAnimation.ABSOLUTE, 0f,
                 TranslateAnimation.ABSOLUTE, 0f,
                 TranslateAnimation.RELATIVE_TO_PARENT, 0f,
-                TranslateAnimation.RELATIVE_TO_PARENT, 0.2f);
-        mAnimation.setDuration(800);
+                TranslateAnimation.RELATIVE_TO_PARENT, 0.1f);
+        mAnimation.setDuration(700);
         mAnimation.setRepeatCount(Animation.INFINITE);
         mAnimation.setRepeatMode(Animation.REVERSE);
         mAnimation.setInterpolator(new LinearInterpolator());
