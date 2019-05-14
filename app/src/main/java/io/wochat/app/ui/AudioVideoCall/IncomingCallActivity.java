@@ -1,12 +1,15 @@
 package io.wochat.app.ui.AudioVideoCall;
 
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -56,6 +59,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private TranslateAnimation mAnimation;
     private String mSessionId;
     private Message message;
+    private RTCcodeBR mRTCcodeBR;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,6 +134,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mAnimation.setRepeatMode(Animation.REVERSE);
         mAnimation.setInterpolator(new LinearInterpolator());
         mAcceptRL .setAnimation(mAnimation);
+
+        mRTCcodeBR = new RTCcodeBR();
 
         mBackNavigationFL.setOnClickListener(this);
         mHangUpCIV.setOnClickListener(this);
@@ -244,12 +250,19 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         Log.d(TAG, "onStart, call bindService WCService");
         Intent intent = new Intent(this, WCService.class);
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+
+        try {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Message.RTC_CODE_REJECTED);
+            registerReceiver(mRTCcodeBR,filter);
+        } catch (Exception e) {}
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         unbindService(mServiceConnection);
+        unregisterReceiver(mRTCcodeBR);
     }
 
     @Override
@@ -272,4 +285,13 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             mService = null;
         }
     };
+
+    private class RTCcodeBR extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
+                finish();
+            }
+        }
+    }
 }

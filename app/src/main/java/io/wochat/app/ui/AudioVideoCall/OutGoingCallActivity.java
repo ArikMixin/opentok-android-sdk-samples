@@ -183,14 +183,26 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                    finish();
+                rejectCall();
                 break;
 
             case R.id.hang_up_civ:
-                    finish();
+                   rejectCall();
                 break;
         }
     }
+
+    public void rejectCall(){
+        //Send Massage to the receiver - let the receiver know that video/audio call is coming
+        message = new Message(mParticipantId, mSelfId, mConversationId,  mVideoAudioCall.getSessionID(), "",
+                "", Message.RTC_CODE_REJECTED, mVideoFlag, false);
+
+        if ((mService != null) && (mService.isXmppConnected()))
+            mService.sendMessage(message);
+        Log.d(TAG, "ServiceConnection: call was rejected");
+        finish();
+    }
+
 
     public void setPhotoByUrl(boolean videoCallFlag){
         if ((mParticipantPic != null) && (!mParticipantPic.trim().equals(""))) {
