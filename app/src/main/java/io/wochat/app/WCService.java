@@ -97,8 +97,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				broadcastTypingSignal(conversationId, message.isTyping());
 				return;
 			}
+			Log.d("ttttttt", "onNewIncomingMessage: " + message.getRtcCode());
 
-			if (message.getRtcCode().equals(Message.RTC_CODE_REJECTED)){
+			if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_REJECTED)){
 				broadcastRTCcodeChanged();
 				return;
 			}
@@ -114,7 +115,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			/*****************************************************************************************/
 
-			boolean res = mRepository.handleIncomingMessage( message, new WCRepository.OnSaveMessageToDBListener() {
+			boolean res = mRepository.handleIncomingMessage(message, new WCRepository.OnSaveMessageToDBListener() {
 				@Override
 				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
 					sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
@@ -125,7 +126,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 					}
 
 					//Open IncomingCallActivity Activity if video call received
-					if (message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
+					if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
 						OpenIncomingCallActivity(message,contact);
 					}
 				}
@@ -218,6 +219,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		}
 	}
 
+
 	private void init() {
 		Log.e(TAG, "init");
 		if ((mSelfUserId != null)&& (mXMPPProvider != null)) {
@@ -295,8 +297,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 	public void sendMessage(Message message){
-		Log.d("arik", " json: " + message.toJson() + "\n getParticipant: " + message.getParticipantId() + "\n getConversationId: " + message.getConversationId());
-
 		//message.setDuration(message.getDuration()/1000);
 		Log.e(TAG, "sendMessage: " + message.toJson());
 		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());

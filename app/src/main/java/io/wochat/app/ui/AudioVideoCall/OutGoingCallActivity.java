@@ -69,7 +69,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         setContentView(R.layout.activity_outgoing_call);
 
             initViews();
-            createSessionAndToken(); // TokBox
+            createSessionAndToken();
     }
 
     private void initViews() {
@@ -114,7 +114,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
                 e.printStackTrace();
         }
 
-        //Play calling sound in first
+        //Sounds Init
+        mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
         mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
         mCallingSound.setLooping(true);
         mCallingSound.start();
@@ -282,8 +283,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private void callRejected(){
         mCallTXTanimation.cancel();
         mCallingSound.stop();
-
-        mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
         mDeclineSound.setLooping(true);
         mDeclineSound.start();
         mStatusTV.setText(getResources().getString(R.string.rejected));
