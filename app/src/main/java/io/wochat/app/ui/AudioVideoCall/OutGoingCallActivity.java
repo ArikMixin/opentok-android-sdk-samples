@@ -62,6 +62,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private AlphaAnimation mCallTXTanimation;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
+    private String mSessionID = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,7 +184,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                rejectCall();
+                    rejectCall();
                 break;
 
             case R.id.hang_up_civ:
@@ -192,13 +193,19 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        rejectCall();
+    }
+
     public void rejectCall(){
         //Send Massage to the receiver - let the receiver know that video/audio call is coming
-        message = new Message(mParticipantId, mSelfId, mConversationId,  mVideoAudioCall.getSessionID(), "",
+        message = new Message(mParticipantId, mSelfId, mConversationId,  mSessionID, "",
                 "", Message.RTC_CODE_REJECTED, mVideoFlag, false);
-
-        if ((mService != null) && (mService.isXmppConnected()))
+        if ((mService != null) && (mService.isXmppConnected())){
             mService.sendMessage(message);
+        }
         Log.d(TAG, "ServiceConnection: call was rejected");
         finish();
     }
@@ -228,9 +235,9 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
         Log.d(TAG, "Session and token received, session is: " + mVideoAudioCall.getSessionID()
                                                                     + " , token is: " + mVideoAudioCall.getToken() );
-
+        mSessionID = mVideoAudioCall.getSessionID();
         //Send Massage to the receiver - let the receiver know that video/audio call is coming
-         message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "",
+        message = new Message(mParticipantId, mSelfId, mConversationId, mSessionID, "",
                 "", Message.RTC_CODE_OFFER, mVideoFlag, false);
         if ((mService != null) && (mService.isXmppConnected())) {
             mService.sendMessage(message);
@@ -305,7 +312,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
                 mCallingSound.stop();
                 finish();
             }
-        }, 3000);
+        }, 4000);
     }
 
     private class RTCcodeBR extends BroadcastReceiver {

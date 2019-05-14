@@ -184,14 +184,18 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         switch (view.getId()) {
             case R.id.back_navigation_fl:
                     rejectCall();
-                    finish();
                 break;
 
             case R.id.hang_up_civ:
                     rejectCall();
-                    finish();
                 break;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        rejectCall();
     }
 
     public void rejectCall(){
@@ -202,6 +206,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         if ((mService != null) && (mService.isXmppConnected()))
             mService.sendMessage(message);
             Log.d(TAG, "ServiceConnection: call was rejected");
+        finish();
     }
 
     public void setPhotoByUrl(boolean videoCallFlag){
