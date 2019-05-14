@@ -982,8 +982,7 @@ public class WCRepository {
 		});
 	}
 
-	public boolean handleIncomingMessage(WCService wcService, Message message, final OnSaveMessageToDBListener listener) {
-		Log.d("arikkkkk", "handleIncomingMessage: " + message);
+	public boolean handleIncomingMessage(Message message, final OnSaveMessageToDBListener listener) {
 		if (message == null)
 			return false;
 
@@ -1014,9 +1013,6 @@ public class WCRepository {
 			else {
 				contact = mContactDao.getContact(participantId);
 			}
-
-			Log.d("arikBBBB","********" + contact.getName());
-
 
 			boolean res = true;
 			message.setParticipantId(message.getSenderId());

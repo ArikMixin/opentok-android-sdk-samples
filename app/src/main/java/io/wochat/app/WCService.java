@@ -44,6 +44,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public static final String LAST_ONLINE_CONTACT_ID_EXTRA = "LAST_ONLINE_CONTACT_ID_EXTRA";
 
 	public static final String IS_TYPING_EXTRA = "IS_TYPING_EXTRA";
+
 	private final IBinder mBinder = new WCBinder();
 	private XMPPProvider mXMPPProvider;
 	private WCRepository mRepository;
@@ -97,6 +98,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				return;
 			}
 
+			if (message.getRtcCode().equals(Message.RTC_CODE_REJECTED)){
+				broadcastRTCcodeChanged();
+				return;
+			}
+
 			/*****************************************************************************************/
 			// ios patches
 			if (message.getDurationMili() == 0){
@@ -108,7 +114,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			/*****************************************************************************************/
 
-			boolean res = mRepository.handleIncomingMessage(this, message, new WCRepository.OnSaveMessageToDBListener() {
+			boolean res = mRepository.handleIncomingMessage( message, new WCRepository.OnSaveMessageToDBListener() {
 				@Override
 				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
 					sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
@@ -119,7 +125,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 					}
 
 					//Open IncomingCallActivity Activity if video call received
-					if (message.getMessageType().equals(Message.MSG_TYPE_WEBRTC_CALL)){
+					if (message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
 						OpenIncomingCallActivity(message,contact);
 					}
 				}
@@ -211,7 +217,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			}
 		}
 	}
-
 
 	private void init() {
 		Log.e(TAG, "init");
@@ -387,20 +392,23 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		});
 	}
 
-	private void OpenIncomingCallActivity(Message message, Contact contact) {
+	private void broadcastRTCcodeChanged() {
+		Intent intent = new Intent();
+		intent.setAction(Message.RTC_CODE_REJECTED);
+		sendBroadcast(intent);
+	}
 
+	private void OpenIncomingCallActivity(Message message, Contact contact) {
 		Intent intent = new Intent(this, IncomingCallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getParticipantId());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
         intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
-
 		intent.putExtra(Consts.INTENT_SESSION_ID, message.getSessionID());
-
-//		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, message.getId());
 //		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
-//		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
-//		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+		//intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 //		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, message.getIsVideoRTC());
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

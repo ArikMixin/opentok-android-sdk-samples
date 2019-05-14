@@ -1,9 +1,11 @@
 package io.wochat.app.ui.AudioVideoCall;
 
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Build;
@@ -56,9 +58,10 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private String errorMsg;
     private boolean mVideoFlag;
     private WCService mService;
-    private MediaPlayer mSoundsPlayer;
+    private MediaPlayer mCallingSound, mDeclineSound;
     private AlphaAnimation mCallTXTanimation;
     private Message message;
+    private RTCcodeBR mRTCcodeBR;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,9 +115,9 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         }
 
         //Play calling sound in first
-        mSoundsPlayer = MediaPlayer.create(this, R.raw.phone_calling_tone);
-        mSoundsPlayer.setLooping(true);
-        mSoundsPlayer.start();
+        mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
+        mCallingSound.setLooping(true);
+        mCallingSound.start();
 
         //Init calling animation
         mCallTXTanimation = new AlphaAnimation(0.0f, 1.0f);
@@ -122,6 +125,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mCallTXTanimation.setRepeatCount(Animation.INFINITE);
         mCallTXTanimation.setRepeatMode(Animation.REVERSE);
         mStatusTV.startAnimation(mCallTXTanimation);
+
+        mRTCcodeBR = new RTCcodeBR();
 
         mBackNavigationFL.setOnClickListener(this);
         mHangUpCIV.setOnClickListener(this);
@@ -208,8 +213,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     @Override
     public void onSucceedCreateSession(StateData<String> success){
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
-        Log.d("testttt", "Session and token received, session is: " + mVideoAudioCall.getSessionID()
-                                                                     + " , token is: " + mVideoAudioCall.getToken() );
+        Log.d(TAG, "Session and token received, session is: " + mVideoAudioCall.getSessionID()
+                                                                    + " , token is: " + mVideoAudioCall.getToken() );
 
         //Send Massage to the receiver - let the receiver know that video/audio call is coming
          message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "",
@@ -237,18 +242,26 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         Log.d(TAG, "onStart, call bindService WCService");
         Intent intent = new Intent(this, WCService.class);
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+
+        try {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Message.RTC_CODE_REJECTED);
+                registerReceiver(mRTCcodeBR,filter);
+        } catch (Exception e) {}
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         unbindService(mServiceConnection);
+        unregisterReceiver(mRTCcodeBR);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSoundsPlayer.stop();
+        mCallingSound.stop();
+        mDeclineSound.stop();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -267,11 +280,29 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     };
 
     private void callRejected(){
+        mCallTXTanimation.cancel();
+        mCallingSound.stop();
+
+        mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
+        mDeclineSound.setLooping(true);
+        mDeclineSound.start();
+        mStatusTV.setText(getResources().getString(R.string.rejected));
+
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
-                    finish();
+                mCallingSound.stop();
+                finish();
             }
-        }, 2000);   //5 seconds
+        }, 4000);   //5 seconds
+    }
+
+    private class RTCcodeBR extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
+                callRejected();
+            }
+        }
     }
 }
