@@ -1,5 +1,6 @@
 package io.wochat.app.ui.AudioVideoCall;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -53,6 +54,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private RelativeLayout mAcceptRL;
     private MediaPlayer mSoundsPlayer;
     private TranslateAnimation mAnimation;
+    private String mSessionId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +62,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             setContentView(R.layout.activity_incoming_call);
 
              initViews();
+             createTokenInExistingSession();
     }
 
     private void initViews() {
@@ -89,8 +92,10 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
         mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
         mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+        mSessionId = getIntent().getStringExtra(Consts.INTENT_SESSION_ID);
 
-        mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
+
+                mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 //      mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
@@ -194,23 +199,25 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         }
     }
 
+    public void createTokenInExistingSession(){
+          videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+          videoAudioCallViewModel.createTokenInExistingSession(this, mSessionId, "" + WCRepository.TokenRoleType.PUBLISHER);
+    }
+
+    //*** The caller already creates the session
     @Override
     public void onSucceedCreateSession(StateData<String> success){
-        Log.d(TAG, "ServiceConnection: Session and token received ");
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
-        //Send Massage to the receiver - let the receiver know that video/audio call is coming
-        Message message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "",
-                "", Message.RTC_CODE_OFFER, mVideoFlag, false);
-        if ((mService != null) && (mService.isXmppConnected())) {
-            mService.sendMessage(message);
-            Log.d(TAG, "ServiceConnection: massage sent ");
-        }
+        Log.d("testttt", "Session and token received, session is: " + mSessionId
+                                           + " , token is: " + mVideoAudioCall.getToken() );
+
+        // TODO: 5/14/2019 start a video/audioCall via TokBox
     }
 
     @Override
     public void onFailedCreateSession(StateData<String> errorMsg) {
         if(errorMsg.getErrorLogic() != null)
-              this.errorMsg = errorMsg.getErrorLogic().toString();
+              this.errorMsg = errorMsg.getErrorLogic();
         else if(errorMsg.getErrorCom() != null)
               this.errorMsg = errorMsg.getErrorCom().toString();
 

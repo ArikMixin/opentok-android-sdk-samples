@@ -205,8 +205,10 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onSucceedCreateSession(StateData<String> success){
-        Log.d(TAG, "ServiceConnection: Session and token received ");
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
+        Log.d("testttt", "Session and token received, session is: " + mVideoAudioCall.getSessionID()
+                                                                     + " , token is: " + mVideoAudioCall.getToken() );
+
         //Send Massage to the receiver - let the receiver know that video/audio call is coming
         Message message = new Message(mParticipantId, mSelfId, mConversationId, mVideoAudioCall.getSessionID(), "",
                 "", Message.RTC_CODE_OFFER, mVideoFlag, false);
@@ -219,7 +221,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     @Override
     public void onFailedCreateSession(StateData<String> errorMsg) {
         if(errorMsg.getErrorLogic() != null)
-              this.errorMsg = errorMsg.getErrorLogic().toString();
+              this.errorMsg = errorMsg.getErrorLogic();
         else if(errorMsg.getErrorCom() != null)
               this.errorMsg = errorMsg.getErrorCom().toString();
 

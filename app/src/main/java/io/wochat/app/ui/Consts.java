@@ -16,4 +16,5 @@ public class Consts {
 	public static final String INTENT_LAST_ONLINE = "INTENT_LAST_ONLINE";
 	public static final String INTENT_IS_ONLINE = "INTENT_IS_ONLINE";
 	public static final String INTENT_IS_VIDEO_CALL = "INTENT_IS_VIDEO_CALL";
+	public static final String INTENT_SESSION_ID = "INTENT_SESSION_ID";
 }

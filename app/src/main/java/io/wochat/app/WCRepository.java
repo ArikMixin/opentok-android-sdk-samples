@@ -86,6 +86,11 @@ public class WCRepository {
 		user_confirm_reg_ok
 	}
 
+	public enum TokenRoleType {
+		SUBSCRIBER,
+		PUBLISHER
+	}
+
 	private static final String TAG = "WCRepository";
 	private final AppExecutors mAppExecutors;
 	private final WCDatabase mDatabase;
@@ -157,6 +162,7 @@ public class WCRepository {
 		mUserRegistrationResult = new MutableLiveData<>();
 		mUserVerificationResult = new MutableLiveData<>();
 		mUploadProfilePicResult = new MutableLiveData<>();
+		mSessionsAndToken = new MutableLiveData<>();
 
 		mUploadImageResult = new MutableLiveData<>();
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
@@ -2027,7 +2033,6 @@ public class WCRepository {
 
 	//TokBox
 	public void createSession(OnSessionResultListener onSessionResultListener, String sessionType) {
-		mSessionsAndToken = new MutableLiveData<>();
 
 		mWochatApi.getCallSessionId(sessionType, new WochatApi.OnServerResponseListener() {
 			@Override
@@ -2037,7 +2042,7 @@ public class WCRepository {
 					try {
 						String session_id = response.getString("session_id");
 						Log.d(TAG, "Video Audio Session - Session id: " + session_id);
-						createToken(onSessionResultListener, session_id, "SUBSCRIBER");
+						createToken(onSessionResultListener, session_id, ""+ TokenRoleType.PUBLISHER);
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -2057,6 +2062,8 @@ public class WCRepository {
 				if (isSuccess) {
 					try {
 						String token = response.getString("token");
+						Log.d("sessionId", "sessionId: " + sessionId + " token: " + token );
+
 						Log.d(TAG, "Video Audio Session - Token id: " + token);
 						VideoAudioCall vac = new VideoAudioCall(sessionId, token);
 						mSessionsAndToken.setValue(vac);

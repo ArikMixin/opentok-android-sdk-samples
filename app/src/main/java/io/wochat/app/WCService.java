@@ -394,6 +394,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
         intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
+
+		intent.putExtra(Consts.INTENT_SESSION_ID, message.getSessionID());
+
 //		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
 //		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 //		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
