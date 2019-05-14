@@ -126,7 +126,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 					//Open IncomingCallActivity Activity if video call received
 					if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
-						OpenIncomingCallActivity(message,contact);
+							OpenIncomingCallActivity(message, contact);
 					}
 				}
 			});
