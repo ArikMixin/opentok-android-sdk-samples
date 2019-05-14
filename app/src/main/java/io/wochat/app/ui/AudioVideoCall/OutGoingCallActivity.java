@@ -293,7 +293,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
                 mCallingSound.stop();
                 finish();
             }
-        }, 4000);   //5 seconds
+        }, 3000);
     }
 
     private class RTCcodeBR extends BroadcastReceiver {
