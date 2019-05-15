@@ -132,7 +132,7 @@
         android:id="@+id/main_audio_rl"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/status_tv"
         app:layout_constraintTop_toBottomOf="@+id/title_rl"
         app:layout_constraintVertical_bias="0.0">

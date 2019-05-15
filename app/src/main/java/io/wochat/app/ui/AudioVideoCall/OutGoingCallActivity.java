@@ -115,6 +115,13 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
                 e.printStackTrace();
         }
 
+        //Phone number
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
+            mFixedParticipantId = PhoneNumberUtils.formatNumber(mParticipantId);
+        else
+            mFixedParticipantId = PhoneNumberUtils.formatNumber("+" + mParticipantId, mParticipantLangAudioTV.toString());
+        mParticipantNumberTV.setText(mFixedParticipantId);
+
         //Sounds Init
         mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
         mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
@@ -165,11 +172,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mParticipantNameAudioTV.setText(mParticipantName);
         mParticipantLangAudioTV.setText(mFullLangName);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-            mFixedParticipantId = PhoneNumberUtils.formatNumber(mParticipantId);
-        else
-            mFixedParticipantId = PhoneNumberUtils.formatNumber("+" + mParticipantId, mParticipantLangAudioTV.toString());
-
         //Set Participant Flags
         mParticipantPicAudioFlagCIV.setImageResource(mFlagDrawable);
         mMicFlagCIV.setImageResource(mFlagDrawable);
@@ -177,7 +179,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         //Set Participant Pic
         setPhotoByUrl(false);
 
-        mParticipantNumberTV.setText(mFixedParticipantId);
+
         mTitleTV.setText(R.string.out_audio_call);
     }
 
