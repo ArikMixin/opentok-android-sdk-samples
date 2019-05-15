@@ -94,6 +94,7 @@
     <string name="out_audio_call">Outgoing WoChat Audio Call with</string>
     <string name="calling">Calling....</string>
     <string name="rejected">Rejected</string>
+    <string name="busy">Busy</string>
     <string name="decline">Decline</string>
     <string name="accept">Accept</string>
 

@@ -58,7 +58,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private String errorMsg;
     private boolean mVideoFlag;
     private WCService mService;
-    private MediaPlayer mCallingSound, mDeclineSound;
+    private MediaPlayer mCallingSound, mDeclineSound, mBusySound ;
     private AlphaAnimation mCallTXTanimation;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
@@ -118,6 +118,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         //Sounds Init
         mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
         mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
+        mBusySound = MediaPlayer.create(this, R.raw.phone_busy_signal);
         mCallingSound.setLooping(true);
         mCallingSound.start();
 
@@ -266,7 +267,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         try {
             IntentFilter filter = new IntentFilter();
             filter.addAction(Message.RTC_CODE_REJECTED);
-                registerReceiver(mRTCcodeBR,filter);
+            filter.addAction(Message.RTC_CODE_BUSY);
+            registerReceiver(mRTCcodeBR,filter);
         } catch (Exception e) {}
     }
 
@@ -282,6 +284,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         super.onDestroy();
         mCallingSound.stop();
         mDeclineSound.stop();
+        mBusySound.stop();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -299,12 +302,19 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         }
     };
 
-    private void callRejected(){
+    private void callRejected(boolean rejectedFlag){
         mCallTXTanimation.cancel();
         mCallingSound.stop();
-        mDeclineSound.setLooping(true);
-        mDeclineSound.start();
-        mStatusTV.setText(getResources().getString(R.string.rejected));
+
+        if(rejectedFlag) {
+            mStatusTV.setText(getResources().getString(R.string.rejected));
+            mDeclineSound.setLooping(true);
+            mDeclineSound.start();
+        }else {
+            mStatusTV.setText(getResources().getString(R.string.busy));
+            mBusySound.setLooping(true);
+            mBusySound.start();
+        }
 
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
@@ -319,7 +329,9 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         @Override
         public void onReceive(Context context, Intent intent) {
             if(intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
-                callRejected();
+                callRejected(true);
+            }else if(intent.getAction().equals(Message.RTC_CODE_BUSY)) {
+                callRejected(false);
             }
         }
     }

@@ -60,6 +60,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private String mSessionId;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
+    public static boolean activityActiveFlag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +72,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void initViews() {
+        activityActiveFlag = true;
 
         mTitleTV = (TextView) findViewById(R.id.title_tv);
         mBackNavigationFL = (FrameLayout) findViewById(R.id.back_navigation_fl);
@@ -259,6 +261,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         try {
             IntentFilter filter = new IntentFilter();
             filter.addAction(Message.RTC_CODE_REJECTED);
+            filter.addAction(Message.RTC_CODE_BUSY);
             registerReceiver(mRTCcodeBR,filter);
         } catch (Exception e) {}
     }
@@ -273,7 +276,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     @Override
     protected void onDestroy() {
         super.onDestroy();
-         mSoundsPlayer.stop();
+        activityActiveFlag = false;
+        mSoundsPlayer.stop();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -295,6 +299,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         @Override
         public void onReceive(Context context, Intent intent) {
             if(intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
+                finish();
+            }else if(intent.getAction().equals(Message.RTC_CODE_BUSY)) {
                 finish();
             }
         }
