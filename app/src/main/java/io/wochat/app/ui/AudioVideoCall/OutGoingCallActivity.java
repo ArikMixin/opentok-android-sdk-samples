@@ -1,5 +1,6 @@
 package io.wochat.app.ui.AudioVideoCall;
 
+import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -12,6 +13,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
@@ -26,6 +28,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.squareup.picasso.Picasso;
+
+import java.util.List;
 import java.util.Locale;
 import io.wochat.app.R;
 import io.wochat.app.WCRepository;
@@ -37,8 +41,10 @@ import io.wochat.app.model.VideoAudioCall;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.VideoAudioCallViewModel;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
-public class OutGoingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener {
+public class OutGoingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener, EasyPermissions.PermissionCallbacks {
 
     private static final String TAG = "OutGoingCallActivity";
     private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
@@ -67,13 +73,18 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private RTCcodeBR mRTCcodeBR;
     private String mSessionID = "";
 
+    public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO };
+    public static final int TOK_BOX_APIKEY = 46296242;
+    public static final int RC_SETTINGS_SCREEN_PERM = 123;
+    public static final int RC_VIDEO_APP_PERM = 124;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_outgoing_call);
 
             initViews();
-            createSessionAndToken();
+            requestPermissions();
     }
 
     private void initViews() {
@@ -150,6 +161,16 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
             videoCall();
         else
             audioCall();
+    }
+
+    @AfterPermissionGranted(RC_VIDEO_APP_PERM)
+    private void requestPermissions() {
+        if (EasyPermissions.hasPermissions(this, perms)) {
+                createSessionAndToken();
+        } else {
+            EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out), RC_VIDEO_APP_PERM, perms);
+
+        }
     }
 
     private void videoCall() {
@@ -252,6 +273,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
             mService.sendMessage(message);
             Log.d(TAG, "ServiceConnection: massage sent ");
         }
+
+        // TODO: 5/15/2019 //MAKE THE SESSION CONNECTION
     }
 
     @Override
@@ -310,6 +333,27 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
             mService = null;
         }
     };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+    /**
+     * continue the process only if client accept all the permissions - if not - finish this activity
+     */
+    @Override
+    public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+        if(perms.size() == 3) // Number of perms
+            createSessionAndToken();
+        else {
+            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+        }
+    }
+    @Override
+    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
+        sendXMPPmsg(Message.RTC_CODE_REJECTED);
+    }
 
     private class RTCcodeBR extends BroadcastReceiver {
         @Override

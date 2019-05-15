@@ -1,5 +1,6 @@
 package io.wochat.app.ui.AudioVideoCall;
 
+import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -11,6 +12,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -23,6 +25,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.squareup.picasso.Picasso;
+
+import java.util.List;
 import java.util.Locale;
 import io.wochat.app.R;
 import io.wochat.app.WCRepository;
@@ -34,8 +38,10 @@ import io.wochat.app.model.VideoAudioCall;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.VideoAudioCallViewModel;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
-public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener {
+public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener, EasyPermissions.PermissionCallbacks {
 
     private static final String TAG = "IncomingCallActivity";
     private CircleImageView mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
@@ -70,7 +76,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             setContentView(R.layout.activity_incoming_call);
 
              initViews();
-             createTokenInExistingSession();
+             requestPermissions();
     }
 
     private void initViews() {
@@ -144,6 +150,16 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             videoCall();
         else
             audioCall();
+    }
+
+    @AfterPermissionGranted(OutGoingCallActivity.RC_VIDEO_APP_PERM)
+    private void requestPermissions() {
+        if (EasyPermissions.hasPermissions(this, OutGoingCallActivity.perms)) {
+                 createTokenInExistingSession();
+        } else {
+                 EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_in), OutGoingCallActivity.RC_VIDEO_APP_PERM, OutGoingCallActivity.perms);
+
+        }
     }
 
     private void videoCall() {
@@ -298,6 +314,26 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             mService = null;
         }
     };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+    /**
+     * continue the process only if client accept all the permissions - if not - finish this activity
+     */
+    @Override
+    public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+        if(perms.size() == 3) // Number of perms
+            createTokenInExistingSession();
+        else
+            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+    }
+    @Override
+    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
+            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+    }
 
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
