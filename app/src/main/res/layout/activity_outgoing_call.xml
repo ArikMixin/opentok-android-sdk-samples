@@ -25,7 +25,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:layout_centerVertical="true"
-                android:layout_marginLeft="30dp"
+                android:layout_marginLeft="20dp"
                 android:src="@drawable/navigation_bar" />
         </FrameLayout>
 
@@ -37,6 +37,18 @@
             android:text=""
             android:textColor="@color/white"
             android:textSize="14dp" />
+
+        <Chronometer
+            android:layout_marginRight="30dp"
+            android:layout_alignParentRight="true"
+            android:id="@+id/timer_chr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="14dp"
+            android:visibility="gone"/>
     </RelativeLayout>
 
 
@@ -132,7 +144,7 @@
         android:id="@+id/main_audio_rl"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/status_tv"
         app:layout_constraintTop_toBottomOf="@+id/title_rl"
         app:layout_constraintVertical_bias="0.0">
@@ -194,7 +206,7 @@
 
             <RelativeLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="210dp"
                 android:layout_centerInParent="true">
 
                 <io.wochat.app.components.CircleImageView
@@ -335,7 +347,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <io.wochat.app.components.CircleImageView
-            android:id="@+id/hang_up_civ"
+            android:id="@+id/decline_civ"
             android:layout_width="62dp"
             android:layout_height="62dp"
             android:layout_centerInParent="true"

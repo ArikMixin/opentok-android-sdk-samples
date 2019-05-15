@@ -11,6 +11,7 @@ import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
@@ -18,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.widget.Chronometer;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -42,7 +44,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
             mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mHangUpCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
-            mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV,mStatusTV;
+            mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV, mStatusTV;
+    private Chronometer mTimerChr;
     private ImageView mCameraSwitchIV;
     private FrameLayout mBackNavigationFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL;
@@ -85,11 +88,13 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mParticipantNameVideoTV = (TextView) findViewById(R.id.participant_name_video_tv);
         mParticipantLangVideoTV = (TextView) findViewById(R.id.participant_lang_video_tv);
         mStatusTV = (TextView) findViewById(R.id.status_tv);
+        mTimerChr = (Chronometer) findViewById(R.id.timer_chr);
+
         mParticipantPicAudioCIV = (CircleImageView) findViewById(R.id.participant_pic_audio_civ);
         mParticipantPicAudioFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_audio_civ);
         mParticipantPicVideoCIV = (CircleImageView) findViewById(R.id.participant_pic_video_civ);
         mParticipantPicVideoFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_video_civ);
-        mHangUpCIV = (CircleImageView) findViewById(R.id.hang_up_civ);
+        mHangUpCIV = (CircleImageView) findViewById(R.id.decline_civ);
         mMainAudioRL = (RelativeLayout) findViewById(R.id.main_audio_rl);
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
 
@@ -187,11 +192,11 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                    rejectCall();
+                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
-            case R.id.hang_up_civ:
-                   rejectCall();
+            case R.id.decline_civ:
+                   sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
         }
     }
@@ -199,18 +204,19 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        rejectCall();
+        sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
+    //Send Massage to the receiver
+    public void sendXMPPmsg(String rtcCode){
+        message = new Message(mParticipantId, mSelfId, mConversationId,  mSessionID, "","",
+                                                                            rtcCode, mVideoFlag, false);
 
-    public void rejectCall(){
-        //Send Massage to the receiver - let the receiver know that video/audio call is coming
-        message = new Message(mParticipantId, mSelfId, mConversationId,  mSessionID, "",
-                "", Message.RTC_CODE_REJECTED, mVideoFlag, false);
         if ((mService != null) && (mService.isXmppConnected())){
             mService.sendMessage(message);
         }
-        Log.d(TAG, "ServiceConnection: call was rejected");
-        finish();
+
+        if(rtcCode.equals(Message.RTC_CODE_REJECTED))
+            finish();
     }
 
 
@@ -270,6 +276,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
             IntentFilter filter = new IntentFilter();
             filter.addAction(Message.RTC_CODE_REJECTED);
             filter.addAction(Message.RTC_CODE_BUSY);
+            filter.addAction(Message.RTC_CODE_ANSWER);
             registerReceiver(mRTCcodeBR,filter);
         } catch (Exception e) {}
     }
@@ -304,7 +311,19 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         }
     };
 
-    private void callRejected(boolean rejectedFlag){
+    private class RTCcodeBR extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(Message.RTC_CODE_REJECTED))
+                finishCall(true);
+            else if(intent.getAction().equals(Message.RTC_CODE_BUSY))
+                finishCall(false);
+            else if(intent.getAction().equals(Message.RTC_CODE_ANSWER))
+                callStarted();
+        }
+    }
+
+    private void finishCall(boolean rejectedFlag){
         mCallTXTanimation.cancel();
         mCallingSound.stop();
 
@@ -327,14 +346,15 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         }, 4000);
     }
 
-    private class RTCcodeBR extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
-                callRejected(true);
-            }else if(intent.getAction().equals(Message.RTC_CODE_BUSY)) {
-                callRejected(false);
-            }
-        }
+    private void callStarted() {
+
+        mCallTXTanimation.cancel();
+        mStatusTV.setVisibility(View.INVISIBLE);
+
+        mTimerChr.setVisibility(View.VISIBLE);
+        mTimerChr.setBase(SystemClock.elapsedRealtime());
+        mTimerChr.start();
     }
+
+
 }
