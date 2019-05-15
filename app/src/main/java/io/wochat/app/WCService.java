@@ -410,8 +410,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		//If incoming activity open send BUSY back to sender
 		if(IncomingCallActivity.activityActiveFlag) {
 				Message message_busy = new Message(message.getParticipantId(), mSelfUserId, message.getConversationId(),
-							message.getSessionID(), "",
-							"", Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);
+							message.getSessionID(), "", "",
+						    Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);
 				sendMessage(message_busy);
 		}else {
 				Intent intent = new Intent(this, IncomingCallActivity.class);
