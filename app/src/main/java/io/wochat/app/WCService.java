@@ -98,7 +98,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 					broadcastTypingSignal(conversationId, message.isTyping());
 				return;
 			}
-			if (message.getRtcCode() != null &&
+			if (message.getRtcCode() != null && // && message.getRtcCode().!equals(Message.RTC_CODE_OFFER) for OFFER ANSWER BUSY REJECTED
 					message.getRtcCode().equals(Message.RTC_CODE_REJECTED)){
 					broadcastRTCcodeChanged(true);
 				return;
