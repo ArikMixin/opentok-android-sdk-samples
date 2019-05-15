@@ -98,14 +98,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 					broadcastTypingSignal(conversationId, message.isTyping());
 				return;
 			}
-			if (message.getRtcCode() != null && // && message.getRtcCode().!equals(Message.RTC_CODE_OFFER) for OFFER ANSWER BUSY REJECTED
-					message.getRtcCode().equals(Message.RTC_CODE_REJECTED)){
-					broadcastRTCcodeChanged(true);
-				return;
-			}
-			if (message.getRtcCode() != null &&
-					message.getRtcCode().equals(Message.RTC_CODE_BUSY)){
-					broadcastRTCcodeChanged(false);
+
+			//WEB RTC Messages (ANSWER, TEXT, CLOSE, REJECTED, BUSY, UPDATE_SESSION)
+			if (message.getRtcCode() != null && !message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
+				broadcastRTCcodeChanged(message.getRtcCode());
 				return;
 			}
 
@@ -397,14 +393,21 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		});
 	}
 
-	private void broadcastRTCcodeChanged(boolean rejectedFlag) {
+//	private void broadcastRTCcodeChanged(boolean rejectedFlag) {
+//		Intent intent = new Intent();
+//		if(rejectedFlag)
+//			intent.setAction(Message.RTC_CODE_REJECTED);
+//		else
+//			intent.setAction(Message.RTC_CODE_BUSY);
+//		sendBroadcast(intent);
+//	}
+
+	private void broadcastRTCcodeChanged(String mRtcCode) {
 		Intent intent = new Intent();
-		if(rejectedFlag)
-			intent.setAction(Message.RTC_CODE_REJECTED);
-		else
-			intent.setAction(Message.RTC_CODE_BUSY);
+			intent.setAction(mRtcCode);
 		sendBroadcast(intent);
 	}
+
 
 	private void OpenIncomingCallActivity(Message message, Contact contact) {
 		//If incoming activity open send BUSY back to sender

@@ -261,7 +261,6 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         try {
             IntentFilter filter = new IntentFilter();
             filter.addAction(Message.RTC_CODE_REJECTED);
-            filter.addAction(Message.RTC_CODE_BUSY);
             registerReceiver(mRTCcodeBR,filter);
         } catch (Exception e) {}
     }
@@ -298,9 +297,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
-                finish();
-            }else if(intent.getAction().equals(Message.RTC_CODE_BUSY)) {
+            if (intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
                 finish();
             }
         }
