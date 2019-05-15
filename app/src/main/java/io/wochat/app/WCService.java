@@ -403,7 +403,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 //	}
 
 	private void broadcastRTCcodeChanged(String mRtcCode) {
-		Log.d("mRtcCode", "mRtcCode: " + mRtcCode);
 		Intent intent = new Intent();
 			intent.setAction(mRtcCode);
 		sendBroadcast(intent);

@@ -88,4 +88,7 @@ dependencies {
     //implementation 'com.nuance:speechkit:2.1+@aar'
     implementation 'com.android.support:preference-v7:27.1.1'
 
+//    TokBox
+    implementation 'com.opentok.android:opentok-android-sdk:2.15.3'
+
 }
