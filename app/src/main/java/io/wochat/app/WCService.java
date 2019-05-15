@@ -409,12 +409,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	private void OpenIncomingCallActivity(Message message, Contact contact) {
 		//If incoming activity open send BUSY back to sender
 		if(IncomingCallActivity.activityActiveFlag) {
-				//sendMessage
 				Message message_busy = new Message(message.getParticipantId(), mSelfUserId, message.getConversationId(),
 							message.getSessionID(), "",
 							"", Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);
 				sendMessage(message_busy);
-				/////////////////////////////////////////////////////////////
 		}else {
 				Intent intent = new Intent(this, IncomingCallActivity.class);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getParticipantId());
@@ -423,10 +421,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
 				intent.putExtra(Consts.INTENT_SESSION_ID, message.getSessionID());
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, message.getId());
-	//		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+				//intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 				//intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
-	//		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+				//intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 				intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, message.getIsVideoRTC());
 				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				this.startActivity(intent);

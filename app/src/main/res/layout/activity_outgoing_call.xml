@@ -51,41 +51,41 @@
 
 
         <RelativeLayout
-            android:layout_marginTop="30dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp">
 
 
             <RelativeLayout
                 android:id="@+id/circle_small_rl"
-                android:layout_alignParentLeft="true"
                 android:layout_width="wrap_content"
                 android:layout_height="90dp"
-                android:layout_marginLeft="40dp"
-                >
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="40dp">
+
                 <io.wochat.app.components.CircleImageView
-                    android:layout_centerInParent="true"
                     android:id="@+id/participant_pic_video_civ"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
+                    android:layout_centerInParent="true"
+                    android:elevation="8dp"
                     android:paddingBottom="10dp"
                     android:src="@color/blue"
-                    android:elevation="8dp"
                     app:civ_border_color="@color/warm_grey"
                     app:civ_border_overlay="true"
-                    app:civ_border_width="0.1dp"
-                    />
+                    app:civ_border_width="0.1dp" />
+
                 <io.wochat.app.components.CircleImageView
                     android:id="@+id/participant_pic_flag_video_civ"
-                    android:layout_toRightOf="@+id/participant_pic_video_civ"
-                    android:paddingBottom="10dp"
-                    android:layout_marginTop="0dp"
-                    android:layout_marginLeft="-40dp"
                     android:layout_width="35dp"
                     android:layout_height="35dp"
                     android:layout_alignParentBottom="true"
-                    android:src="@drawable/flag_israel"
+                    android:layout_marginLeft="-40dp"
+                    android:layout_marginTop="0dp"
+                    android:layout_toRightOf="@+id/participant_pic_video_civ"
                     android:elevation="8dp"
+                    android:paddingBottom="10dp"
+                    android:src="@drawable/flag_israel"
                     app:civ_border_color="@color/warm_grey"
                     app:civ_border_overlay="true"
                     app:civ_border_width="0.1dp"
@@ -95,34 +95,34 @@
             </RelativeLayout>
 
 
-<RelativeLayout
-    android:layout_toRightOf="@+id/circle_small_rl"
-    android:layout_width="wrap_content"
-    android:layout_marginTop="15dp"
-    android:layout_height="wrap_content"
-    android:layout_marginLeft="15dp">
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:layout_toRightOf="@+id/circle_small_rl">
 
-            <TextView
-            android:id="@+id/participant_name_video_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="aaaaaaaaa"
-            android:textColor="@color/white"
-            android:textSize="23dp"
-            android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/participant_name_video_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="aaaaaaaaa"
+                    android:textColor="@color/white"
+                    android:textSize="23dp"
+                    android:textStyle="bold" />
 
 
-        <TextView
-            android:id="@+id/participant_lang_video_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/participant_name_video_tv"
-            android:layout_marginTop="0dp"
-            android:text="aaaaaaaaa"
-            android:textColor="@color/white"
-            android:textSize="13dp"
-            android:textStyle="bold" />
-</RelativeLayout>
+                <TextView
+                    android:id="@+id/participant_lang_video_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/participant_name_video_tv"
+                    android:layout_marginTop="0dp"
+                    android:text="aaaaaaaaa"
+                    android:textColor="@color/white"
+                    android:textSize="13dp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
 
         </RelativeLayout>
     </RelativeLayout>
@@ -132,8 +132,8 @@
         android:id="@+id/main_audio_rl"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/speaker_iv"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/status_tv"
         app:layout_constraintTop_toBottomOf="@+id/title_rl"
         app:layout_constraintVertical_bias="0.0">
 
@@ -158,8 +158,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
-                android:layout_toRightOf="@+id/participant_name_audio_tv"
-                >
+                android:layout_toRightOf="@+id/participant_name_audio_tv">
 
                 <ImageView
                     android:id="@+id/communication_video_iv"
@@ -186,78 +185,80 @@
             android:textStyle="bold" />
 
         <RelativeLayout
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="30dp"
-            android:layout_marginBottom="10dp"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_below="@+id/participant_lang_audio_tv"
-            android:layout_above="@+id/status_tv"
-         >
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="5dp">
 
             <RelativeLayout
-                android:layout_centerInParent="true"
                 android:layout_width="wrap_content"
-                android:layout_height="210dp">
-        <io.wochat.app.components.CircleImageView
-            android:layout_centerInParent="true"
-            android:id="@+id/participant_pic_audio_civ"
-            android:layout_width="210dp"
-            android:layout_height="210dp"
-            android:paddingBottom="15dp"
-            android:src="@color/blue"
-            android:elevation="8dp"
-            app:civ_border_color="@color/warm_grey"
-            app:civ_border_overlay="true"
-            app:civ_border_width="0.1dp"
-            />
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true">
+
+                <io.wochat.app.components.CircleImageView
+                    android:id="@+id/participant_pic_audio_civ"
+                    android:layout_width="210dp"
+                    android:layout_height="210dp"
+                    android:layout_centerInParent="true"
+                    android:elevation="8dp"
+                    android:paddingBottom="15dp"
+                    android:src="@color/blue"
+                    app:civ_border_color="@color/warm_grey"
+                    app:civ_border_overlay="true"
+                    app:civ_border_width="0.1dp" />
+
                 <io.wochat.app.components.CircleImageView
                     android:id="@+id/participant_pic_flag_audio_civ"
-                    android:layout_toRightOf="@+id/participant_pic_audio_civ"
-                    android:paddingBottom="15dp"
-                    android:layout_marginLeft="-80dp"
-                    android:layout_marginTop="0dp"
-                    android:layout_centerHorizontal="true"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_alignParentBottom="true"
-                    android:src="@drawable/flag_israel"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginLeft="-80dp"
+                    android:layout_marginTop="0dp"
+                    android:layout_toRightOf="@+id/participant_pic_audio_civ"
                     android:elevation="8dp"
+                    android:paddingBottom="15dp"
+                    android:src="@drawable/flag_israel"
                     app:civ_border_color="@color/warm_grey"
                     app:civ_border_overlay="true"
                     app:civ_border_width="0.1dp"
 
                     />
 
-     </RelativeLayout>
+            </RelativeLayout>
 
 
         </RelativeLayout>
 
-        <TextView
-            android:id="@+id/status_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="5dp"
-            android:text="@string/calling"
-            android:textColor="@color/white"
-            android:textSize="30dp"
-            android:layout_above="@+id/participant_number_audio_tv"
-    />
-
-        <TextView
-            android:id="@+id/participant_number_audio_tv"
-            android:layout_centerHorizontal="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
-            android:textColor="@color/white"
-            android:textSize="17dp"
-            android:layout_alignParentBottom="true"
-      />
 
     </RelativeLayout>
+
+    <TextView
+        android:id="@+id/status_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="@string/calling"
+        android:textColor="@color/white"
+        android:textSize="30dp"
+        app:layout_constraintBottom_toTopOf="@+id/participant_number_audio_tv"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/participant_number_audio_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="17dp"
+        app:layout_constraintBottom_toTopOf="@+id/speaker_iv"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="10dp"
+ />
+
 
     <ImageView
         android:id="@+id/speaker_iv"
@@ -325,29 +326,29 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <RelativeLayout
+        android:id="@+id/hang_up_rl"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/hang_up_rl"
+        android:layout_marginBottom="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginBottom="30dp">
-            <io.wochat.app.components.CircleImageView
-                android:id="@+id/hang_up_civ"
-                android:layout_width="62dp"
-                android:layout_height="62dp"
-                android:layout_centerInParent="true"
-                android:src="@color/red"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent">
-            </io.wochat.app.components.CircleImageView>
+        app:layout_constraintStart_toStartOf="parent">
+
+        <io.wochat.app.components.CircleImageView
+            android:id="@+id/hang_up_civ"
+            android:layout_width="62dp"
+            android:layout_height="62dp"
+            android:layout_centerInParent="true"
+            android:src="@color/red"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"></io.wochat.app.components.CircleImageView>
 
         <ImageView
-            android:layout_centerInParent="true"
             android:id="@+id/hang_up_iv"
             android:layout_width="35dp"
             android:layout_height="35dp"
+            android:layout_centerInParent="true"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_action_speaker"
             app:layout_constraintBottom_toBottomOf="parent"
