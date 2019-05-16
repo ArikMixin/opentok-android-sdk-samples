@@ -376,12 +376,12 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         ///StartTokBox
         Log.d("yig", "222: ");
         if (mSubscriber == null) {
-            mSubscriber = new Subscriber.Builder(this, mStream).build();
+            mSubscriber = new Subscriber.Builder(this, mStream)
+                    .build();
             mSession.subscribe(mSubscriber);
 
             if(mIsVideoCall)
-                mSubscriberFL.addView(mSubscriber.getView());
-
+                   mSubscriberFL.addView(mSubscriber.getView());
         }
     }
 
