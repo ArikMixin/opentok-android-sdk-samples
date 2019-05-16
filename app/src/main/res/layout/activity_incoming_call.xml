@@ -8,6 +8,11 @@
     android:background="@drawable/call_background"
     tools:context=".ui.AudioVideoCall.IncomingCallActivity">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/subscriber_fl" />
+
     <RelativeLayout
         android:id="@+id/title_rl"
         android:layout_width="match_parent"
@@ -325,5 +330,22 @@
             android:layout_height="wrap_content" />
 
     </RelativeLayout>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/publisher_fl"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="25dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="20dp"
+        android:background="#FFFFFF"
+        android:padding="1dp"
+        app:cardCornerRadius="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/hang_up_rl"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/speaker_iv" />
 
 </android.support.constraint.ConstraintLayout>

@@ -24,6 +24,12 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.opentok.android.OpentokError;
+import com.opentok.android.Publisher;
+import com.opentok.android.Session;
+import com.opentok.android.Stream;
+import com.opentok.android.Subscriber;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -41,9 +47,11 @@ import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener, EasyPermissions.PermissionCallbacks {
+public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener, EasyPermissions.PermissionCallbacks, Session.SessionListener {
 
     private static final String TAG = "IncomingCallActivity";
+    private static final String TOKBOX = "TokBox";
+
     private CircleImageView mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
             mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mDeclineCIV, mAcceptCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
@@ -69,6 +77,13 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private Message message;
     private RTCcodeBR mRTCcodeBR;
     public static boolean activityActiveFlag;
+
+    private Session mSession;
+    private Publisher mPublisher;
+    private Subscriber mSubscriber;
+    private Stream mStream;
+    private FrameLayout mPublisherFL;
+    private FrameLayout mSubscriberFL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +113,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mMainAudioRL = (RelativeLayout) findViewById(R.id.main_audio_rl);
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
         mTimerChr = (Chronometer) findViewById(R.id.timer_chr);
+        mPublisherFL = (FrameLayout)findViewById(R.id.publisher_fl);
+        mSubscriberFL = (FrameLayout)findViewById(R.id.subscriber_fl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -107,8 +124,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
         mSessionId = getIntent().getStringExtra(Consts.INTENT_SESSION_ID);
 
-
-                mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
+        mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 //      mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
@@ -247,7 +263,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     public void createTokenInExistingSession(){
-        videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+          videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
           videoAudioCallViewModel.createTokenInExistingSession(this, mSessionId, "" + WCRepository.TokenRoleType.PUBLISHER);
     }
 
@@ -258,7 +274,13 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         Log.d(TAG, "Session and token received, session is: " + mSessionId
                                            + " , token is: " + mVideoAudioCall.getToken() );
         //Create session connection via TokBox
-        // TODO: 5/14/2019 start a video/audioCall via TokBox
+        connectToSession(mSessionId, mVideoAudioCall.getToken());
+    }
+
+    public void connectToSession(String sessionID, String tokenID){
+        mSession = new Session.Builder(this, OutGoingCallActivity.TOK_BOX_APIKEY, sessionID).build();
+        mSession.setSessionListener(this);
+        mSession.connect(tokenID);
     }
 
     @Override
@@ -298,6 +320,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         super.onDestroy();
         activityActiveFlag = false;
         mSoundsPlayer.stop();
+        mSession.disconnect();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -349,5 +372,56 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mTimerChr.setVisibility(View.VISIBLE);
         mTimerChr.setBase(SystemClock.elapsedRealtime());
         mTimerChr.start();
+
+        ///StartTokBox
+        Log.d("yig", "222: ");
+        if (mSubscriber == null) {
+            mSubscriber = new Subscriber.Builder(this, mStream).build();
+            mSession.subscribe(mSubscriber);
+
+            if(mIsVideoCall)
+                mSubscriberFL.addView(mSubscriber.getView());
+
+        }
     }
+
+    //TokBox
+    @Override
+    public void onConnected(Session session) {
+        Log.i(TOKBOX, "Session Connected");
+    }
+
+    @Override
+    public void onDisconnected(Session session) {
+        Log.i(TOKBOX, "Session Disconnected");
+    }
+
+    @Override
+    public void onStreamReceived(Session session, Stream stream) {
+        Log.d("yig", "1111: ");
+         this.mStream = stream;
+//        if (mSubscriber == null) {
+//            mSubscriber = new Subscriber.Builder(this, stream).build();
+//            mSession.subscribe(mSubscriber);
+//            mSubscriberFL.addView(mSubscriber.getView());
+//        }
+    Log.i(TOKBOX, "Stream Received");
+    }
+
+    @Override
+    public void onStreamDropped(Session session, Stream stream) {
+        Log.i(TOKBOX, "Stream Dropped");
+        if (mSubscriber != null) {
+            mSubscriber = null;
+            mSubscriberFL.removeAllViews();
+
+            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+        }
+    }
+
+    @Override
+    public void onError(Session session, OpentokError opentokError) {
+        Log.e(TOKBOX, "Session error: " + opentokError.getMessage());
+    }
+
 }

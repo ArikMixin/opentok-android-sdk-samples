@@ -27,8 +27,13 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.squareup.picasso.Picasso;
 
+import com.opentok.android.OpentokError;
+import com.opentok.android.Publisher;
+import com.opentok.android.PublisherKit;
+import com.opentok.android.Stream;
+import com.opentok.android.Subscriber;
+import com.squareup.picasso.Picasso;
 import java.util.List;
 import java.util.Locale;
 import io.wochat.app.R;
@@ -44,9 +49,18 @@ import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class OutGoingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener, EasyPermissions.PermissionCallbacks {
+import com.opentok.android.Session;
+
+public class OutGoingCallActivity extends AppCompatActivity
+        implements View.OnClickListener,
+        WCRepository.OnSessionResultListener,
+        EasyPermissions.PermissionCallbacks,
+        Session.SessionListener,
+        PublisherKit.PublisherListener {
 
     private static final String TAG = "OutGoingCallActivity";
+    private static final String TOKBOX = "TokBox";
+
     private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
             mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mHangUpCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
@@ -54,7 +68,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private Chronometer mTimerChr;
     private ImageView mCameraSwitchIV;
     private FrameLayout mBackNavigationFL;
-    private RelativeLayout mMainAudioRL, mMainVideoRL;
+    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL;
     private String mFixedParticipantId;
     private Locale loc;
     private int mFlagDrawable;
@@ -72,8 +86,16 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private Message message;
     private RTCcodeBR mRTCcodeBR;
     private String mSessionID = "";
-    public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO };
-    public static final int TOK_BOX_APIKEY = 46296242;
+
+    private Session mSession;
+    private Publisher mPublisher;
+    private Subscriber mSubscriber;
+    private FrameLayout mPublisherFL;
+    private FrameLayout mSubscriberFL;
+
+    public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
+                                                                     Manifest.permission.RECORD_AUDIO };
+    public static final String TOK_BOX_APIKEY = "46296242";
     public static final int RC_SETTINGS_SCREEN_PERM = 123;
     public static final int RC_VIDEO_APP_PERM = 124;
 
@@ -98,7 +120,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mParticipantLangVideoTV = (TextView) findViewById(R.id.participant_lang_video_tv);
         mStatusTV = (TextView) findViewById(R.id.status_tv);
         mTimerChr = (Chronometer) findViewById(R.id.timer_chr);
-
         mParticipantPicAudioCIV = (CircleImageView) findViewById(R.id.participant_pic_audio_civ);
         mParticipantPicAudioFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_audio_civ);
         mParticipantPicVideoCIV = (CircleImageView) findViewById(R.id.participant_pic_video_civ);
@@ -106,6 +127,10 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mHangUpCIV = (CircleImageView) findViewById(R.id.decline_civ);
         mMainAudioRL = (RelativeLayout) findViewById(R.id.main_audio_rl);
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
+        mStatusRL = (RelativeLayout) findViewById(R.id.status_rl);
+        mUserPicAudioRL = (RelativeLayout) findViewById(R.id.user_pic_audio_rl);
+        mPublisherFL = (FrameLayout)findViewById(R.id.publisher_fl);
+        mSubscriberFL = (FrameLayout)findViewById(R.id.subscriber_fl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -133,7 +158,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             mFixedParticipantId = PhoneNumberUtils.formatNumber(mParticipantId);
         else
-            mFixedParticipantId = PhoneNumberUtils.formatNumber("+" + mParticipantId, mParticipantLangAudioTV.toString());
+            mFixedParticipantId = PhoneNumberUtils.formatNumber("+" + mParticipantId,
+                                                                mParticipantLangAudioTV.toString());
         mParticipantNumberTV.setText(mFixedParticipantId);
 
         //Sounds Init
@@ -166,7 +192,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         if (EasyPermissions.hasPermissions(this, perms)) {
                 createSessionAndToken();
         } else {
-            EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out), RC_VIDEO_APP_PERM, perms);
+            EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out),
+                                                                              RC_VIDEO_APP_PERM, perms);
         }
     }
 
@@ -201,7 +228,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
 
         //Set Participant Pic
         setPhotoByUrl(false);
-
 
         mTitleTV.setText(R.string.out_audio_call);
     }
@@ -266,7 +292,13 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         //Send Massage to the receiver (With the sessionID) - let the receiver know that video/audio call is coming
         sendXMPPmsg(Message.RTC_CODE_OFFER);
         //Create session connection via TokBox
-        // TODO: 5/15/2019 //MAKE THE SESSION CONNECTION
+        connectToSession(mVideoAudioCall.getSessionID(), mVideoAudioCall.getToken());
+    }
+
+    public void connectToSession(String sessionID, String tokenID){
+        mSession = new Session.Builder(this, TOK_BOX_APIKEY, sessionID).build();
+        mSession.setSessionListener(this);
+        mSession.connect(tokenID);
     }
 
     @Override
@@ -309,6 +341,9 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         mCallingSound.stop();
         mDeclineSound.stop();
         mBusySound.stop();
+         mSession.disconnect();
+//        mSession.unsubscribe(mSubscriber);
+
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -382,12 +417,66 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private void callStarted() {
 
         mCallTXTanimation.cancel();
-        mStatusTV.setVisibility(View.INVISIBLE);
+        mStatusRL.setVisibility(View.GONE);
 
+        //User pic animation (When the status not sowed anymore)
         mTimerChr.setVisibility(View.VISIBLE);
         mTimerChr.setBase(SystemClock.elapsedRealtime());
         mTimerChr.start();
     }
 
+    //TokBox
+    @Override
+    public void onConnected(Session session) {
+        Log.i(TOKBOX, "Session Connected");
 
+        mPublisher = new Publisher.Builder(this)
+                .videoTrack(mIsVideoCall)
+                .build();
+        mPublisher.setPublisherListener(this);
+
+        mSession.publish(mPublisher);
+
+        //Only for audio calls
+          if (mIsVideoCall){
+                mPublisherFL.addView(mPublisher.getView());
+                mPublisherFL.setVisibility(View.VISIBLE);
+          }
+    }
+
+    @Override
+    public void onDisconnected(Session session) {
+        Log.i(TOKBOX, "Session Disconnected");
+    }
+
+    @Override
+    public void onStreamReceived(Session session, Stream stream) {
+        Log.i(TOKBOX, "Stream Received");
+    }
+
+    @Override
+    public void onStreamDropped(Session session, Stream stream) {
+        Log.i(TOKBOX, "Stream Dropped");
+    }
+
+    @Override
+    public void onError(Session session, OpentokError opentokError) {
+        Log.e(TOKBOX, "Session error: " + opentokError.getMessage());
+    }
+
+    // PublisherListener methods
+    @Override
+    public void onStreamCreated(PublisherKit publisherKit, Stream stream) {
+        Log.i(TOKBOX, "Publisher onStreamCreated");
+    }
+
+    @Override
+    public void onStreamDestroyed(PublisherKit publisherKit, Stream stream) {
+        Log.i(TOKBOX, "Publisher onStreamDestroyed");
+    }
+
+    @Override
+    public void onError(PublisherKit publisherKit, OpentokError opentokError) {
+        Log.e(TOKBOX, "Publisher error: " + opentokError.getMessage());
+    }
 }
