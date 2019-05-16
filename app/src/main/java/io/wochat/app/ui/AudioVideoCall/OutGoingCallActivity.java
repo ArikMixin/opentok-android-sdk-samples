@@ -341,7 +341,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     }
     @Override
     public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
-        sendXMPPmsg(Message.RTC_CODE_REJECTED);
+            sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
 
     private class RTCcodeBR extends BroadcastReceiver {
