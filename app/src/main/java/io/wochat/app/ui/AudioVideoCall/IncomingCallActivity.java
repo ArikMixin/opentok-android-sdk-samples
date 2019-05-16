@@ -247,7 +247,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     public void createTokenInExistingSession(){
-          videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+        videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
           videoAudioCallViewModel.createTokenInExistingSession(this, mSessionId, "" + WCRepository.TokenRoleType.PUBLISHER);
     }
 
@@ -257,7 +257,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
         Log.d(TAG, "Session and token received, session is: " + mSessionId
                                            + " , token is: " + mVideoAudioCall.getToken() );
-
+        //Create session connection via TokBox
         // TODO: 5/14/2019 start a video/audioCall via TokBox
     }
 
@@ -325,9 +325,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
      */
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
-        if(perms.size() == 3) // Number of perms
-            createTokenInExistingSession();
-        else
+        if(perms.size() != 3)  //if the client not accept all 3 permissions reject the call (close the activity)
             sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
     @Override

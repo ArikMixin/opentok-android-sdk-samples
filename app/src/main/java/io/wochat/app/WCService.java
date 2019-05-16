@@ -126,6 +126,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 						}
 					}
 
+					Log.d("arik_test", "OnSaved: " + message.getRtcCode());
 					//Open IncomingCallActivity Activity if video call received
 					if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
 							OpenIncomingCallActivity(message, contact);
@@ -411,7 +412,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	private void OpenIncomingCallActivity(Message message, Contact contact) {
 
-		Log.d("testttttt", "!!!!!!!!!!");
 		//If incoming activity open send BUSY back to sender
 		if(IncomingCallActivity.activityActiveFlag) {
 				Message message_busy = new Message(message.getParticipantId(), mSelfUserId, message.getConversationId(),

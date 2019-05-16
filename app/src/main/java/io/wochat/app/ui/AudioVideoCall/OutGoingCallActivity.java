@@ -72,7 +72,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     private Message message;
     private RTCcodeBR mRTCcodeBR;
     private String mSessionID = "";
-
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO };
     public static final int TOK_BOX_APIKEY = 46296242;
     public static final int RC_SETTINGS_SCREEN_PERM = 123;
@@ -88,7 +87,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void initViews() {
-
         mMicFlagCIV = (CircleImageView) findViewById(R.id.mic_flag_civ);
         mTitleTV = (TextView) findViewById(R.id.title_tv);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
@@ -169,7 +167,6 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
                 createSessionAndToken();
         } else {
             EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out), RC_VIDEO_APP_PERM, perms);
-
         }
     }
 
@@ -256,7 +253,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
     }
 
     public void createSessionAndToken(){
-         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+        videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
          videoAudioCallViewModel.createSessionsAndToken(this,"RELAYED");
     }
 
@@ -266,14 +263,9 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
         Log.d(TAG, "Session and token received, session is: " + mVideoAudioCall.getSessionID()
                                                                     + " , token is: " + mVideoAudioCall.getToken() );
         mSessionID = mVideoAudioCall.getSessionID();
-        //Send Massage to the receiver - let the receiver know that video/audio call is coming
-        message = new Message(mParticipantId, mSelfId, mConversationId, mSessionID, "",
-                "", Message.RTC_CODE_OFFER, mVideoFlag, false);
-        if ((mService != null) && (mService.isXmppConnected())) {
-            mService.sendMessage(message);
-            Log.d(TAG, "ServiceConnection: massage sent ");
-        }
-
+        //Send Massage to the receiver (With the sessionID) - let the receiver know that video/audio call is coming
+        sendXMPPmsg(Message.RTC_CODE_OFFER);
+        //Create session connection via TokBox
         // TODO: 5/15/2019 //MAKE THE SESSION CONNECTION
     }
 
@@ -344,11 +336,8 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
      */
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
-        if(perms.size() == 3) // Number of perms
-            createSessionAndToken();
-        else {
+        if(perms.size() != 3)  //if the client not accept all 3 permissions reject the call (close the activity)
             sendXMPPmsg(Message.RTC_CODE_REJECTED);
-        }
     }
     @Override
     public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
