@@ -66,12 +66,12 @@ public class GroupViewModel extends AndroidViewModel {
 		mRepository.makeAdmin(groupId, memberId);
 	}
 
-	public void removeMember(String groupId, String memberId){
-		mRepository.removeMember(groupId, memberId);
+	public void removeMember(String groupId, String memberId, Resources resources){
+		mRepository.removeMember(groupId, memberId, resources);
 	}
 
-	public void addMembers(String groupId, String[] memberIds){
-		mRepository.addMembers(groupId, memberIds);
+	public void addMembers(String groupId, String[] memberIds, Resources resources){
+		mRepository.addMembers(groupId, memberIds, resources);
 	}
 
 	public void getGroupDetailsAndInsertToDB(String groupId, Resources resources){

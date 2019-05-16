@@ -47,6 +47,7 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
 import io.wochat.app.ui.ContactInfo.ContactInfoMediaActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
@@ -59,6 +60,9 @@ import io.wochat.app.viewmodel.GroupViewModel;
 public class GroupInfoActivity extends AppCompatActivity implements View.OnClickListener {
 
 	private static final int REQUEST_IMAGE_PICKER = 1;
+	private static final int REQUEST_CONTACTS_SELECT = 2;
+	private static final String TAG = "GroupInfoActivity";
+
 	private ContactViewModel mContactViewModel;
 	private ImageView mContactIV;
 	private SubtitleCollapsingToolbarLayout mToolbarLayout;
@@ -79,6 +83,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private String mSelfLang;
 	private Uri mCameraPhotoFileUri;
 	private byte[] mProfilePicByte;
+	private LinearLayout mAddMembersLL;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -93,11 +98,11 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		mMediaLL = (LinearLayout)findViewById(R.id.media_ll);
 
 		mGroupMembersLL = (LinearLayout)findViewById(R.id.group_members_ll);
-
+		mAddMembersLL = (LinearLayout)findViewById(R.id.add_members_ll);
 
 
 		mMediaLL.setOnClickListener(this);
-
+		mAddMembersLL.setOnClickListener(this);
 
 
 
@@ -195,8 +200,14 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 				finish();
 				break;
 
-			case R.id.call_iv:
-				Toast.makeText(this, "call", Toast.LENGTH_SHORT).show();
+			case R.id.add_members_ll:
+				Intent intent1 = new Intent(this, ContactMultiSelectorActivity.class);
+				intent1.putExtra(Consts.INTENT_TITLE, getString(R.string.select_contacts));
+				intent1.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_right_arrow);
+				String[] array = getGroupMemberContactsArrayIds();
+				intent1.putExtra(ContactMultiSelectorActivity.EXCLUDE_CONTACTS, array);
+				startActivityForResult(intent1, REQUEST_CONTACTS_SELECT);
+				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 				break;
 
 			case R.id.video_iv:
@@ -304,7 +315,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 					mGroupViewModel.removeAdmin(mConversationId, gmc.getGroupMember().getUserId());
 					break;
 				case R.id.remove_member_ll:
-					mGroupViewModel.removeMember(mConversationId, gmc.getGroupMember().getUserId());
+					mGroupViewModel.removeMember(mConversationId, gmc.getGroupMember().getUserId(), getResources());
 					break;
 			}
 		}
@@ -389,6 +400,13 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 					setBitmapAsProfilePic(mCameraPhotoFileUri);
 				}
 				mGroupViewModel.updateGroupImage(mConversationId, mProfilePicByte, getResources());
+			}
+		}
+		else if (requestCode == REQUEST_CONTACTS_SELECT){
+			if (resultCode == RESULT_OK) {
+				String[] contacts = data.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
+				mGroupViewModel.addMembers(mConversationId, contacts, getResources());
+
 			}
 		}
 	}
@@ -497,5 +515,15 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		});
 
 		alertDialog.show();
+	}
+
+
+	private String[] getGroupMemberContactsArrayIds(){
+		int i = 0;
+		String[] array = new String[mGroupMemberContacts.size()];
+		for(GroupMemberContact memberContact : mGroupMemberContacts) {
+			array[i++] = memberContact.getContact().getContactId();
+		}
+		return array;
 	}
 }

@@ -226,11 +226,11 @@
                             android:id="@+id/add_members_tv"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-                            android:textColor="@color/app_blue"
-                            android:layout_marginStart="20dp"
                             android:layout_gravity="center_vertical"
-                            android:text="Add people to this group"/>
+                            android:layout_marginStart="20dp"
+                            android:text="@string/add_people_to_this_group"
+                            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                            android:textColor="@color/app_blue"/>
 
 
                     </LinearLayout>

@@ -2460,20 +2460,30 @@ public class WCRepository {
 		});
 	}
 
-	public void removeMember(String groupId, String memberId) {
+	public void removeMember(String groupId, String memberId, Resources resources) {
 		mAppExecutors.networkIO().execute(() -> {
 			String[] contactArray = new String[1];
 			contactArray[0] = memberId;
 			mWochatApi.removeContactsFromGroup(groupId, contactArray, (isSuccess, errorLogic, errorComm, response) -> {
-
+				if (isSuccess){
+					ConversationAndItsGroupMembers cgm = handleGroupResult(response, resources);
+					mAppExecutors.diskIO().execute(() -> {
+						mGroupDao.removeMember(groupId, memberId);
+					});
+				}
 			});
 		});
 	}
 
-	public void addMembers(String groupId, String[] memberIds) {
+	public void addMembers(String groupId, String[] memberIds, Resources resources) {
 		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.addContactsToGroup(groupId, memberIds, (isSuccess, errorLogic, errorComm, response) -> {
-
+				if (isSuccess){
+					ConversationAndItsGroupMembers cgm = handleGroupResult(response, resources);
+					mAppExecutors.diskIO().execute(() -> {
+						updateDBWithGroupData(groupId, cgm);
+					});
+				}
 			});
 		});
 	}
