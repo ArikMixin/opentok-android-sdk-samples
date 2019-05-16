@@ -94,5 +94,11 @@
     <string name="person_in_this_group_title">1 person in this group</string>
     <string name="msg_enter_group_name">Please enter group name.</string>
     <string name="msg_group_name_2_chars">Group name must be at least 2 characters.</string>
+    <string name="group_info_member_message">Message %s</string>
+    <string name="group_info_member_view">View %s</string>
+    <string name="group_info_member_make_admin">Make Group Admin</string>
+    <string name="group_info_member_dismiss_admin">Dismiss Group Admin</string>
+    <string name="group_info_member_remove">Remove %s</string>
+    <string name="group_info_member_verify_sec_code">Verify Security Code</string>
 
 </resources>

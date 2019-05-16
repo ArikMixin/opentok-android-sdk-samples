@@ -1,7 +1,9 @@
 package io.wochat.app.ui.Group;
 
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.SubtitleCollapsingToolbarLayout;
 import android.support.v7.app.AlertDialog;
@@ -29,6 +31,7 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.ContactInfo.ContactInfoMediaActivity;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
@@ -49,6 +52,9 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private Date mCreatedDate;
 	private List<GroupMemberContact> mGroupMemberContacts;
 	private LinearLayout mGroupMembersLL;
+	private String mSelfId;
+	private boolean mSelfIsAdmin;
+	private BottomSheetDialog mBottomSheetDialog;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +80,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		mContactIV = (ImageView)findViewById(R.id.contact_iv);
 		mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
 		mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mConversationViewModel.getConversationLD(mConversationId).observe(this, conversation -> {
@@ -136,7 +143,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 				finish();
 				break;
 
-			case R.id.action_add_members:
+			case R.id.action_picture:
 				break;
 			case R.id.action_edit:
 				break;
@@ -162,7 +169,12 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 				break;
 
 			case R.id.media_ll:
+				Intent intent = new Intent(this, ContactInfoMediaActivity.class);
+				intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, mConversation.getGroupName());
+				startActivity(intent);
 				break;
+
 
 			case R.id.delete_conversation_ll:
 				showConfirmationDelete();
@@ -190,10 +202,23 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 
 	private void createViewMembers(){
 		mGroupMembersLL.removeAllViews();
+		mSelfIsAdmin = false;
 		for(GroupMemberContact memberContact : mGroupMemberContacts) {
+
+			if (memberContact.getGroupMember().isAdmin() && memberContact.getContact().getContactId().equals(mSelfId))
+				mSelfIsAdmin = true;
+
 			View view = LayoutInflater.from(this).inflate(R.layout.group_member_item, null);
 			populateMember(view, memberContact);
+
+			view.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					openMemberMenu((GroupMemberContact)v.getTag());
+				}
+			});
 			mGroupMembersLL.addView(view);
+
 		}
 	}
 
@@ -208,5 +233,88 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		else
 			adminTV.setVisibility(View.INVISIBLE);
 		avatarCfiv.setContact(memberContact.getContact());
+		view.setTag(memberContact);
+	}
+
+	private View.OnClickListener mMemberActionClickListener = new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			GroupMemberContact gmc = (GroupMemberContact)v.getTag();
+			mBottomSheetDialog.dismiss();
+			switch (v.getId()){
+				case R.id.message_member_ll:
+					break;
+				case R.id.view_member_ll:
+					break;
+				case R.id.make_admin_ll:
+					mGroupViewModel.makeAdmin(mConversationId, gmc.getGroupMember().getUserId());
+					break;
+				case R.id.dismiss_admin_ll:
+					mGroupViewModel.removeAdmin(mConversationId, gmc.getGroupMember().getUserId());
+					break;
+				case R.id.remove_member_ll:
+					mGroupViewModel.removeMember(mConversationId, gmc.getGroupMember().getUserId());
+					break;
+			}
+		}
+	};
+
+	private void openMemberMenu(GroupMemberContact gmc){
+		String memberName = gmc.getContact().getDisplayName();
+		boolean isMemberAdmin = gmc.getGroupMember().isAdmin();
+
+		mBottomSheetDialog = new BottomSheetDialog(this);
+		View sheetView = getLayoutInflater().inflate(R.layout.dialog_group_info_member, null);
+
+		LinearLayout messageMemberLL = sheetView.findViewById(R.id.message_member_ll);
+		LinearLayout viewMemberLL = sheetView.findViewById(R.id.view_member_ll);
+		LinearLayout makeAdminLL = sheetView.findViewById(R.id.make_admin_ll);
+		LinearLayout dismissAdminLL = sheetView.findViewById(R.id.dismiss_admin_ll);
+		LinearLayout removeMemberLL = sheetView.findViewById(R.id.remove_member_ll);
+
+		messageMemberLL.setOnClickListener(mMemberActionClickListener);
+		viewMemberLL.setOnClickListener(mMemberActionClickListener);
+		makeAdminLL.setOnClickListener(mMemberActionClickListener);
+		dismissAdminLL.setOnClickListener(mMemberActionClickListener);
+		removeMemberLL.setOnClickListener(mMemberActionClickListener);
+
+		messageMemberLL.setTag(gmc);
+		viewMemberLL.setTag(gmc);
+		makeAdminLL.setTag(gmc);
+		dismissAdminLL.setTag(gmc);
+		removeMemberLL.setTag(gmc);
+
+		messageMemberLL.setVisibility(View.VISIBLE);
+		viewMemberLL.setVisibility(View.VISIBLE);
+
+		if (!mSelfIsAdmin){
+			makeAdminLL.setVisibility(View.GONE);
+			dismissAdminLL.setVisibility(View.GONE);
+			removeMemberLL.setVisibility(View.GONE);
+		}
+		else {
+			removeMemberLL.setVisibility(View.VISIBLE);
+			if (isMemberAdmin){
+				makeAdminLL.setVisibility(View.GONE);
+				dismissAdminLL.setVisibility(View.VISIBLE);
+			}
+			else {
+				dismissAdminLL.setVisibility(View.GONE);
+				makeAdminLL.setVisibility(View.VISIBLE);
+			}
+		}
+
+
+		TextView messageMemberTV = (TextView)sheetView.findViewById(R.id.message_member_tv);
+		messageMemberTV.setText(String.format(getString(R.string.group_info_member_message), memberName));
+		TextView viewMemberTV = (TextView)sheetView.findViewById(R.id.view_member_tv);
+		viewMemberTV.setText(String.format(getString(R.string.group_info_member_view), memberName));
+		TextView makeAdminTV = (TextView)sheetView.findViewById(R.id.make_admin_tv);
+		TextView dismissAdminTV = (TextView)sheetView.findViewById(R.id.dismiss_admin_tv);
+		TextView removeMemberTV = (TextView)sheetView.findViewById(R.id.remove_member_tv);
+		removeMemberTV.setText(String.format(getString(R.string.group_info_member_remove), memberName));
+
+		mBottomSheetDialog.setContentView(sheetView);
+		mBottomSheetDialog.show();
 	}
 }

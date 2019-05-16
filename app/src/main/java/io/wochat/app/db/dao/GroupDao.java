@@ -58,6 +58,19 @@ public interface GroupDao {
 		"WHERE group_id =:groupId")
 	LiveData<List<GroupMemberContact>> getMembersContacts(String groupId);
 
+	@Query("UPDATE group_memeber_table " +
+		"SET  is_admin = 0 " +
+		"WHERE group_id =:groupId AND user_id =:memberId")
+	void removeAdmin(String groupId, String memberId);
+
+	@Query("UPDATE group_memeber_table " +
+		"SET  is_admin = 1 " +
+		"WHERE group_id =:groupId AND user_id =:memberId")
+	void makeAdmin(String groupId, String memberId);
+
+	@Query("DELETE FROM group_memeber_table " +
+		"WHERE group_id =:groupId AND user_id =:memberId")
+	void removeMember(String groupId, String memberId);
 
 
 }

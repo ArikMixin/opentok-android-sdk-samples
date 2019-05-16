@@ -25,11 +25,12 @@ import java.util.Locale;
 import java.util.Map;
 
 import io.wochat.app.BuildConfig;
+import io.wochat.app.utils.Utils;
 
 public class WochatApi {
 
-	//private static final String BASE_URL = "https://api-dev.wochat.io/";
-	private static final String BASE_URL = "https://api.wochat.io/";
+	private static final String BASE_URL = "https://api-dev.wochat.io/";
+	//private static final String BASE_URL = "https://api.wochat.io/";
 
 	private static final String TAG = "WochatApi";
 	private final Context mContext;
@@ -214,7 +215,7 @@ public class WochatApi {
 
 	public void userGetContacts(String[] contactIdArray, final OnServerResponseListener lsnr) {
 
-		Log.e(TAG, "API userGetContacts - contactIdList count: " + contactIdArray.length);
+		Log.e(TAG, "API userGetContacts - contactIdList count: " + Utils.LogArray(Log.ERROR, TAG, contactIdArray));
 
 		JSONObject jsonObject = new JSONObject();
 		JSONArray jsonArray = new JSONArray(Arrays.asList(contactIdArray));
@@ -250,6 +251,99 @@ public class WochatApi {
 
 	}
 
+	public void updateGroupName(String groupId, String name, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API updateGroupName to: " + name);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("name", name);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/";
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+	public void updateGroupImage(String groupId, String imageUrl, String thumbUrl, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API updateGroupImage to: " + imageUrl);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("image_url", imageUrl);
+			jsonObject.put("thumb_url", thumbUrl);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/";
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+
+	public void addContactsToGroup(String groupId, String[] contacts, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API addContactsToGroup - contactIdList count: " + contacts.length);
+
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray(Arrays.asList(contacts));
+		try {
+			jsonObject.put("participants", jsonArray);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/participants/";
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+	}
+
+	public void removeContactsFromGroup(String groupId, String[] contacts, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API removeContactsFromGroup - contactIdList count: " + contacts.length);
+
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray(Arrays.asList(contacts));
+		try {
+			jsonObject.put("participants", jsonArray);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/participants/";
+		sendRequestAndHandleResult(Request.Method.DELETE, url, jsonObject, lsnr);
+	}
+
+	public void makeAdminToGroup(String groupId, String contact, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API makeAdminToGroup - contact: " + contact);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("is_admin", true);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/participants/" + contact + "/";
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+	public void removeAdminFromGroup(String groupId, String contact, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API makeAdminToGroup - contact: " + contact);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("is_admin", false);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/participants/" + contact + "/";
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
 
 
 	public void createNewGroup(String name, String imageUrl, String[] contacts, final OnServerResponseListener lsnr) {
@@ -268,24 +362,20 @@ public class WochatApi {
 		}
 
 		String url = BASE_URL + "group/";
-
 		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
-
-
 	}
 
 
 
 	public void getGroupDetails(String groupId, final OnServerResponseListener lsnr) {
-
 		Log.e(TAG, "API getGroupDetails: " + groupId);
-
 		String url = BASE_URL + "group/" + groupId + "/";
-
 		sendRequestAndHandleResult(Request.Method.GET, url, null, lsnr);
-
-
 	}
+
+
+
+	/*****************************************************************************************************************/
 
 	public static final int UPLOAD_MIME_TYPE_IAMGE = 1;
 	public static final int UPLOAD_MIME_TYPE_VIDEO = 2;
@@ -570,6 +660,7 @@ public class WochatApi {
 					Map<String, String> params = new HashMap<String, String>();
 					params.put("User-Id", mUserId);
 					params.put("Api-Token", mToken);
+					Log.e(TAG, "request params: User-Id:" + mUserId + " , Api-Token:"+mToken);
 					return params;
 				}
 				else

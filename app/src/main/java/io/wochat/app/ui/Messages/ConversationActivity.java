@@ -90,6 +90,7 @@ import io.wochat.app.utils.Utils;
 import io.wochat.app.utils.videocompression.MediaController;
 import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
+import io.wochat.app.viewmodel.GroupViewModel;
 import io.wochat.app.viewmodel.SupportedLanguagesViewModel;
 
 //import com.stfalcon.chatkit.utils.DateFormatter;
@@ -180,6 +181,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private ContactViewModel mContactViewModel;
 	private boolean mIsGroup;
 	private List<GroupMember> mGroupMembers;
+	private GroupViewModel mGroupViewModel;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -269,6 +271,7 @@ public class ConversationActivity extends PermissionActivity implements
 			if (mIsGroup) {
 				Intent intent = new Intent(this, GroupInfoActivity.class);
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+				intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
 				startActivity(intent);
 			}
 			else {
@@ -341,7 +344,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 //		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
 //		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
-
+		mGroupViewModel = ViewModelProviders.of(this).get(GroupViewModel.class);
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
 		if (mParticipantId != null) {
@@ -417,6 +420,10 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 
+
+		if (mIsGroup){
+			mGroupViewModel.getGroupDetailsAndInsertToDB(mConversationId, getResources());
+		}
 	}
 
 
@@ -1466,12 +1473,18 @@ public class ConversationActivity extends PermissionActivity implements
 					if ((Utils.isNotNullAndNotEmpty(message.getMediaUrl())) && (message.getAckStatus().equals(Message.ACK_STATUS_PENDING))) { // need to upload - one time
 						//mConversationViewModel.getMessage(message.getMessageId()).removeObserver(mMessageObserver);
 						if ((mService != null) && (mService.isXmppConnected())) {
-							mService.sendMessage(message);
+							if (mIsGroup)
+								mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+							else
+								mService.sendMessage(message);
 						}
 						else {
 							new Handler(getMainLooper()).postDelayed(() -> {
 								if ((mService != null) && (mService.isXmppConnected())) {
-									mService.sendMessage(message);
+									if (mIsGroup)
+										mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+									else
+										mService.sendMessage(message);
 								}
 							}, 1500);
 						}
@@ -1484,7 +1497,11 @@ public class ConversationActivity extends PermissionActivity implements
 							new Handler(getMainLooper()).postDelayed(() -> {
 								if ((mService != null) && (mService.isXmppConnected())) {
 									Log.e("GIL", "call sendMessage: " + message.toJson());
-									mService.sendMessage(message);
+									if (mIsGroup)
+										mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+									else
+										mService.sendMessage(message);
+
 								}
 							}, 1500);
 						}
@@ -1495,7 +1512,11 @@ public class ConversationActivity extends PermissionActivity implements
 						new Handler(getMainLooper()).postDelayed(() -> {
 							if ((mService != null) && (mService.isXmppConnected())) {
 								Log.e("GIL", "call sendMessage: " + message.toJson());
-								mService.sendMessage(message);
+								if (mIsGroup)
+									mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+								else
+									mService.sendMessage(message);
+
 							}
 						}, 1500);
 					}
@@ -1936,7 +1957,12 @@ public class ConversationActivity extends PermissionActivity implements
 			Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() result: " + pendingMessages.size());
 
 			if ((pendingMessages != null)&&(pendingMessages.size()>= totalMessagesToSend)) {
-				mService.sendMessages(pendingMessages);
+
+				if (mIsGroup)
+					mService.sendGroupMessages(pendingMessages, mGroupMembers, mSelfId);
+				else
+					mService.sendMessages(pendingMessages);
+
 				Log.e(TAG, "forwardMessagesToContacts, mForwardContactId: " + mForwardContactId);
 				if (mForwardContactId != null) {
 					String conversationId = Conversation.getConversationId(mSelfId, mForwardContactId);

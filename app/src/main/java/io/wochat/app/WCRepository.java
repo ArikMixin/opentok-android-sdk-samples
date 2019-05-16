@@ -1252,6 +1252,8 @@ public class WCRepository {
 
 
 	private void handleGroupEvent(Message message, Resources resources){
+		String groupId;
+		String memberId;
 		switch (message.getEventCode()){
 			case Message.EVENT_CODE_USER_ADDED:
 				List<String> list = new ArrayList<>();
@@ -1264,17 +1266,28 @@ public class WCRepository {
 				if (list.size()>0)
 					getContactsFromServer(list.toArray(new String[0]));
 
-				String groupId = message.getGroupId();
+				groupId = message.getGroupId();
 				getGroupDetailsAndInsertToDB(groupId, resources);
+				break;
 
 
 			case Message.EVENT_CODE_USER_REMOVED:
+				break;
 			case Message.EVENT_CODE_USER_LEFT:
+				break;
 			case Message.EVENT_CODE_MADE_ADMIN:
+				memberId = message.getOtherUser();
+				groupId = message.getGroupId();
+				mGroupDao.makeAdmin(groupId, memberId);
+				break;
 			case Message.EVENT_CODE_REMOVED_ADMIN:
+				memberId = message.getOtherUser();
+				groupId = message.getGroupId();
+				mGroupDao.removeAdmin(groupId, memberId);
+				break;
 			case Message.EVENT_CODE_ICON_CHANGED:
+				break;
 			case Message.EVENT_CODE_NAME_CHANGED:
-
 				break;
 		}
 
@@ -2329,33 +2342,34 @@ public class WCRepository {
 				if (isSuccess){
 					ConversationAndItsGroupMembers cgm = handleGroupResult(response, resources);
 					mAppExecutors.diskIO().execute(() -> {
-
-						List<String> contactsIds = new ArrayList<>();
-
-						for(GroupMember groupMember : cgm.getGroupMembers()){
-							if(!mContactDao.hasContact(groupMember.getUserId())){
-								Contact contact = new Contact(groupMember.getUserId());
-								mContactDao.insert(contact);
-								contactsIds.add(groupMember.getUserId());
-							}
-						}
-
-						if (mConversationDao.hasConversation(groupId))
-							mConversationDao.update(cgm.getConversation());
-						else
-							mConversationDao.insert(cgm.getConversation());
-						mGroupDao.insert(cgm.getGroupMembers());
-
-						if (contactsIds.size() > 0) {
-							String[] contactArray = contactsIds.toArray(new String[0]);
-							getContactsFromServer(contactArray);
-						}
-
+						updateDBWithGroupData(groupId, cgm);
 					});
-
 				}
 			});
 		});
+	}
+
+	private void updateDBWithGroupData(String groupId, ConversationAndItsGroupMembers cgm){
+		List<String> contactsIds = new ArrayList<>();
+
+		for(GroupMember groupMember : cgm.getGroupMembers()){
+			if(!mContactDao.hasContact(groupMember.getUserId())){
+				Contact contact = new Contact(groupMember.getUserId());
+				mContactDao.insert(contact);
+				contactsIds.add(groupMember.getUserId());
+			}
+		}
+
+		if (mConversationDao.hasConversation(groupId))
+			mConversationDao.update(cgm.getConversation());
+		else
+			mConversationDao.insert(cgm.getConversation());
+		mGroupDao.insert(cgm.getGroupMembers());
+
+		if (contactsIds.size() > 0) {
+			String[] contactArray = contactsIds.toArray(new String[0]);
+			getContactsFromServer(contactArray);
+		}
 	}
 
 
@@ -2368,25 +2382,56 @@ public class WCRepository {
 		return mGroupDao.getMembersContacts(groupId);
 	}
 
-	public LiveData<List<GroupMemberContact>> getMembersContactOldBad(String groupId){
-		LiveData<List<GroupMember>> members = mGroupDao.getMembersLD(groupId);
+//	public LiveData<List<GroupMemberContact>> getMembersContactOldBad(String groupId){
+//		LiveData<List<GroupMember>> members = mGroupDao.getMembersLD(groupId);
+//
+//		LiveData<List<GroupMemberContact>> res = Transformations.map(members, input -> {
+//			List<GroupMemberContact> gmcList = new ArrayList<>();
+//			for(GroupMember groupMember : input){
+//				GroupMemberContact gmc = new GroupMemberContact();
+//				gmc.setGroupMember(groupMember);
+//				Contact contact = mContactDao.getContact(groupMember.getUserId());
+//				gmc.setContact(contact);
+//				gmcList.add(gmc);
+//			}
+//			return gmcList;
+//		});
+//		return res;
+//
+//	}
 
-		LiveData<List<GroupMemberContact>> res = Transformations.map(members, input -> {
-			List<GroupMemberContact> gmcList = new ArrayList<>();
-			for(GroupMember groupMember : input){
-				GroupMemberContact gmc = new GroupMemberContact();
-				gmc.setGroupMember(groupMember);
-				Contact contact = mContactDao.getContact(groupMember.getUserId());
-				gmc.setContact(contact);
-				gmcList.add(gmc);
-			}
-			return gmcList;
+	public void removeAdmin(String groupId, String memberId) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.removeAdminFromGroup(groupId, memberId, (isSuccess, errorLogic, errorComm, response) -> {
+
+			});
 		});
-		return res;
-
 	}
 
+	public void makeAdmin(String groupId, String memberId) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.makeAdminToGroup(groupId, memberId, (isSuccess, errorLogic, errorComm, response) -> {
 
+			});
+		});
+	}
 
+	public void removeMember(String groupId, String memberId) {
+		mAppExecutors.networkIO().execute(() -> {
+			String[] contactArray = new String[1];
+			contactArray[0] = memberId;
+			mWochatApi.removeContactsFromGroup(groupId, contactArray, (isSuccess, errorLogic, errorComm, response) -> {
+
+			});
+		});
+	}
+
+	public void addMembers(String groupId, String[] memberIds) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.addContactsToGroup(groupId, memberIds, (isSuccess, errorLogic, errorComm, response) -> {
+
+			});
+		});
+	}
 
 }

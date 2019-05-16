@@ -317,6 +317,25 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 
+	public void sendGroupMessages(List<Message> messages, List<GroupMember> groupMembers, String selfId){
+		List<String> participantIds = new ArrayList<>();
+		for (GroupMember groupMember : groupMembers){
+			if(!groupMember.getUserId().equals(selfId))
+				participantIds.add(groupMember.getUserId());
+		}
+
+		Log.e(TAG, "sendMessages count: " + messages.size());
+		for (Message  message : messages) {
+			if (message.isImage()){
+				if ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty())) // make sure media was uploaded
+					mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
+			}
+			else
+				mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
+		}
+	}
+
+
 	private void sendAckStatusForIncomingMessage(Message message, @Message.ACK_STATUS String ackStatus) {
 		Message msg = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(), "", "EN");
 		msg.setMessageType(Message.MSG_TYPE_ACKNOWLEDGMENT);

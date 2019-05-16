@@ -469,6 +469,30 @@ public class Utils {
 		return msg;
 	}
 
+	public static String LogArray(int priority, String tag, String[] array) {
+		String msg = null;
+		for (int i=0; i<array.length; i++){
+			msg = (msg==null?array[i]:(msg + ", " + array[i]));
+		}
+		switch (priority){
+			case Log.VERBOSE:
+				Log.v(tag, msg);
+				break;
+			case Log.DEBUG:
+				Log.d(tag, msg);
+				break;
+			case Log.INFO:
+				Log.i(tag, msg);
+				break;
+			case Log.ERROR:
+				Log.e(tag, msg);
+				break;
+			case Log.WARN:
+				Log.w(tag, msg);
+				break;
+		}
+		return msg;
+	}
 
 
 	public static String getUserFirstName(String fullName) {

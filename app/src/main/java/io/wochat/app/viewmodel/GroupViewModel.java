@@ -4,6 +4,7 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 
 import java.util.List;
@@ -50,5 +51,24 @@ public class GroupViewModel extends AndroidViewModel {
 		return mRepository.getMembersContact(groupId);
 	}
 
+	public void removeAdmin(String groupId, String memberId){
+		mRepository.removeAdmin(groupId, memberId);
+	}
+
+	public void makeAdmin(String groupId, String memberId){
+		mRepository.makeAdmin(groupId, memberId);
+	}
+
+	public void removeMember(String groupId, String memberId){
+		mRepository.removeMember(groupId, memberId);
+	}
+
+	public void addMembers(String groupId, String[] memberIds){
+		mRepository.addMembers(groupId, memberIds);
+	}
+
+	public void getGroupDetailsAndInsertToDB(String groupId, Resources resources){
+		mRepository.getGroupDetailsAndInsertToDB(groupId, resources);
+	}
 
 }
