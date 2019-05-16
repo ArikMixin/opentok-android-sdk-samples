@@ -410,6 +410,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 
 	private void OpenIncomingCallActivity(Message message, Contact contact) {
+
+		Log.d("testttttt", "!!!!!!!!!!");
 		//If incoming activity open send BUSY back to sender
 		if(IncomingCallActivity.activityActiveFlag) {
 				Message message_busy = new Message(message.getParticipantId(), mSelfUserId, message.getConversationId(),
