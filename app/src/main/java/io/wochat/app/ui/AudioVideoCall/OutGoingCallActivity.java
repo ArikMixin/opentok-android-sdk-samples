@@ -353,7 +353,7 @@ public class OutGoingCallActivity extends AppCompatActivity implements View.OnCl
                 finishCall(false);
             else if(intent.getAction().equals(Message.RTC_CODE_ANSWER))
                 callStarted();
-        }
+            }
     }
 
     private void finishCall(boolean rejectedFlag){
