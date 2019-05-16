@@ -255,7 +255,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     @Override
     public void onSucceedCreateSession(StateData<String> success){
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
-        Log.d("testttt", "Session and token received, session is: " + mSessionId
+        Log.d(TAG, "Session and token received, session is: " + mSessionId
                                            + " , token is: " + mVideoAudioCall.getToken() );
 
         // TODO: 5/14/2019 start a video/audioCall via TokBox
