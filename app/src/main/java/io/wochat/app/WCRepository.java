@@ -547,7 +547,7 @@ public class WCRepository {
 			String description = response.getString("description");
 			String image_url = response.getString("image_url");
 			String id = response.getString("id");
-			String created_date = response.getString("created_date");
+			int created_date = response.getInt("created_date");
 			String created_by = response.getString("created_by");
 			JSONArray participantsArray = response.getJSONArray("participants");
 			ArrayList<GroupMember> gml = new ArrayList<>();
@@ -610,6 +610,50 @@ public class WCRepository {
 
 							else if (errorComm != null) {
 								mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm));
+							}
+
+						});
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+
+
+
+		});
+	}
+
+	public void updateGroupName(String groupId, String newName, Resources resources){
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.updateGroupName(groupId, newName, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						mConversationDao.updateGroupName(groupId, newName);
+					});
+				}
+			});
+		});
+	}
+	public void updateGroupImage(String groupId, byte[] bytes, Resources resources){
+		mAppExecutors.networkIO().execute(() -> {
+
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					try {
+						String imageUrl = response.getString("url");
+						String imageThumbUrl = response.getString("thumb_url");
+						mWochatApi.updateGroupImage(groupId, imageUrl, imageThumbUrl, (isSuccess1, errorLogic1, errorComm1, response1) -> {
+							if (isSuccess1){
+								//ConversationAndItsGroupMembers cgm = handleGroupResult(response1, resources);
+								mAppExecutors.diskIO().execute(() -> {
+									mConversationDao.updateGroupImage(groupId, imageUrl);
+								});
+							}
+							else if (errorLogic != null) {
+							}
+
+							else if (errorComm != null) {
 							}
 
 						});

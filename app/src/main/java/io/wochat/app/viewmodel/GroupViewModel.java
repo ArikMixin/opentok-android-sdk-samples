@@ -37,6 +37,13 @@ public class GroupViewModel extends AndroidViewModel {
 		mRepository.createNewGroup(groupName, bytes, contactList, getApplication().getResources());
 	}
 
+	public void updateGroupImage(String groupId, byte[] bytes, Resources resources){
+		mRepository.updateGroupImage(groupId, bytes, resources);
+	}
+
+	public void updateGroupName(String groupId, String newName, Resources resources){
+		mRepository.updateGroupName(groupId, newName, resources);
+	}
 
 	public MutableLiveData<StateData<Conversation>> getCreateGroupResult(){
 		return mRepository.getCreateGroupResult();

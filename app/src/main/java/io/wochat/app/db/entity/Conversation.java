@@ -178,7 +178,7 @@ public class Conversation implements IDialog{
 						String groupDescription,
 						String groupImageUrl,
 						String groupCreatedBy,
-						String groupCreatedDate){
+						int groupCreatedDate){
 
 		this.conversationId = conversationId;
 		this.participantId = null;
@@ -186,7 +186,8 @@ public class Conversation implements IDialog{
 		this.groupName = groupName;
 		this.groupDescription = groupDescription;
 		this.groupImageUrl = groupImageUrl;
-		this.groupCreatedDate = Utils.stringToDate(groupCreatedDate, "yyyy-MM-dd HH:mm:ss");
+		//this.groupCreatedDate = Utils.stringToDate(groupCreatedDate, "yyyy-MM-dd HH:mm:ss");
+		this.groupCreatedDate = new Date(groupCreatedDate);
 		this.groupCreatedBy = groupCreatedBy;
 
 	}

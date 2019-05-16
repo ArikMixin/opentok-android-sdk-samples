@@ -169,4 +169,15 @@ public interface ConversationDao {
 	void updateParticipantName(String participantId, String participantName);
 
 
+
+	@Query("UPDATE conversation_table SET  " +
+		"group_image_url = :imageUrl " +
+		"WHERE conversation_id =:conversationId")
+	void updateGroupImage(String conversationId, String imageUrl);
+
+	@Query("UPDATE conversation_table SET  " +
+		"group_name = :name " +
+		"WHERE conversation_id =:conversationId")
+	void updateGroupName(String conversationId, String name);
+
 }

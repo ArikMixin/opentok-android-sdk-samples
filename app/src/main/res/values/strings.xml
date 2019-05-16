@@ -78,6 +78,7 @@
     <string name="settings_user_default_phone">No phone</string>
     <string name="dialog_save_button_text">Save</string>
     <string name="dialog_default_negative_button_text">Cancel</string>
+    <string name="enter_group_name_title">Enter Group Name</string>
     <string name="settings_profile_edit_dialog_name_title">Enter Your Name</string>
     <string name="settings_profile_edit_dialog_status_title">Add About</string>
     <string name="settings_profile_edit_dialog_empty_string_warning">Name can\'t be empty</string>

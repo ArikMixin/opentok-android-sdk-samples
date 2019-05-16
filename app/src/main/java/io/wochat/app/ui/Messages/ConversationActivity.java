@@ -272,6 +272,8 @@ public class ConversationActivity extends PermissionActivity implements
 				Intent intent = new Intent(this, GroupInfoActivity.class);
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+				intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
+				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
 				startActivity(intent);
 			}
 			else {
@@ -399,9 +401,20 @@ public class ConversationActivity extends PermissionActivity implements
 				mGroupMembers = conversationAndItsMessages.getGroupMembers();
 				displayUITypingSignal(false, null);
 				startListenToMessagesChanges();
+			});
+
+
+
+		mConversationViewModel.getConversationLD(mConversationId).observe(this, conversation -> {
+			mConversation = conversation;
+			mIsGroup = mConversation.isGroup();
+			if (mIsGroup){
+				mParticipantPic = mConversation.getGroupImageUrl();
+				mParticipantName = mConversation.getGroupName();
+				mContactNameTV.setText(mParticipantName);
+				mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
+			}
 		});
-
-
 
 		mTypingSignalBR = new TypingSignalBR();
 

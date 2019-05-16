@@ -1,19 +1,31 @@
 package io.wochat.app.ui.Group;
 
+import android.app.Activity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.SubtitleCollapsingToolbarLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -22,6 +34,10 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 
@@ -31,7 +47,10 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
 import io.wochat.app.ui.ContactInfo.ContactInfoMediaActivity;
+import io.wochat.app.ui.Messages.ConversationActivity;
+import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
@@ -39,6 +58,7 @@ import io.wochat.app.viewmodel.GroupViewModel;
 
 public class GroupInfoActivity extends AppCompatActivity implements View.OnClickListener {
 
+	private static final int REQUEST_IMAGE_PICKER = 1;
 	private ContactViewModel mContactViewModel;
 	private ImageView mContactIV;
 	private SubtitleCollapsingToolbarLayout mToolbarLayout;
@@ -55,6 +75,10 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private String mSelfId;
 	private boolean mSelfIsAdmin;
 	private BottomSheetDialog mBottomSheetDialog;
+	private String mSelfName;
+	private String mSelfLang;
+	private Uri mCameraPhotoFileUri;
+	private byte[] mProfilePicByte;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +105,9 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
 		mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
 		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
+		mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
+		mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
+
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mConversationViewModel.getConversationLD(mConversationId).observe(this, conversation -> {
@@ -144,8 +171,16 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 				break;
 
 			case R.id.action_picture:
+				StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+				StrictMode.setVmPolicy(builder.build());
+				mCameraPhotoFileUri = ImagePickerUtil.getCaptureImageOutputUri(this);
+				Intent intent = ImagePickerUtil.getPickImageChooserIntent(this, mCameraPhotoFileUri);
+				intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+				startActivityForResult(intent, REQUEST_IMAGE_PICKER);
 				break;
+
 			case R.id.action_edit:
+				showNameAlertDialog(mConversation.getGroupName());
 				break;
 		}
 
@@ -243,8 +278,24 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 			mBottomSheetDialog.dismiss();
 			switch (v.getId()){
 				case R.id.message_member_ll:
+					Intent intent1 = new Intent(GroupInfoActivity.this, ConversationActivity.class);
+					intent1.putExtra(Consts.INTENT_PARTICIPANT_ID, gmc.getContact().getContactId());
+					intent1.putExtra(Consts.INTENT_PARTICIPANT_NAME, gmc.getContact().getDisplayName());
+					intent1.putExtra(Consts.INTENT_PARTICIPANT_LANG, gmc.getContact().getLanguage());
+					intent1.putExtra(Consts.INTENT_PARTICIPANT_PIC, gmc.getContact().getAvatar());
+					intent1.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, gmc.getContact().toJson());
+					intent1.putExtra(Consts.INTENT_CONVERSATION_ID, Conversation.getConversationId(mSelfId, gmc.getContact().getContactId()));
+					intent1.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+					intent1.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
+					intent1.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
+					startActivity(intent1);
 					break;
 				case R.id.view_member_ll:
+					Intent intent = new Intent(GroupInfoActivity.this, ContactInfoActivity.class);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_ID, gmc.getGroupMember().getUserId());
+					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					startActivity(intent);
+
 					break;
 				case R.id.make_admin_ll:
 					mGroupViewModel.makeAdmin(mConversationId, gmc.getGroupMember().getUserId());
@@ -284,7 +335,13 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		dismissAdminLL.setTag(gmc);
 		removeMemberLL.setTag(gmc);
 
-		messageMemberLL.setVisibility(View.VISIBLE);
+		if(gmc.getContact().getContactId().equals(mSelfId))
+			messageMemberLL.setVisibility(View.GONE); // cannot message myself
+		else
+			messageMemberLL.setVisibility(View.VISIBLE);
+
+
+
 		viewMemberLL.setVisibility(View.VISIBLE);
 
 		if (!mSelfIsAdmin){
@@ -316,5 +373,129 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 
 		mBottomSheetDialog.setContentView(sheetView);
 		mBottomSheetDialog.show();
+	}
+
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == REQUEST_IMAGE_PICKER) {
+			if (resultCode == Activity.RESULT_OK) {
+				if (data != null) {
+					Uri selectedImage = data.getData();
+					mProfilePicByte = ImagePickerUtil.getImageBytes(getContentResolver(), selectedImage);
+					setBitmapAsProfilePic(selectedImage);
+				}
+				else {
+					setBitmapAsProfilePic(mCameraPhotoFileUri);
+				}
+				mGroupViewModel.updateGroupImage(mConversationId, mProfilePicByte, getResources());
+			}
+		}
+	}
+
+
+	private void setBitmapAsProfilePic(Uri selectedImage){
+		try {
+
+
+			Matrix matrix = null;
+			try {
+				ExifInterface exif = new ExifInterface(selectedImage.getPath());
+				int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+				Log.d("EXIF", "Exif: " + orientation);
+				matrix = new Matrix();
+				if (orientation == 6) {
+					matrix.postRotate(90);
+				} else if (orientation == 3) {
+					matrix.postRotate(180);
+				} else if (orientation == 8) {
+					matrix.postRotate(270);
+				}
+			} catch (IOException e) {
+
+			}
+
+
+			InputStream imageStream;
+			Bitmap imageBitmap = null;
+			try {
+				imageStream = getContentResolver().openInputStream(selectedImage);
+				imageBitmap = BitmapFactory.decodeStream(imageStream);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+
+			int width = imageBitmap.getWidth();
+			int height = imageBitmap.getHeight();
+			String newPath = null;
+
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+			if (width > 1300){
+				int newWidth, newHeight;
+				newWidth = 1300;
+				newHeight = 1300 * height / width;
+
+				imageBitmap = Bitmap.createScaledBitmap(imageBitmap, newWidth, newHeight, false);
+
+				if (matrix != null)
+					imageBitmap = Bitmap.createBitmap(imageBitmap, 0, 0, newWidth, newHeight, matrix, true);
+			}
+
+
+
+			imageBitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream);
+			//mContactIV.setImageBitmap(imageBitmap);
+			mProfilePicByte = byteArrayOutputStream.toByteArray();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+
+
+	private void showNameAlertDialog(String currentName) {
+		final EditText editText = new EditText(this);
+		//remove edit text underline
+		editText.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this)
+			.setTitle(R.string.enter_group_name_title)
+			.setView(editText)
+			.setPositiveButton((R.string.dialog_save_button_text), null)
+			.setNegativeButton((R.string.dialog_default_negative_button_text), (dialog, which) ->
+				dialog.dismiss());
+
+		AlertDialog alertDialog = builder.create();
+		alertDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+
+		editText.setText(currentName);
+		editText.setSelectAllOnFocus(true);
+		editText.clearFocus();
+		editText.requestFocus();
+
+
+		//override default positive button DialogInterface.OnClickListener's functionality
+		alertDialog.setOnShowListener(dialogInterface -> {
+			Button button = ((AlertDialog) alertDialog).getButton(AlertDialog.BUTTON_POSITIVE);
+			button.setOnClickListener(view -> {
+
+				String inputNameS = editText.getText().toString();
+
+				if (inputNameS.isEmpty()) {
+					Toast.makeText(GroupInfoActivity.this,
+						R.string.settings_profile_edit_dialog_empty_string_warning,
+						Toast.LENGTH_SHORT).show();
+				}
+				else{
+					mGroupViewModel.updateGroupName(mConversationId, inputNameS, getResources());
+					alertDialog.dismiss();
+				}
+
+			});
+		});
+
+		alertDialog.show();
 	}
 }
