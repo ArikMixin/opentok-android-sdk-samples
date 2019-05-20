@@ -78,4 +78,17 @@ public class GroupViewModel extends AndroidViewModel {
 		mRepository.getGroupDetailsAndInsertToDB(groupId, resources);
 	}
 
+	public void leaveGroup(String groupId){
+		mRepository.leaveGroup(groupId);
+	}
+
+	public LiveData<Boolean> isSelfInGroup(String groupId){
+		return mRepository.isSelfInGroup(groupId);
+	}
+
+	public void getAllUserGroupsDetails(Resources resources){
+		mRepository.getAllUserGroupsDetails(resources);
+	}
+
+
 }

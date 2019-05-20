@@ -555,15 +555,23 @@ public class WCRepository {
 
 			GroupMember.initMemberColorIndex();
 
+			String selfId = mSharedPreferences.getUserId();
+			boolean isSelfInGroup = false;
+
 			for (int j=0; j< participantsArray.length(); j++){
 				String p = participantsArray.getString(j);
 				GroupMember gm = gson.fromJson(p, GroupMember.class);
 				gm.setGroupId(id);
 				gm.setColor(GroupMember.getNextMemberColor(resources));
 				gml.add(gm);
+				if(gm.getUserId().equals(selfId))
+					isSelfInGroup = true;
+
 			}
 
 			Conversation conversation = new Conversation(id, name, description, image_url, created_by, created_date);
+			conversation.setSelfInGroup(isSelfInGroup);
+
 			Log.e(TAG, "gml: " + gml.toString());
 
 			ConversationAndItsGroupMembers cgm = new ConversationAndItsGroupMembers();
@@ -586,39 +594,71 @@ public class WCRepository {
 			for (Contact contact : contactList){
 				contactArray[i++] = contact.getContactId();
 			}
-
-			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
-				if (isSuccess){
-					try {
-						String imageUrl = response.getString("url");
-						mWochatApi.createNewGroup(groupName, imageUrl, contactArray, (isSuccess1, errorLogic1, errorComm1, response1) -> {
-							if (isSuccess1){
-								ConversationAndItsGroupMembers cgm = handleGroupResult(response1, resources);
-								mAppExecutors.diskIO().execute(() -> {
-									mConversationDao.insert(cgm.getConversation());
-									mGroupDao.insert(cgm.getGroupMembers());
-									mAppExecutors.mainThread().execute(() -> {
-										mCreateGroupResult.setValue(new StateData<Conversation>().success(cgm.getConversation()));
+			if (bytes != null) {
+				mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+					if (isSuccess) {
+						try {
+							String imageUrl = response.getString("url");
+							mWochatApi.createNewGroup(groupName, imageUrl, contactArray, (isSuccess1, errorLogic1, errorComm1, response1) -> {
+								if (isSuccess1) {
+									ConversationAndItsGroupMembers cgm = handleGroupResult(response1, resources);
+									mAppExecutors.diskIO().execute(() -> {
+										mConversationDao.insert(cgm.getConversation());
+										mGroupDao.insert(cgm.getGroupMembers());
+										mAppExecutors.mainThread().execute(() -> {
+											mCreateGroupResult.setValue(new StateData<Conversation>().success(cgm.getConversation()));
+										});
 									});
-								});
-								Log.e(TAG, "gml: " + cgm.getGroupMembers().toString());
-								Log.e(TAG, "createNewGroup: " + response1.toString());
-							}
-							else if (errorLogic != null) {
-								mCreateGroupResult.setValue(new StateData<Conversation>().errorLogic(errorLogic));
-							}
+									Log.e(TAG, "gml: " + cgm.getGroupMembers().toString());
+									Log.e(TAG, "createNewGroup: " + response1.toString());
+								}
+								else if (errorLogic1 != null) {
+									mCreateGroupResult.setValue(new StateData<Conversation>().errorLogic(errorLogic1));
+								}
 
-							else if (errorComm != null) {
-								mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm));
-							}
+								else if (errorComm1 != null) {
+									mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm1));
+								}
 
-						});
-					} catch (JSONException e) {
-						e.printStackTrace();
+							});
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
 					}
-				}
-			});
+					else if (errorLogic != null) {
+						mCreateGroupResult.setValue(new StateData<Conversation>().errorLogic(errorLogic));
+					}
 
+					else if (errorComm != null) {
+						mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm));
+					}
+				});
+			}
+			else {// no pic
+				mWochatApi.createNewGroup(groupName, null, contactArray, (isSuccess1, errorLogic1, errorComm1, response1) -> {
+					if (isSuccess1) {
+						ConversationAndItsGroupMembers cgm = handleGroupResult(response1, resources);
+						mAppExecutors.diskIO().execute(() -> {
+							mConversationDao.insert(cgm.getConversation());
+							mGroupDao.insert(cgm.getGroupMembers());
+							mAppExecutors.mainThread().execute(() -> {
+								mCreateGroupResult.setValue(new StateData<Conversation>().success(cgm.getConversation()));
+							});
+						});
+						Log.e(TAG, "gml: " + cgm.getGroupMembers().toString());
+						Log.e(TAG, "createNewGroup: " + response1.toString());
+					}
+					else if (errorLogic1 != null) {
+						mCreateGroupResult.setValue(new StateData<Conversation>().errorLogic(errorLogic1));
+					}
+
+					else if (errorComm1 != null) {
+						mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm1));
+					}
+
+				});
+
+			}
 
 
 		});
@@ -2380,6 +2420,35 @@ public class WCRepository {
 	}
 
 
+	public void getAllUserGroupsDetails(Resources resources){
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.getAllUserGroupsDetails(mSharedPreferences.getUserId(),
+				(isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						List<ConversationAndItsGroupMembers> conversationAndItsMembersList = new ArrayList<>();
+						for(int i=0; i<response.length(); i++){
+							try {
+								JSONObject object = response.getJSONObject(i);
+								ConversationAndItsGroupMembers cgm = handleGroupResult(object, resources);
+								conversationAndItsMembersList.add(cgm);
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						}
+						mAppExecutors.diskIO().execute(() -> {
+							for(ConversationAndItsGroupMembers caigm : conversationAndItsMembersList){
+								updateDBWithGroupData(caigm.getConversation().getId(), caigm);
+							}
+						});
+
+					});
+				}
+			});
+		});
+
+	}
+
 	public void getGroupDetailsAndInsertToDB(String groupId, Resources resources){
 		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.getGroupDetails(groupId, (isSuccess, errorLogic, errorComm, response) -> {
@@ -2404,10 +2473,21 @@ public class WCRepository {
 			}
 		}
 
-		if (mConversationDao.hasConversation(groupId))
-			mConversationDao.update(cgm.getConversation());
+		if (mConversationDao.hasConversation(groupId)) {
+			//mConversationDao.update(cgm.getConversation());
+			Conversation conv = cgm.getConversation();
+			mConversationDao.updateGroupData(
+				groupId,
+				conv.getGroupName(),
+				conv.getGroupDescription(),
+				conv.getGroupImageUrl(),
+				conv.getGroupCreatedDate(),
+				conv.getGroupCreatedBy());
+		}
 		else
 			mConversationDao.insert(cgm.getConversation());
+
+		mGroupDao.removeMembers(groupId); // handle the case if user where added or deleted
 		mGroupDao.insert(cgm.getGroupMembers());
 
 		if (contactsIds.size() > 0) {
@@ -2486,6 +2566,28 @@ public class WCRepository {
 				}
 			});
 		});
+	}
+
+
+	public void leaveGroup(String groupId) {
+		mAppExecutors.networkIO().execute(() -> {
+			String[] contactArray = new String[1];
+			String selfId = mSharedPreferences.getUserId();
+			contactArray[0] = selfId;
+			mWochatApi.removeContactsFromGroup(groupId, contactArray, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						mGroupDao.removeMember(groupId, selfId);
+						mConversationDao.leaveGroup(groupId);
+					});
+				}
+			});
+		});
+
+	}
+
+	public LiveData<Boolean> isSelfInGroup(String groupId) {
+		return mGroupDao.isSelfInGroup(groupId);
 	}
 
 }

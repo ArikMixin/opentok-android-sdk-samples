@@ -169,6 +169,11 @@ public class Conversation implements IDialog{
 	@Expose
 	private String groupCreatedBy;
 
+	/***************************************************/
+	@SerializedName("is_self_in_group")
+	@ColumnInfo(name = "is_self_in_group")
+	@Expose
+	private boolean isSelfInGroup;
 
 
 	/***************************************************/
@@ -189,6 +194,7 @@ public class Conversation implements IDialog{
 		//this.groupCreatedDate = Utils.stringToDate(groupCreatedDate, "yyyy-MM-dd HH:mm:ss");
 		this.groupCreatedDate = new Date(groupCreatedDate);
 		this.groupCreatedBy = groupCreatedBy;
+		this.isSelfInGroup = true;
 
 	}
 
@@ -487,5 +493,11 @@ public class Conversation implements IDialog{
 	}
 
 
+	public boolean isSelfInGroup() {
+		return isSelfInGroup;
+	}
 
+	public void setSelfInGroup(boolean selfInGroup) {
+		isSelfInGroup = selfInGroup;
+	}
 }

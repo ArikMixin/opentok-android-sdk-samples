@@ -351,26 +351,9 @@ public class NewGroupActivity extends AppCompatActivity implements View.OnClickL
 
 
 	private void finishAction() {
-
-		if (mProfilePicByte != null){
-
-			createGroup(mGroupNameET.getText().toString());
-//			mGroupViewModel.uploadImage(mProfilePicByte).observe(this, stringStateData -> {
-//				if (stringStateData.isSuccess()){
-//					String imageUrl = stringStateData.getData();
-//					createGroup(imageUrl, mGroupNameET.getText().toString(), mContactList);
-//				}
-//				else if (stringStateData.isErrorComm()){
-//					Toast.makeText(this, "Communication error", Toast.LENGTH_SHORT).show();
-//				}
-//				else if (stringStateData.isErrorLogic()){
-//					Toast.makeText(this, "General error", Toast.LENGTH_SHORT).show();
-//				}
-//			});
-		}
-
-
+		createGroup(mGroupNameET.getText().toString());
 	}
+
 	private void createGroup(String groupName) {
 		mGroupViewModel.getCreateGroupResult().observe(this, conversationStateData -> {
 			mProgressDialog.dismiss();

@@ -182,6 +182,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private boolean mIsGroup;
 	private List<GroupMember> mGroupMembers;
 	private GroupViewModel mGroupViewModel;
+	private TextView mNotInGroupMsgTV;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -217,6 +218,9 @@ public class ConversationActivity extends PermissionActivity implements
 
 		setContentView(R.layout.activity_conversation);
 
+
+		mNotInGroupMsgTV = (TextView)findViewById(R.id.not_in_group_msg_tv);
+		mNotInGroupMsgTV.setVisibility(View.GONE);
 
 		mScrollToEndIB = (ImageButton)findViewById(R.id.scroll_end_ib);
 		mScrollToEndIB.setVisibility(View.INVISIBLE);
@@ -413,6 +417,15 @@ public class ConversationActivity extends PermissionActivity implements
 				mParticipantName = mConversation.getGroupName();
 				mContactNameTV.setText(mParticipantName);
 				mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
+
+				if (mIsGroup) {
+					mNotInGroupMsgTV.setVisibility(View.GONE);
+					mMessageInput.setVisibility(View.VISIBLE);
+				}
+				else {
+					mNotInGroupMsgTV.setVisibility(View.VISIBLE);
+					mMessageInput.setVisibility(View.GONE);
+				}
 			}
 		});
 

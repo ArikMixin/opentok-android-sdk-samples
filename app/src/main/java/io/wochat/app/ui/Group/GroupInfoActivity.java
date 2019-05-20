@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -84,6 +85,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private Uri mCameraPhotoFileUri;
 	private byte[] mProfilePicByte;
 	private LinearLayout mAddMembersLL;
+	private LinearLayout mQuitGroupLL;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -99,11 +101,11 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 
 		mGroupMembersLL = (LinearLayout)findViewById(R.id.group_members_ll);
 		mAddMembersLL = (LinearLayout)findViewById(R.id.add_members_ll);
-
+		mQuitGroupLL = (LinearLayout)findViewById(R.id.quit_group_ll);
 
 		mMediaLL.setOnClickListener(this);
 		mAddMembersLL.setOnClickListener(this);
-
+		mQuitGroupLL.setOnClickListener(this);
 
 
 		mContactIV = (ImageView)findViewById(R.id.contact_iv);
@@ -138,10 +140,14 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 
 		mCreatedBy = mConversation.getGroupCreatedBy();
 		mCreatedDate = mConversation.getGroupCreatedDate();
-		for(GroupMemberContact memberContact : mGroupMemberContacts) {
-			if(memberContact.getContact().getContactId().equals(mCreatedBy)){
-				mToolbarLayout.setSubtitle("Created By " + memberContact.getContact().getDisplayName());
-				break;
+		if (mCreatedBy.equals(mSelfId))
+			mToolbarLayout.setSubtitle(String.format(getString(R.string.created_by), "You"));
+		else {
+			for (GroupMemberContact memberContact : mGroupMemberContacts) {
+				if (memberContact.getContact().getContactId().equals(mCreatedBy)) {
+					mToolbarLayout.setSubtitle(String.format(getString(R.string.created_by), memberContact.getContact().getDisplayName()));
+					break;
+				}
 			}
 		}
 		mToolbarLayout.setTitle(mConversation.getGroupName());
@@ -210,8 +216,8 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 				break;
 
-			case R.id.video_iv:
-				Toast.makeText(this, "video", Toast.LENGTH_SHORT).show();
+			case R.id.quit_group_ll:
+				showQuitGroupConfirmation();
 				break;
 
 			case R.id.media_ll:
@@ -220,29 +226,25 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, mConversation.getGroupName());
 				startActivity(intent);
 				break;
-
-
-			case R.id.delete_conversation_ll:
-				showConfirmationDelete();
-				break;
-
 		}
 	}
 
 
-	private void showConfirmationDelete(){
+	private void showQuitGroupConfirmation(){
 		new AlertDialog.Builder(this)
-			.setTitle("Confirmation")
-			.setMessage("All messages will be deleted.\nAre you sure?")
-			.setNegativeButton("Cancel", (dialog, which) -> {dialog.cancel();})
-			.setPositiveButton("Delete", (dialog, which) -> {clearConversation();})
+			.setTitle(R.string.quit_group_confirmation_title)
+			.setMessage(String.format(getString(R.string.quit_group_confirmation_body), mConversation.getGroupName()))
+			.setNegativeButton(R.string.cancel, (dialog, which) -> {dialog.cancel();})
+			.setPositiveButton(R.string.quit, (dialog, which) -> {quitGroup();})
 			.setCancelable(false)
 			.show();
 	}
 
-	private void clearConversation() {
-		mConversationViewModel.clearConversation(mConversationId);
-		Toast.makeText(this, "Messages Deleted", Toast.LENGTH_SHORT).show();
+	private void quitGroup() {
+		mGroupViewModel.leaveGroup(mConversationId);
+		new Handler(getMainLooper()).postDelayed(() ->
+			GroupInfoActivity.this.finish(), 1000);
+
 	}
 
 

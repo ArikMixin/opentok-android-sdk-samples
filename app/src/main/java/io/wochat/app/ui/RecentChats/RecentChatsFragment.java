@@ -51,6 +51,7 @@ import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.settings.SettingsActivity;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ConversationViewModel;
+import io.wochat.app.viewmodel.GroupViewModel;
 import io.wochat.app.viewmodel.UserViewModel;
 
 
@@ -75,6 +76,7 @@ public class RecentChatsFragment extends Fragment  implements
 	private User mSelfUser;
 	private String mSelfUserLang;
 	private String mSelfUserName;
+	private GroupViewModel mGroupViewModel;
 
 	public static RecentChatsFragment newInstance() {
 		return new RecentChatsFragment();
@@ -132,6 +134,10 @@ public class RecentChatsFragment extends Fragment  implements
 				Log.e("AAA", "conversations: null");
 			}
 		});
+
+
+		mGroupViewModel = ViewModelProviders.of(this).get(GroupViewModel.class);
+		mGroupViewModel.getAllUserGroupsDetails(getResources());
 //			conversationCompletes -> {
 //				mConversationCompletes = conversationCompletes;
 //				if (conversationCompletes != null) {

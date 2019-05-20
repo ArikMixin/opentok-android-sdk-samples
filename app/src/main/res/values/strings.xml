@@ -103,5 +103,10 @@
     <string name="group_info_member_verify_sec_code">Verify Security Code</string>
     <string name="add_people_to_this_group">Add people to this group</string>
     <string name="select_contacts">Select Contacts</string>
+    <string name="quit_group_confirmation_title">Confirmation</string>
+    <string name="quit_group_confirmation_body">Are you sure you want to quit %s group?</string>
+    <string name="quit">Quit</string>
+    <string name="cancel">Cancel</string>
+    <string name="created_by">Created By %s</string>
 
 </resources>

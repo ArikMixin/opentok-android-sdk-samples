@@ -10,6 +10,7 @@ import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
 
 
+import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.db.entity.Conversation;
@@ -132,6 +133,20 @@ public interface ConversationDao {
 	@Update
 	void update(Conversation conversation);
 
+	@Query("UPDATE conversation_table SET  " +
+		"group_name = :groupName , " +
+		"group_description = :description , " +
+		"group_image_url = :image_url , " +
+		"group_created_date = :created_date , " +
+		"group_created_by = :created_by , " +
+		"is_self_in_group = 1 " +
+		"WHERE conversation_id =:id" )
+	void updateGroupData(String id, String groupName, String description, String image_url, Date created_date, String created_by);
+
+
+
+
+
 
 	@Query("SELECT * " +
 		"FROM conversation_table " +
@@ -179,5 +194,11 @@ public interface ConversationDao {
 		"group_name = :name " +
 		"WHERE conversation_id =:conversationId")
 	void updateGroupName(String conversationId, String name);
+
+
+	@Query("UPDATE conversation_table SET  " +
+		"is_self_in_group = 0 " +
+		"WHERE conversation_id =:conversationId")
+	void leaveGroup(String conversationId);
 
 }

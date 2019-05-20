@@ -72,5 +72,14 @@ public interface GroupDao {
 		"WHERE group_id =:groupId AND user_id =:memberId")
 	void removeMember(String groupId, String memberId);
 
+	@Query("SELECT is_self_in_group " +
+		"FROM conversation_table  " +
+		"WHERE conversation_id =:groupId")
+	LiveData<Boolean> isSelfInGroup(String groupId);
+
+	@Query("DELETE FROM group_memeber_table " +
+		"WHERE group_id =:groupId")
+	void removeMembers(String groupId);
+
 
 }

@@ -216,7 +216,19 @@
                 app:showVideoButton="true"
                 app:videoButtonIcon="@drawable/msg_in_video_dark"/>
 
-
+            <TextView
+                android:id="@+id/not_in_group_msg_tv"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:padding="15dp"
+                android:layout_alignParentBottom="true"
+                android:gravity="center"
+                android:background="@color/white"
+                android:textColor="@color/black"
+                android:visibility="gone"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+                android:text="You cannot send messages to this group because you're no longer a participant."
+                />
             <ImageView
                 android:id="@+id/recording_big_iv"
                 android:layout_width="wrap_content"
