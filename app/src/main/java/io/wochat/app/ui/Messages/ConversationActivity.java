@@ -251,6 +251,8 @@ public class ConversationActivity extends PermissionActivity implements
 			if (mIsGroup){
 				mParticipantPic = mConversation.getGroupImageUrl();
 				mParticipantName = mConversation.getGroupName();
+				mParticipantLang = null;
+				mParticipantId = null;
 			}
 		}
 
@@ -353,7 +355,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mGroupViewModel = ViewModelProviders.of(this).get(GroupViewModel.class);
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
-		if (mParticipantId != null) {
+		if ((mParticipantId != null)&& (!mIsGroup)) {
 			mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
 			mContactViewModel.refreshContact(mParticipantId).observe(this, contact -> {
 				mParticipantPic = contact.getAvatar();
@@ -553,7 +555,19 @@ public class ConversationActivity extends PermissionActivity implements
 				CustomOutcomingSpeechableMessageViewHolder.class,
 				mSelfContact,
 				R.layout.item_custom_outcoming_audio_message_new,
+				this)
+
+			.registerContentType(
+				MessageHolders.VIEW_TYPE_INFO_MESSAGE,
+				CustomInfoTextMessageViewHolder.class,
+				mParticipantContact,
+				R.layout.item_custom_info_text_message,
+				CustomInfoTextMessageViewHolder.class,
+				mSelfContact,
+				R.layout.item_custom_info_text_message,
 				this);
+
+
 
 		mMessagesAdapter = new MessagesListAdapter<>(mSelfId, holdersConfig, mImageLoader);
 		mMessagesAdapter.setOnMessageLongClickListener(this);
@@ -596,10 +610,12 @@ public class ConversationActivity extends PermissionActivity implements
 	public boolean hasContentFor(Message message, short type) {
 		switch (type) {
 			case MessageHolders.VIEW_TYPE_AUDIO_MESSAGE:
-				return ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty()));
+				return (message.isAudio() && (message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty()));
 			case MessageHolders.VIEW_TYPE_SPEECH_MESSAGE:
 				//return ((message.getTranslatedText() != null) && (!message.getTranslatedText().isEmpty()));
-				return true;
+				return message.isSpeechable();
+			case MessageHolders.VIEW_TYPE_INFO_MESSAGE:
+				return message.getMessageType().equals(Message.MSG_TYPE_GROUP_EVENT);
 		}
 		return false;
 	}

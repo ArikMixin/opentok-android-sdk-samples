@@ -294,7 +294,10 @@ public class Conversation implements IDialog{
 	}
 
 	public String getParticipantLanguage() {
-		return participantLanguage;
+		if (isGroup)
+			return null;
+		else
+			return participantLanguage;
 	}
 
 	public void setParticipantLanguage(String participantLanguage) {

@@ -275,7 +275,11 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		CircleFlagImageView avatarCfiv = view.findViewById(R.id.member_cfiv);
 		TextView nameTV = view.findViewById(R.id.member_name_tv);
 
-		nameTV.setText(memberContact.getContact().getDisplayName());
+		if (memberContact.getContact().getContactId().equals(mSelfId))
+			nameTV.setText("You");
+		else
+			nameTV.setText(memberContact.getContact().getDisplayName());
+
 		if(memberContact.getGroupMember().isAdmin())
 			adminTV.setVisibility(View.VISIBLE);
 		else

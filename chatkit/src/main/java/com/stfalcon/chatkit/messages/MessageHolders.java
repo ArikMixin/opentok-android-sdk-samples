@@ -42,6 +42,7 @@ public class MessageHolders {
 	public static final short VIEW_TYPE_VIDEO_MESSAGE = 133;
 	public static final short VIEW_TYPE_AUDIO_MESSAGE = 134;
 	public static final short VIEW_TYPE_SPEECH_MESSAGE = 135;
+	public static final short VIEW_TYPE_INFO_MESSAGE = 136;
 
     private Class<? extends ViewHolder<Date>> dateHeaderHolder;
     private int dateHeaderLayout;

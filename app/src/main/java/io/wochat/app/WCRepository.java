@@ -66,6 +66,7 @@ import io.wochat.app.utils.SpeechToTextUtil;
 import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
 
+
 /**
  * Repository handling the work with products and comments.
  */
@@ -880,7 +881,11 @@ public class WCRepository {
 					contact = new Contact(contactsServer[i]);
 					mContactDao.insert(contact);
 				}
+
+				// update redundant fields
 				mConversationDao.updateConversationWithContactData(contact.getId(), contact.getName(), contact.getLanguage(), contact.getAvatar());
+				mMessageDao.updateMessagesActingUserWithContactName(contact.getId(), contact.getName());
+				mMessageDao.updateMessagesOtherUserWithContactName(contact.getId(), contact.getName());
 			}
 		});
 	}
@@ -1338,40 +1343,96 @@ public class WCRepository {
 	private void handleGroupEvent(Message message, Resources resources){
 		String groupId;
 		String memberId;
-		switch (message.getEventCode()){
-			case Message.EVENT_CODE_USER_ADDED:
-				List<String> list = new ArrayList<>();
-				String actingUser = message.getActingUser();
-				String otherUser = message.getOtherUser();
-				if (!mContactDao.hasContact(actingUser))
-					list.add(actingUser);
-				if (!mContactDao.hasContact(otherUser))
-					list.add(otherUser);
-				if (list.size()>0)
-					getContactsFromServer(list.toArray(new String[0]));
 
+		// handle missing users
+		List<String> list = new ArrayList<>();
+		Contact contact;
+		String actingUser = message.getActingUser();
+		String otherUser = message.getOtherUser();
+		String selfId = mSharedPreferences.getUserId();
+
+		if (Utils.isNotNullAndNotEmpty(actingUser)) {
+			if (actingUser.equals(selfId)) {
+				message.setActingUserName("You");
+			}
+			else if (mContactDao.hasContact(actingUser)) {
+				contact = mContactDao.getContact(actingUser);
+				message.setActingUserName(contact.getName());
+			}
+			else {
+				contact = new Contact(actingUser);
+				mContactDao.insert(contact);
+				list.add(actingUser);
+				message.setActingUserName(actingUser);
+			}
+		}
+
+		if (Utils.isNotNullAndNotEmpty(otherUser)) {
+			if (otherUser.equals(selfId)) {
+				message.setOtherUserName("You");
+			}
+			else if (mContactDao.hasContact(otherUser)) {
+				contact = mContactDao.getContact(otherUser);
+				message.setOtherUserName(contact.getName());
+			}
+			else {
+				contact = new Contact(otherUser);
+				mContactDao.insert(contact);
+				list.add(otherUser);
+				message.setOtherUserName(otherUser);
+			}
+		}
+
+		if (list.size()>0)
+			getContactsFromServer(list.toArray(new String[0]));
+
+		message.setShouldBeDisplayed(true);
+
+		mMessageDao.insert(message);
+
+		switch (message.getEventCode()){
+			case Message.EVENT_CODE_GROUP_CREATED:
+				groupId = message.getGroupId();
+				getGroupDetailsAndInsertToDB(groupId, resources);
+				break;
+
+			case Message.EVENT_CODE_USER_ADDED:
 				groupId = message.getGroupId();
 				getGroupDetailsAndInsertToDB(groupId, resources);
 				break;
 
 
 			case Message.EVENT_CODE_USER_REMOVED:
+				groupId = message.getGroupId();
+				getGroupDetailsAndInsertToDB(groupId, resources);
 				break;
+
 			case Message.EVENT_CODE_USER_LEFT:
+				groupId = message.getGroupId();
+				getGroupDetailsAndInsertToDB(groupId, resources);
 				break;
+
 			case Message.EVENT_CODE_MADE_ADMIN:
 				memberId = message.getOtherUser();
 				groupId = message.getGroupId();
 				mGroupDao.makeAdmin(groupId, memberId);
 				break;
+
 			case Message.EVENT_CODE_REMOVED_ADMIN:
 				memberId = message.getOtherUser();
 				groupId = message.getGroupId();
 				mGroupDao.removeAdmin(groupId, memberId);
 				break;
+
 			case Message.EVENT_CODE_ICON_CHANGED:
+				groupId = message.getGroupId();
+				getGroupDetailsAndInsertToDB(groupId, resources);
 				break;
+
 			case Message.EVENT_CODE_NAME_CHANGED:
+				groupId = message.getGroupId();
+				String name = message.getGroupName();
+				mConversationDao.updateGroupName(groupId, name);
 				break;
 		}
 
@@ -2589,5 +2650,9 @@ public class WCRepository {
 	public LiveData<Boolean> isSelfInGroup(String groupId) {
 		return mGroupDao.isSelfInGroup(groupId);
 	}
+
+
+
+
 
 }

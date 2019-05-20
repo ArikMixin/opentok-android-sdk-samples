@@ -147,4 +147,15 @@ public interface MessageDao {
 		"((message_type = 'IMAGE') OR" +
 		"(message_type = 'VIDEO')) ORDER BY timestamp_milli DESC")
 	LiveData<List<Message>> getMediaMessagesConversation(String conversationId);
+
+
+	@Query("UPDATE message_table SET  " +
+		"acting_user_name = :name " +
+		"WHERE acting_user =:id")
+	void updateMessagesActingUserWithContactName(String id, String name);
+
+	@Query("UPDATE message_table SET  " +
+		"other_user_name = :name " +
+		"WHERE other_user =:id")
+	void updateMessagesOtherUserWithContactName(String id, String name);
 }

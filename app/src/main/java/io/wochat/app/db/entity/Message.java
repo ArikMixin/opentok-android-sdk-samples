@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
+import android.support.v4.text.BidiFormatter;
 import android.text.Html;
 import android.widget.TextView;
 
@@ -30,6 +31,8 @@ import java.util.List;
 import java.util.UUID;
 
 import io.wochat.app.utils.Utils;
+
+import static android.support.v4.text.TextDirectionHeuristicsCompat.LTR;
 
 
 @Entity(tableName = "message_table",
@@ -75,6 +78,8 @@ public class Message implements IMessage,
 			default: return 1;
 		}
 	}
+
+
 
 
 	@StringDef({
@@ -126,15 +131,17 @@ public class Message implements IMessage,
 
 
 
-	public static final String EVENT_CODE_USER_ADDED = "USER_ADDED";
-	public static final String EVENT_CODE_USER_REMOVED = "USER_REMOVED";
-	public static final String EVENT_CODE_USER_LEFT = "USER_LEFT";
-	public static final String EVENT_CODE_MADE_ADMIN = "MADE_ADMIN";
-	public static final String EVENT_CODE_REMOVED_ADMIN = "REMOVED_ADMIN";
-	public static final String EVENT_CODE_ICON_CHANGED = "ICON_CHANGED";
-	public static final String EVENT_CODE_NAME_CHANGED = "NAME_CHANGED";
+	public static final String EVENT_CODE_GROUP_CREATED		= "GROUP_CREATED";
+	public static final String EVENT_CODE_USER_ADDED		= "USER_ADDED";
+	public static final String EVENT_CODE_USER_REMOVED		= "USER_REMOVED";
+	public static final String EVENT_CODE_USER_LEFT			= "USER_LEFT";
+	public static final String EVENT_CODE_MADE_ADMIN		= "MADE_ADMIN";
+	public static final String EVENT_CODE_REMOVED_ADMIN		= "REMOVED_ADMIN";
+	public static final String EVENT_CODE_ICON_CHANGED		= "ICON_CHANGED";
+	public static final String EVENT_CODE_NAME_CHANGED		= "NAME_CHANGED";
 
 	@StringDef({
+		EVENT_CODE_GROUP_CREATED,
 		EVENT_CODE_USER_ADDED,
 		EVENT_CODE_USER_REMOVED,
 		EVENT_CODE_USER_LEFT,
@@ -372,6 +379,15 @@ public class Message implements IMessage,
 	@Expose
 	private String groupName;
 	/**********************************************/
+	@ColumnInfo(name = "acting_user_name")
+	@Expose
+	private String actingUserName;
+	/**********************************************/
+	@ColumnInfo(name = "other_user_name")
+	@Expose
+	private String otherUserName;
+	/**********************************************/
+
 
 	// for outgoing message
 	public Message(String participantId, String selfId, String conversationId, String messageText, String messageLang) {
@@ -571,7 +587,10 @@ public class Message implements IMessage,
 
 	@Override
 	public String getTextWithNameHeader(){
-		if (isGroupMessage() && !isOutgoing()){
+		if (messageType.equals(MSG_TYPE_GROUP_EVENT)){
+			return getText();
+		}
+		else if (isGroupMessage() && !isOutgoing()){
 			String сolorString = Integer.toString(senderColor, 16);
 			//String сolorString = String.format("%X", Color.GREEN).substring(2);
 			String title = "<font color=\"#%s\">" + Utils.getUserFirstName(getSenderName()) + "</font><BR>";
@@ -588,6 +607,10 @@ public class Message implements IMessage,
 
 	@Override
     public String getText() {
+		if (messageType.equals(MSG_TYPE_GROUP_EVENT)){
+			return getGroupEventMessage();
+		}
+
 		if (showTranslationFlag == null){
 			if (isMagic())
 				showTranslationFlag = SHOW_TRANSLATION_MAGIC;
@@ -626,6 +649,7 @@ public class Message implements IMessage,
 //				return messageText;
 //		}
     }
+
 
 	public void userClickAction(){
 		if (showTranslationFlag == null){
@@ -1136,6 +1160,61 @@ public class Message implements IMessage,
 		return newMessage;
 	}
 
+
+
+	private String getGroupEventMessage() {
+		if (!messageType.equals(MSG_TYPE_GROUP_EVENT))
+			return "";
+
+		//BidiFormatter.getInstance().unicodeWrap();
+		String res = "";
+		String name;
+		switch (eventCode){
+			case EVENT_CODE_GROUP_CREATED:
+				res = actingUserName + " created group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_ADDED:
+				res = actingUserName + " added " + otherUserName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_REMOVED:
+				res = actingUserName + " removed " + otherUserName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_LEFT:
+				res = actingUserName + " left the group";
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_MADE_ADMIN:
+				if ("You".equalsIgnoreCase(actingUserName))
+					res = "You are now an admin";
+				else {
+					res = actingUserName + " is now an admin";
+					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				}
+				break;
+			case Message.EVENT_CODE_REMOVED_ADMIN:
+				if ("You".equalsIgnoreCase(actingUserName))
+					res = "You are no longer an admin";
+				else {
+					res = actingUserName + " is no longer an admin";
+					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				}
+				break;
+			case Message.EVENT_CODE_ICON_CHANGED:
+				res = actingUserName + " changed group icon";
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_NAME_CHANGED:
+				res = actingUserName + " changed group name to " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+		}
+		return res;
+	}
+
+
 	public Boolean getShowNonTranslated() {
 		return showNonTranslated;
 	}
@@ -1218,4 +1297,19 @@ public class Message implements IMessage,
 		this.senderColor = senderColor;
 	}
 
+	public String getActingUserName() {
+		return actingUserName;
+	}
+
+	public void setActingUserName(String actingUserName) {
+		this.actingUserName = actingUserName;
+	}
+
+	public String getOtherUserName() {
+		return otherUserName;
+	}
+
+	public void setOtherUserName(String otherUserName) {
+		this.otherUserName = otherUserName;
+	}
 }
