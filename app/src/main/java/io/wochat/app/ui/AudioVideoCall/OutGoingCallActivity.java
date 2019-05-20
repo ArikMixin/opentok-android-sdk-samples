@@ -374,8 +374,10 @@ public class OutGoingCallActivity extends AppCompatActivity
         mBusySound.stop();
         if(mSession != null) {
             mSession.disconnect();
-            if(mSubscriber != null)
-                mSession.unsubscribe(mSubscriber);
+                if(mSubscriber != null)
+                    mSession.unsubscribe(mSubscriber);
+                if(mPublisher != null)
+                    mSession.unpublish(mPublisher);
         }
     }
 
@@ -506,7 +508,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
        //Only for video calls
         if (mIsVideoCall){
-            mPublisher_pre.destroy();
+             mPublisher_pre.destroy();
               mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                                                                 BaseVideoRenderer.STYLE_VIDEO_FILL);
               mPublisherFL.addView(mPublisher.getView());

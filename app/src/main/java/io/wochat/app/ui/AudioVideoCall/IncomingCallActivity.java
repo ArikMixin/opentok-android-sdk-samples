@@ -345,8 +345,10 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
         if(mSession != null) {
                 mSession.disconnect();
-                if(mSubscriber != null)
-                  mSession.unsubscribe(mSubscriber);
+                    if(mSubscriber != null)
+                        mSession.unsubscribe(mSubscriber);
+                    if(mPublisher != null)
+                        mSession.unpublish(mPublisher);
         }
     }
 
