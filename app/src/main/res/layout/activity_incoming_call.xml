@@ -348,4 +348,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/speaker_iv" />
 
+    <RelativeLayout
+        android:background="#88808080"
+        android:id="@+id/connecting_rl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_centerInParent="true"
+            android:id="@+id/connecting_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/connecting"
+            android:textColor="@color/white"
+            android:textSize="30dp"
+            />
+    </RelativeLayout>
+
 </android.support.constraint.ConstraintLayout>

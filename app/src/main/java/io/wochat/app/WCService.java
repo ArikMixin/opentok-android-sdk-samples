@@ -256,6 +256,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void onDestroy() {
 		if (mXMPPProvider != null)
 			mXMPPProvider.disconnectAsync();
+		unregisterReceiver(mAppObserverBR);
 		super.onDestroy();
 	}
 

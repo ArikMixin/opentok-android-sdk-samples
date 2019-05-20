@@ -4,10 +4,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 
-import com.stfalcon.chatkit.commons.models.IDialog;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 
 import io.wochat.app.R;
@@ -40,13 +38,24 @@ public class CustomDialogViewHolder
         mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
 		mMsgTypeIV = (ImageView)itemView.findViewById(R.id.dialogMsgTypeIV);
 		mAvatarcfiv = (CircleFlagImageView) itemView.findViewById(R.id.dialogAvatar);
-		mCameraIB = (ImageButton) itemView.findViewById(com.stfalcon.chatkit.R.id.camera_ib);
-		mPhoneIB = (ImageButton) itemView.findViewById(com.stfalcon.chatkit.R.id.phone_ib);
+		mCameraIB = (ImageButton)itemView.findViewById(R.id.camera_ib);
+		mPhoneIB = (ImageButton)itemView.findViewById(R.id.phone_ib);
+
     }
 
     @Override
     public void onBind(Conversation conversation) {
         super.onBind(conversation);
+
+		mCameraIB.setOnClickListener(view -> {
+			if(onButtonClickListener != null)
+				onButtonClickListener.onButtonClick(conversation, BTN_CAMERA);
+		});
+
+		mPhoneIB.setOnClickListener(view -> {
+			if(onButtonClickListener != null)
+				onButtonClickListener.onButtonClick(conversation, BTN_PHONE);
+		});
 
         mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
 			conversation.getParticipantLanguage(),
@@ -115,21 +124,6 @@ public class CustomDialogViewHolder
 //            }
 //        }
 
-		mCameraIB.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				if(onButtonClickListener != null){
-					onButtonClickListener.onButtonClick(conversation, BTN_CAMERA);
-				}
-			}
-		});
 
-		mPhoneIB.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				if(onButtonClickListener != null)
-					onButtonClickListener.onButtonClick(conversation, BTN_PHONE);
-			}
-		});
     }
 }

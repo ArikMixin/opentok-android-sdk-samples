@@ -1,6 +1,5 @@
 package io.wochat.app.ui.AudioVideoCall;
 
-import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -10,12 +9,14 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
@@ -25,13 +26,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
+import com.opentok.android.PublisherKit;
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.squareup.picasso.Picasso;
-
 import java.util.List;
 import java.util.Locale;
 import io.wochat.app.R;
@@ -47,7 +49,7 @@ import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener, EasyPermissions.PermissionCallbacks, Session.SessionListener {
+public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener, EasyPermissions.PermissionCallbacks, Session.SessionListener, PublisherKit.PublisherListener {
 
     private static final String TAG = "IncomingCallActivity";
     private static final String TOKBOX = "TokBox";
@@ -55,10 +57,10 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private CircleImageView mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
             mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mDeclineCIV, mAcceptCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
-            mParticipantNameVideoTV, mParticipantLangVideoTV;
+            mParticipantNameVideoTV, mParticipantLangVideoTV, mConnectingTV;
     private Chronometer mTimerChr;
     private FrameLayout mBackNavigationFL;
-    private RelativeLayout mMainAudioRL, mMainVideoRL;
+    private RelativeLayout mMainAudioRL, mMainVideoRL, mConnectingRL;
     private Locale loc;
     private int mFlagDrawable;
     private String mFullLangName;
@@ -77,13 +79,16 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private Message message;
     private RTCcodeBR mRTCcodeBR;
     public static boolean activityActiveFlag;
-
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
     private Stream mStream;
     private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
+    private AlphaAnimation mCallTXTanimation;
+    private boolean callStartedFlag;
+    volatile boolean sessitonRecivedFlag;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +120,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mTimerChr = (Chronometer) findViewById(R.id.timer_chr);
         mPublisherFL = (FrameLayout)findViewById(R.id.publisher_fl);
         mSubscriberFL = (FrameLayout)findViewById(R.id.subscriber_fl);
+        mConnectingRL = (RelativeLayout) findViewById(R.id.connecting_rl);
+        mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -156,6 +163,13 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mAnimation.setInterpolator(new LinearInterpolator());
         mAcceptRL .setAnimation(mAnimation);
 
+        //connection animation
+        mCallTXTanimation = new AlphaAnimation(0.0f, 1.0f);
+        mCallTXTanimation.setDuration(1000);
+        mCallTXTanimation.setRepeatCount(Animation.INFINITE);
+        mCallTXTanimation.setRepeatMode(Animation.REVERSE);
+        mConnectingTV.startAnimation(mCallTXTanimation);
+
         mRTCcodeBR = new RTCcodeBR();
 
         mBackNavigationFL.setOnClickListener(this);
@@ -168,12 +182,17 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             audioCall();
     }
 
+    /**
+     * (1) Request permissions if the user has not yet approved them -
+     * (2) If there are permissions already, ask for a session and token and connect to the session
+     */
     @AfterPermissionGranted(OutGoingCallActivity.RC_VIDEO_APP_PERM)
     private void requestPermissions() {
         if (EasyPermissions.hasPermissions(this, OutGoingCallActivity.perms)) {
                  createTokenInExistingSession();
         } else {
-                 EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_in), OutGoingCallActivity.RC_VIDEO_APP_PERM, OutGoingCallActivity.perms);
+                 EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_in),
+                                                    OutGoingCallActivity.RC_VIDEO_APP_PERM, OutGoingCallActivity.perms);
 
         }
     }
@@ -219,11 +238,14 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                 break;
 
             case R.id.decline_civ:
+                Log.d("test", "onClick: ");
+                if(callStartedFlag)
+                    sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                else
                     sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.accept_civ:
-                    sendXMPPmsg(Message.RTC_CODE_ANSWER); // Let the caller know that the receiver accept the call
                     callStarted();
                 break;
 
@@ -244,7 +266,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         if ((mService != null) && (mService.isXmppConnected()))
                 mService.sendMessage(message);
 
-        if(rtcCode.equals(Message.RTC_CODE_REJECTED))
+        if(rtcCode.equals(Message.RTC_CODE_REJECTED) || rtcCode.equals(Message.RTC_CODE_CLOSE))
                finish();
     }
 
@@ -320,7 +342,12 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         super.onDestroy();
         activityActiveFlag = false;
         mSoundsPlayer.stop();
-        mSession.disconnect();
+
+        if(mSession != null) {
+                mSession.disconnect();
+                if(mSubscriber != null)
+                  mSession.unsubscribe(mSubscriber);
+        }
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -356,33 +383,92 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
 
+    @Override
+    public void onStreamCreated(PublisherKit publisherKit, Stream stream) {
+
+    }
+
+    @Override
+    public void onStreamDestroyed(PublisherKit publisherKit, Stream stream) {
+
+    }
+
+    @Override
+    public void onError(PublisherKit publisherKit, OpentokError opentokError) {
+
+    }
+
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
                 finish();
+            }else if(intent.getAction().equals(Message.RTC_CODE_CLOSE)){
+                mTimerChr.stop();
+                mTitleTV.setText(getResources().getString(R.string.call_ended));
+                        Handler handler = new Handler();
+                        handler.postDelayed(() -> finish(), 4000);
             }
         }
     }
 
     private void callStarted() {
+        callStartedFlag = true;
+        mSoundsPlayer.stop();
         mAnimation.cancel();
         mAcceptCIV.setEnabled(false);
 
-        mTimerChr.setVisibility(View.VISIBLE);
-        mTimerChr.setBase(SystemClock.elapsedRealtime());
-        mTimerChr.start();
+        mConnectingRL.setVisibility(View.VISIBLE);
 
-        ///StartTokBox
-        Log.d("yig", "222: ");
-        if (mSubscriber == null) {
-            mSubscriber = new Subscriber.Builder(this, mStream)
-                    .build();
-            mSession.subscribe(mSubscriber);
+        Thread thread =  new Thread() {
+                @Override
+                public void run() {
 
-            if(mIsVideoCall)
-                   mSubscriberFL.addView(mSubscriber.getView());
-        }
+                    while (!sessitonRecivedFlag);
+
+                    runOnUiThread(() -> {
+
+                        if (mSubscriber == null) {
+                            mSubscriber = new Subscriber.Builder(IncomingCallActivity.this, mStream)
+                                    .build();
+                            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                                    BaseVideoRenderer.STYLE_VIDEO_FILL);
+                            mSession.subscribe(mSubscriber);
+
+                            //Wait 2 seconds
+                            new Handler().postDelayed(() -> {
+                                mConnectingRL.setVisibility(View.GONE);
+                                if (mIsVideoCall)
+                                    mSubscriberFL.addView(mSubscriber.getView());
+                                    mTimerChr.setVisibility(View.VISIBLE);
+                                    mTimerChr.setBase(SystemClock.elapsedRealtime());
+                                    mTimerChr.start();
+
+                                sendXMPPmsg(Message.RTC_CODE_ANSWER); // Let the caller know that the receiver accept the call
+                            } , 2000);
+
+                        }
+                        //**************************
+                        //Publish back
+                        mPublisher = new Publisher.Builder(IncomingCallActivity.this)
+                                .videoTrack(mIsVideoCall)
+                                .build();
+                        mPublisher.setPublisherListener(IncomingCallActivity.this);
+
+                        mSession.publish(mPublisher);
+
+                        //Only for audio calls
+                        if (mIsVideoCall){
+                            mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                                    BaseVideoRenderer.STYLE_VIDEO_FILL);
+                            mPublisherFL.addView(mPublisher.getView());
+                            mPublisherFL.setVisibility(View.VISIBLE);
+                        }
+                    });
+                }
+            };
+        thread.start();
+
     }
 
     //TokBox
@@ -398,13 +484,15 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onStreamReceived(Session session, Stream stream) {
-        Log.d("yig", "1111: ");
+        Log.i(TOKBOX, "Session Received");
          this.mStream = stream;
+        sessitonRecivedFlag = true;
 //        if (mSubscriber == null) {
 //            mSubscriber = new Subscriber.Builder(this, stream).build();
 //            mSession.subscribe(mSubscriber);
 //            mSubscriberFL.addView(mSubscriber.getView());
 //        }
+
     Log.i(TOKBOX, "Stream Received");
     }
 

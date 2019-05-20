@@ -28,6 +28,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
 import com.opentok.android.PublisherKit;
@@ -88,7 +89,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private String mSessionID = "";
 
     private Session mSession;
-    private Publisher mPublisher;
+    private Publisher mPublisher, mPublisher_pre;
     private Subscriber mSubscriber;
     private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
@@ -129,8 +130,8 @@ public class OutGoingCallActivity extends AppCompatActivity
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
         mStatusRL = (RelativeLayout) findViewById(R.id.status_rl);
         mUserPicAudioRL = (RelativeLayout) findViewById(R.id.user_pic_audio_rl);
-        mPublisherFL = (FrameLayout)findViewById(R.id.publisher_fl);
-        mSubscriberFL = (FrameLayout)findViewById(R.id.subscriber_fl);
+        mPublisherFL = (FrameLayout) findViewById(R.id.publisher_fl);
+        mSubscriberFL = (FrameLayout) findViewById(R.id.subscriber_fl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -187,14 +188,43 @@ public class OutGoingCallActivity extends AppCompatActivity
             audioCall();
     }
 
+    /**
+     * (1) Request permissions if the user has not yet approved them -
+     * (2) If there are permissions already, ask for a session and token and connect to the session
+     */
     @AfterPermissionGranted(RC_VIDEO_APP_PERM)
     private void requestPermissions() {
         if (EasyPermissions.hasPermissions(this, perms)) {
-                createSessionAndToken();
+
+                    //Show self camera Preview at first
+                    if (mIsVideoCall) {
+                         startCameraPreview();
+                    }
+
+              createSessionAndToken();
         } else {
-            EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out),
+              EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out),
                                                                               RC_VIDEO_APP_PERM, perms);
         }
+    }
+
+    private void startCameraPreview() {
+ /*       mPublisher = new Publisher.Builder(this)
+                .videoTrack(mIsVideoCall)
+                .build();
+      //  mPublisher.setPublisherListener(this);
+
+        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                BaseVideoRenderer.STYLE_VIDEO_FILL);
+        mPublisher.startPreview();
+        mSubscriberFL.addView(mPublisher.getView());*/
+
+/////////////////////
+        mPublisher_pre = new Publisher(this);
+        mPublisher_pre.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                BaseVideoRenderer.STYLE_VIDEO_FILL);
+        mPublisher_pre.startPreview();
+        mSubscriberFL.addView(mPublisher_pre.getView());
     }
 
     private void videoCall() {
@@ -323,6 +353,7 @@ public class OutGoingCallActivity extends AppCompatActivity
             IntentFilter filter = new IntentFilter();
             filter.addAction(Message.RTC_CODE_REJECTED);
             filter.addAction(Message.RTC_CODE_BUSY);
+            filter.addAction(Message.RTC_CODE_CLOSE);
             filter.addAction(Message.RTC_CODE_ANSWER);
             registerReceiver(mRTCcodeBR,filter);
         } catch (Exception e) {}
@@ -341,9 +372,11 @@ public class OutGoingCallActivity extends AppCompatActivity
         mCallingSound.stop();
         mDeclineSound.stop();
         mBusySound.stop();
-         mSession.disconnect();
-//        mSession.unsubscribe(mSubscriber);
-
+        if(mSession != null) {
+            mSession.disconnect();
+            if(mSubscriber != null)
+                mSession.unsubscribe(mSubscriber);
+        }
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -382,27 +415,30 @@ public class OutGoingCallActivity extends AppCompatActivity
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals(Message.RTC_CODE_REJECTED))
-                finishCall(true);
-            else if(intent.getAction().equals(Message.RTC_CODE_BUSY))
-                finishCall(false);
+            if(intent.getAction().equals(Message.RTC_CODE_REJECTED) ||
+                    intent.getAction().equals(Message.RTC_CODE_BUSY) ||
+                    intent.getAction().equals(Message.RTC_CODE_CLOSE))
+                             callEnded(intent.getAction());
             else if(intent.getAction().equals(Message.RTC_CODE_ANSWER))
                 callStarted();
             }
     }
 
-    private void finishCall(boolean rejectedFlag){
+    private void callEnded(String rtcCode){
         mCallTXTanimation.cancel();
         mCallingSound.stop();
 
-        if(rejectedFlag) {
+        if(rtcCode.equals(Message.RTC_CODE_REJECTED)) {
             mStatusTV.setText(getResources().getString(R.string.rejected));
             mDeclineSound.setLooping(true);
             mDeclineSound.start();
-        }else {
+        }else if(rtcCode.equals(Message.RTC_CODE_BUSY)) {
             mStatusTV.setText(getResources().getString(R.string.busy));
             mBusySound.setLooping(true);
             mBusySound.start();
+        }else if(rtcCode.equals(Message.RTC_CODE_CLOSE)){
+            mTimerChr.stop();
+            mTitleTV.setText(getResources().getString(R.string.call_ended));
         }
 
         Handler handler = new Handler();
@@ -415,6 +451,8 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     private void callStarted() {
+        //Stop sounds
+        mCallingSound.stop();
 
         mCallTXTanimation.cancel();
         mStatusRL.setVisibility(View.GONE);
@@ -430,18 +468,23 @@ public class OutGoingCallActivity extends AppCompatActivity
     public void onConnected(Session session) {
         Log.i(TOKBOX, "Session Connected");
 
+        //mPublisher.destroy();
         mPublisher = new Publisher.Builder(this)
                 .videoTrack(mIsVideoCall)
                 .build();
         mPublisher.setPublisherListener(this);
-
         mSession.publish(mPublisher);
 
-        //Only for audio calls
-          if (mIsVideoCall){
+
+
+
+//        //Only for video calls
+/*          if (mIsVideoCall){
+              mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                                                          BaseVideoRenderer.STYLE_VIDEO_FILL);
                 mPublisherFL.addView(mPublisher.getView());
                 mPublisherFL.setVisibility(View.VISIBLE);
-          }
+          }*/
     }
 
     @Override
@@ -452,11 +495,33 @@ public class OutGoingCallActivity extends AppCompatActivity
     @Override
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Received");
+
+        if (mSubscriber == null) {
+            mSubscriber = new Subscriber.Builder(OutGoingCallActivity.this, stream)
+                    .build();
+            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+            mSession.subscribe(mSubscriber);
+            mSubscriberFL.addView(mSubscriber.getView());
+        }
+
+       //Only for video calls
+        if (mIsVideoCall){
+            mPublisher_pre.destroy();
+              mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                                                                BaseVideoRenderer.STYLE_VIDEO_FILL);
+              mPublisherFL.addView(mPublisher.getView());
+              mPublisherFL.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Dropped");
+
+        if (mSubscriber != null) {
+            mSubscriber = null;
+            mSubscriberFL.removeAllViews();
+        }
     }
 
     @Override
