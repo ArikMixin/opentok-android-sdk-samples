@@ -16,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
@@ -191,7 +192,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         if (EasyPermissions.hasPermissions(this, OutGoingCallActivity.perms)) {
                     //Show self camera Preview at first (Full Screen)
                     if (mIsVideoCall) {
-                        // startCameraPreview();
+                        startCameraPreview();
                         createTokenInExistingSession();
                     }
         } else {
@@ -450,42 +451,40 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
                     runOnUiThread(() -> {
 
-                        if (mSubscriber == null) {
-                            mSubscriber = new Subscriber.Builder(IncomingCallActivity.this, mStream)
-                                    .build();
-                            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                                    BaseVideoRenderer.STYLE_VIDEO_FILL);
-                            mSession.subscribe(mSubscriber);
-
-                            //Wait 2 seconds (because the black screen)
-                            new Handler().postDelayed(() -> {
-                                mConnectingRL.setVisibility(View.GONE);
-                                if (mIsVideoCall)
-                                    mSubscriberFL.addView(mSubscriber.getView());
-                                    mTimerChr.setVisibility(View.VISIBLE);
-                                    mTimerChr.setBase(SystemClock.elapsedRealtime());
-                                    mTimerChr.start();
-
-                                sendXMPPmsg(Message.RTC_CODE_ANSWER); // Let the caller know that the receiver accept the call
-                            } , 2000);
-
-                        }
-                        //**************************
-                        //Publish back
-                        mPublisher = new Publisher.Builder(IncomingCallActivity.this)
-                                .videoTrack(mIsVideoCall)
-                                .build();
-                        mPublisher.setPublisherListener(IncomingCallActivity.this);
-
                         mSession.publish(mPublisher);
 
+       if (mSubscriber == null) {
+                 mSubscriber = new Subscriber.Builder(IncomingCallActivity.this, mStream).build();
+                 mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                 mSession.subscribe(mSubscriber);
+
                         //Only for audio calls
-                        if (mIsVideoCall){
-                            mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                                    BaseVideoRenderer.STYLE_VIDEO_FILL);
-                                mPublisherFL.addView(mPublisher.getView());
+                        if (mIsVideoCall) {
+
+                            //Hide the connection layout and start mTimerChr
+                            mConnectingRL.setVisibility(View.GONE);
+                            mSubscriberFL.addView(mSubscriber.getView());
+
+
+
+                            //Set Publisher
+                            mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                            ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                            mPublisherFL.addView(mPublisher.getView());
                             mPublisherFL.setVisibility(View.VISIBLE);
+
+                            //Wait 2 seconds because of the api black screen - and then start timer and sent massage to caller
+                            new Handler().postDelayed(() -> {
+                                mTimerChr.setVisibility(View.VISIBLE);
+                                mTimerChr.setBase(SystemClock.elapsedRealtime());
+                                mTimerChr.start();
+
+                                sendXMPPmsg(Message.RTC_CODE_ANSWER);
+                            }, 2000);
                         }
+
+
+                    }
                     });
                 }
             };

@@ -16,6 +16,7 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
@@ -95,7 +96,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
-    private CardView mPublisherFL;
+    private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
 
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
@@ -134,7 +135,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
         mStatusRL = (RelativeLayout) findViewById(R.id.status_rl);
         mUserPicAudioRL = (RelativeLayout) findViewById(R.id.user_pic_audio_rl);
-        mPublisherFL = (CardView) findViewById(R.id.publisher_fl);
+        mPublisherFL = (FrameLayout) findViewById(R.id.publisher_fl);
         mSubscriberFL = (FrameLayout) findViewById(R.id.subscriber_fl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
@@ -482,20 +483,23 @@ public class OutGoingCallActivity extends AppCompatActivity
         Log.i(TOKBOX, "Stream Received");
 
         if (mSubscriber == null) {
-            mSubscriber = new Subscriber.Builder(OutGoingCallActivity.this, stream)
-                    .build();
-            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-            mSession.subscribe(mSubscriber);
-            mSubscriberFL.addView(mSubscriber.getView());
-        }
+                        mSubscriber = new Subscriber.Builder(OutGoingCallActivity.this, stream).build();
+                        mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                        mSession.subscribe(mSubscriber);
 
-       //Show preview (Small Windows) Only for video calls
-       if (mIsVideoCall){
-                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
-                mPublisherFL.addView(mPublisher.getView());
-                mPublisherFL.setVisibility(View.VISIBLE);
-       }
+                       //Show preview (Small Windows) Only for video calls
+                       if (mIsVideoCall){
+
+                                mSubscriberFL.addView(mSubscriber.getView());
+
+                                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                                ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                                mPublisherFL.addView(mPublisher.getView());
+                                ((View)mPublisherFL.getParent()).requestLayout();
+                                mPublisherFL.setVisibility(View.VISIBLE);
+
+                       }
+        }
     }
 
     @Override
