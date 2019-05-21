@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.Chronometer;
@@ -89,7 +90,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private String mSessionID = "";
 
     private Session mSession;
-    private Publisher mPublisher, mPublisher_pre;
+    private Publisher mPublisher;
     private Subscriber mSubscriber;
     private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
@@ -197,9 +198,8 @@ public class OutGoingCallActivity extends AppCompatActivity
         if (EasyPermissions.hasPermissions(this, perms)) {
 
                     //Show self camera Preview at first
-                    if (mIsVideoCall) {
-                         startCameraPreview();
-                    }
+                    if (mIsVideoCall)
+                             startCameraPreview();
 
               createSessionAndToken();
         } else {
@@ -209,22 +209,14 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     private void startCameraPreview() {
- /*       mPublisher = new Publisher.Builder(this)
+        mPublisher = new Publisher.Builder(this)
                 .videoTrack(mIsVideoCall)
                 .build();
-      //  mPublisher.setPublisherListener(this);
+        mPublisher.setPublisherListener(this);
 
-        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                BaseVideoRenderer.STYLE_VIDEO_FILL);
+        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
         mPublisher.startPreview();
-        mSubscriberFL.addView(mPublisher.getView());*/
-
-/////////////////////
-        mPublisher_pre = new Publisher(this);
-        mPublisher_pre.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                BaseVideoRenderer.STYLE_VIDEO_FILL);
-        mPublisher_pre.startPreview();
-        mSubscriberFL.addView(mPublisher_pre.getView());
+        mSubscriberFL.addView(mPublisher.getView());
     }
 
     private void videoCall() {
@@ -309,7 +301,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     public void createSessionAndToken(){
-        videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
          videoAudioCallViewModel.createSessionsAndToken(this,"RELAYED");
     }
 
@@ -372,12 +364,17 @@ public class OutGoingCallActivity extends AppCompatActivity
         mCallingSound.stop();
         mDeclineSound.stop();
         mBusySound.stop();
+
         if(mSession != null) {
-            mSession.disconnect();
-                if(mSubscriber != null)
-                    mSession.unsubscribe(mSubscriber);
-                if(mPublisher != null)
-                    mSession.unpublish(mPublisher);
+                 mSession.disconnect();
+                    if(mSubscriber != null){
+                            mSession.unsubscribe(mSubscriber);
+                            mSubscriber.destroy();
+                    }
+                    if(mPublisher != null){
+                            mSession.unpublish(mPublisher);
+                            mPublisher.destroy();
+            }
         }
     }
 
@@ -469,24 +466,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     @Override
     public void onConnected(Session session) {
         Log.i(TOKBOX, "Session Connected");
-
-        //mPublisher.destroy();
-        mPublisher = new Publisher.Builder(this)
-                .videoTrack(mIsVideoCall)
-                .build();
-        mPublisher.setPublisherListener(this);
         mSession.publish(mPublisher);
-
-
-
-
-//        //Only for video calls
-/*          if (mIsVideoCall){
-              mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                                                          BaseVideoRenderer.STYLE_VIDEO_FILL);
-                mPublisherFL.addView(mPublisher.getView());
-                mPublisherFL.setVisibility(View.VISIBLE);
-          }*/
     }
 
     @Override
@@ -507,13 +487,12 @@ public class OutGoingCallActivity extends AppCompatActivity
         }
 
        //Only for video calls
-        if (mIsVideoCall){
-             mPublisher_pre.destroy();
-              mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                                                                BaseVideoRenderer.STYLE_VIDEO_FILL);
-              mPublisherFL.addView(mPublisher.getView());
-              mPublisherFL.setVisibility(View.VISIBLE);
-        }
+       if (mIsVideoCall){
+                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                mPublisherFL.addView(mPublisher.getView());
+                mPublisherFL.setVisibility(View.VISIBLE);
+       }
     }
 
     @Override

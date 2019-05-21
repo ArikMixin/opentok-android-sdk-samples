@@ -25,7 +25,6 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -339,16 +338,21 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     protected void onDestroy() {
+        Log.d("tttt", "onDestroy: ");
         super.onDestroy();
         activityActiveFlag = false;
         mSoundsPlayer.stop();
 
         if(mSession != null) {
-                mSession.disconnect();
-                    if(mSubscriber != null)
-                        mSession.unsubscribe(mSubscriber);
-                    if(mPublisher != null)
-                        mSession.unpublish(mPublisher);
+            mSession.disconnect();
+            if(mSubscriber != null){
+                mSession.unsubscribe(mSubscriber);
+                mSubscriber.destroy();
+            }
+            if(mPublisher != null){
+                mSession.unpublish(mPublisher);
+                mPublisher.destroy();
+            }
         }
     }
 
