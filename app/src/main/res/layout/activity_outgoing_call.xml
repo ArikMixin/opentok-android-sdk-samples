@@ -375,11 +375,13 @@
 
     </RelativeLayout>
 
+
+
     <android.support.v7.widget.CardView
-        android:visibility="gone"
         android:id="@+id/publisher_fl"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:visibility="gone"
+        android:layout_width="140dp"
+        android:layout_height="220dp"
         android:layout_gravity="bottom|end"
         android:layout_marginStart="20dp"
         android:layout_marginTop="25dp"
@@ -389,8 +391,7 @@
         android:padding="1dp"
         app:cardCornerRadius="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/hang_up_rl"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/speaker_iv" />
+        app:layout_constraintStart_toStartOf="parent">
+    </android.support.v7.widget.CardView>
 
 </android.support.constraint.ConstraintLayout>

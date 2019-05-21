@@ -78,6 +78,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private Message message;
     private RTCcodeBR mRTCcodeBR;
     public static boolean activityActiveFlag;
+
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
@@ -188,12 +189,27 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     @AfterPermissionGranted(OutGoingCallActivity.RC_VIDEO_APP_PERM)
     private void requestPermissions() {
         if (EasyPermissions.hasPermissions(this, OutGoingCallActivity.perms)) {
-                 createTokenInExistingSession();
+                    //Show self camera Preview at first (Full Screen)
+                    if (mIsVideoCall) {
+                        // startCameraPreview();
+                        createTokenInExistingSession();
+                    }
         } else {
                  EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_in),
                                                     OutGoingCallActivity.RC_VIDEO_APP_PERM, OutGoingCallActivity.perms);
 
         }
+    }
+
+    private void startCameraPreview() {
+        mPublisher = new Publisher.Builder(this)
+                .videoTrack(mIsVideoCall)
+                .build();
+        mPublisher.setPublisherListener(this);
+
+        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+        mPublisher.startPreview();
+        mSubscriberFL.addView(mPublisher.getView());
     }
 
     private void videoCall() {
@@ -441,7 +457,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                                     BaseVideoRenderer.STYLE_VIDEO_FILL);
                             mSession.subscribe(mSubscriber);
 
-                            //Wait 2 seconds
+                            //Wait 2 seconds (because the black screen)
                             new Handler().postDelayed(() -> {
                                 mConnectingRL.setVisibility(View.GONE);
                                 if (mIsVideoCall)
@@ -467,7 +483,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                         if (mIsVideoCall){
                             mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
                                     BaseVideoRenderer.STYLE_VIDEO_FILL);
-                            mPublisherFL.addView(mPublisher.getView());
+                                mPublisherFL.addView(mPublisher.getView());
                             mPublisherFL.setVisibility(View.VISIBLE);
                         }
                     });
@@ -492,14 +508,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TOKBOX, "Session Received");
          this.mStream = stream;
-        sessitonRecivedFlag = true;
-//        if (mSubscriber == null) {
-//            mSubscriber = new Subscriber.Builder(this, stream).build();
-//            mSession.subscribe(mSubscriber);
-//            mSubscriberFL.addView(mSubscriber.getView());
-//        }
 
-    Log.i(TOKBOX, "Stream Received");
+                 sessitonRecivedFlag = true;
     }
 
     @Override

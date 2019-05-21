@@ -8,14 +8,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
@@ -92,7 +95,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
-    private FrameLayout mPublisherFL;
+    private CardView mPublisherFL;
     private FrameLayout mSubscriberFL;
 
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
@@ -131,7 +134,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
         mStatusRL = (RelativeLayout) findViewById(R.id.status_rl);
         mUserPicAudioRL = (RelativeLayout) findViewById(R.id.user_pic_audio_rl);
-        mPublisherFL = (FrameLayout) findViewById(R.id.publisher_fl);
+        mPublisherFL = (CardView) findViewById(R.id.publisher_fl);
         mSubscriberFL = (FrameLayout) findViewById(R.id.subscriber_fl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
@@ -486,7 +489,7 @@ public class OutGoingCallActivity extends AppCompatActivity
             mSubscriberFL.addView(mSubscriber.getView());
         }
 
-       //Only for video calls
+       //Show preview (Small Windows) Only for video calls
        if (mIsVideoCall){
                 mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                 ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
