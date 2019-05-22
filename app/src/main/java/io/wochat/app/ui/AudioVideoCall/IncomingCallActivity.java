@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -453,41 +454,48 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
                         mSession.publish(mPublisher);
 
-       if (mSubscriber == null) {
-                 mSubscriber = new Subscriber.Builder(IncomingCallActivity.this, mStream).build();
-                 mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                 mSession.subscribe(mSubscriber);
-
-                        //Only for audio calls
-                        if (mIsVideoCall) {
-
-                            //Hide the connection layout and start mTimerChr
-                            mConnectingRL.setVisibility(View.GONE);
-                            mSubscriberFL.addView(mSubscriber.getView());
-
-
-
-                            //Set Publisher
+                        if (mIsVideoCall && Build.VERSION.SDK_INT < 28){
                             mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                            ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                            ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
                             mPublisherFL.addView(mPublisher.getView());
                             mPublisherFL.setVisibility(View.VISIBLE);
-
-                            //Wait 2 seconds because of the api black screen - and then start timer and sent massage to caller
-                            new Handler().postDelayed(() -> {
-                                mTimerChr.setVisibility(View.VISIBLE);
-                                mTimerChr.setBase(SystemClock.elapsedRealtime());
-                                mTimerChr.start();
-
-                                sendXMPPmsg(Message.RTC_CODE_ANSWER);
-                            }, 2000);
                         }
 
+              if (mSubscriber == null) {
 
+                         mSubscriber = new Subscriber.Builder(IncomingCallActivity.this, mStream).build();
+                         mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                         mSession.subscribe(mSubscriber);
+
+                            //Only for audio calls
+                            if (mIsVideoCall) {
+
+                                //Hide the connection layout and start mTimerChr
+                                mConnectingRL.setVisibility(View.GONE);
+                                mSubscriberFL.addView(mSubscriber.getView());
+
+                                //Set Publisher
+                                //*** Show the receiver video (Small Windows) Only for video calls
+                                if(Build.VERSION.SDK_INT >= 28) {
+                                    mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                                    ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                                    mPublisherFL.addView(mPublisher.getView());
+                                    mPublisherFL.setVisibility(View.VISIBLE);
+                                }
+
+                                //Wait 2 seconds because of the api black screen - and then start timer and sent massage to caller
+                                new Handler().postDelayed(() -> {
+                                    mTimerChr.setVisibility(View.VISIBLE);
+                                    mTimerChr.setBase(SystemClock.elapsedRealtime());
+                                    mTimerChr.start();
+
+                                    sendXMPPmsg(Message.RTC_CODE_ANSWER);
+                                }, 2000);
+                            }
                     }
                     });
                 }
-            };
+        };
         thread.start();
 
     }

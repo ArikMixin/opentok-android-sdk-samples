@@ -15,11 +15,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
@@ -482,24 +479,33 @@ public class OutGoingCallActivity extends AppCompatActivity
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Received");
 
+        //*** Show the receiver video (Small Windows) Only for video calls
+        if (mIsVideoCall && Build.VERSION.SDK_INT < 28){
+            mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+            ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
+            mPublisherFL.addView(mPublisher.getView());
+            mPublisherFL.setVisibility(View.VISIBLE);
+        }
+
         if (mSubscriber == null) {
                         mSubscriber = new Subscriber.Builder(OutGoingCallActivity.this, stream).build();
-                        mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                         mSession.subscribe(mSubscriber);
 
-                       //Show preview (Small Windows) Only for video calls
+                       //Show the caller video (full screen) Only for video calls
                        if (mIsVideoCall){
-
+                                mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                                 mSubscriberFL.addView(mSubscriber.getView());
 
-                                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                                ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
-                                mPublisherFL.addView(mPublisher.getView());
-                                ((View)mPublisherFL.getParent()).requestLayout();
-                                mPublisherFL.setVisibility(View.VISIBLE);
-
+                           //*** Show the receiver video (Small Windows) Only for video calls
+                           if(Build.VERSION.SDK_INT >= 28) {
+                                   mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                                   ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                                   mPublisherFL.addView(mPublisher.getView());
+                                   mPublisherFL.setVisibility(View.VISIBLE);
+                           }
                        }
         }
+
     }
 
     @Override
