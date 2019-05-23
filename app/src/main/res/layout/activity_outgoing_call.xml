@@ -140,6 +140,23 @@
                     android:textColor="@color/white"
                     android:textSize="13dp"
                     android:textStyle="bold" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_toRightOf="@+id/participant_name_video_tv">
+
+                    <ImageView
+                        android:id="@+id/disable_video_iv"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_marginRight="35dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginTop="15dp"
+                        android:src="@drawable/close_camera" />
+                </RelativeLayout>
+
             </RelativeLayout>
 
         </RelativeLayout>
@@ -183,7 +200,7 @@
                     android:layout_height="26dp"
                     android:layout_centerInParent="true"
                     android:layout_marginTop="15dp"
-                    android:src="@drawable/ic_action_video_w" />
+                    android:src="@drawable/open_camera" />
             </RelativeLayout>
 
         </RelativeLayout>
