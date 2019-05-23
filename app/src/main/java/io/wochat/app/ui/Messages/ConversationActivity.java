@@ -748,7 +748,8 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mIsInputInTextMode = false;
 		if (mIsGroup){
-			mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+			if (!message.isMagic())
+				mService.sendGroupMessage(message, mGroupMembers, mSelfId);
 		}
 		else {
 			if (!message.isMagic())
@@ -1567,6 +1568,13 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 	};
 
+	private void addGroupInfo(Message message) {
+		message.setGroupName(mParticipantName);
+		message.setGroupId(mConversationId);
+		message.setGroups(new String[]{mConversationId});
+	}
+
+
 	private void submitTempImageMessage(Uri imageUri) {
 		//Log.e(TAG, "submitTempImageMessage: " + imageUri);
 		if (mService == null) {
@@ -1575,9 +1583,12 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 		Message message = Message.CreateImageMessage(mParticipantId, mSelfId, mConversationId, imageUri, mSelfLang);
+		if (mIsGroup)
+			addGroupInfo(message);
 		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
+
 
 	private void submitTempVideoMessage(File compressedVideoFile, File thumbFile, int duration) {
 
@@ -1591,6 +1602,8 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 		Message message = Message.CreateVideoMessage(mParticipantId, mSelfId, mConversationId, compressedVideoUri, thumbUri, mSelfLang, duration);
+		if (mIsGroup)
+			addGroupInfo(message);
 		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
@@ -1606,6 +1619,9 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 		Message message = Message.CreateAudioMessage(mParticipantId, mSelfId, mConversationId, audioUri, duration);
+		if (mIsGroup)
+			addGroupInfo(message);
+
 		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
@@ -1613,6 +1629,9 @@ public class ConversationActivity extends PermissionActivity implements
 	private void submitTempSpeechableMessage(String text, int duration) {
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, text, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
+		if (mIsGroup)
+			addGroupInfo(message);
+
 
 		if (isMagicButtonOn()) {
 			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);

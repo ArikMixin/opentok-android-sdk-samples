@@ -356,7 +356,8 @@ public class NewGroupActivity extends AppCompatActivity implements View.OnClickL
 
 	private void createGroup(String groupName) {
 		mGroupViewModel.getCreateGroupResult().observe(this, conversationStateData -> {
-			mProgressDialog.dismiss();
+			if (mProgressDialog != null)
+				mProgressDialog.dismiss();
 			if (conversationStateData.isSuccess()){
 				Conversation conversation = conversationStateData.getData();
 				if(conversation.getGroupName().equals(groupName)){

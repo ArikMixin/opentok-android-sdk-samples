@@ -81,5 +81,9 @@ public interface GroupDao {
 		"WHERE group_id =:groupId")
 	void removeMembers(String groupId);
 
+	@Query("UPDATE conversation_table SET  " +
+		"is_self_in_group = 1 " +
+		"WHERE conversation_id =:groupId")
+	void joinBackGroup(String groupId);
 
 }

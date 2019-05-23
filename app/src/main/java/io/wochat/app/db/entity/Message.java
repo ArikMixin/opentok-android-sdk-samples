@@ -571,6 +571,10 @@ public class Message implements IMessage,
 		return messageType.equals(MSG_TYPE_SPEECHABLE);
 	}
 
+	public boolean isGroupEvent() {
+		return messageType.equals(MSG_TYPE_GROUP_EVENT);
+	}
+
 
 	public String getDisplayedLang(){
 		switch (showTranslationFlag){
@@ -1166,9 +1170,7 @@ public class Message implements IMessage,
 		if (!messageType.equals(MSG_TYPE_GROUP_EVENT))
 			return "";
 
-		//BidiFormatter.getInstance().unicodeWrap();
 		String res = "";
-		String name;
 		switch (eventCode){
 			case EVENT_CODE_GROUP_CREATED:
 				res = actingUserName + " created group " + groupName;
@@ -1190,7 +1192,7 @@ public class Message implements IMessage,
 				if ("You".equalsIgnoreCase(actingUserName))
 					res = "You are now an admin";
 				else {
-					res = actingUserName + " is now an admin";
+					res = otherUserName + " is now an admin";
 					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
 				}
 				break;
@@ -1198,7 +1200,7 @@ public class Message implements IMessage,
 				if ("You".equalsIgnoreCase(actingUserName))
 					res = "You are no longer an admin";
 				else {
-					res = actingUserName + " is no longer an admin";
+					res = otherUserName + " is no longer an admin";
 					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
 				}
 				break;
@@ -1213,6 +1215,63 @@ public class Message implements IMessage,
 		}
 		return res;
 	}
+
+	public String getGroupEventNotificationMessage() {
+		if (!messageType.equals(MSG_TYPE_GROUP_EVENT))
+			return "";
+
+		String res = "";
+		switch (eventCode){
+			case EVENT_CODE_GROUP_CREATED:
+				res = actingUserName + " added you to group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_ADDED:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = actingUserName + " added you to group " + groupName;
+				else
+					res = actingUserName + " added " + otherUserName + " to group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_REMOVED:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = actingUserName + " removed you from group " + groupName;
+				else
+					res = actingUserName + " removed " + otherUserName + " from group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_LEFT:
+				res = actingUserName + " has left the group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_MADE_ADMIN:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = actingUserName + " made you administrator in group " + groupName;
+				else {
+					res = actingUserName + " made " + otherUserName + " administrator in group " + groupName;
+					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				}
+				break;
+			case Message.EVENT_CODE_REMOVED_ADMIN:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = actingUserName + " dismissed you as administrator in group " + groupName;
+				else {
+					res = actingUserName + " dismissed " + otherUserName + " as administrator in group " + groupName;
+					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				}
+				break;
+			case Message.EVENT_CODE_ICON_CHANGED:
+				res = actingUserName + " changed group icon of group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_NAME_CHANGED:
+				res = actingUserName + " changed group name to " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+		}
+		return res;
+	}
+
 
 
 	public Boolean getShowNonTranslated() {
@@ -1311,5 +1370,14 @@ public class Message implements IMessage,
 
 	public void setOtherUserName(String otherUserName) {
 		this.otherUserName = otherUserName;
+	}
+
+
+	public static Message getGroupCreatedMessage(Message userAddedMessage){
+		Message newMessage = fromJson(userAddedMessage.toJson());
+		newMessage.setMessageId(UUID.randomUUID().toString());
+		newMessage.setEventCode(EVENT_CODE_GROUP_CREATED);
+		newMessage.setTimestampMilli(userAddedMessage.getTimestampMilli()-10);
+		return newMessage;
 	}
 }

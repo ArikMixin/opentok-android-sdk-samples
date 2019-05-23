@@ -422,6 +422,10 @@ public class WCRepository {
 		return mSelfUser;
 	}
 
+	public String getSelfUserId() {
+		return mSharedPreferences.getUserId();
+	}
+
 
 	public void uploadAudio(Message message, byte[] mediaFileBytes) {
 		mAppExecutors.networkIO().execute(() -> {
@@ -1240,6 +1244,12 @@ public class WCRepository {
 			return false;
 
 		mAppExecutors.diskIO().execute(() -> {
+
+			if (message.getMessageType().equals(Message.MSG_TYPE_GROUP_EVENT)) {
+				handleGroupEvent(message, resources);
+				return;
+			}
+
 			Contact contact;
 			String participantId = message.getSenderId();
 
@@ -1329,9 +1339,6 @@ public class WCRepository {
 					break;
 				case Message.MSG_TYPE_GIF:
 					break;
-				case Message.MSG_TYPE_GROUP_EVENT:
-					handleGroupEvent(message, resources);
-					break;
 			}
 
 
@@ -1343,6 +1350,19 @@ public class WCRepository {
 	private void handleGroupEvent(Message message, Resources resources){
 		String groupId;
 		String memberId;
+
+		if (!mConversationDao.hasConversation(message.getConversationId())) {
+			Conversation conversation = new Conversation();
+			conversation.setGroup(true);
+			conversation.setParticipantId(null);
+			conversation.setConversationId(message.getConversationId());
+			conversation.setParticipantName(null);
+			conversation.setParticipantLanguage(null);
+			conversation.setGroupName(message.getGroupName());
+			mConversationDao.insert(conversation);
+			//getGroupDetailsAndInsertToDB(conversation.getId(), resources);
+		}
+
 
 		// handle missing users
 		List<String> list = new ArrayList<>();
@@ -1388,16 +1408,26 @@ public class WCRepository {
 
 		message.setShouldBeDisplayed(true);
 
+		boolean conversationHasMessages = mConversationDao.hasMessages(message.getGroupId());
+
 		mMessageDao.insert(message);
 
 		switch (message.getEventCode()){
-			case Message.EVENT_CODE_GROUP_CREATED:
-				groupId = message.getGroupId();
-				getGroupDetailsAndInsertToDB(groupId, resources);
-				break;
+
+//			**************   inner implementation in EVENT_CODE_USER_ADDED  **********
+//			case Message.EVENT_CODE_GROUP_CREATED:
+//				groupId = message.getGroupId();
+//				getGroupDetailsAndInsertToDB(groupId, resources);
+//				break;
+//			**************************************************************************
 
 			case Message.EVENT_CODE_USER_ADDED:
+				if (!conversationHasMessages) { // add Group Created msg only for new conversation, not for re-added
+					Message groupCreatedMessage = Message.getGroupCreatedMessage(message);
+					mMessageDao.insert(groupCreatedMessage);
+				}
 				groupId = message.getGroupId();
+				mGroupDao.joinBackGroup(groupId);
 				getGroupDetailsAndInsertToDB(groupId, resources);
 				break;
 
@@ -1532,7 +1562,7 @@ public class WCRepository {
 				toLanguage = message.getTranslatedLanguage();
 			}
 
-			needTranslation1 = (!fromLanguage.equals(toLanguage));
+			needTranslation1 = (!fromLanguage.equals(toLanguage));//gil
 			needTranslationMagic = message.isMagic();
 
 			if (needTranslation1 && needTranslationMagic) {  // translate to 2 language, regular and magic
@@ -2277,6 +2307,138 @@ public class WCRepository {
 	}
 
 
+
+	public void getNotificationDataForGroupEvent(Message message, ContactServer contactServer, NotificationDataListener listener) {
+		if ((message == null)||(!message.isGroupEvent())) {
+			Log.e(TAG, "getNotificationDataForGroupEvent: null or not group event - exit ");
+			return;
+		}
+		mAppExecutors.diskIO().execute(() -> {
+
+			Notif notif = mNotifDao.getNotification(message.getId());
+			if (notif != null){
+				listener.onNotificationDataResult(null);
+				return;
+			}
+
+
+			NotificationData data = new NotificationData();
+
+			Contact actingUser;
+			Contact otherUser;
+			String actingUserId = message.getActingUser();
+			String otherUserId = message.getOtherUser();
+			if ((Utils.isNotNullAndNotEmpty(actingUserId))&&(!mContactDao.hasContact(actingUserId))) {
+				actingUser = new Contact(actingUserId);
+				mContactDao.insert(actingUser);
+			}
+			else {
+				actingUser = mContactDao.getContact(actingUserId);
+			}
+
+			if ((Utils.isNotNullAndNotEmpty(otherUserId))&&(!mContactDao.hasContact(otherUserId))) {
+				otherUser = new Contact(otherUserId);
+				mContactDao.insert(otherUser);
+			}
+			else {
+				otherUser = mContactDao.getContact(otherUserId);
+			}
+
+
+
+			data.contact = null;
+			data.contactName = message.getGroupName();
+			data.selfUser = mUserDao.getSelfUser();
+
+			Conversation conversation;
+
+			if(!mConversationDao.hasConversation(message.getConversationId())){
+				conversation = new Conversation();
+				conversation.setParticipantId(null);
+				conversation.setConversationId(message.getConversationId());
+				conversation.setParticipantName(null);
+				conversation.setParticipantLanguage(null);
+				conversation.setGroupName(message.getGroupName());
+				try {
+					Log.e(TAG, "ERROR getNotificationData: message.getConversationId: " +  message.getConversationId());
+					Log.e(TAG, "ERROR getNotificationData: insert conversation: " +  conversation.toString());
+					mConversationDao.insert(conversation);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			else {
+				conversation = mConversationDao.getConversation(message.getConversationId());
+			}
+
+			data.conversation = conversation;
+			data.title =message.getGroupName();
+			data.conversationId = message.getGroupId();
+			data.messageId = message.getId();
+
+
+			Notif newNotif = new Notif();
+			newNotif.setMessageId(data.messageId);
+			newNotif.setCanceled(false);
+			newNotif.setDisplayed(true);
+			newNotif.setContactId(contactServer.getUserId());
+			newNotif.setConversationId(data.conversationId);
+			newNotif.setTimestamp(new Date());
+			mNotifDao.insert(newNotif);
+
+
+			message.setActingUserName(actingUser.getName());
+			message.setOtherUserName(otherUser.getName());
+			data.body = message.getGroupEventNotificationMessage();
+
+			Log.e(TAG, "getNotificationData, text: " + data.body);
+
+			mAppExecutors.mainThread().execute(() -> {
+				Log.e(TAG, "getNotificationData, download: " + data.conversation.getGroupImageUrl());
+
+				if (data.conversation.getGroupImageUrl() == null){
+					Log.e(TAG, "getNotificationData, no profile image");
+					data.largeIcon = null;
+					listener.onNotificationDataResult(data);
+					return;
+				}
+
+				try {
+					Picasso.get().load(data.conversation.getGroupImageUrl()).error(R.drawable.profile_circle).into(new Target() {
+						@Override
+						public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+							Log.e(TAG, "getNotificationData, onBitmapLoaded");
+							data.largeIcon = Utils.getCircleBitmap(bitmap);
+							listener.onNotificationDataResult(data);
+						}
+
+						@Override
+						public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+							Log.e(TAG, "getNotificationData, onBitmapFailed");
+							data.largeIcon = null;
+							listener.onNotificationDataResult(data);
+						}
+
+						@Override
+						public void onPrepareLoad(Drawable placeHolderDrawable) {
+							Log.e(TAG, "getNotificationData, onPrepareLoad");
+						}
+					});
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e(TAG, "getNotificationData, onBitmapFailed");
+					data.largeIcon = null;
+					listener.onNotificationDataResult(data);
+				}
+			});
+
+
+
+		});
+	}
+
+
 	public void getNotificationData(Message message, ContactServer contactServer, NotificationDataListener listener) {
     	if ((message == null)||(contactServer == null)) {
 			Log.e(TAG, "getNotificationData: null - exit ");
@@ -2292,9 +2454,9 @@ public class WCRepository {
 
 
 			NotificationData data = new NotificationData();
-			Contact contact;
 
-			if (!mContactDao.hasContact(contactServer.getUserId())){
+			Contact contact;
+			if (!mContactDao.hasContact(contactServer.getUserId())) {
 				contact = new Contact(contactServer);
 				mContactDao.insert(contact);
 			}
@@ -2302,6 +2464,7 @@ public class WCRepository {
 				contact = mContactDao.getContact(contactServer.getUserId());
 			}
 			data.contact = contact;
+			data.contactName = contact.getName();
 
 			data.selfUser = mUserDao.getSelfUser();
 
@@ -2373,8 +2536,17 @@ public class WCRepository {
 			Log.e(TAG, "getNotificationData, text: " + data.body);
 
 			mAppExecutors.mainThread().execute(() -> {
-				Log.e(TAG, "getNotificationData, download: " + contactServer.getProfilePicUrl());
-				if (contactServer.getProfilePicUrl() == null){
+				String imageUrl;
+				if (conversation.isGroup())
+					imageUrl = conversation.getGroupImageUrl();
+				else
+					imageUrl = contactServer.getProfilePicUrl();
+
+				Log.e(TAG, "getNotificationData, download: " + imageUrl);
+
+
+
+				if (imageUrl == null){
 					Log.e(TAG, "getNotificationData, no profile image");
 					data.largeIcon = null;
 					listener.onNotificationDataResult(data);
@@ -2382,7 +2554,7 @@ public class WCRepository {
 				}
 
 				try {
-					Picasso.get().load(contactServer.getProfilePicUrl()).error(R.drawable.profile_circle).into(new Target() {
+					Picasso.get().load(imageUrl).error(R.drawable.profile_circle).into(new Target() {
 						@Override
 						public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
 							Log.e(TAG, "getNotificationData, onBitmapLoaded");

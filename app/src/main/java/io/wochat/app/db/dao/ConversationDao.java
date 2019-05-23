@@ -40,6 +40,8 @@ public interface ConversationDao {
 		"WHERE participant_id =:contactId")
 	public void updateConversationWithContactData(String contactId, String contactName, String contactLanguage, String profilePic);
 
+	@Query("SELECT EXISTS(SELECT * FROM message_table WHERE conversation_id =:conversationId LIMIT 1)")
+	boolean hasMessages(String conversationId);
 
 
 	@Query("SELECT EXISTS(SELECT * FROM conversation_table WHERE conversation_id =:conversationId LIMIT 1)")

@@ -10,6 +10,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -69,6 +70,9 @@ public class WochatApi {
 		mContext = context.getApplicationContext();
 		mUserId = userId;
 		mToken = token;
+
+		VolleyLog.DEBUG = BuildConfig.DEBUG;
+
 	}
 
 	public void setUserId(String userId) {
@@ -315,8 +319,9 @@ public class WochatApi {
 			e.printStackTrace();
 		}
 
-		String url = BASE_URL + "group/" + groupId + "/participants/";
-		sendRequestAndHandleResult(Request.Method.DELETE, url, jsonObject, lsnr);
+		String url = BASE_URL + "group/" + groupId + "/delete_participants/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
 	}
 
 	public void makeAdminToGroup(String groupId, String contact, final OnServerResponseListener lsnr) {
@@ -477,6 +482,7 @@ public class WochatApi {
 
 	private void sendGetAndHandleResult(String url, HashMap<String, String> params, final OnServerResponseListener lsnr){
 		HashMap<String, String> mParams = params;
+
 		RequestQueue queue = Volley.newRequestQueue(mContext);
 
 		if(mParams != null) {
