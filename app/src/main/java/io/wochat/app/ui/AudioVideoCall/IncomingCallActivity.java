@@ -25,6 +25,7 @@ import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.Chronometer;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -67,7 +68,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             mParticipantNameVideoTV, mParticipantLangVideoTV, mConnectingTV;
     private Chronometer mTimerChr;
     private FrameLayout mBackNavigationFL;
-    private RelativeLayout mMainAudioRL, mMainVideoRL, mConnectingRL;
+    private RelativeLayout mMainAudioRL, mMainVideoRL, mConnectingRL, mIncomingCallBtnsRl;
     private Locale loc;
     private int mFlagDrawable;
     private String mFullLangName;
@@ -85,6 +86,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private String mSessionId;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
+    private ImageView mDisableVideoIV;
     public static boolean activityActiveFlag;
 
     private Session mSession;
@@ -133,6 +135,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mSubscriberFL = (FrameLayout)findViewById(R.id.subscriber_fl);
         mConnectingRL = (RelativeLayout) findViewById(R.id.connecting_rl);
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
+        mIncomingCallBtnsRl = (RelativeLayout) findViewById(R.id.incoming_call_btns_rl);
+        mDisableVideoIV = (ImageView) findViewById(R.id.disable_video_iv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -414,7 +418,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     protected void onDestroy() {
-        Log.d("tttt", "onDestroy: ");
+        Log.d(TAG, "onDestroy: ");
         super.onDestroy();
         activityActiveFlag = false;
         mSoundsPlayer.stop();
@@ -496,10 +500,12 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
     private void callStarted() {
         callStartedFlag = true;
+
+        //Hide incoming call btns and show inside call btns
+        mIncomingCallBtnsRl.setVisibility(View.GONE);
         mSoundsPlayer.stop();
         mAnimation.cancel();
         mAcceptCIV.setEnabled(false);
-
         mConnectingRL.setVisibility(View.VISIBLE);
 
         Thread thread =  new Thread() {
@@ -549,6 +555,9 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
                                     sendXMPPmsg(Message.RTC_CODE_ANSWER);
                                 }, 2000);
+
+                                //Show inside call btns
+                                mDisableVideoIV.setVisibility(View.VISIBLE);
                             }
                     }
                     });
