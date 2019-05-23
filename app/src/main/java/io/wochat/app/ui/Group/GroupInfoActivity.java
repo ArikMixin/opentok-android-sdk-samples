@@ -16,6 +16,7 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.SubtitleCollapsingToolbarLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.util.Log;
@@ -86,6 +87,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private byte[] mProfilePicByte;
 	private LinearLayout mAddMembersLL;
 	private LinearLayout mQuitGroupLL;
+	private CardView mAddMembersCV;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +104,8 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		mGroupMembersLL = (LinearLayout)findViewById(R.id.group_members_ll);
 		mAddMembersLL = (LinearLayout)findViewById(R.id.add_members_ll);
 		mQuitGroupLL = (LinearLayout)findViewById(R.id.quit_group_ll);
+
+		mAddMembersCV = (CardView)findViewById(R.id.add_members_cv);
 
 		mMediaLL.setOnClickListener(this);
 		mAddMembersLL.setOnClickListener(this);
@@ -135,7 +139,8 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	}
 
 	private void init() {
-		Picasso.get().load(mConversation.getGroupImageUrl()).into(mContactIV);
+		if (Utils.isNotNullAndNotEmpty(mConversation.getGroupImageUrl()))
+			Picasso.get().load(mConversation.getGroupImageUrl()).into(mContactIV);
 
 
 		mCreatedBy = mConversation.getGroupCreatedBy();
@@ -156,6 +161,11 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 
 
 		createViewMembers();
+
+		if(mSelfIsAdmin)
+			mAddMembersCV.setVisibility(View.VISIBLE);
+		else
+			mAddMembersCV.setVisibility(View.GONE);
 	}
 
 

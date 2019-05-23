@@ -431,6 +431,16 @@ public class ConversationActivity extends PermissionActivity implements
 			}
 		});
 
+		if(mIsGroup) {
+			mGroupViewModel = ViewModelProviders.of(this).get(GroupViewModel.class);
+			mGroupViewModel.getMembersLD(mConversationId).observe(this, groupMembers -> {
+				mGroupMembers = groupMembers;
+				displayUITypingSignal(false, null);
+			});
+		}
+
+
+
 		mTypingSignalBR = new TypingSignalBR();
 
 		mRecordingBigIV = (ImageView) findViewById(R.id.recording_big_iv);

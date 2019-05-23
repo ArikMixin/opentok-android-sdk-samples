@@ -1351,6 +1351,11 @@ public class WCRepository {
 		String groupId;
 		String memberId;
 
+		if (!mContactDao.hasContact(message.getSenderId())){
+			Contact contact = new Contact(message.getSenderId());
+			mContactDao.insert(contact);
+		}
+
 		if (!mConversationDao.hasConversation(message.getConversationId())) {
 			Conversation conversation = new Conversation();
 			conversation.setGroup(true);
@@ -2760,7 +2765,11 @@ public class WCRepository {
 	public void removeAdmin(String groupId, String memberId) {
 		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.removeAdminFromGroup(groupId, memberId, (isSuccess, errorLogic, errorComm, response) -> {
-
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() -> {
+						mGroupDao.removeAdmin(groupId, memberId);
+					});
+				}
 			});
 		});
 	}
@@ -2768,7 +2777,11 @@ public class WCRepository {
 	public void makeAdmin(String groupId, String memberId) {
 		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.makeAdminToGroup(groupId, memberId, (isSuccess, errorLogic, errorComm, response) -> {
-
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() -> {
+						mGroupDao.makeAdmin(groupId, memberId);
+					});
+				}
 			});
 		});
 	}

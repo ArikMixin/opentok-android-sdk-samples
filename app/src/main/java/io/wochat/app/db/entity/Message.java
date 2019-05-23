@@ -1189,7 +1189,7 @@ public class Message implements IMessage,
 				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
 				break;
 			case Message.EVENT_CODE_MADE_ADMIN:
-				if ("You".equalsIgnoreCase(actingUserName))
+				if ("You".equalsIgnoreCase(otherUserName))
 					res = "You are now an admin";
 				else {
 					res = otherUserName + " is now an admin";
@@ -1197,7 +1197,7 @@ public class Message implements IMessage,
 				}
 				break;
 			case Message.EVENT_CODE_REMOVED_ADMIN:
-				if ("You".equalsIgnoreCase(actingUserName))
+				if ("You".equalsIgnoreCase(otherUserName))
 					res = "You are no longer an admin";
 				else {
 					res = otherUserName + " is no longer an admin";
