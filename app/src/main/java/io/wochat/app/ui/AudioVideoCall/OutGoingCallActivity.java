@@ -280,6 +280,49 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     @Override
+    public boolean onTouch(View view, MotionEvent event) {
+        switch (event.getAction()) {
+
+            //Hold the view
+            case MotionEvent.ACTION_DOWN:
+                dX = view.getX() - event.getRawX();
+                dY = view.getY() - event.getRawY();
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                view.animate()
+                        .x(event.getRawX() + dX)
+                        .y(event.getRawY() + dY)
+                        .setDuration(0)
+                        .start();
+                break;
+
+            //Release the view
+            case MotionEvent.ACTION_UP:
+
+                if(event.getRawX() < screenWidth / 2)
+                    mCornerX = 25;
+                else
+                    mCornerX = screenWidth - view.getWidth() -25; //  - 450
+
+                if(event.getRawY() < screenHeight / 2)
+                    mCornerY = 25;
+                else
+                    mCornerY = screenHeight - view.getHeight() -125; // 900
+
+                view.animate()
+                        .x(mCornerX)
+                        .y(mCornerY)
+                        .setDuration(400)
+                        .start();
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
+
+    @Override
     public void onBackPressed() {
         super.onBackPressed();
         sendXMPPmsg(Message.RTC_CODE_REJECTED);
@@ -551,46 +594,4 @@ public class OutGoingCallActivity extends AppCompatActivity
         Log.e(TOKBOX, "Publisher error: " + opentokError.getMessage());
     }
 
-    @Override
-    public boolean onTouch(View view, MotionEvent event) {
-        switch (event.getAction()) {
-
-            //Hold the view
-            case MotionEvent.ACTION_DOWN:
-                        dX = view.getX() - event.getRawX();
-                        dY = view.getY() - event.getRawY();
-                break;
-
-                case MotionEvent.ACTION_MOVE:
-                    view.animate()
-                            .x(event.getRawX() + dX)
-                            .y(event.getRawY() + dY)
-                            .setDuration(0)
-                            .start();
-                break;
-
-                //Release the view
-            case MotionEvent.ACTION_UP:
-
-                  if(event.getRawX() < screenWidth / 2)
-                      mCornerX = 25;
-                  else
-                      mCornerX = screenWidth - view.getWidth() -25; //  - 450
-
-                  if(event.getRawY() < screenHeight / 2)
-                       mCornerY = 25;
-                  else
-                       mCornerY = screenHeight - view.getHeight() -125; // 900
-
-                view.animate()
-                        .x(mCornerX)
-                        .y(mCornerY)
-                        .setDuration(400)
-                        .start();
-                break;
-                default:
-                    return false;
-        }
-        return true;
-    }
 }

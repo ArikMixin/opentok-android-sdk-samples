@@ -16,6 +16,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
@@ -50,7 +51,12 @@ import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener, WCRepository.OnSessionResultListener, EasyPermissions.PermissionCallbacks, Session.SessionListener, PublisherKit.PublisherListener {
+public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener,
+        WCRepository.OnSessionResultListener,
+        EasyPermissions.PermissionCallbacks,
+        Session.SessionListener,
+        View.OnTouchListener,
+        PublisherKit.PublisherListener {
 
     private static final String TAG = "IncomingCallActivity";
     private static final String TOKBOX = "TokBox";
@@ -87,6 +93,9 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private Stream mStream;
     private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
+    private float dX, dY, mCornerX, mCornerY ;
+    private int screenHeight, screenWidth;
+
     private AlphaAnimation mCallTXTanimation;
     private boolean callStartedFlag;
     volatile boolean sessitonRecivedFlag;
@@ -148,6 +157,10 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                 e.printStackTrace();
         }
 
+        //Get The Screen Sizes
+        screenHeight = getResources().getDisplayMetrics().heightPixels;
+        screenWidth = getResources().getDisplayMetrics().widthPixels;
+
         //Play calling sound in first
         mSoundsPlayer = MediaPlayer.create(this, R.raw.incoming_call);
         mSoundsPlayer.setLooping(true);
@@ -177,6 +190,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mBackNavigationFL.setOnClickListener(this);
         mDeclineCIV.setOnClickListener(this);
         mAcceptCIV.setOnClickListener(this);
+        mPublisherFL.setOnTouchListener(this);
 
         if (mIsVideoCall)
             videoCall();
@@ -268,6 +282,50 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
         }
     }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent event) {
+        switch (event.getAction()) {
+
+            //Hold the view
+            case MotionEvent.ACTION_DOWN:
+                dX = view.getX() - event.getRawX();
+                dY = view.getY() - event.getRawY();
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                view.animate()
+                        .x(event.getRawX() + dX)
+                        .y(event.getRawY() + dY)
+                        .setDuration(0)
+                        .start();
+                break;
+
+            //Release the view
+            case MotionEvent.ACTION_UP:
+
+                if(event.getRawX() < screenWidth / 2)
+                    mCornerX = 25;
+                else
+                    mCornerX = screenWidth - view.getWidth() -25; //  - 450
+
+                if(event.getRawY() < screenHeight / 2)
+                    mCornerY = 25;
+                else
+                    mCornerY = screenHeight - view.getHeight() -125; // 900
+
+                view.animate()
+                        .x(mCornerX)
+                        .y(mCornerY)
+                        .setDuration(400)
+                        .start();
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
+
 
     @Override
     public void onBackPressed() {
