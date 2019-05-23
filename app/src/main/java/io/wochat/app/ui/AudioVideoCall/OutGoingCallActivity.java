@@ -18,7 +18,9 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
@@ -59,7 +61,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         WCRepository.OnSessionResultListener,
         EasyPermissions.PermissionCallbacks,
         Session.SessionListener,
-        PublisherKit.PublisherListener {
+        PublisherKit.PublisherListener, View.OnTouchListener {
 
     private static final String TAG = "OutGoingCallActivity";
     private static final String TOKBOX = "TokBox";
@@ -95,9 +97,13 @@ public class OutGoingCallActivity extends AppCompatActivity
     private Subscriber mSubscriber;
     private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
+    private float dX, dY, mCornerX, mCornerY ;
+    private int screenHeight, screenWidth;
 
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
                                                                      Manifest.permission.RECORD_AUDIO };
+
+    public static final int SCREEN_MINIMUM_VER = 25;
     public static final String TOK_BOX_APIKEY = "46296242";
     public static final int RC_SETTINGS_SCREEN_PERM = 123;
     public static final int RC_VIDEO_APP_PERM = 124;
@@ -165,6 +171,10 @@ public class OutGoingCallActivity extends AppCompatActivity
                                                                 mParticipantLangAudioTV.toString());
         mParticipantNumberTV.setText(mFixedParticipantId);
 
+        //Get The Screen Sizes
+         screenHeight = getResources().getDisplayMetrics().heightPixels;
+         screenWidth = getResources().getDisplayMetrics().widthPixels;
+
         //Sounds Init
         mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
         mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
@@ -183,6 +193,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         mBackNavigationFL.setOnClickListener(this);
         mHangUpCIV.setOnClickListener(this);
+        mPublisherFL.setOnTouchListener(this);
 
         if (mIsVideoCall)
             videoCall();
@@ -479,8 +490,9 @@ public class OutGoingCallActivity extends AppCompatActivity
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Received");
 
+        Log.d("tetsttttt", "onStreamReceived: " + Build.VERSION.SDK_INT);
         //*** Show the receiver video (Small Windows) Only for video calls
-        if (mIsVideoCall && Build.VERSION.SDK_INT < 28){
+        if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER){
             mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
             ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
             mPublisherFL.addView(mPublisher.getView());
@@ -497,7 +509,7 @@ public class OutGoingCallActivity extends AppCompatActivity
                                 mSubscriberFL.addView(mSubscriber.getView());
 
                            //*** Show the receiver video (Small Windows) Only for video calls
-                           if(Build.VERSION.SDK_INT >= 28) {
+                           if(Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER) {
                                    mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                                    ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
                                    mPublisherFL.addView(mPublisher.getView());
@@ -537,5 +549,48 @@ public class OutGoingCallActivity extends AppCompatActivity
     @Override
     public void onError(PublisherKit publisherKit, OpentokError opentokError) {
         Log.e(TOKBOX, "Publisher error: " + opentokError.getMessage());
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent event) {
+        switch (event.getAction()) {
+
+            //Hold the view
+            case MotionEvent.ACTION_DOWN:
+                        dX = view.getX() - event.getRawX();
+                        dY = view.getY() - event.getRawY();
+                break;
+
+                case MotionEvent.ACTION_MOVE:
+                    view.animate()
+                            .x(event.getRawX() + dX)
+                            .y(event.getRawY() + dY)
+                            .setDuration(0)
+                            .start();
+                break;
+
+                //Release the view
+            case MotionEvent.ACTION_UP:
+
+                  if(event.getRawX() < screenWidth / 2)
+                      mCornerX = 25;
+                  else
+                      mCornerX = screenWidth - view.getWidth() -25; //  - 450
+
+                  if(event.getRawY() < screenHeight / 2)
+                       mCornerY = 25;
+                  else
+                       mCornerY = screenHeight - view.getHeight() -125; // 900
+
+                view.animate()
+                        .x(mCornerX)
+                        .y(mCornerY)
+                        .setDuration(400)
+                        .start();
+                break;
+                default:
+                    return false;
+        }
+        return true;
     }
 }

@@ -454,7 +454,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
                         mSession.publish(mPublisher);
 
-                        if (mIsVideoCall && Build.VERSION.SDK_INT < 28){
+                        if (mIsVideoCall && Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER){
                             mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                             ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
                             mPublisherFL.addView(mPublisher.getView());
@@ -476,7 +476,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
                                 //Set Publisher
                                 //*** Show the receiver video (Small Windows) Only for video calls
-                                if(Build.VERSION.SDK_INT >= 28) {
+                                if(Build.VERSION.SDK_INT >= OutGoingCallActivity.SCREEN_MINIMUM_VER) {
                                     mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                                     ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
                                     mPublisherFL.addView(mPublisher.getView());
