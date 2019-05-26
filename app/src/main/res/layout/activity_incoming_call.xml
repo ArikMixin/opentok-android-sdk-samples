@@ -151,7 +151,7 @@
         android:layout_toRightOf="@+id/participant_name_video_tv">
 
         <ToggleButton
-            android:id="@+id/camera_btn_video_iv"
+            android:id="@+id/camera_btn_video_tb"
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:layout_marginRight="35dp"
@@ -200,7 +200,7 @@
                 android:layout_toRightOf="@+id/participant_name_audio_tv">
 
                 <ToggleButton
-                    android:id="@+id/camera_btn_audio_iv"
+                    android:id="@+id/camera_btn_audio_tb"
                     android:layout_width="35dp"
                     android:layout_height="35dp"
                     android:layout_centerInParent="true"
@@ -381,20 +381,6 @@
     </RelativeLayout>
     </android.support.constraint.ConstraintLayout>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <!--Incoming Calls Buttons -->
     <RelativeLayout
         android:id="@+id/incoming_call_btns_rl"
@@ -402,14 +388,14 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent">
 
-
         <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/hang_up_rl"
-            android:layout_alignParentLeft="true"
+        android:id="@+id/decline_rl"
+        android:layout_alignParentLeft="true"
         android:layout_marginBottom="40dp"
         android:layout_marginLeft="80dp">
+
         <io.wochat.app.components.CircleImageView
         android:id="@+id/decline_civ"
         android:layout_width="62dp"

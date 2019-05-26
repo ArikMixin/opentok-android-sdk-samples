@@ -67,7 +67,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private static final String TOKBOX = "TokBox";
 
     private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
-            mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mHangUpCIV;
+            mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mDeclineCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
             mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV, mStatusTV;
     private Chronometer mTimerChr;
@@ -101,6 +101,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private float dX, dY, mCornerX, mCornerY ;
     private int screenHeight, screenWidth;
     private boolean callStartedFlag;
+    private boolean callEndedFlag;
 
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
                                                                      Manifest.permission.RECORD_AUDIO };
@@ -136,15 +137,15 @@ public class OutGoingCallActivity extends AppCompatActivity
         mParticipantPicAudioFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_audio_civ);
         mParticipantPicVideoCIV = (CircleImageView) findViewById(R.id.participant_pic_video_civ);
         mParticipantPicVideoFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_video_civ);
-        mHangUpCIV = (CircleImageView) findViewById(R.id.decline_civ);
+        mDeclineCIV = (CircleImageView) findViewById(R.id.decline_civ);
         mMainAudioRL = (RelativeLayout) findViewById(R.id.main_audio_rl);
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
         mStatusRL = (RelativeLayout) findViewById(R.id.status_rl);
         mUserPicAudioRL = (RelativeLayout) findViewById(R.id.user_pic_audio_rl);
         mPublisherFL = (FrameLayout) findViewById(R.id.publisher_fl);
         mSubscriberFL = (FrameLayout) findViewById(R.id.subscriber_fl);
-        mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_iv);
-        mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_iv);
+        mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_tb);
+        mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_tb);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -197,7 +198,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mRTCcodeBR = new RTCcodeBR();
 
         mBackNavigationFL.setOnClickListener(this);
-        mHangUpCIV.setOnClickListener(this);
+        mDeclineCIV.setOnClickListener(this);
         mPublisherFL.setOnTouchListener(this);
         mCameraBtnVideo.setOnClickListener(this);
         mCameraBtnAudio.setOnClickListener(this);
@@ -282,21 +283,22 @@ public class OutGoingCallActivity extends AppCompatActivity
                             sendXMPPmsg(Message.RTC_CODE_CLOSE);
                         else
                             sendXMPPmsg(Message.RTC_CODE_REJECTED);
-                break;
+            break;
 
             case R.id.decline_civ:
                         if(callStartedFlag)
                             sendXMPPmsg(Message.RTC_CODE_CLOSE);
                         else
                             sendXMPPmsg(Message.RTC_CODE_REJECTED);
-                break;
+            break;
 
-            case R.id.camera_btn_video_iv:
+            case R.id.camera_btn_video_tb:
                 cameraBtnVideo();
-                break;
-            case R.id.camera_btn_audio_iv:
+            break;
+
+            case R.id.camera_btn_audio_tb:
                 cameraBtnAudio();
-                break;
+            break;
         }
     }
 
@@ -379,7 +381,7 @@ public class OutGoingCallActivity extends AppCompatActivity
             mService.sendMessage(message);
         }
 
-        if(rtcCode.equals(Message.RTC_CODE_REJECTED))
+        if(rtcCode.equals(Message.RTC_CODE_REJECTED) || rtcCode.equals(Message.RTC_CODE_CLOSE))
             finish();
     }
 
@@ -512,7 +514,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getAction().equals(Message.RTC_CODE_REJECTED) ||
+            if(!callEndedFlag && intent.getAction().equals(Message.RTC_CODE_REJECTED) ||
                     intent.getAction().equals(Message.RTC_CODE_BUSY) ||
                     intent.getAction().equals(Message.RTC_CODE_CLOSE))
                              callEnded(intent.getAction());
@@ -615,6 +617,9 @@ public class OutGoingCallActivity extends AppCompatActivity
             mSubscriber = null;
             mSubscriberFL.removeAllViews();
         }
+
+        if(!callEndedFlag)
+               callEnded(Message.RTC_CODE_CLOSE);
     }
 
     @Override

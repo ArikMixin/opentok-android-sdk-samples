@@ -108,6 +108,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
     private int screenHeight, screenWidth;
     private AlphaAnimation mCallTXTanimation;
     private boolean callStartedFlag;
+    private boolean callEndedFlag;
     volatile boolean sessitonRecivedFlag;
 
 
@@ -147,8 +148,8 @@ public class IncomingCallActivity extends AppCompatActivity implements
         mDeclineInsideRL = (RelativeLayout) findViewById(R.id.decline_inside_rl);
         mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
-        mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_iv);
-        mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_iv);
+        mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_tb);
+        mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_tb);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -308,9 +309,9 @@ public class IncomingCallActivity extends AppCompatActivity implements
                     callStarted();
                 break;
 
-            case R.id.camera_btn_video_iv:
+            case R.id.camera_btn_video_tb:
                 break;
-            case R.id.camera_btn_audio_iv:
+            case R.id.camera_btn_audio_tb:
                 break;
         }
     }
@@ -435,6 +436,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
         try {
             IntentFilter filter = new IntentFilter();
             filter.addAction(Message.RTC_CODE_REJECTED);
+            filter.addAction(Message.RTC_CODE_CLOSE);
             registerReceiver(mRTCcodeBR,filter);
         } catch (Exception e) {}
     }
@@ -540,16 +542,24 @@ public class IncomingCallActivity extends AppCompatActivity implements
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d("ttttt", "intent.getAction(): " + intent.getAction());
             if (intent.getAction().equals(Message.RTC_CODE_REJECTED)) { //Close immediately - User Ignore the call
-                  finish();
-            }else if(intent.getAction().equals(Message.RTC_CODE_CLOSE)){
-                mTimerChr.stop();
-                mTitleTV.setText(getResources().getString(R.string.call_ended));
-                        Handler handler = new Handler();
-                        handler.postDelayed(() -> finish(),
-                  OutGoingCallActivity.CLOSING_TIME);
+                         finish();
+            }else if(!callEndedFlag && intent.getAction().equals(Message.RTC_CODE_CLOSE)){
+                callEnded();
             }
         }
+    }
+
+    private void callEnded(){
+        callEndedFlag =  true;
+
+        mTimerChr.stop();
+        mTitleTV.setText(getResources().getString(R.string.call_ended));
+
+        Handler handler = new Handler();
+        handler.postDelayed(() -> finish(),
+               OutGoingCallActivity.CLOSING_TIME);
     }
 
     private void callStarted() {
@@ -650,7 +660,8 @@ public class IncomingCallActivity extends AppCompatActivity implements
             mSubscriber = null;
             mSubscriberFL.removeAllViews();
 
-            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+            if(!callEndedFlag)
+                    callEnded();
         }
     }
 
