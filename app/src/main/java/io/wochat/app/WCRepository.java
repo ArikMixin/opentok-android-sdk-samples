@@ -651,6 +651,12 @@ public class WCRepository {
 						mAppExecutors.diskIO().execute(() -> {
 							mConversationDao.insert(cgm.getConversation());
 							mGroupDao.insert(cgm.getGroupMembers());
+							Message groupCreatedMessage = Message.getGroupCreatedMessageSelf(
+								cgm.getConversation().getConversationId(),
+								cgm.getConversation().getGroupName(),
+								mSharedPreferences.getUserId());
+							mMessageDao.insert(groupCreatedMessage);
+
 							mAppExecutors.mainThread().execute(() -> {
 								mCreateGroupResult.setValue(new StateData<Conversation>().success(cgm.getConversation()));
 							});
