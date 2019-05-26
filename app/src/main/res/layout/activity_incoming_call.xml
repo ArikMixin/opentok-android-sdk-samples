@@ -65,7 +65,7 @@
         android:id="@+id/main_video_rl"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/speaker_iv"
         app:layout_constraintTop_toBottomOf="@+id/title_rl">
 
@@ -259,6 +259,126 @@
 
 
     </RelativeLayout>
+
+
+
+
+
+
+
+    <!--Inside a call buttons-->
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/inside_call_btns_cl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible">
+    <ImageView
+        android:id="@+id/speaker_iv"
+        android:layout_width="68dp"
+        android:layout_height="68dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="30dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_speaker"
+        app:layout_constraintBottom_toBottomOf="@+id/translate_rl"
+        app:layout_constraintEnd_toStartOf="@+id/translate_rl"
+        app:layout_constraintStart_toStartOf="parent"></ImageView>
+
+
+    <ImageView
+        android:id="@+id/mute_iv"
+        android:layout_width="68dp"
+        android:layout_height="68dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="30dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_mute_whole"
+        app:layout_constraintBottom_toBottomOf="@+id/translate_rl"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/translate_rl" />
+
+
+    <RelativeLayout
+        android:id="@+id/translate_rl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="35dp"
+        app:layout_constraintBottom_toTopOf="@+id/camera_switch_iv"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+
+        <io.wochat.app.components.CircleImageView
+            android:id="@+id/mic_flag_civ"
+            android:layout_width="67dp"
+            android:layout_height="67dp"
+            android:layout_centerInParent="true"
+            android:alpha="0.3"
+            android:src="@drawable/flag_united_states_of_america" />
+
+        <ImageView
+            android:id="@+id/translator_mic_iv"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
+            android:layout_marginTop="3dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_translator_disabled" />
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/camera_switch_iv"
+        android:layout_width="54dp"
+        android:layout_height="54dp"
+        android:layout_marginBottom="35dp"
+        android:src="@drawable/ic_camera_switch"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/hang_up_inside_rl"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <RelativeLayout
+        android:id="@+id/hang_up_inside_rl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <io.wochat.app.components.CircleImageView
+            android:id="@+id/decline_inside_civ"
+            android:layout_width="62dp"
+            android:layout_height="62dp"
+            android:layout_centerInParent="true"
+            android:src="@color/red"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"></io.wochat.app.components.CircleImageView>
+
+        <ImageView
+            android:id="@+id/hang_up_inside_iv"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_centerInParent="true"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_action_speaker"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </RelativeLayout>
+    </android.support.constraint.ConstraintLayout>
+
+
+
+
+
+
+
+
+
+
 
 
 

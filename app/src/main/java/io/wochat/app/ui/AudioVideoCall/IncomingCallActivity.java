@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -69,6 +70,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private Chronometer mTimerChr;
     private FrameLayout mBackNavigationFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL, mConnectingRL, mIncomingCallBtnsRl;
+    private ConstraintLayout mInsideCallBtnsCL;
     private Locale loc;
     private int mFlagDrawable;
     private String mFullLangName;
@@ -86,7 +88,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private String mSessionId;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
-    private ImageView mDisableVideoIV;
+    private ImageView mDisableVideoIV, mCameraSwitchIV;
     public static boolean activityActiveFlag;
 
     private Session mSession;
@@ -137,6 +139,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
         mIncomingCallBtnsRl = (RelativeLayout) findViewById(R.id.incoming_call_btns_rl);
         mDisableVideoIV = (ImageView) findViewById(R.id.disable_video_iv);
+        mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
+        mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -556,8 +560,11 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                                     sendXMPPmsg(Message.RTC_CODE_ANSWER);
                                 }, 2000);
 
-                                //Show inside call btns
+                                //Show inside a call btns
                                 mDisableVideoIV.setVisibility(View.VISIBLE);
+                                mInsideCallBtnsCL.setVisibility(View.VISIBLE);
+                                if(mIsVideoCall)
+                                    mCameraSwitchIV.setVisibility(View.VISIBLE);
                             }
                     }
                     });
