@@ -15,6 +15,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.RemoteInput;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.text.BidiFormatter;
 import android.util.Log;
 
 import java.util.Map;
@@ -32,6 +33,9 @@ import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.SplashActivity;
+import io.wochat.app.utils.Utils;
+
+import static android.support.v4.text.TextDirectionHeuristicsCompat.LTR;
 
 public class NotificationHelper {
 
@@ -51,15 +55,28 @@ public class NotificationHelper {
 		Message message = Message.fromJson(notifString);
 		ContactServer contact = ContactServer.fromJson(senderString);
 		WCRepository repo = ((WCApplication) application).getRepository();
-		repo.getNotificationData(message, contact, data -> {
-			if (data != null)
-				showNotification(application.getApplicationContext(), data);
-		});
+		if (message.isGroupEvent()){
+
+			if(repo.getSelfUserId().equals(message.getActingUser())) // do not pop notification for self operations
+				return;
+
+			repo.getNotificationDataForGroupEvent(message, contact, data -> {
+				if (data != null)
+					showNotification(application.getApplicationContext(), data);
+			});
+		}
+		else {
+			repo.getNotificationData(message, contact, data -> {
+				if (data != null)
+					showNotification(application.getApplicationContext(), data);
+			});
+		}
 	}
 
 	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
 		WCRepository repo = ((WCApplication) application).getRepository();
-		repo.getNotificationData(message, contact.getContactServer(), data -> {
+		ContactServer contactServer = contact != null? contact.getContactServer() : null;
+		repo.getNotificationData(message, contactServer, data -> {
 			if (data != null)
 				showNotification(application.getApplicationContext(), data);
 		});
@@ -80,11 +97,13 @@ public class NotificationHelper {
 		//intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		intent.putExtra(Consts.INTENT_CONVERSATION_ID, data.conversationId);
 
-		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, data.contact.getId());
-		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, data.contact.getDisplayName());
-		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, data.contact.getLanguage());
-		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, data.contact.getAvatar());
-		intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, data.contact.toJson());
+		if(data.contact != null) { // not group event
+			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, data.contact.getId());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, data.contact.getDisplayName());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, data.contact.getLanguage());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, data.contact.getAvatar());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, data.contact.toJson());
+		}
 
 		intent.putExtra(Consts.INTENT_SELF_ID, data.selfUser.getUserId());
 		intent.putExtra(Consts.INTENT_SELF_LANG, data.selfUser.getLanguage());
@@ -97,8 +116,18 @@ public class NotificationHelper {
 
 		PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		// prior Nougat
-
+		String title;
+		if(data.conversation.isGroup()){
+			if (Utils.isNotNullAndNotEmpty(data.title)) {
+				title = data.title + "@" + data.conversation.getGroupName();
+				title = BidiFormatter.getInstance().unicodeWrap(title, LTR, true);
+			}
+			else
+				title = null;
+		}
+		else {
+			title = data.title;
+		}
 
 
 		/****************************************************************************************************/
@@ -106,7 +135,6 @@ public class NotificationHelper {
 		NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(context, getChanggelId())
 //			.setContentTitle("Group Summary")
 //			.setContentText("This is the group summary")
-			.setContentTitle(data.title)
 			.setContentText(data.body)
 			.setSmallIcon(R.drawable.ic_notif)
 			.setGroupSummary(true)
@@ -116,6 +144,8 @@ public class NotificationHelper {
 			.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
 			.setContentIntent(pendingIntent)
 			.setFullScreenIntent(pendingIntent, true);
+		if (title != null)
+			summaryBuilder.setContentTitle(title);
 		if (data.largeIcon != null)
 			summaryBuilder.setLargeIcon(data.largeIcon);
 
@@ -142,9 +172,7 @@ public class NotificationHelper {
 
 		builder
 			.setStyle(new NotificationCompat.BigTextStyle().bigText(data.body))
-			.setContentTitle(data.title)
 			.setContentText(data.body)
-			.setTicker(data.title)
 			.setSmallIcon(R.drawable.ic_notif)
 			.setDefaults(NotificationCompat.DEFAULT_ALL)
 			.setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -157,6 +185,11 @@ public class NotificationHelper {
 			.addPerson(data.contactName)
 			//.setFullScreenIntent(pendingIntent, true)
 			.setContentIntent(pendingIntent);
+
+		if (title != null) {
+			builder.setContentTitle(title);
+			builder.setTicker(title);
+		}
 
 
 		if (data.largeIcon != null)

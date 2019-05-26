@@ -37,6 +37,7 @@ public interface IMessage {
      * @return the message text
      */
     String getText();
+    String getTextWithNameHeader();
 
     /**
      * Returns message author. See the {@link IContact} for more details

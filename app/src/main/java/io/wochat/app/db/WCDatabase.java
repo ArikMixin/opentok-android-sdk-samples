@@ -37,18 +37,30 @@ import io.wochat.app.db.converter.StringArrayConverter;
 import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ContactLocalDao;
 import io.wochat.app.db.dao.ConversationDao;
+import io.wochat.app.db.dao.GroupDao;
 import io.wochat.app.db.dao.MessageDao;
 import io.wochat.app.db.dao.NotifDao;
 import io.wochat.app.db.dao.UserDao;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.GroupMember;
+import io.wochat.app.db.entity.GroupMemberMessage;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.Notif;
 import io.wochat.app.db.entity.User;
 
 
-@Database(entities = {User.class, Contact.class, ContactLocal.class, Conversation.class, Message.class, Notif.class}, version = 2)
+@Database(entities = {
+	User.class,
+	Contact.class,
+	ContactLocal.class,
+	Conversation.class,
+	Message.class,
+	Notif.class,
+	GroupMember.class,
+	GroupMemberMessage.class}, version = 2)
+
 @TypeConverters({LocationConverter.class, DateConverter.class, StringArrayConverter.class})
 public abstract class WCDatabase extends RoomDatabase {
 
@@ -64,6 +76,7 @@ public abstract class WCDatabase extends RoomDatabase {
 	public abstract MessageDao messageDao();
 	public abstract ConversationDao conversationDao();
 	public abstract NotifDao notifDao();
+	public abstract GroupDao groupDao();
 
 
 	private final MutableLiveData<Boolean> mIsDatabaseCreated = new MutableLiveData<>();

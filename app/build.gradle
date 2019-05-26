@@ -87,5 +87,8 @@ dependencies {
     implementation 'com.nuance:speechkit:2.2.4'
     //implementation 'com.nuance:speechkit:2.1+@aar'
     implementation 'com.android.support:preference-v7:27.1.1'
+    //implementation 'com.hendraanggrian:collapsingtoolbarlayout-subtitle:1.0.0'
+    implementation 'com.hendraanggrian:collapsingtoolbarlayout-subtitle:27.1.0'
+    //implementation "com.hendraanggrian.material:collapsingtoolbarlayout-subtitle:1.0.0"
 
 }

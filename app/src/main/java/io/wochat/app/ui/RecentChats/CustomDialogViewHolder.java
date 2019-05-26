@@ -1,6 +1,7 @@
 package io.wochat.app.ui.RecentChats;
 
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 
@@ -23,6 +24,8 @@ public class CustomDialogViewHolder
     private final ImageView mCocheIV;
 	private final CircleFlagImageView mAvatarcfiv;
 	private final ImageView mMsgTypeIV;
+	private final ImageButton mCameraIB;
+	private final ImageButton mPhoneIB;
 
 	//private View onlineIndicator;
 
@@ -32,21 +35,39 @@ public class CustomDialogViewHolder
         mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
 		mMsgTypeIV = (ImageView)itemView.findViewById(R.id.dialogMsgTypeIV);
 		mAvatarcfiv = (CircleFlagImageView) itemView.findViewById(R.id.dialogAvatar);
+		mCameraIB = (ImageButton)itemView.findViewById(R.id.camera_ib);
+		mPhoneIB = (ImageButton)itemView.findViewById(R.id.phone_ib);
+
     }
 
     @Override
     public void onBind(Conversation conversation) {
         super.onBind(conversation);
 
-        mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
+        String initials;
+
+		if (conversation.isGroup()){
+			mCameraIB.setVisibility(View.INVISIBLE);
+			mPhoneIB.setVisibility(View.INVISIBLE);
+			initials = Contact.getInitialsFromName(conversation.getGroupName());
+		}
+		else {
+			mCameraIB.setVisibility(View.VISIBLE);
+			mPhoneIB.setVisibility(View.VISIBLE);
+			initials = Contact.getInitialsFromName(conversation.getParticipantName());
+		}
+
+		mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
 			conversation.getParticipantLanguage(),
-			Contact.getInitialsFromName(conversation.getParticipantName()));
+			initials);
 
 		if (conversation.getLastMessageId() == null){
 			mCocheIV.setVisibility(View.GONE);
 			mMsgTypeIV.setVisibility(View.GONE);
 			return;
 		}
+
+
 
         if (conversation.getLastMessageAckStatus()!= null) {
 			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());

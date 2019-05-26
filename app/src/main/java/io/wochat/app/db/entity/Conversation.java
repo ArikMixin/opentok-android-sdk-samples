@@ -8,6 +8,7 @@ import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.stfalcon.chatkit.commons.models.IContact;
@@ -54,27 +55,30 @@ public class Conversation implements IDialog{
 	private String conversationId;
 
 	/***************************************************/
-	@NonNull
 	@SerializedName("participant_id")
 	@ColumnInfo(name = "participant_id")
+	@Nullable
 	@Expose
 	private String participantId;
 
 	/***************************************************/
 	@SerializedName("participant_profile_pic_url")
 	@ColumnInfo(name = "participant_profile_pic_url")
+	@Nullable
 	@Expose
 	private String participantProfilePicUrl;
 
 	/***************************************************/
 	@SerializedName("participant_name")
 	@ColumnInfo(name = "participant_name")
+	@Nullable
 	@Expose
 	private String participantName;
 
 	/***************************************************/
 	@SerializedName("participant_language")
 	@ColumnInfo(name = "participant_language")
+	@Nullable
 	@Expose
 	private String participantLanguage;
 
@@ -103,8 +107,12 @@ public class Conversation implements IDialog{
 	@SerializedName("last_message_sender_id")
 	@ColumnInfo(name = "last_message_sender_id")
 	@Expose
-	String mLastMessageSenderId;
-
+	private String mLastMessageSenderId;
+	/***************************************************/
+	@SerializedName("last_message_sender_name")
+	@ColumnInfo(name = "last_message_sender_name")
+	@Expose
+	private String mLastMessageSenderName;
 	/***************************************************/
 	@SerializedName("last_message_duration")
 	@ColumnInfo(name = "last_message_duration")
@@ -114,7 +122,7 @@ public class Conversation implements IDialog{
 	@SerializedName("last_message_ack_status")
 	@ColumnInfo(name = "last_message_ack_status")
 	@Expose
-	@Message.ACK_STATUS String mLastMessageAckStatus;
+	private @Message.ACK_STATUS String mLastMessageAckStatus;
 	/***************************************************/
 
 	@SerializedName("num_of_unread_messages")
@@ -139,14 +147,67 @@ public class Conversation implements IDialog{
 	@SerializedName("group_name")
 	@ColumnInfo(name = "group_name")
 	@Expose
-	private String GroupName;
+	private String groupName;
 	/***************************************************/
+	@SerializedName("group_description")
+	@ColumnInfo(name = "group_description")
+	@Expose
+	private String groupDescription;
+	/***************************************************/
+	@SerializedName("group_image_url")
+	@ColumnInfo(name = "group_image_url")
+	@Expose
+	private String groupImageUrl;
+	/***************************************************/
+	@SerializedName("group_created_date")
+	@ColumnInfo(name = "group_created_date")
+	@Expose
+	private Date groupCreatedDate;
+	/***************************************************/
+	@SerializedName("group_created_by")
+	@ColumnInfo(name = "group_created_by")
+	@Expose
+	private String groupCreatedBy;
+
+	/***************************************************/
+	@SerializedName("is_self_in_group")
+	@ColumnInfo(name = "is_self_in_group")
+	@Expose
+	private boolean isSelfInGroup;
+
+
+	/***************************************************/
+	// for group //***********************/
+	public Conversation(String conversationId,
+						String groupName,
+						String groupDescription,
+						String groupImageUrl,
+						String groupCreatedBy,
+						int groupCreatedDate){
+
+		this.conversationId = conversationId;
+		this.participantId = null;
+		this.isGroup = true;
+		this.groupName = groupName;
+		this.groupDescription = groupDescription;
+		this.groupImageUrl = groupImageUrl;
+		//this.groupCreatedDate = Utils.stringToDate(groupCreatedDate, "yyyy-MM-dd HH:mm:ss");
+		this.groupCreatedDate = new Date(groupCreatedDate);
+		this.groupCreatedBy = groupCreatedBy;
+		this.isSelfInGroup = true;
+
+	}
+
 
 	public Conversation(String participantId, String selfId){
 		this.conversationId = getConversationId(participantId, selfId);
 		this.participantId = participantId;
 	}
 
+	public Conversation(String conversationId, String participantId, String selfId){
+		this.conversationId = conversationId;
+		this.participantId = participantId;
+	}
 
 	public Conversation(){
 
@@ -209,20 +270,23 @@ public class Conversation implements IDialog{
 
 	}
 
-	public void setGroup(boolean group) {
-		isGroup = group;
+	public void setGroup(boolean isGroup) {
+		this.isGroup = isGroup;
 	}
 
 	public String getGroupName() {
-		return GroupName;
+		return groupName;
 	}
 
 	public void setGroupName(String groupName) {
-		GroupName = groupName;
+		this.groupName = groupName;
 	}
 
 	public String getParticipantProfilePicUrl() {
-		return participantProfilePicUrl;
+		if (isGroup)
+			return groupImageUrl;
+		else
+			return participantProfilePicUrl;
 	}
 
 	public void setParticipantProfilePicUrl(String participantProfilePicUrl) {
@@ -230,7 +294,10 @@ public class Conversation implements IDialog{
 	}
 
 	public String getParticipantLanguage() {
-		return participantLanguage;
+		if (isGroup)
+			return null;
+		else
+			return participantLanguage;
 	}
 
 	public void setParticipantLanguage(String participantLanguage) {
@@ -260,7 +327,10 @@ public class Conversation implements IDialog{
 
 	@Override
 	public String getDialogName() {
-		return participantName;
+		if (isGroup)
+			return groupName;
+		else
+			return participantName;
 	}
 
 	@Override
@@ -274,6 +344,18 @@ public class Conversation implements IDialog{
 
 	@Override
 	public String getLastMessageTextToDisplay() {
+		if (isGroup()){
+			String firstName = Utils.getUserFirstName(mLastMessageSenderName);
+			return firstName + ": " + getLastMessageTextToDisplayInner();
+		}
+		else {
+			return getLastMessageTextToDisplayInner();
+		}
+	}
+
+
+
+	public String getLastMessageTextToDisplayInner() {
 		if (lastMessageType.equals(Message.MSG_TYPE_VIDEO)) {
 			return "Video (" + Utils.convertSecondsToHMmSs(mLastMessageDuration) + ") ";
 		}
@@ -343,6 +425,47 @@ public class Conversation implements IDialog{
 		this.magicButtonLangCode = magicButtonLangCode;
 	}
 
+
+	public String getGroupDescription() {
+		return groupDescription;
+	}
+
+	public void setGroupDescription(String groupDescription) {
+		this.groupDescription = groupDescription;
+	}
+
+	public String getGroupImageUrl() {
+		return groupImageUrl;
+	}
+
+	public void setGroupImageUrl(String groupImageUrl) {
+		this.groupImageUrl = groupImageUrl;
+	}
+
+	public Date getGroupCreatedDate() {
+		return groupCreatedDate;
+	}
+
+	public void setGroupCreatedDate(Date groupCreatedDate) {
+		this.groupCreatedDate = groupCreatedDate;
+	}
+
+	public String getGroupCreatedBy() {
+		return groupCreatedBy;
+	}
+
+	public void setGroupCreatedBy(String groupCreatedBy) {
+		this.groupCreatedBy = groupCreatedBy;
+	}
+
+	public String getLastMessageSenderName() {
+		return mLastMessageSenderName;
+	}
+
+	public void setLastMessageSenderName(String lastMessageSenderName) {
+		mLastMessageSenderName = lastMessageSenderName;
+	}
+
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this).
@@ -356,9 +479,28 @@ public class Conversation implements IDialog{
 			append("lastMessageTimeStamp", lastMessageTimeStamp).
 			append("numOfUnreadMessages", numOfUnreadMessages).
 			append("isGroup", isGroup).
-			append("GroupName", GroupName).
+			append("GroupName", groupName).
 			toString();
 	}
 
 
+	public String toJson(){
+		Gson gson = new Gson();
+		return gson.toJson(this);
+	}
+
+
+	public static Conversation fromJson(String jsonString){
+		Gson gson = new Gson();
+		return gson.fromJson(jsonString, Conversation.class);
+	}
+
+
+	public boolean isSelfInGroup() {
+		return isSelfInGroup;
+	}
+
+	public void setSelfInGroup(boolean selfInGroup) {
+		isSelfInGroup = selfInGroup;
+	}
 }

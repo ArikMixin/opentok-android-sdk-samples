@@ -7,8 +7,10 @@ import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
+import android.arch.persistence.room.Update;
 
 
+import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.db.entity.Conversation;
@@ -38,6 +40,8 @@ public interface ConversationDao {
 		"WHERE participant_id =:contactId")
 	public void updateConversationWithContactData(String contactId, String contactName, String contactLanguage, String profilePic);
 
+	@Query("SELECT EXISTS(SELECT * FROM message_table WHERE conversation_id =:conversationId LIMIT 1)")
+	boolean hasMessages(String conversationId);
 
 
 	@Query("SELECT EXISTS(SELECT * FROM conversation_table WHERE conversation_id =:conversationId LIMIT 1)")
@@ -49,6 +53,7 @@ public interface ConversationDao {
 		"last_message_timestamp = :lastMessageTimeStamp ," +
 		"last_message_text = :lastMessageText ," +
 		"last_message_sender_id = :lastMessageSenderId ," +
+		"last_message_sender_name = :lastMessageSenderName ," +
 		"last_message_ack_status = :lastMessageAckStatus ," +
 		"last_message_type = :lastMessageType ," +
 		"last_message_duration = :lastMessageDuration " +
@@ -58,6 +63,7 @@ public interface ConversationDao {
 						long lastMessageTimeStamp,
 						String lastMessageText,
 						String lastMessageSenderId,
+						String lastMessageSenderName,
 						String lastMessageAckStatus,
 						String lastMessageType,
 						int lastMessageDuration);
@@ -68,6 +74,7 @@ public interface ConversationDao {
 		"last_message_timestamp = :lastMessageTimeStamp ," +
 		"last_message_text = :lastMessageText ," +
 		"last_message_sender_id = :lastMessageSenderId ," +
+		"last_message_sender_name = :lastMessageSenderName ," +
 		"num_of_unread_messages = :numOfUnreadMessages ," +
 		"last_message_ack_status = :lastMessageAckStatus ," +
 		"last_message_type = :lastMessageType ," +
@@ -78,6 +85,7 @@ public interface ConversationDao {
 						long lastMessageTimeStamp,
 						String lastMessageText,
 						String lastMessageSenderId,
+						String lastMessageSenderName,
 						String lastMessageAckStatus,
 						String lastMessageType,
 						int lastMessageDuration,
@@ -124,6 +132,22 @@ public interface ConversationDao {
 	@Insert
     void insert(Conversation conversation);
 
+	@Update
+	void update(Conversation conversation);
+
+	@Query("UPDATE conversation_table SET  " +
+		"group_name = :groupName , " +
+		"group_description = :description , " +
+		"group_image_url = :image_url , " +
+		"group_created_date = :created_date , " +
+		"group_created_by = :created_by , " +
+		"is_self_in_group = 1 " +
+		"WHERE conversation_id =:id" )
+	void updateGroupData(String id, String groupName, String description, String image_url, Date created_date, String created_by);
+
+
+
+
 
 
 	@Query("SELECT * " +
@@ -161,5 +185,22 @@ public interface ConversationDao {
 		"WHERE participant_id =:participantId")
 	void updateParticipantName(String participantId, String participantName);
 
+
+
+	@Query("UPDATE conversation_table SET  " +
+		"group_image_url = :imageUrl " +
+		"WHERE conversation_id =:conversationId")
+	void updateGroupImage(String conversationId, String imageUrl);
+
+	@Query("UPDATE conversation_table SET  " +
+		"group_name = :name " +
+		"WHERE conversation_id =:conversationId")
+	void updateGroupName(String conversationId, String name);
+
+
+	@Query("UPDATE conversation_table SET  " +
+		"is_self_in_group = 0 " +
+		"WHERE conversation_id =:conversationId")
+	void leaveGroup(String conversationId);
 
 }

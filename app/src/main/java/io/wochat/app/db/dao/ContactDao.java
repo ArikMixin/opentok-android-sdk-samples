@@ -96,7 +96,7 @@ public interface ContactDao {
 	@Insert(onConflict = OnConflictStrategy.IGNORE)
 	void insert(Contact[] contact);
 
-	@Insert(onConflict = OnConflictStrategy.IGNORE)
+	@Insert(onConflict = OnConflictStrategy.REPLACE)
 	void insert(Contact contact);
 
 	@Update(onConflict = OnConflictStrategy.IGNORE)

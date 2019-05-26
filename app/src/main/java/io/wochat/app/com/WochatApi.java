@@ -10,6 +10,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -25,11 +26,12 @@ import java.util.Locale;
 import java.util.Map;
 
 import io.wochat.app.BuildConfig;
+import io.wochat.app.utils.Utils;
 
 public class WochatApi {
 
-	//private static final String BASE_URL = "https://api-dev.wochat.io/";
-	private static final String BASE_URL = "https://api.wochat.io/";
+	private static final String BASE_URL = "https://api-dev.wochat.io/";
+	//private static final String BASE_URL = "https://api.wochat.io/";
 
 	private static final String TAG = "WochatApi";
 	private final Context mContext;
@@ -40,6 +42,10 @@ public class WochatApi {
 
 	public interface OnServerResponseListener{
 		void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response);
+	}
+
+	public interface OnServerResponseArrayListener{
+		void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONArray response);
 	}
 
 	private static WochatApi mInstance;
@@ -64,6 +70,9 @@ public class WochatApi {
 		mContext = context.getApplicationContext();
 		mUserId = userId;
 		mToken = token;
+
+		VolleyLog.DEBUG = BuildConfig.DEBUG;
+
 	}
 
 	public void setUserId(String userId) {
@@ -214,7 +223,7 @@ public class WochatApi {
 
 	public void userGetContacts(String[] contactIdArray, final OnServerResponseListener lsnr) {
 
-		Log.e(TAG, "API userGetContacts - contactIdList count: " + contactIdArray.length);
+		Log.e(TAG, "API userGetContacts - contactIdList: " + Utils.LogArray(Log.ERROR, TAG, contactIdArray));
 
 		JSONObject jsonObject = new JSONObject();
 		JSONArray jsonArray = new JSONArray(Arrays.asList(contactIdArray));
@@ -233,7 +242,7 @@ public class WochatApi {
 
 	public void userGetStatus(String[] contactIdArray, final OnServerResponseListener lsnr) {
 
-		Log.e(TAG, "API userGetContacts - contactIdList count: " + contactIdArray.length);
+		Log.e(TAG, "API userGetContacts - contactIdList : " + Utils.LogArray(Log.ERROR, TAG, contactIdArray));
 
 		JSONObject jsonObject = new JSONObject();
 		JSONArray jsonArray = new JSONArray(Arrays.asList(contactIdArray));
@@ -249,6 +258,142 @@ public class WochatApi {
 
 
 	}
+
+	public void updateGroupName(String groupId, String name, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API updateGroupName to: " + name);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("name", name);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/";
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+	public void updateGroupImage(String groupId, String imageUrl, String thumbUrl, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API updateGroupImage to: " + imageUrl);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("image_url", imageUrl);
+			jsonObject.put("thumb_url", thumbUrl);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/";
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+
+	public void addContactsToGroup(String groupId, String[] contacts, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API addContactsToGroup - contactIdList : " + Utils.LogArray(Log.ERROR, TAG, contacts));
+
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray(Arrays.asList(contacts));
+		try {
+			jsonObject.put("participants", jsonArray);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/participants/";
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+	}
+
+	public void removeContactsFromGroup(String groupId, String[] contacts, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API removeContactsFromGroup - contactIdList : " + Utils.LogArray(Log.ERROR, TAG, contacts));
+
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray(Arrays.asList(contacts));
+		try {
+			jsonObject.put("participants", jsonArray);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/delete_participants/";
+
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+	}
+
+	public void makeAdminToGroup(String groupId, String contact, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API makeAdminToGroup - contact: " + contact);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("is_admin", true);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/participants/" + contact + "/";
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+	public void removeAdminFromGroup(String groupId, String contact, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API makeAdminToGroup - contact: " + contact);
+
+		JSONObject jsonObject = new JSONObject();
+		try {
+			jsonObject.put("is_admin", false);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/" + groupId + "/participants/" + contact + "/";
+		sendRequestAndHandleResult(Request.Method.PATCH, url, jsonObject, lsnr);
+	}
+
+
+	public void createNewGroup(String name, String imageUrl, String[] contacts, final OnServerResponseListener lsnr) {
+
+		Log.e(TAG, "API createGroup - contactIdList : " + Utils.LogArray(Log.ERROR, TAG, contacts));
+
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray(Arrays.asList(contacts));
+		try {
+			jsonObject.put("name", name);
+			jsonObject.put("description", "");
+			if (imageUrl != null)
+				jsonObject.put("image_url", imageUrl);
+			else
+				jsonObject.put("image_url", "");
+
+			jsonObject.put("participants", jsonArray);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		String url = BASE_URL + "group/";
+		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
+	}
+
+
+
+	public void getGroupDetails(String groupId, final OnServerResponseListener lsnr) {
+		Log.e(TAG, "API getGroupDetails groupId: " + groupId);
+		String url = BASE_URL + "group/" + groupId + "/";
+		sendRequestAndHandleResult(Request.Method.GET, url, null, lsnr);
+	}
+
+
+	public void getAllUserGroupsDetails(String userId, final OnServerResponseArrayListener lsnrArray) {
+		Log.e(TAG, "API getAllUserGroupsDetails userId: " + userId);
+		String url = BASE_URL + "/group/user/" + userId + "/";
+		sendRequestAndHandleResult(Request.Method.GET, url, null, lsnrArray);
+	}
+
+	/*****************************************************************************************************************/
 
 	public static final int UPLOAD_MIME_TYPE_IAMGE = 1;
 	public static final int UPLOAD_MIME_TYPE_VIDEO = 2;
@@ -337,6 +482,7 @@ public class WochatApi {
 
 	private void sendGetAndHandleResult(String url, HashMap<String, String> params, final OnServerResponseListener lsnr){
 		HashMap<String, String> mParams = params;
+
 		RequestQueue queue = Volley.newRequestQueue(mContext);
 
 		if(mParams != null) {
@@ -492,8 +638,15 @@ public class WochatApi {
 	}
 
 
+	private void sendRequestAndHandleResult(int method, String url, JSONObject jsonObject, final OnServerResponseListener lsnrObject){
+		sendRequestAndHandleResult(method, url, jsonObject, lsnrObject, null);
+	}
 
-	private void sendRequestAndHandleResult(int method, String url, JSONObject jsonObject, final OnServerResponseListener lsnr){
+	private void sendRequestAndHandleResult(int method, String url, JSONObject jsonObject, final OnServerResponseArrayListener lsnrArray){
+		sendRequestAndHandleResult(method, url, jsonObject, null, lsnrArray);
+	}
+
+	private void sendRequestAndHandleResult(int method, String url, JSONObject jsonObject, final OnServerResponseListener lsnrObject, final OnServerResponseArrayListener lsnrArray){
 		RequestQueue queue = Volley.newRequestQueue(mContext);
 		JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
 			(method, url, jsonObject, new Response.Listener<JSONObject>() {
@@ -502,17 +655,32 @@ public class WochatApi {
 				@Override
 				public void onResponse(JSONObject response) {
 					Log.e(TAG, "Response: " + response.toString());
-					JSONObject data = null;
+					JSONObject dataObject = null;
+					JSONArray  dataArray = null;
 					if (response != null) {
 						try {
 							boolean result = response.getBoolean("success");
 							String error = response.getString("error");
-							if (result && (!response.getString("data").equals("")))
-								data = response.getJSONObject("data");
-							lsnr.OnServerResponse(result, error, null, data);
+							if (result && (!response.getString("data").equals(""))) {
+								Object object = response.get("data");
+								if (object instanceof JSONObject) {
+									dataObject = (JSONObject)object;
+									lsnrObject.OnServerResponse(result, error, null, dataObject);
+								}
+								else if (object instanceof JSONArray) {
+									dataArray = (JSONArray)object;
+									lsnrArray.OnServerResponse(result, error, null, dataArray);
+								}
+							}
+
 						} catch (JSONException e) {
 							e.printStackTrace();
-							lsnr.OnServerResponse(false, null, e, null);
+
+							if (lsnrObject != null)
+								lsnrObject.OnServerResponse(false, null, e, null);
+
+							if (lsnrArray != null)
+								lsnrArray.OnServerResponse(false, null, e, null);
 						}
 
 					}
@@ -522,7 +690,12 @@ public class WochatApi {
 				@Override
 				public void onErrorResponse(VolleyError error) {
 					Log.e(TAG, "Error: " + error.getMessage());
-					lsnr.OnServerResponse(false, null, error, null);
+
+					if (lsnrObject != null)
+						lsnrObject.OnServerResponse(false, null, error, null);
+
+					if (lsnrArray != null)
+						lsnrArray.OnServerResponse(false, null, error, null);
 
 				}
 
@@ -533,6 +706,7 @@ public class WochatApi {
 					Map<String, String> params = new HashMap<String, String>();
 					params.put("User-Id", mUserId);
 					params.put("Api-Token", mToken);
+					Log.e(TAG, "request params: User-Id:" + mUserId + " , Api-Token:"+mToken);
 					return params;
 				}
 				else

@@ -36,6 +36,7 @@ import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.utils.DateFormatter;
 
 import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -286,6 +287,8 @@ public class Utils {
 			case "HE":
 				return R.drawable.flag_israel;
 
+			case "UN":
+				return R.drawable.flag_un;
 			case "DE":
 				return R.drawable.flag_germany;
 			case "EN":
@@ -423,6 +426,84 @@ public class Utils {
 
 	public static boolean isNotNullAndNotEmpty(String string) {
 		return (string != null)&&(!string.trim().isEmpty());
+	}
+
+
+	public static Date stringToDate(String dateString, String formatString){
+		//String dtStart = "2010-10-15T09:27:37Z";
+		//2019-04-23 07:46:03
+		//SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		Date date = null;
+		SimpleDateFormat format = new SimpleDateFormat(formatString);
+		try {
+			date = format.parse(dateString);
+			return date;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return date;
+		}
+	}
+
+	public static String LogList(int priority, String tag, List<String> list) {
+		String msg = null;
+		for (String s : list){
+			msg = (msg==null?s:(msg + ", " + s));
+		}
+		switch (priority){
+			case Log.VERBOSE:
+				Log.v(tag, msg);
+				break;
+			case Log.DEBUG:
+				Log.d(tag, msg);
+				break;
+			case Log.INFO:
+				Log.i(tag, msg);
+				break;
+			case Log.ERROR:
+				Log.e(tag, msg);
+				break;
+			case Log.WARN:
+				Log.w(tag, msg);
+				break;
+		}
+		return msg;
+	}
+
+	public static String LogArray(int priority, String tag, String[] array) {
+		String msg = null;
+		for (int i=0; i<array.length; i++){
+			msg = (msg==null?array[i]:(msg + ", " + array[i]));
+		}
+		switch (priority){
+			case Log.VERBOSE:
+				Log.v(tag, msg);
+				break;
+			case Log.DEBUG:
+				Log.d(tag, msg);
+				break;
+			case Log.INFO:
+				Log.i(tag, msg);
+				break;
+			case Log.ERROR:
+				Log.e(tag, msg);
+				break;
+			case Log.WARN:
+				Log.w(tag, msg);
+				break;
+		}
+		return msg;
+	}
+
+
+	public static String getUserFirstName(String fullName) {
+		String firstName;
+		if (Utils.isNullOrEmpty(fullName))
+			return "";
+		firstName = fullName.trim();
+		if (firstName.contains(" "))
+			return firstName.split(" ")[0];
+		else
+			return firstName;
 	}
 
 }

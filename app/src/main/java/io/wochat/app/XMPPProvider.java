@@ -22,8 +22,11 @@ import org.jivesoftware.smack.roster.RosterGroup;
 import org.jivesoftware.smack.roster.SubscribeListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smackx.address.MultipleRecipientManager;
 import org.jivesoftware.smackx.iqlast.LastActivityManager;
 import org.jivesoftware.smackx.iqlast.packet.LastActivity;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.FullJid;
@@ -33,17 +36,20 @@ import org.jxmpp.jid.parts.Resourcepart;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import io.wochat.app.utils.Utils;
 
 class XMPPProvider {
 
 
 	private static final String TAG = "XMPPProvider";
 
-	//private static final String XMPP_DOMAIN = "ejabberd-dev.wochat.io";
-	private static final String XMPP_DOMAIN = "ejabberd.wochat.io";
+	private static final String XMPP_DOMAIN = "ejabberd-dev.wochat.io";
+	//private static final String XMPP_DOMAIN = "ejabberd.wochat.io";
 
 
 	private static final String XMPP_RESOURCE = "android";
@@ -70,6 +76,8 @@ class XMPPProvider {
 	private ChatManager mChatManager;
 	private OnChatMessageListener mOnChatMessageListener;
 	private LastActivityManager mLastActivityManager;
+	private MultiUserChatManager mMultiUserChatManager;
+	private MultipleRecipientManager mMultipleRecipientManager;
 
 	public interface OnChatMessageListener {
 		void onNewIncomingMessage(String msg, String conversationId);
@@ -124,6 +132,11 @@ class XMPPProvider {
 		mChatManager = ChatManager.getInstanceFor(mConnection);
 		mChatManager.addIncomingListener(mIncomingChatMessageListener);
 		mChatManager.addOutgoingListener(mOutgoingChatMessageListener);
+
+
+		//mMultiUserChatManager = MultiUserChatManager.getInstanceFor(mConnection);
+
+
 
 		mLastActivityManager = LastActivityManager.getInstanceFor(mConnection);
 		mLastActivityManager.enable();
@@ -545,6 +558,47 @@ class XMPPProvider {
 		});
 	}
 
+
+	public void sendGroupStringMessage(String theMessage, List<String> participantIds, String conversationId){
+
+		Log.e(TAG, "sendGroupStringMessage msg: " +
+			theMessage + " , participants: " +
+			Utils.LogList(Log.ERROR, TAG, participantIds));
+
+		mExecutors.networkIO().execute(new Runnable() {
+			@Override
+			public void run() {
+				EntityBareJid jid = null;
+				try {
+					if(connectAndLogin()) {
+						Log.e(TAG, "connectAndLogin result: " + true);
+						if (mConnection.isAuthenticated()) {
+
+							List<EntityBareJid> jidList = new ArrayList<>();
+							for (String participantId : participantIds){
+								jid = JidCreate.entityBareFrom(participantId + "@" + XMPP_DOMAIN);
+								jidList.add(jid);
+							}
+
+							Message message = new Message();
+							message.setBody(theMessage);
+							message.setType(Message.Type.chat);
+							message.setThread(conversationId);
+
+
+							MultipleRecipientManager.send(mConnection, message, jidList, null, null);
+							mOnChatMessageListener.onNewOutgoingMessage(message.getBody(), message.getThread());
+						}
+					}
+					else {
+						Log.e(TAG, "connectAndLogin result: " + false);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
 
 
 }

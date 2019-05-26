@@ -13,14 +13,17 @@ import android.util.Log;
 
 import org.jivesoftware.smack.packet.Presence;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.logic.NotificationHelper;
+import io.wochat.app.model.ConversationAndItsGroupMembers;
 import io.wochat.app.utils.Utils;
 
 
@@ -29,6 +32,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	public static final String TYPING_SIGNAL_ACTION = "TYPING_SIGNAL_ACTION";
 	public static final String CONVERSATION_ID_EXTRA = "CONVERSATION_ID_EXTRA";
+	public static final String PARTICIPANT_ID_EXTRA = "PARTICIPANT_ID_EXTRA";
 
 	public static final String PRESSENCE_ACTION = "PRESSENCE_ACTION";
 	public static final String PRESSENCE_IS_AVAILABLE_EXTRA = "PRESSENCE_IS_AVAILABLE_EXTRA";
@@ -78,6 +82,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			case Message.MSG_TYPE_SPEECHABLE:
 			case Message.MSG_TYPE_TEXT:
 			case Message.MSG_TYPE_VIDEO:
+			case Message.MSG_TYPE_GROUP_EVENT:
 				return true;
 		}
 		return false;
@@ -89,7 +94,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			Message message = Message.fromJson(msg);
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
-				broadcastTypingSignal(conversationId, message.isTyping());
+				broadcastTypingSignal(conversationId, message.getSenderId(), message.isTyping());
 				return;
 			}
 
@@ -104,7 +109,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			/*****************************************************************************************/
 
-			boolean res = mRepository.handleIncomingMessage(message, new WCRepository.OnSaveMessageToDBListener() {
+			boolean res = mRepository.handleIncomingMessage(message, getResources(), new WCRepository.OnSaveMessageToDBListener() {
 				@Override
 				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
 					sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
@@ -146,7 +151,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void onConnectionChange(boolean connected, boolean authenticated) {
 		if(connected && authenticated) {
 			((WCApplication) getApplication()).getAppExecutors().diskIO().execute(() -> {
-				List<Conversation> convList = mRepository.getAllConversations();
+				List<ConversationAndItsGroupMembers> convList = mRepository.getAllConversationsAndItsMembers();
 				List<Message> msgs = mRepository.getOutgoingPendingMessages();
 				mAppExecutors.networkIO().execute(() -> {
 					subscribe(convList);
@@ -167,9 +172,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		broadcastPresenceChange(isAvailable, contactId);
 	}
 
-	public void subscribe(List<Conversation> conversations) {
-		for(Conversation conversation : conversations){
-			subscribe(conversation.getParticipantId(), conversation.getParticipantName());
+	public void subscribe(List<ConversationAndItsGroupMembers> conversations) {
+		for(ConversationAndItsGroupMembers cgm : conversations){
+			subscribe(cgm);
 		}
 	}
 
@@ -177,6 +182,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		Log.e(TAG, "CurrentConversationId: " + conversationId);
 		mCurrentConversationId = conversationId;
 	}
+
+
 
 
 	public class WCBinder extends Binder {
@@ -238,6 +245,14 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	@Override
 	public void onDestroy() {
+		if (mAppObserverBR != null) {
+			mAppObserverBR = null;
+			try {
+				unregisterReceiver(mAppObserverBR);
+			} catch (Exception e) {
+			}
+
+		}
 		if (mXMPPProvider != null)
 			mXMPPProvider.disconnectAsync();
 		super.onDestroy();
@@ -246,6 +261,18 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void unSubscribeContact(String contactId){
 		mXMPPProvider.unSubscribeContact(contactId);
 	}
+
+	public void subscribe(ConversationAndItsGroupMembers convAndMembers){
+		if (convAndMembers.getConversation().isGroup()) {
+			for (GroupMember groupMember : convAndMembers.getGroupMembers()) {
+				mXMPPProvider.subscribeContact(groupMember.getUserId(), groupMember.getUserName());
+			}
+		}
+		else {
+			mXMPPProvider.subscribeContact(convAndMembers.getConversation().getParticipantId(), convAndMembers.getConversation().getParticipantName());
+		}
+	}
+
 
 	public void subscribe(String contactId, String name){
 		mXMPPProvider.subscribeContact(contactId, name);
@@ -288,6 +315,36 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
 	}
 
+
+	public void sendGroupMessage(Message message, List<GroupMember> groupMembers, String selfId) {
+		List<String> participantIds = new ArrayList<>();
+		for (GroupMember groupMember : groupMembers){
+			if(!groupMember.getUserId().equals(selfId))
+				participantIds.add(groupMember.getUserId());
+		}
+		mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
+	}
+
+
+	public void sendGroupMessages(List<Message> messages, List<GroupMember> groupMembers, String selfId){
+		List<String> participantIds = new ArrayList<>();
+		for (GroupMember groupMember : groupMembers){
+			if(!groupMember.getUserId().equals(selfId))
+				participantIds.add(groupMember.getUserId());
+		}
+
+		Log.e(TAG, "sendMessages count: " + messages.size());
+		for (Message  message : messages) {
+			if (message.isImage()){
+				if ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty())) // make sure media was uploaded
+					mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
+			}
+			else
+				mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
+		}
+	}
+
+
 	private void sendAckStatusForIncomingMessage(Message message, @Message.ACK_STATUS String ackStatus) {
 		Message msg = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(), "", "EN");
 		msg.setMessageType(Message.MSG_TYPE_ACKNOWLEDGMENT);
@@ -306,6 +363,18 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		mXMPPProvider.sendStringMessage(msg.toJson(), participantId, conversationId);
 	}
 
+	public void sendTypingSignalForGroup(String conversationId, boolean isTyping, List<GroupMember> groupMembers, String selfId) {
+		Message msg = new Message(null, mSelfUserId, conversationId, "", "EN");
+		msg.setMessageType(Message.MSG_TYPE_TYPING_SIGNAL);
+		msg.setIsTyping(isTyping);
+
+		List<String> participantIds = new ArrayList<>();
+		for (GroupMember groupMember : groupMembers){
+			if(!groupMember.getUserId().equals(selfId))
+				participantIds.add(groupMember.getUserId());
+		}
+		mXMPPProvider.sendGroupStringMessage(msg.toJson(), participantIds, conversationId);
+	}
 
 
 	public void sendAckStatusForIncomingMessages(List<Message> messages, String ackStatus) {
@@ -351,10 +420,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	}
 
 
-	private void broadcastTypingSignal(String conversationId, boolean isTyping) {
+	private void broadcastTypingSignal(String conversationId, String senderId, boolean isTyping) {
 		Intent intent = new Intent();
 		intent.setAction(TYPING_SIGNAL_ACTION);
 		intent.putExtra(CONVERSATION_ID_EXTRA, conversationId);
+		intent.putExtra(PARTICIPANT_ID_EXTRA, senderId);
 		intent.putExtra(IS_TYPING_EXTRA, isTyping);
 		sendBroadcast(intent);
 	}

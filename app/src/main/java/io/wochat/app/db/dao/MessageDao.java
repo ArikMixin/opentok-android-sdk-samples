@@ -43,6 +43,10 @@ public interface MessageDao {
 	@Query("SELECT * FROM message_table WHERE message_id =:messageId")
 	LiveData<Message> getMessage(String messageId);
 
+	@Query("SELECT * FROM message_table WHERE message_id =:messageId")
+	Message getMessageObj(String messageId);
+
+
 	@Query("SELECT COUNT(message_id) FROM message_table WHERE " +
 		"(conversation_id =:conversationId) AND " +
 		"(ack_status <> 'READ') AND" +
@@ -96,6 +100,11 @@ public interface MessageDao {
 		"WHERE message_id =:messageId")
 	void updateAckStatusToRead(String messageId);
 
+	@Query("UPDATE message_table " +
+		"SET  ack_status = :ackStatus " +
+		"WHERE message_id =:messageId")
+	void updateAckStatus(String messageId, @Message.ACK_STATUS String ackStatus);
+
 	@Insert
     void insert(Message message);
 
@@ -138,4 +147,15 @@ public interface MessageDao {
 		"((message_type = 'IMAGE') OR" +
 		"(message_type = 'VIDEO')) ORDER BY timestamp_milli DESC")
 	LiveData<List<Message>> getMediaMessagesConversation(String conversationId);
+
+
+	@Query("UPDATE message_table SET  " +
+		"acting_user_name = :name " +
+		"WHERE acting_user =:id")
+	void updateMessagesActingUserWithContactName(String id, String name);
+
+	@Query("UPDATE message_table SET  " +
+		"other_user_name = :name " +
+		"WHERE other_user =:id")
+	void updateMessagesOtherUserWithContactName(String id, String name);
 }
