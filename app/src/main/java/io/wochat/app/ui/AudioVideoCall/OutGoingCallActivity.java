@@ -209,9 +209,8 @@ public class OutGoingCallActivity extends AppCompatActivity
     private void requestPermissions() {
         if (EasyPermissions.hasPermissions(this, perms)) {
 
-                    //Show self camera Preview at first
-                    if (mIsVideoCall)
-                             startCameraPreview();
+              //Show self camera Preview at first
+              startCameraPreview();
 
               createSessionAndToken();
         } else {
@@ -226,9 +225,11 @@ public class OutGoingCallActivity extends AppCompatActivity
                 .build();
         mPublisher.setPublisherListener(this);
 
-        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-        mPublisher.startPreview();
-        mSubscriberFL.addView(mPublisher.getView());
+        if(mIsVideoCall) { //Only if it is video call - show preview
+                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                mPublisher.startPreview();
+                mSubscriberFL.addView(mPublisher.getView());
+        }
     }
 
     private void videoCall() {
@@ -533,13 +534,12 @@ public class OutGoingCallActivity extends AppCompatActivity
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Received");
 
-        Log.d("tetsttttt", "onStreamReceived: " + Build.VERSION.SDK_INT);
         //*** Show the receiver video (Small Windows) Only for video calls
         if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER){
-            mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-            ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
-            mPublisherFL.addView(mPublisher.getView());
-            mPublisherFL.setVisibility(View.VISIBLE);
+                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                mPublisherFL.addView(mPublisher.getView());
+                mPublisherFL.setVisibility(View.VISIBLE);
         }
 
         if (mSubscriber == null) {
@@ -547,18 +547,18 @@ public class OutGoingCallActivity extends AppCompatActivity
                         mSession.subscribe(mSubscriber);
 
                        //Show the caller video (full screen) Only for video calls
-                       if (mIsVideoCall){
+                        if (mIsVideoCall) {
                                 mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                                 mSubscriberFL.addView(mSubscriber.getView());
+                        }
 
                            //*** Show the receiver video (Small Windows) Only for video calls
-                           if(Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER) {
+                           if(mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER) {
                                    mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                                    ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
                                    mPublisherFL.addView(mPublisher.getView());
                                    mPublisherFL.setVisibility(View.VISIBLE);
                            }
-                       }
         }
 
     }
