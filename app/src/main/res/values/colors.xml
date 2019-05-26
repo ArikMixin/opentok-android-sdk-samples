@@ -129,4 +129,5 @@
 
     <color name="settings_divider">#E7E7E7</color>
     <color name="linear_layout_unselected">#FAFAFA</color>
+    <color name="pause_grey">#a3a3a3</color>
 </resources>

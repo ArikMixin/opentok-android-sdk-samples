@@ -319,13 +319,11 @@ public class OutGoingCallActivity extends AppCompatActivity
         if(mIsVideoCall) {
             mIsVideoCall = false;
             mPublisher.setPublishVideo(false);
-            mPublisherFL.setVisibility(View.GONE);
-            mPublisherFL.removeAllViews();
-        }else{        //open publisher video
+            mPublisherFL.removeView(mPublisher.getView());
+        }else{  //open publisher video
             mIsVideoCall = true;
             mPublisher.setPublishVideo(true);
-            mPublisherFL.setVisibility(View.VISIBLE);
-            mPublisherFL.addView(mPublisher.getView());
+                 mPublisherFL.addView(mPublisher.getView());
         }
     }
 

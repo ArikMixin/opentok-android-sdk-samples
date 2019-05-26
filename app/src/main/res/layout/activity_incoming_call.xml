@@ -13,6 +13,24 @@
         android:layout_height="match_parent"
         android:id="@+id/subscriber_fl" />
 
+    <FrameLayout
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/pause_grey"
+        android:id="@+id/camera_pause_full_fl">
+
+        <ImageView
+            android:alpha="0.6"
+            android:layout_gravity="center"
+            android:layout_marginBottom="80dp"
+            android:scaleType="fitXY"
+            android:layout_width="85dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_camera_pause"/>
+       </FrameLayout>
+
+
     <RelativeLayout
         android:id="@+id/title_rl"
         android:layout_width="match_parent"

@@ -72,7 +72,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
             mParticipantNameVideoTV, mParticipantLangVideoTV, mConnectingTV;
     private Chronometer mTimerChr;
-    private FrameLayout mBackNavigationFL;
+    private FrameLayout mBackNavigationFL, mCameraPauseFullFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL, mConnectingRL, mIncomingCallBtnsRl;
     private ConstraintLayout mInsideCallBtnsCL;
     private Locale loc;
@@ -150,6 +150,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
         mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_tb);
         mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_tb);
+        mCameraPauseFullFL = (FrameLayout) findViewById(R.id.camera_pause_full_fl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -520,13 +521,16 @@ public class IncomingCallActivity extends AppCompatActivity implements
     @Override
     public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
         mIsVideoCall = false;
+        mCameraPauseFullFL.setVisibility(View.VISIBLE);
         mSubscriberFL.setVisibility(View.GONE);
         mSubscriberFL.removeAllViews();
     }
 
     @Override
     public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
+
         mIsVideoCall = true;
+        mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
         mSubscriberFL.addView(mSubscriber.getView());
     }
