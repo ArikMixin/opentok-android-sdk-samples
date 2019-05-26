@@ -629,4 +629,5 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         Log.e(TOKBOX, "Session error: " + opentokError.getMessage());
     }
 
+
 }

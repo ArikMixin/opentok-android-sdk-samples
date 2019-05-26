@@ -295,6 +295,13 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     private void cameraBtnVideo() {
+        //close publisher video
+        if(mIsVideoCall) {
+            mPublisher.setPublishVideo(false);
+            mPublisherFL.setVisibility(View.GONE);
+            mPublisherFL.removeAllViews();
+            mIsVideoCall = false;
+        }
     }
 
     @Override
