@@ -145,7 +145,7 @@
                     android:layout_toRightOf="@+id/participant_name_video_tv">
 
                     <ImageView
-                        android:id="@+id/disable_video_iv"
+                        android:id="@+id/camera_btn_video_iv"
                         android:layout_width="35dp"
                         android:layout_height="35dp"
                         android:layout_marginRight="35dp"
@@ -192,9 +192,9 @@
                 android:layout_toRightOf="@+id/participant_name_audio_tv">
 
                 <ImageView
-                    android:id="@+id/communication_video_iv"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
+                    android:id="@+id/camera_btn_audio_iv"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
                     android:layout_centerInParent="true"
                     android:layout_marginTop="15dp"
                     android:src="@drawable/open_camera" />

@@ -139,7 +139,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
         mIncomingCallBtnsRl = (RelativeLayout) findViewById(R.id.incoming_call_btns_rl);
         mDeclineInsideRL = (RelativeLayout) findViewById(R.id.decline_inside_rl);
-        mDisableVideoIV = (ImageView) findViewById(R.id.disable_video_iv);
+        mDisableVideoIV = (ImageView) findViewById(R.id.camera_btn_video_iv);
         mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
 
