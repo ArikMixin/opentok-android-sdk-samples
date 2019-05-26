@@ -44,19 +44,22 @@ public class CustomDialogViewHolder
     public void onBind(Conversation conversation) {
         super.onBind(conversation);
 
-        mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
-			conversation.getParticipantLanguage(),
-			Contact.getInitialsFromName(conversation.getParticipantName()));
+        String initials;
 
 		if (conversation.isGroup()){
 			mCameraIB.setVisibility(View.INVISIBLE);
 			mPhoneIB.setVisibility(View.INVISIBLE);
+			initials = Contact.getInitialsFromName(conversation.getGroupName());
 		}
 		else {
 			mCameraIB.setVisibility(View.VISIBLE);
 			mPhoneIB.setVisibility(View.VISIBLE);
+			initials = Contact.getInitialsFromName(conversation.getParticipantName());
 		}
 
+		mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
+			conversation.getParticipantLanguage(),
+			initials);
 
 		if (conversation.getLastMessageId() == null){
 			mCocheIV.setVisibility(View.GONE);
