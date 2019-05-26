@@ -1983,6 +1983,9 @@ public class WCRepository {
 						mGroupDao.insert(gmm);
 					}
 				}
+				mMessageDao.updateAckStatusToSent(message.getMessageId());
+				mConversationDao.updateLastMessageAck(message.getConversationId(), message.getMessageId(), Message.ACK_STATUS_SENT);
+
 
 			}
 			else {
