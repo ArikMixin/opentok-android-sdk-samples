@@ -150,14 +150,17 @@
         android:layout_alignParentRight="true"
         android:layout_toRightOf="@+id/participant_name_video_tv">
 
-        <ImageView
+        <ToggleButton
             android:id="@+id/camera_btn_video_iv"
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:layout_marginRight="35dp"
             android:layout_alignParentRight="true"
             android:layout_marginTop="15dp"
-            android:src="@drawable/close_camera" />
+            android:textOn=""
+            android:textOff=""
+            android:background="@drawable/camera_video_selector"/>
+
     </RelativeLayout>
 </RelativeLayout>
 
@@ -196,13 +199,15 @@
                 android:layout_alignParentRight="true"
                 android:layout_toRightOf="@+id/participant_name_audio_tv">
 
-                <ImageView
+                <ToggleButton
                     android:id="@+id/camera_btn_audio_iv"
                     android:layout_width="35dp"
                     android:layout_height="35dp"
                     android:layout_centerInParent="true"
                     android:layout_marginTop="15dp"
-                    android:src="@drawable/open_camera" />
+                    android:textOn=""
+                    android:textOff=""
+                    android:background="@drawable/camera_audio_selector"/>
             </RelativeLayout>
 
         </RelativeLayout>

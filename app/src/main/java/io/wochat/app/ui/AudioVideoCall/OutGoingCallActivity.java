@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Handler;
@@ -18,7 +17,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
@@ -91,6 +90,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private Message message;
     private RTCcodeBR mRTCcodeBR;
     private String mSessionID = "";
+    private ToggleButton mCameraBtnVideo, mCameraBtnAudio;
 
     private Session mSession;
     private Publisher mPublisher;
@@ -140,6 +140,8 @@ public class OutGoingCallActivity extends AppCompatActivity
         mUserPicAudioRL = (RelativeLayout) findViewById(R.id.user_pic_audio_rl);
         mPublisherFL = (FrameLayout) findViewById(R.id.publisher_fl);
         mSubscriberFL = (FrameLayout) findViewById(R.id.subscriber_fl);
+        mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_iv);
+        mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_iv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -194,6 +196,8 @@ public class OutGoingCallActivity extends AppCompatActivity
         mBackNavigationFL.setOnClickListener(this);
         mHangUpCIV.setOnClickListener(this);
         mPublisherFL.setOnTouchListener(this);
+        mCameraBtnVideo.setOnClickListener(this);
+        mCameraBtnAudio.setOnClickListener(this);
 
         if (mIsVideoCall)
             videoCall();
@@ -277,7 +281,20 @@ public class OutGoingCallActivity extends AppCompatActivity
             case R.id.decline_civ:
                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
+
+            case R.id.camera_btn_video_iv:
+                cameraBtnVideo();
+                break;
+            case R.id.camera_btn_audio_iv:
+                cameraBtnAudio();
+                break;
         }
+    }
+
+    private void cameraBtnAudio() {
+    }
+
+    private void cameraBtnVideo() {
     }
 
     @Override

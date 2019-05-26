@@ -30,6 +30,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
+
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -88,7 +90,10 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private String mSessionId;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
-    private ImageView mDisableVideoIV, mCameraSwitchIV;
+    private ImageView mCameraSwitchIV;
+    private ToggleButton mCameraBtnVideo, mCameraBtnAudio;
+
+
     public static boolean activityActiveFlag;
 
     private Session mSession;
@@ -99,7 +104,6 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     private FrameLayout mSubscriberFL;
     private float dX, dY, mCornerX, mCornerY ;
     private int screenHeight, screenWidth;
-
     private AlphaAnimation mCallTXTanimation;
     private boolean callStartedFlag;
     volatile boolean sessitonRecivedFlag;
@@ -139,9 +143,10 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
         mIncomingCallBtnsRl = (RelativeLayout) findViewById(R.id.incoming_call_btns_rl);
         mDeclineInsideRL = (RelativeLayout) findViewById(R.id.decline_inside_rl);
-        mDisableVideoIV = (ImageView) findViewById(R.id.camera_btn_video_iv);
         mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
+        mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_iv);
+        mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_iv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -201,6 +206,8 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
         mDeclineInsideRL.setOnClickListener(this);
         mAcceptCIV.setOnClickListener(this);
         mPublisherFL.setOnTouchListener(this);
+        mCameraBtnVideo.setOnClickListener(this);
+        mCameraBtnAudio.setOnClickListener(this);
 
         if (mIsVideoCall)
             videoCall();
@@ -292,12 +299,14 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                     sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
-
             case R.id.accept_civ:
                     callStarted();
                 break;
 
-
+            case R.id.camera_btn_video_iv:
+                break;
+            case R.id.camera_btn_audio_iv:
+                break;
         }
     }
 
@@ -572,7 +581,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                                 }, 2000);
 
                                 //Show inside a call btns
-                                mDisableVideoIV.setVisibility(View.VISIBLE);
+                                mCameraBtnVideo.setVisibility(View.VISIBLE);
                                 mInsideCallBtnsCL.setVisibility(View.VISIBLE);
                                 if(mIsVideoCall)
                                     mCameraSwitchIV.setVisibility(View.VISIBLE);
