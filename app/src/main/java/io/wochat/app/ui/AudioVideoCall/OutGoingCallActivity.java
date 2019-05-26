@@ -60,7 +60,8 @@ public class OutGoingCallActivity extends AppCompatActivity
         WCRepository.OnSessionResultListener,
         EasyPermissions.PermissionCallbacks,
         Session.SessionListener,
-        PublisherKit.PublisherListener, View.OnTouchListener {
+        PublisherKit.PublisherListener,
+        View.OnTouchListener {
 
     private static final String TAG = "OutGoingCallActivity";
     private static final String TOKBOX = "TokBox";
@@ -99,10 +100,12 @@ public class OutGoingCallActivity extends AppCompatActivity
     private FrameLayout mSubscriberFL;
     private float dX, dY, mCornerX, mCornerY ;
     private int screenHeight, screenWidth;
+    private boolean callStartedFlag;
 
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
                                                                      Manifest.permission.RECORD_AUDIO };
 
+    public static final int CLOSING_TIME = 3000;
     public static final int SCREEN_MINIMUM_VER = 25;
     public static final String TOK_BOX_APIKEY = "46296242";
     public static final int RC_SETTINGS_SCREEN_PERM = 123;
@@ -275,11 +278,17 @@ public class OutGoingCallActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                        if(callStartedFlag)
+                            sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                        else
+                            sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.decline_civ:
-                   sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                        if(callStartedFlag)
+                            sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                        else
+                            sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.camera_btn_video_iv:
@@ -291,16 +300,30 @@ public class OutGoingCallActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if(callStartedFlag)
+            sendXMPPmsg(Message.RTC_CODE_CLOSE);
+        else
+            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+    }
+
     private void cameraBtnAudio() {
     }
 
     private void cameraBtnVideo() {
         //close publisher video
         if(mIsVideoCall) {
+            mIsVideoCall = false;
             mPublisher.setPublishVideo(false);
             mPublisherFL.setVisibility(View.GONE);
             mPublisherFL.removeAllViews();
-            mIsVideoCall = false;
+        }else{        //open publisher video
+            mIsVideoCall = true;
+            mPublisher.setPublishVideo(true);
+            mPublisherFL.setVisibility(View.VISIBLE);
+            mPublisherFL.addView(mPublisher.getView());
         }
     }
 
@@ -347,11 +370,6 @@ public class OutGoingCallActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        sendXMPPmsg(Message.RTC_CODE_REJECTED);
-    }
     //Send Massage to the receiver
     public void sendXMPPmsg(String rtcCode){
         message = new Message(mParticipantId, mSelfId, mConversationId,  mSessionID, "","",
@@ -526,10 +544,12 @@ public class OutGoingCallActivity extends AppCompatActivity
                 mCallingSound.stop();
                 finish();
             }
-        }, 4000);
+        }, CLOSING_TIME);
     }
 
     private void callStarted() {
+        callStartedFlag = true;
+
         //Stop sounds
         mCallingSound.stop();
 

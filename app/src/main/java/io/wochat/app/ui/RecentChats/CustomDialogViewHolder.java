@@ -20,13 +20,13 @@ import io.wochat.app.utils.Utils;
  * Created by Anton Bevza on 1/18/17.
  */
 public class CustomDialogViewHolder
-        extends DialogsListAdapter.DialogViewHolder<Conversation> {
+        extends DialogsListAdapter.DialogViewHolder<Conversation> implements View.OnClickListener {
 
     private final ImageView mCocheIV;
 	private final CircleFlagImageView mAvatarcfiv;
 	private final ImageView mMsgTypeIV;
 	private final ImageButton mCameraIB, mPhoneIB;
-
+	private Conversation conversation;
 
 	public static final int BTN_CAMERA = 1;
 	public static final int BTN_PHONE = 2;
@@ -41,23 +41,18 @@ public class CustomDialogViewHolder
 		mCameraIB = (ImageButton)itemView.findViewById(R.id.camera_ib);
 		mPhoneIB = (ImageButton)itemView.findViewById(R.id.phone_ib);
 
+		mCameraIB.setOnClickListener(this);
+		mPhoneIB.setOnClickListener(this);
     }
 
     @Override
     public void onBind(Conversation conversation) {
         super.onBind(conversation);
 
-		mCameraIB.setOnClickListener(view -> {
-			if(onButtonClickListener != null)
-				onButtonClickListener.onButtonClick(conversation, BTN_CAMERA);
-		});
+		mCameraIB.setTag(conversation);
+		mPhoneIB.setTag(conversation);
 
-		mPhoneIB.setOnClickListener(view -> {
-			if(onButtonClickListener != null)
-				onButtonClickListener.onButtonClick(conversation, BTN_PHONE);
-		});
-
-        mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
+		mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
 			conversation.getParticipantLanguage(),
 			Contact.getInitialsFromName(conversation.getParticipantName()));
 
@@ -126,4 +121,19 @@ public class CustomDialogViewHolder
 
 
     }
+
+	@Override
+	public void onClick(View v) {
+
+		 conversation = (Conversation) v.getTag();
+
+		switch(v.getId()){
+			case R.id.camera_ib:
+					onButtonClickListener.onButtonClick(conversation, BTN_CAMERA);
+				break;
+			case R.id.phone_ib:
+					onButtonClickListener.onButtonClick(conversation, BTN_PHONE);
+				break;
+		}
+	}
 }

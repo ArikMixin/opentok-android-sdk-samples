@@ -39,6 +39,7 @@ import com.opentok.android.PublisherKit;
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
+import com.opentok.android.SubscriberKit;
 import com.squareup.picasso.Picasso;
 import java.util.List;
 import java.util.Locale;
@@ -55,12 +56,13 @@ import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class IncomingCallActivity extends AppCompatActivity implements View.OnClickListener,
+public class IncomingCallActivity extends AppCompatActivity implements
+        View.OnClickListener,
         WCRepository.OnSessionResultListener,
         EasyPermissions.PermissionCallbacks,
         Session.SessionListener,
         View.OnTouchListener,
-        PublisherKit.PublisherListener {
+        PublisherKit.PublisherListener, SubscriberKit.VideoListener {
 
     private static final String TAG = "IncomingCallActivity";
     private static final String TOKBOX = "TokBox";
@@ -282,21 +284,24 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                        if(callStartedFlag)
+                            sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                        else
+                            sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.decline_civ:
-                if(callStartedFlag)
-                    sendXMPPmsg(Message.RTC_CODE_CLOSE);
-                else
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                        if(callStartedFlag)
+                            sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                        else
+                            sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.decline_inside_rl:
-                if(callStartedFlag)
-                    sendXMPPmsg(Message.RTC_CODE_CLOSE);
-                else
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                        if(callStartedFlag)
+                            sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                        else
+                            sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.accept_civ:
@@ -308,6 +313,15 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
             case R.id.camera_btn_audio_iv:
                 break;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+            if(callStartedFlag)
+                sendXMPPmsg(Message.RTC_CODE_CLOSE);
+            else
+                sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
 
     @Override
@@ -351,13 +365,6 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                 return false;
         }
         return true;
-    }
-
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
 
     //Send Massage to the caller
@@ -494,29 +501,53 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onStreamCreated(PublisherKit publisherKit, Stream stream) {
-
     }
 
     @Override
     public void onStreamDestroyed(PublisherKit publisherKit, Stream stream) {
-
     }
 
     @Override
     public void onError(PublisherKit publisherKit, OpentokError opentokError) {
+    }
 
+    @Override
+    public void onVideoDataReceived(SubscriberKit subscriberKit) {
+    }
+
+    @Override
+    public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
+        mIsVideoCall = false;
+        mSubscriberFL.setVisibility(View.GONE);
+        mSubscriberFL.removeAllViews();
+    }
+
+    @Override
+    public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
+        mIsVideoCall = true;
+        mSubscriberFL.setVisibility(View.VISIBLE);
+        mSubscriberFL.addView(mSubscriber.getView());
+    }
+
+    @Override
+    public void onVideoDisableWarning(SubscriberKit subscriberKit) {
+    }
+
+    @Override
+    public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) {
     }
 
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Message.RTC_CODE_REJECTED)) {
-                finish();
+            if (intent.getAction().equals(Message.RTC_CODE_REJECTED)) { //Close immediately - User Ignore the call
+                  finish();
             }else if(intent.getAction().equals(Message.RTC_CODE_CLOSE)){
                 mTimerChr.stop();
                 mTitleTV.setText(getResources().getString(R.string.call_ended));
                         Handler handler = new Handler();
-                        handler.postDelayed(() -> finish(), 4000);
+                        handler.postDelayed(() -> finish(),
+                  OutGoingCallActivity.CLOSING_TIME);
             }
         }
     }
@@ -552,15 +583,15 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
 
                          mSubscriber = new Subscriber.Builder(IncomingCallActivity.this, mStream).build();
                          mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                         mSubscriber.setVideoListener(IncomingCallActivity.this);
                          mSession.subscribe(mSubscriber);
-
-                            //Only for audio calls
-                            //if (mIsVideoCall) {
 
                                 //Hide the connection layout and start mTimerChr
                                 mConnectingRL.setVisibility(View.GONE);
                                 if(mIsVideoCall)
                                     mSubscriberFL.addView(mSubscriber.getView());
+
+
 
                                 //Set Publisher
                                 //*** Show the receiver video (Small Windows) Only for video calls
@@ -585,8 +616,7 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
                                 mInsideCallBtnsCL.setVisibility(View.VISIBLE);
                                 if(mIsVideoCall)
                                     mCameraSwitchIV.setVisibility(View.VISIBLE);
-                           // }
-                    }
+                      }
                     });
                 }
         };
@@ -628,6 +658,5 @@ public class IncomingCallActivity extends AppCompatActivity implements View.OnCl
     public void onError(Session session, OpentokError opentokError) {
         Log.e(TOKBOX, "Session error: " + opentokError.getMessage());
     }
-
 
 }
