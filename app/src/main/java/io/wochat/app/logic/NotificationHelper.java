@@ -33,6 +33,7 @@ import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.SplashActivity;
+import io.wochat.app.utils.Utils;
 
 import static android.support.v4.text.TextDirectionHeuristicsCompat.LTR;
 
@@ -74,7 +75,8 @@ public class NotificationHelper {
 
 	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
 		WCRepository repo = ((WCApplication) application).getRepository();
-		repo.getNotificationData(message, contact.getContactServer(), data -> {
+		ContactServer contactServer = contact != null? contact.getContactServer() : null;
+		repo.getNotificationData(message, contactServer, data -> {
 			if (data != null)
 				showNotification(application.getApplicationContext(), data);
 		});
@@ -116,8 +118,12 @@ public class NotificationHelper {
 
 		String title;
 		if(data.conversation.isGroup()){
-			title = data.title + "@" + data.conversation.getGroupName();
-			title = BidiFormatter.getInstance().unicodeWrap(title, LTR, true);
+			if (Utils.isNotNullAndNotEmpty(data.title)) {
+				title = data.title + "@" + data.conversation.getGroupName();
+				title = BidiFormatter.getInstance().unicodeWrap(title, LTR, true);
+			}
+			else
+				title = null;
 		}
 		else {
 			title = data.title;
@@ -129,7 +135,6 @@ public class NotificationHelper {
 		NotificationCompat.Builder summaryBuilder = new NotificationCompat.Builder(context, getChanggelId())
 //			.setContentTitle("Group Summary")
 //			.setContentText("This is the group summary")
-			.setContentTitle(title)
 			.setContentText(data.body)
 			.setSmallIcon(R.drawable.ic_notif)
 			.setGroupSummary(true)
@@ -139,6 +144,8 @@ public class NotificationHelper {
 			.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
 			.setContentIntent(pendingIntent)
 			.setFullScreenIntent(pendingIntent, true);
+		if (title != null)
+			summaryBuilder.setContentTitle(title);
 		if (data.largeIcon != null)
 			summaryBuilder.setLargeIcon(data.largeIcon);
 
@@ -165,9 +172,7 @@ public class NotificationHelper {
 
 		builder
 			.setStyle(new NotificationCompat.BigTextStyle().bigText(data.body))
-			.setContentTitle(title)
 			.setContentText(data.body)
-			.setTicker(title)
 			.setSmallIcon(R.drawable.ic_notif)
 			.setDefaults(NotificationCompat.DEFAULT_ALL)
 			.setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -180,6 +185,11 @@ public class NotificationHelper {
 			.addPerson(data.contactName)
 			//.setFullScreenIntent(pendingIntent, true)
 			.setContentIntent(pendingIntent);
+
+		if (title != null) {
+			builder.setContentTitle(title);
+			builder.setTicker(title);
+		}
 
 
 		if (data.largeIcon != null)

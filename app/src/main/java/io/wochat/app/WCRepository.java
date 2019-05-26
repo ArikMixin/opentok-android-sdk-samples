@@ -610,6 +610,11 @@ public class WCRepository {
 									mAppExecutors.diskIO().execute(() -> {
 										mConversationDao.insert(cgm.getConversation());
 										mGroupDao.insert(cgm.getGroupMembers());
+										Message groupCreatedMessage = Message.getGroupCreatedMessageSelf(
+											cgm.getConversation().getConversationId(),
+											cgm.getConversation().getGroupName(),
+											mSharedPreferences.getUserId());
+										mMessageDao.insert(groupCreatedMessage);
 										mAppExecutors.mainThread().execute(() -> {
 											mCreateGroupResult.setValue(new StateData<Conversation>().success(cgm.getConversation()));
 										});
@@ -1247,6 +1252,7 @@ public class WCRepository {
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_GROUP_EVENT)) {
 				handleGroupEvent(message, resources);
+				listener.OnSaved(true, message, null);
 				return;
 			}
 
@@ -1480,6 +1486,8 @@ public class WCRepository {
 				case Message.ACK_STATUS_RECEIVED:
 				case Message.ACK_STATUS_READ:
 					Message originalMessage = mMessageDao.getMessageObj(message.getOriginalMessageId());
+					if (originalMessage == null)
+						return;
 					if (originalMessage.isGroupMessage()){
 						GroupMemberMessage gmm = new GroupMemberMessage();
 						gmm.setAckStatus(message.getAckStatus());
@@ -2053,7 +2061,7 @@ public class WCRepository {
 			if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)) {
 
 				String selfLang = mSharedPreferences.getUserLang();
-				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
+				boolean needTranslation1 = (message.getTranslatedLanguage() != null)&&(!message.getTranslatedLanguage().equals(selfLang));
 				boolean needTranslationMagic = message.isMagic();
 
 				if (needTranslation1 || needTranslationMagic)
@@ -2445,7 +2453,7 @@ public class WCRepository {
 
 
 	public void getNotificationData(Message message, ContactServer contactServer, NotificationDataListener listener) {
-    	if ((message == null)||(contactServer == null)) {
+    	if (message == null) {
 			Log.e(TAG, "getNotificationData: null - exit ");
     		return;
 		}
@@ -2461,25 +2469,34 @@ public class WCRepository {
 			NotificationData data = new NotificationData();
 
 			Contact contact;
-			if (!mContactDao.hasContact(contactServer.getUserId())) {
-				contact = new Contact(contactServer);
-				mContactDao.insert(contact);
+			if (contactServer != null) {
+				if (!mContactDao.hasContact(contactServer.getUserId())) {
+					contact = new Contact(contactServer);
+					mContactDao.insert(contact);
+				}
+				else {
+					contact = mContactDao.getContact(contactServer.getUserId());
+				}
+				data.contact = contact;
+				data.contactName = contact.getName();
 			}
 			else {
-				contact = mContactDao.getContact(contactServer.getUserId());
+				data.contact = null;
+				data.contactName = "";
 			}
-			data.contact = contact;
-			data.contactName = contact.getName();
+
 
 			data.selfUser = mUserDao.getSelfUser();
 
 			Conversation conversation;
 
 			if(!mConversationDao.hasConversation(message.getConversationId())){
-				conversation = new Conversation(contact.getId(), mSharedPreferences.getUserId());
-				conversation.setParticipantName(contact.getName());
-				conversation.setParticipantLanguage(contact.getLanguage());
-				conversation.setParticipantProfilePicUrl(contact.getAvatar());
+				conversation = new Conversation();
+				conversation.setConversationId(message.getConversationId());
+				conversation.setParticipantId(data.contact != null?data.contact.getId():null);
+				conversation.setParticipantName(data.contactName);
+				conversation.setParticipantLanguage(data.contact != null?data.contact.getLanguage():null);
+				conversation.setParticipantProfilePicUrl(data.contact != null?data.contact.getAvatar():null);
 				try {
 					Log.e(TAG, "ERROR getNotificationData: message.getConversationId: " +  message.getConversationId());
 					Log.e(TAG, "ERROR getNotificationData: insert conversation: " +  conversation.toString());
@@ -2495,9 +2512,9 @@ public class WCRepository {
 
 			data.conversation = conversation;
 
-    		data.title =contact.getDisplayName();
+    		data.title =data.contact != null?data.contact.getDisplayName():null;
     		if (data.title == null)
-				data.title = contactServer.getUserName();
+				data.title = data.contact != null?data.contact.getContactServer().getUserName():null;
 			if (data.title == null)
 				data.title = "";
 
@@ -2509,13 +2526,16 @@ public class WCRepository {
 			newNotif.setMessageId(data.messageId);
 			newNotif.setCanceled(false);
 			newNotif.setDisplayed(true);
-			newNotif.setContactId(data.contact.getId());
+			newNotif.setContactId(data.contact != null?data.contact.getId():null);
 			newNotif.setConversationId(data.conversationId);
 			newNotif.setTimestamp(new Date());
 			mNotifDao.insert(newNotif);
 
 
 			switch (message.getMessageType()){
+				case Message.MSG_TYPE_GROUP_EVENT:
+					data.body = message.getGroupEventNotificationMessage();
+					break;
 				case Message.MSG_TYPE_TEXT:
 					if ((message.getTranslatedText() != null)&&(!message.getTranslatedText().isEmpty()))
 						data.body = message.getTranslatedText();

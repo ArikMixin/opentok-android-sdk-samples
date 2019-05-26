@@ -82,6 +82,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			case Message.MSG_TYPE_SPEECHABLE:
 			case Message.MSG_TYPE_TEXT:
 			case Message.MSG_TYPE_VIDEO:
+			case Message.MSG_TYPE_GROUP_EVENT:
 				return true;
 		}
 		return false;

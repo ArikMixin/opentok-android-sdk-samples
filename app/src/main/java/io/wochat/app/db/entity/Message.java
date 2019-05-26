@@ -81,7 +81,6 @@ public class Message implements IMessage,
 
 
 
-
 	@StringDef({
 		ACK_STATUS_PENDING,
 		ACK_STATUS_SENT,
@@ -842,7 +841,7 @@ public class Message implements IMessage,
 		return messageType;
 	}
 
-	public void setMessageType(@NonNull String messageType) {
+	public void setMessageType(@NonNull @MSG_TYPE String messageType) {
 		this.messageType = messageType;
 	}
 
@@ -1380,4 +1379,22 @@ public class Message implements IMessage,
 		newMessage.setTimestampMilli(userAddedMessage.getTimestampMilli()-10);
 		return newMessage;
 	}
+
+
+	public static Message getGroupCreatedMessageSelf(String conversationId, String groupName, String selfId) {
+		Message newMessage = new Message();
+		newMessage.setConversationId(conversationId);
+		newMessage.groups = new String[]{conversationId};
+		newMessage.setSenderId(selfId);
+		newMessage.setActingUser(selfId);
+		newMessage.setActingUserName("You");
+		newMessage.setShouldBeDisplayed(true);
+		newMessage.setGroupName(groupName);
+		newMessage.setMessageType(MSG_TYPE_GROUP_EVENT);
+		newMessage.setMessageId(UUID.randomUUID().toString());
+		newMessage.setEventCode(EVENT_CODE_GROUP_CREATED);
+		newMessage.setTimestampMilli(System.currentTimeMillis());
+		return newMessage;
+	}
+
 }
