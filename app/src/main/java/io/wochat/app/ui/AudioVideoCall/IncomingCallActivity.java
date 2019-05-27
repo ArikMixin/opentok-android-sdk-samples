@@ -523,16 +523,15 @@ public class IncomingCallActivity extends AppCompatActivity implements
         mIsVideoCall = false;
         mCameraPauseFullFL.setVisibility(View.VISIBLE);
         mSubscriberFL.setVisibility(View.GONE);
-        mSubscriberFL.removeAllViews();
+       // mSubscriberFL.removeAllViews();
     }
 
     @Override
     public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
-
         mIsVideoCall = true;
         mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
-        mSubscriberFL.addView(mSubscriber.getView());
+        //mSubscriberFL.addView(mSubscriber.getView());
     }
 
     @Override
@@ -546,7 +545,6 @@ public class IncomingCallActivity extends AppCompatActivity implements
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("ttttt", "intent.getAction(): " + intent.getAction());
             if (intent.getAction().equals(Message.RTC_CODE_REJECTED)) { //Close immediately - User Ignore the call
                          finish();
             }else if(!callEndedFlag && intent.getAction().equals(Message.RTC_CODE_CLOSE)){

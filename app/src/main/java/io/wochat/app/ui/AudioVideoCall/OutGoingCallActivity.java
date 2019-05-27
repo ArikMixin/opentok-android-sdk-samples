@@ -14,6 +14,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
@@ -317,13 +318,18 @@ public class OutGoingCallActivity extends AppCompatActivity
     private void cameraBtnVideo() {
         //close publisher video
         if(mIsVideoCall) {
-            mIsVideoCall = false;
-            mPublisher.setPublishVideo(false);
-            mPublisherFL.removeView(mPublisher.getView());
+                mIsVideoCall = false;
+                mPublisher.setPublishVideo(false);
+                mPublisherFL.removeView(mPublisher.getView());
         }else{  //open publisher video
-            mIsVideoCall = true;
-            mPublisher.setPublishVideo(true);
-                 mPublisherFL.addView(mPublisher.getView());
+                mIsVideoCall = true;
+                mPublisher.setPublishVideo(true);
+                mPublisherFL.addView(mPublisher.getView());
+
+               if(Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER){
+                       ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                       mSubscriberFL.addView(mSubscriber.getView());
+               }
         }
     }
 

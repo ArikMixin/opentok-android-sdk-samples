@@ -408,7 +408,6 @@
         android:layout_marginBottom="20dp"
         android:padding="1dp"
         app:cardCornerRadius="8dp"
-        android:elevation="8dp"
         app:cardBackgroundColor="@color/pause_grey"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -421,5 +420,7 @@
             android:src="@drawable/ic_camera_pause"/>
 
     </android.support.v7.widget.CardView>
+
+
 
 </android.support.constraint.ConstraintLayout>
