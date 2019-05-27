@@ -311,8 +311,10 @@ public class IncomingCallActivity extends AppCompatActivity implements
                 break;
 
             case R.id.camera_btn_video_tb:
+                    cameraBtnVideo();
                 break;
             case R.id.camera_btn_audio_tb:
+                    cameraBtnAudio();
                 break;
         }
     }
@@ -324,6 +326,27 @@ public class IncomingCallActivity extends AppCompatActivity implements
                 sendXMPPmsg(Message.RTC_CODE_CLOSE);
             else
                 sendXMPPmsg(Message.RTC_CODE_REJECTED);
+    }
+
+    private void cameraBtnAudio() {
+    }
+
+    private void cameraBtnVideo() {
+        //close publisher video
+        if(mIsVideoCall) {
+            mIsVideoCall = false;
+            mPublisher.setPublishVideo(false);
+            mPublisherFL.removeView(mPublisher.getView());
+        }else{  //open publisher video
+            mIsVideoCall = true;
+            mPublisher.setPublishVideo(true);
+            mPublisherFL.addView(mPublisher.getView());
+
+            if(Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER){
+                ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                mSubscriberFL.addView(mSubscriber.getView());
+            }
+        }
     }
 
     @Override

@@ -38,6 +38,7 @@ import com.opentok.android.Publisher;
 import com.opentok.android.PublisherKit;
 import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
+import com.opentok.android.SubscriberKit;
 import com.squareup.picasso.Picasso;
 import java.util.List;
 import java.util.Locale;
@@ -62,7 +63,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         EasyPermissions.PermissionCallbacks,
         Session.SessionListener,
         PublisherKit.PublisherListener,
-        View.OnTouchListener {
+        View.OnTouchListener, SubscriberKit.VideoListener {
 
     private static final String TAG = "OutGoingCallActivity";
     private static final String TOKBOX = "TokBox";
@@ -73,7 +74,7 @@ public class OutGoingCallActivity extends AppCompatActivity
             mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV, mStatusTV;
     private Chronometer mTimerChr;
     private ImageView mCameraSwitchIV;
-    private FrameLayout mBackNavigationFL;
+    private FrameLayout mBackNavigationFL, mCameraPauseFullFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL;
     private String mFixedParticipantId;
     private Locale loc;
@@ -147,6 +148,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mSubscriberFL = (FrameLayout) findViewById(R.id.subscriber_fl);
         mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_tb);
         mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_tb);
+        mCameraPauseFullFL = (FrameLayout) findViewById(R.id.camera_pause_full_fl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -515,6 +517,35 @@ public class OutGoingCallActivity extends AppCompatActivity
             sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
 
+    @Override
+    public void onVideoDataReceived(SubscriberKit subscriberKit) {
+
+    }
+
+    @Override
+    public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
+        mIsVideoCall = false;
+        mCameraPauseFullFL.setVisibility(View.VISIBLE);
+        mSubscriberFL.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
+        mIsVideoCall = true;
+        mCameraPauseFullFL.setVisibility(View.GONE);
+        mSubscriberFL.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onVideoDisableWarning(SubscriberKit subscriberKit) {
+
+    }
+
+    @Override
+    public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) {
+
+    }
+
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -594,13 +625,14 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         if (mSubscriber == null) {
                         mSubscriber = new Subscriber.Builder(OutGoingCallActivity.this, stream).build();
+                        mSubscriber.setVideoListener(OutGoingCallActivity.this);
                         mSession.subscribe(mSubscriber);
 
-                       //Show the caller video (full screen) Only for video calls
-                        if (mIsVideoCall) {
-                                mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                                mSubscriberFL.addView(mSubscriber.getView());
-                        }
+                           //Show the caller video (full screen) Only for video calls
+                            if (mIsVideoCall) {
+                                    mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                                    mSubscriberFL.addView(mSubscriber.getView());
+                            }
 
                            //*** Show the receiver video (Small Windows) Only for video calls
                            if(mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER) {
