@@ -330,7 +330,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
                if(Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER){
                        ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
-                       mSubscriberFL.addView(mSubscriber.getView());
+                        mSubscriberFL.addView(mSubscriber.getView());
                }
         }
     }
@@ -524,14 +524,12 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     @Override
     public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
-        mIsVideoCall = false;
         mCameraPauseFullFL.setVisibility(View.VISIBLE);
         mSubscriberFL.setVisibility(View.GONE);
     }
 
     @Override
     public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
-        mIsVideoCall = true;
         mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
     }

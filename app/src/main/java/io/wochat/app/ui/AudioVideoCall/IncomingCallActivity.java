@@ -107,8 +107,10 @@ public class IncomingCallActivity extends AppCompatActivity implements
     private float dX, dY, mCornerX, mCornerY ;
     private int screenHeight, screenWidth;
     private AlphaAnimation mCallTXTanimation;
-    private boolean callStartedFlag;
-    private boolean callEndedFlag;
+    private boolean mCallStartedFlag;
+    private boolean mCallEndedFlag;
+    private boolean mCallerVideoDisabled;
+    private boolean mCameraOpenFlag = true;
     volatile boolean sessitonRecivedFlag;
 
 
@@ -251,6 +253,12 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     private void videoCall() {
         mVideoFlag = true;
+
+        if(mMainAudioRL.getVisibility() == View.VISIBLE)
+              mMainAudioRL.setVisibility(View.GONE);
+        if(mCameraSwitchIV.getVisibility() != View.VISIBLE)
+              mCameraSwitchIV.setVisibility(View.VISIBLE);
+
         mMainVideoRL.setVisibility(View.VISIBLE);
 
         mParticipantNameVideoTV.setText(mParticipantName);
@@ -267,6 +275,12 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     private void audioCall() {
         mVideoFlag = false;
+
+        if(mMainVideoRL.getVisibility() == View.VISIBLE)
+             mMainVideoRL.setVisibility(View.GONE);
+        if(mCameraSwitchIV.getVisibility() == View.VISIBLE)
+            mCameraSwitchIV.setVisibility(View.GONE);
+
         mMainAudioRL.setVisibility(View.VISIBLE);
 
         mParticipantNameAudioTV.setText(mParticipantName);
@@ -286,35 +300,35 @@ public class IncomingCallActivity extends AppCompatActivity implements
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                        if(callStartedFlag)
+                        if(mCallStartedFlag)
                             sendXMPPmsg(Message.RTC_CODE_CLOSE);
                         else
                             sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.decline_civ:
-                        if(callStartedFlag)
+                        if(mCallStartedFlag)
                             sendXMPPmsg(Message.RTC_CODE_CLOSE);
                         else
                             sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.decline_inside_rl:
-                        if(callStartedFlag)
+                        if(mCallStartedFlag)
                             sendXMPPmsg(Message.RTC_CODE_CLOSE);
                         else
                             sendXMPPmsg(Message.RTC_CODE_REJECTED);
                 break;
 
             case R.id.accept_civ:
-                    callStarted();
+                        callStarted();
                 break;
 
             case R.id.camera_btn_video_tb:
-                    cameraBtnVideo();
+                        cameraBtnVideo();
                 break;
             case R.id.camera_btn_audio_tb:
-                    cameraBtnAudio();
+                        cameraBtnAudio();
                 break;
         }
     }
@@ -322,30 +336,81 @@ public class IncomingCallActivity extends AppCompatActivity implements
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-            if(callStartedFlag)
+            if(mCallStartedFlag)
                 sendXMPPmsg(Message.RTC_CODE_CLOSE);
             else
                 sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
 
     private void cameraBtnAudio() {
+        turnCallType(false);
+        mCameraBtnVideo.setChecked(false);
+
+
+        mCameraOpenFlag = true;
+        mPublisher.setPublishVideo(true);
+
+        mSubscriberFL.setVisibility(View.VISIBLE);
+        mPublisherFL.setVisibility(View.VISIBLE);
+
+        mPublisherFL.addView(mPublisher.getView());
+
+        if (Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+            mSubscriberFL.addView(mSubscriber.getView());
+        }
+
+
+
+
+
+
+
+        if(mCallerVideoDisabled)
+            mCameraPauseFullFL.setVisibility(View.VISIBLE);
+        else
+            mCameraPauseFullFL.setVisibility(View.GONE);
     }
 
     private void cameraBtnVideo() {
-        //close publisher video
-        if(mIsVideoCall) {
-            mIsVideoCall = false;
-            mPublisher.setPublishVideo(false);
-            mPublisherFL.removeView(mPublisher.getView());
-        }else{  //open publisher video
-            mIsVideoCall = true;
-            mPublisher.setPublishVideo(true);
-            mPublisherFL.addView(mPublisher.getView());
 
-            if(Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER){
-                ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
-                mSubscriberFL.addView(mSubscriber.getView());
-            }
+        //close publisher video
+        if(mCameraOpenFlag) {
+                        mCameraOpenFlag = false;
+
+                        mPublisher.setPublishVideo(false);
+                        mPublisherFL.removeView(mPublisher.getView());
+
+                        //If both (caller and receiver) close the cameras - turn to audio
+                        if(mCallerVideoDisabled)
+                             turnCallType(true);
+
+        }else{  //open publisher video
+
+                    mCameraOpenFlag = true;
+
+                    mPublisher.setPublishVideo(true);
+                    mPublisherFL.addView(mPublisher.getView());
+
+                                        if (Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+                                            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                                            mSubscriberFL.addView(mSubscriber.getView());
+                                        }
+       }
+    }
+
+    private void turnCallType(boolean closeVideo){
+
+        //Open Audio Call
+        if(closeVideo) {
+            //mSubscriberFL.removeView(mPublisher.getView());
+            mCameraPauseFullFL.setVisibility(View.GONE);
+            mSubscriberFL.setVisibility(View.GONE);
+            mPublisherFL.setVisibility(View.GONE);
+
+            audioCall();
+        }else{
+            videoCall();
         }
     }
 
@@ -543,14 +608,19 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     @Override
     public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
-        mIsVideoCall = false;
+        if(!mCameraOpenFlag) {
+            turnCallType(true);
+            return;
+        }
+
+        mCallerVideoDisabled = true;
         mCameraPauseFullFL.setVisibility(View.VISIBLE);
         mSubscriberFL.setVisibility(View.GONE);
     }
 
     @Override
     public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
-        mIsVideoCall = true;
+        mCallerVideoDisabled = false;
         mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
     }
@@ -568,14 +638,14 @@ public class IncomingCallActivity extends AppCompatActivity implements
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(Message.RTC_CODE_REJECTED)) { //Close immediately - User Ignore the call
                          finish();
-            }else if(!callEndedFlag && intent.getAction().equals(Message.RTC_CODE_CLOSE)){
+            }else if(!mCallEndedFlag && intent.getAction().equals(Message.RTC_CODE_CLOSE)){
                 callEnded();
             }
         }
     }
 
     private void callEnded(){
-        callEndedFlag =  true;
+        mCallEndedFlag =  true;
 
         mTimerChr.stop();
         mTitleTV.setText(getResources().getString(R.string.call_ended));
@@ -586,7 +656,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
     }
 
     private void callStarted() {
-        callStartedFlag = true;
+        mCallStartedFlag = true;
 
         //Hide incoming call btns and show inside call btns
         mIncomingCallBtnsRl.setVisibility(View.GONE);
@@ -683,7 +753,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
             mSubscriber = null;
             mSubscriberFL.removeAllViews();
 
-            if(!callEndedFlag)
+            if(!mCallEndedFlag)
                     callEnded();
         }
     }
