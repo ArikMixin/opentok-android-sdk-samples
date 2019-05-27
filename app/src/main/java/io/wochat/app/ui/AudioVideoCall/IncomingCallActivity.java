@@ -523,7 +523,6 @@ public class IncomingCallActivity extends AppCompatActivity implements
         mIsVideoCall = false;
         mCameraPauseFullFL.setVisibility(View.VISIBLE);
         mSubscriberFL.setVisibility(View.GONE);
-       // mSubscriberFL.removeAllViews();
     }
 
     @Override
@@ -531,7 +530,6 @@ public class IncomingCallActivity extends AppCompatActivity implements
         mIsVideoCall = true;
         mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
-        //mSubscriberFL.addView(mSubscriber.getView());
     }
 
     @Override
