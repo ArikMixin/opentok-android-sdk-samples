@@ -344,15 +344,19 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     private void cameraBtnAudio() {
         turnCallType(false);
-            mCameraBtnVideo.setChecked(false);
 
+        /*if(!mIsVideoCall) {
+            turnCallType(false);
+            mIsVideoCall = true;
+            return;
+        }*/
 
+        mCameraBtnVideo.setChecked(false);
         mCameraOpenFlag = true;
 
         mSubscriberFL.setVisibility(View.VISIBLE);
         mPublisherFL.setVisibility(View.VISIBLE);
 
-        Log.d("lik", "mCallerVideoDisabled: " + mCallerVideoDisabled);
         if(mCallerVideoDisabled)
             mCameraPauseFullFL.setVisibility(View.VISIBLE);
         else
