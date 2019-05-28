@@ -676,10 +676,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
                         mSession.publish(mPublisher);
 
                         if (mIsVideoCall && Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER){
-                            mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                            ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
-                            mPublisherFL.addView(mPublisher.getView());
-                            mPublisherFL.setVisibility(View.VISIBLE);
+                            animateAndAddView();
                         }
 
               if (mSubscriber == null) {
@@ -699,10 +696,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
                                 //Set Publisher
                                 //*** Show the receiver video (Small Windows) Only for video calls
                                 if(mIsVideoCall && Build.VERSION.SDK_INT >= OutGoingCallActivity.SCREEN_MINIMUM_VER) {
-                                        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                                        ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
-                                        mPublisherFL.addView(mPublisher.getView());
-                                        mPublisherFL.setVisibility(View.VISIBLE);
+                                    animateAndAddView();
                                 }
 
                                 //Wait 2 seconds because of the api black screen - and then start timer and sent massage to caller
@@ -725,6 +719,30 @@ public class IncomingCallActivity extends AppCompatActivity implements
         };
         thread.start();
 
+    }
+
+    private void animateAndAddView(){
+
+        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+        ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+        mPublisherFL.addView(mPublisher.getView());
+        mPublisherFL.setVisibility(View.VISIBLE);
+
+     /*          mEffectFL.animate()
+                       //.setStartDelay(2000)
+                       .scaleX(0.3f).scaleY(0.3f)//scale to quarter(half x,half y)
+                       .translationY((mEffectFL.getHeight()/4 + 225)).translationX((-mEffectFL.getWidth()/4 -120))// move to bottom / right
+                       .alpha(1) // make it less visible
+                       .setDuration(800)
+                       .withEndAction(() -> {
+                              mEffectFL.setVisibility(View.VISIBLE);
+                               mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                               ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                               mPublisherFL.addView(mPublisher.getView());
+                               mPublisherFL.setVisibility(View.VISIBLE);
+
+                           Log.d("tigtog", "after: " + mEffectFL.getWidth());
+                       });*/
     }
 
     //TokBox

@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
@@ -100,6 +99,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private Subscriber mSubscriber;
     private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
+    private FrameLayout mEffectFL;
     private float dX, dY, mCornerX, mCornerY ;
     private int screenHeight, screenWidth;
     private boolean callStartedFlag;
@@ -128,6 +128,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mTitleTV = (TextView) findViewById(R.id.title_tv);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
         mBackNavigationFL = (FrameLayout) findViewById(R.id.back_navigation_fl);
+        mEffectFL = (FrameLayout) findViewById(R.id.effect_fl);
         mParticipantNameAudioTV = (TextView) findViewById(R.id.participant_name_audio_tv);
         mParticipantLangAudioTV = (TextView) findViewById(R.id.participant_lang_audio_tv);
         mParticipantNumberTV = (TextView) findViewById(R.id.participant_number_audio_tv);
@@ -614,33 +615,48 @@ public class OutGoingCallActivity extends AppCompatActivity
         Log.i(TOKBOX, "Stream Received");
 
         //*** Show the receiver video (Small Windows) Only for video calls
-        if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER){
-                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
-                mPublisherFL.addView(mPublisher.getView());
-                mPublisherFL.setVisibility(View.VISIBLE);
-        }
+        if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER)
+                    animateAndAddView();
 
         if (mSubscriber == null) {
-                        mSubscriber = new Subscriber.Builder(OutGoingCallActivity.this, stream).build();
-                        mSubscriber.setVideoListener(OutGoingCallActivity.this);
-                        mSession.subscribe(mSubscriber);
+            mSubscriber = new Subscriber.Builder(OutGoingCallActivity.this, stream).build();
+            mSubscriber.setVideoListener(OutGoingCallActivity.this);
+            mSession.subscribe(mSubscriber);
 
-                           //Show the caller video (full screen) Only for video calls
-                            if (mIsVideoCall) {
-                                    mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                                    mSubscriberFL.addView(mSubscriber.getView());
-                            }
+            //Show the caller video (full screen) Only for video calls
+            if (mIsVideoCall) {
+                mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                mSubscriberFL.addView(mSubscriber.getView());
+            }
 
-                           //*** Show the receiver video (Small Windows) Only for video calls
-                           if(mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER) {
-                                   mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                                   ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
-                                   mPublisherFL.addView(mPublisher.getView());
-                                   mPublisherFL.setVisibility(View.VISIBLE);
-                           }
+            //*** Show the receiver video (Small Windows) Only for video calls
+            if (mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER)
+                        animateAndAddView();
         }
+    }
 
+   private void animateAndAddView(){
+
+       mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+       ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+       mPublisherFL.addView(mPublisher.getView());
+       mPublisherFL.setVisibility(View.VISIBLE);
+
+     /*          mEffectFL.animate()
+                       //.setStartDelay(2000)
+                       .scaleX(0.3f).scaleY(0.3f)//scale to quarter(half x,half y)
+                       .translationY((mEffectFL.getHeight()/4 + 225)).translationX((-mEffectFL.getWidth()/4 -120))// move to bottom / right
+                       .alpha(1) // make it less visible
+                       .setDuration(800)
+                       .withEndAction(() -> {
+                              mEffectFL.setVisibility(View.VISIBLE);
+                               mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                               ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                               mPublisherFL.addView(mPublisher.getView());
+                               mPublisherFL.setVisibility(View.VISIBLE);
+
+                           Log.d("tigtog", "after: " + mEffectFL.getWidth());
+                       });*/
     }
 
     @Override
