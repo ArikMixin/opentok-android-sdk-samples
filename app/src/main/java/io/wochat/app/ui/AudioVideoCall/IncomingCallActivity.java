@@ -343,34 +343,28 @@ public class IncomingCallActivity extends AppCompatActivity implements
     }
 
     private void cameraBtnAudio() {
-        turnCallType(false);
-
-        /*if(!mIsVideoCall) {
             turnCallType(false);
-            mIsVideoCall = true;
-            return;
-        }*/
 
-        mCameraBtnVideo.setChecked(false);
-        mCameraOpenFlag = true;
+            mCameraBtnVideo.setChecked(false);
+            mCameraOpenFlag = true;
 
-        mSubscriberFL.setVisibility(View.VISIBLE);
-        mPublisherFL.setVisibility(View.VISIBLE);
+            mSubscriberFL.setVisibility(View.VISIBLE);
+            mPublisherFL.setVisibility(View.VISIBLE);
 
-        if(mCallerVideoDisabled)
-            mCameraPauseFullFL.setVisibility(View.VISIBLE);
-        else
-            mCameraPauseFullFL.setVisibility(View.GONE);
+            if(mCallerVideoDisabled)
+                mCameraPauseFullFL.setVisibility(View.VISIBLE);
+            else
+                mCameraPauseFullFL.setVisibility(View.GONE);
 
-        if(mPublisher != null) {
-                mPublisher.setPublishVideo(true);
-                mPublisherFL.addView(mPublisher.getView());
-        }
+            if(mPublisher != null) {
+                    mPublisher.setPublishVideo(true);
+                    mPublisherFL.addView(mPublisher.getView());
+            }
 
-        if (mSubscriber != null && Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
-                    ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
-                    mSubscriberFL.addView(mSubscriber.getView());
-        }
+            if (mSubscriber != null && Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+                        ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                        mSubscriberFL.addView(mSubscriber.getView());
+            }
 
     }
 
