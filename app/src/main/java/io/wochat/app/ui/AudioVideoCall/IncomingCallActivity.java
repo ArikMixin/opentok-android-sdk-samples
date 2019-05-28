@@ -240,7 +240,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     private void startCameraPreview() {
         mPublisher = new Publisher.Builder(this)
-                .videoTrack(mIsVideoCall)
+//                .videoTrack(mIsVideoCall)
                 .build();
         mPublisher.setPublisherListener(this);
 
@@ -248,6 +248,8 @@ public class IncomingCallActivity extends AppCompatActivity implements
                 mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                 mPublisher.startPreview();
                 mSubscriberFL.addView(mPublisher.getView());
+        }else{
+                mPublisher.setPublishVideo(false);
         }
     }
 
@@ -356,8 +358,9 @@ public class IncomingCallActivity extends AppCompatActivity implements
             else
                 mCameraPauseFullFL.setVisibility(View.GONE);
 
-            if(mPublisher != null) {
+            if(mPublisher != null) { // When open video from audio call
                     mPublisher.setPublishVideo(true);
+                    mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                     mPublisherFL.addView(mPublisher.getView());
             }
 
