@@ -344,32 +344,30 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     private void cameraBtnAudio() {
         turnCallType(false);
-        mCameraBtnVideo.setChecked(false);
+            mCameraBtnVideo.setChecked(false);
 
 
         mCameraOpenFlag = true;
-        mPublisher.setPublishVideo(true);
 
         mSubscriberFL.setVisibility(View.VISIBLE);
         mPublisherFL.setVisibility(View.VISIBLE);
 
-        mPublisherFL.addView(mPublisher.getView());
-
-        if (Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
-            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
-            mSubscriberFL.addView(mSubscriber.getView());
-        }
-
-
-
-
-
-
-
+        Log.d("lik", "mCallerVideoDisabled: " + mCallerVideoDisabled);
         if(mCallerVideoDisabled)
             mCameraPauseFullFL.setVisibility(View.VISIBLE);
         else
             mCameraPauseFullFL.setVisibility(View.GONE);
+
+        if(mPublisher != null) {
+                mPublisher.setPublishVideo(true);
+                mPublisherFL.addView(mPublisher.getView());
+        }
+
+        if (mSubscriber != null && Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+                    ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                    mSubscriberFL.addView(mSubscriber.getView());
+        }
+
     }
 
     private void cameraBtnVideo() {
@@ -377,7 +375,6 @@ public class IncomingCallActivity extends AppCompatActivity implements
         //close publisher video
         if(mCameraOpenFlag) {
                         mCameraOpenFlag = false;
-
                         mPublisher.setPublishVideo(false);
                         mPublisherFL.removeView(mPublisher.getView());
 
@@ -403,7 +400,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
         //Open Audio Call
         if(closeVideo) {
-            //mSubscriberFL.removeView(mPublisher.getView());
+            mCameraBtnAudio.setChecked(false);
             mCameraPauseFullFL.setVisibility(View.GONE);
             mSubscriberFL.setVisibility(View.GONE);
             mPublisherFL.setVisibility(View.GONE);
@@ -608,12 +605,12 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     @Override
     public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
-        if(!mCameraOpenFlag) {
-            turnCallType(true);
-            return;
-        }
-
         mCallerVideoDisabled = true;
+
+        if(!mCameraOpenFlag) {
+                turnCallType(true);
+                return;
+        }
         mCameraPauseFullFL.setVisibility(View.VISIBLE);
         mSubscriberFL.setVisibility(View.GONE);
     }
