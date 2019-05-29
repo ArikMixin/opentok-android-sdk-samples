@@ -25,6 +25,7 @@ import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.Chronometer;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -32,6 +33,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.opentok.android.AudioDeviceManager;
+import com.opentok.android.BaseAudioDevice;
 import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
 import com.opentok.android.Publisher;
@@ -62,7 +65,8 @@ public class IncomingCallActivity extends AppCompatActivity implements
         EasyPermissions.PermissionCallbacks,
         Session.SessionListener,
         View.OnTouchListener,
-        PublisherKit.PublisherListener, SubscriberKit.VideoListener {
+        PublisherKit.PublisherListener, SubscriberKit.VideoListener,
+        CompoundButton.OnCheckedChangeListener {
 
     private static final String TAG = "IncomingCallActivity";
     private static final String TOKBOX = "TokBox";
@@ -215,6 +219,8 @@ public class IncomingCallActivity extends AppCompatActivity implements
         mCameraBtnVideo.setOnClickListener(this);
         mCameraBtnAudio.setOnClickListener(this);
         mCameraSwitchIV.setOnClickListener(this);
+        mMuteTB.setOnCheckedChangeListener(this);
+        mSpeakerIB.setOnCheckedChangeListener(this);
 
         if (mIsVideoCall)
             videoCall();
@@ -249,8 +255,11 @@ public class IncomingCallActivity extends AppCompatActivity implements
                 mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                 mPublisher.startPreview();
                 mSubscriberFL.addView(mPublisher.getView());
-        }else{
-                mPublisher.setPublishVideo(false);
+        }else{ // Audio call
+            mPublisher.setPublishVideo(false);
+            // switch from loud speaker to phone speaker (voice session)
+            mSpeakerIB.setChecked(false);
+            AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
         }
     }
 
@@ -351,6 +360,27 @@ public class IncomingCallActivity extends AppCompatActivity implements
                                 .withEndAction(() -> mCameraSwitchIV.setEnabled(true))
                                 .start();
                 break;
+        }
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        switch (buttonView.getId()) {
+            case R.id.mute_iv:
+
+                if (isChecked)
+                    mPublisher.setPublishAudio(false);
+                else
+                    mPublisher.setPublishAudio(true);
+        break;
+
+         case R.id.speaker_iv:
+
+                if(isChecked)
+                    AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.SpeakerPhone);
+                else
+                    AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
+        break;
         }
     }
 
