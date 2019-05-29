@@ -109,8 +109,8 @@ public class IncomingCallActivity extends AppCompatActivity implements
     private AlphaAnimation mCallTXTanimation;
     private boolean mCallStartedFlag;
     private boolean mCallEndedFlag;
-    private boolean mCallerVideoDisabled;
-    private boolean mCameraOpenFlag = true;
+    private boolean mCallerCamOpen = true;
+    private boolean mSelfCamOpen = true;
     volatile boolean sessitonRecivedFlag;
 
 
@@ -255,11 +255,19 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     private void videoCall() {
         mVideoFlag = true;
+        mSelfCamOpen = true;
+
+        if(!mCallerCamOpen)
+          mCameraPauseFullFL.setVisibility(View.VISIBLE);
+        else
+          mCameraPauseFullFL.setVisibility(View.GONE);
 
         if(mMainAudioRL.getVisibility() == View.VISIBLE)
               mMainAudioRL.setVisibility(View.GONE);
         if(mCameraSwitchIV.getVisibility() != View.VISIBLE)
               mCameraSwitchIV.setVisibility(View.VISIBLE);
+        if(mSubscriberFL.getVisibility() != View.VISIBLE)
+            mSubscriberFL.setVisibility(View.VISIBLE);
 
         mMainVideoRL.setVisibility(View.VISIBLE);
 
@@ -278,10 +286,12 @@ public class IncomingCallActivity extends AppCompatActivity implements
     private void audioCall() {
         mVideoFlag = false;
 
+//        if(mCameraPauseFullFL.getVisibility() == View.VISIBLE)
+//              mCameraPauseFullFL.setVisibility(View.GONE);
         if(mMainVideoRL.getVisibility() == View.VISIBLE)
-             mMainVideoRL.setVisibility(View.GONE);
+              mMainVideoRL.setVisibility(View.GONE);
         if(mCameraSwitchIV.getVisibility() == View.VISIBLE)
-            mCameraSwitchIV.setVisibility(View.GONE);
+              mCameraSwitchIV.setVisibility(View.GONE);
 
         mMainAudioRL.setVisibility(View.VISIBLE);
 
@@ -295,7 +305,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
         setPhotoByUrl(false);
 //
 //        mParticipantNumberTV.setText(mFixedParticipantId);
-        mTitleTV.setText(R.string.in_audio_call);
+          mTitleTV.setText(R.string.in_audio_call);
     }
 
     @Override
@@ -345,18 +355,17 @@ public class IncomingCallActivity extends AppCompatActivity implements
     }
 
     private void cameraBtnAudio() {
-            turnCallType(false);
-
+            turnCallType(true);
             mCameraBtnVideo.setChecked(false);
-            mCameraOpenFlag = true;
+            mSelfCamOpen = true;
 
             mSubscriberFL.setVisibility(View.VISIBLE);
             mPublisherFL.setVisibility(View.VISIBLE);
 
-            if(mCallerVideoDisabled)
-                mCameraPauseFullFL.setVisibility(View.VISIBLE);
-            else
-                mCameraPauseFullFL.setVisibility(View.GONE);
+//            if(mCallerCamOpen)
+//                mCameraPauseFullFL.setVisibility(View.VISIBLE);
+//            else
+//                mCameraPauseFullFL.setVisibility(View.GONE);
 
             if(mPublisher != null) { // When open video from audio call
                     mPublisher.setPublishVideo(true);
@@ -373,44 +382,43 @@ public class IncomingCallActivity extends AppCompatActivity implements
 
     private void cameraBtnVideo() {
 
-        //close publisher video
-        if(mCameraOpenFlag) {
-                        mCameraOpenFlag = false;
+        //close publisher (self)  video
+        if(mSelfCamOpen) {
+               mSelfCamOpen = false;
+
                         mPublisher.setPublishVideo(false);
                         mPublisherFL.removeView(mPublisher.getView());
 
-                        //If both (caller and receiver) close the cameras - turn to audio
-                        if(mCallerVideoDisabled)
-                             turnCallType(true);
-
+                         if(!mCallerCamOpen)
+                                  turnCallType(false);
         }else{  //open publisher video
+             mSelfCamOpen = true;
 
-                    mCameraOpenFlag = true;
+                        mPublisher.setPublishVideo(true);
+                        mPublisherFL.addView(mPublisher.getView());
 
-                    mPublisher.setPublishVideo(true);
-                    mPublisherFL.addView(mPublisher.getView());
-
-                                        if (Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
-                                            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
-                                            mSubscriberFL.addView(mSubscriber.getView());
-                                        }
+                             if (Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+                                   ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                                   mSubscriberFL.addView(mSubscriber.getView());
+                             }
        }
     }
 
-    private void turnCallType(boolean closeVideo){
+    private void turnCallType(boolean video){
 
         //Open Audio Call
-        if(closeVideo) {
+        if(video) {
+            videoCall();
+        }else{
             mCameraBtnAudio.setChecked(false);
             mCameraPauseFullFL.setVisibility(View.GONE);
             mSubscriberFL.setVisibility(View.GONE);
             mPublisherFL.setVisibility(View.GONE);
 
             audioCall();
-        }else{
-            videoCall();
         }
     }
+
 
     @Override
     public boolean onTouch(View view, MotionEvent event) {
@@ -604,23 +612,28 @@ public class IncomingCallActivity extends AppCompatActivity implements
     public void onVideoDataReceived(SubscriberKit subscriberKit) {
     }
 
-    @Override
+    @Override// caller
     public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
-        mCallerVideoDisabled = true;
+        mCallerCamOpen = false;
 
-        if(!mCameraOpenFlag) {
-                turnCallType(true);
-                return;
+        if(!mSelfCamOpen) {
+                turnCallType(false);
+                   return;
         }
+        mSubscriberFL.setVisibility(View.GONE); //Caller full screen video
         mCameraPauseFullFL.setVisibility(View.VISIBLE);
-        mSubscriberFL.setVisibility(View.GONE);
     }
 
-    @Override
+    @Override// caller
     public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
-        mCallerVideoDisabled = false;
+        mCallerCamOpen = true;
+
+        if(!mVideoFlag) {
+            turnCallType(true);
+             //return;
+        }
+        mSubscriberFL.setVisibility(View.VISIBLE); //Caller full screen video
         mCameraPauseFullFL.setVisibility(View.GONE);
-        mSubscriberFL.setVisibility(View.VISIBLE);
     }
 
     @Override

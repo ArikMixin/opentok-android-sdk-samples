@@ -103,7 +103,9 @@ public class OutGoingCallActivity extends AppCompatActivity
     private float dX, dY, mCornerX, mCornerY ;
     private int screenHeight, screenWidth;
     private boolean callStartedFlag;
-    private boolean callEndedFlag;
+    private boolean mCallEndedFlag;
+    private boolean mCallerCamOpen = true;
+    private boolean mSelfCamOpen = true;
 
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
                                                                      Manifest.permission.RECORD_AUDIO };
@@ -208,9 +210,9 @@ public class OutGoingCallActivity extends AppCompatActivity
         mCameraBtnAudio.setOnClickListener(this);
 
         if (mIsVideoCall)
-            videoCall();
+                videoCall();
         else
-            audioCall();
+                audioCall();
     }
 
     /**
@@ -233,7 +235,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     private void startCameraPreview() {
         mPublisher = new Publisher.Builder(this)
-                .videoTrack(mIsVideoCall)
+               // .videoTrack(mIsVideoCall)
                 .build();
         mPublisher.setPublisherListener(this);
 
@@ -241,11 +243,25 @@ public class OutGoingCallActivity extends AppCompatActivity
                 mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                 mPublisher.startPreview();
                 mSubscriberFL.addView(mPublisher.getView());
+        }else{
+            mPublisher.setPublishVideo(false);
         }
     }
 
     private void videoCall() {
         mVideoFlag = true;
+        mSelfCamOpen = true;
+
+        if(!mCallerCamOpen)
+            mCameraPauseFullFL.setVisibility(View.VISIBLE);
+        else
+            mCameraPauseFullFL.setVisibility(View.GONE);
+
+        if(mMainAudioRL.getVisibility() == View.VISIBLE)
+            mMainAudioRL.setVisibility(View.GONE);
+        if(mCameraSwitchIV.getVisibility() != View.VISIBLE)
+            mCameraSwitchIV.setVisibility(View.VISIBLE);
+
         mMainVideoRL.setVisibility(View.VISIBLE);
 
         mParticipantNameVideoTV.setText(mParticipantName);
@@ -253,7 +269,6 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         //Set Participant Flags
         mParticipantPicVideoFlagCIV.setImageResource(mFlagDrawable);
-        mMicFlagCIV.setImageResource(mFlagDrawable);
 
         //Set Participant Pic
         setPhotoByUrl(true);
@@ -263,20 +278,27 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     private void audioCall() {
         mVideoFlag = false;
+
+//        if(mCameraPauseFullFL.getVisibility() == View.VISIBLE)
+//                 mCameraPauseFullFL.setVisibility(View.GONE);
+        if(mMainVideoRL.getVisibility() == View.VISIBLE)
+                 mMainVideoRL.setVisibility(View.GONE);
+        if(mCameraSwitchIV.getVisibility() == View.VISIBLE)
+                 mCameraSwitchIV.setVisibility(View.GONE);
+
         mMainAudioRL.setVisibility(View.VISIBLE);
 
-        mCameraSwitchIV.setVisibility(View.GONE); // No need camera switch button in audio call
         mParticipantNameAudioTV.setText(mParticipantName);
         mParticipantLangAudioTV.setText(mFullLangName);
 
         //Set Participant Flags
         mParticipantPicAudioFlagCIV.setImageResource(mFlagDrawable);
-        mMicFlagCIV.setImageResource(mFlagDrawable);
 
         //Set Participant Pic
         setPhotoByUrl(false);
-
-        mTitleTV.setText(R.string.out_audio_call);
+//
+//        mParticipantNumberTV.setText(mFixedParticipantId);
+          mTitleTV.setText(R.string.out_audio_call);
     }
 
     @Override
@@ -316,23 +338,68 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     private void cameraBtnAudio() {
+        turnCallType(true);
+        mCameraBtnVideo.setChecked(false);
+        mSelfCamOpen = true;
+
+        mSubscriberFL.setVisibility(View.VISIBLE);
+        mPublisherFL.setVisibility(View.VISIBLE);
+
+//        if(mCallerCamOpen)
+//            mCameraPauseFullFL.setVisibility(View.VISIBLE);
+//        else
+//            mCameraPauseFullFL.setVisibility(View.GONE);
+
+        if(mPublisher != null) { // When open video from audio call
+            mPublisher.setPublishVideo(true);
+            mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+            mPublisherFL.addView(mPublisher.getView());
+        }
+
+        if (mSubscriber != null && Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+            mSubscriberFL.addView(mSubscriber.getView());
+        }
     }
 
-    private void cameraBtnVideo() {
-        //close publisher video
-        if(mIsVideoCall) {
-                mIsVideoCall = false;
-                mPublisher.setPublishVideo(false);
-                mPublisherFL.removeView(mPublisher.getView());
-        }else{  //open publisher video
-                mIsVideoCall = true;
-                mPublisher.setPublishVideo(true);
-                mPublisherFL.addView(mPublisher.getView());
 
-               if(Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER){
-                       ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
-                        mSubscriberFL.addView(mSubscriber.getView());
-               }
+    private void cameraBtnVideo() {
+
+        //close publisher (self)  video
+        if(mSelfCamOpen) {
+                mSelfCamOpen = false;
+
+                    mPublisher.setPublishVideo(false);
+                    mPublisherFL.removeView(mPublisher.getView());
+
+                    //If both (caller and receiver) close the cameras - turn to audio
+                    if(!mCallerCamOpen)
+                        turnCallType(false);
+        }else{  //open publisher video
+
+            mSelfCamOpen = true;
+                    mPublisher.setPublishVideo(true);
+                    mPublisherFL.addView(mPublisher.getView());
+
+                            if (Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+                                ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                                mSubscriberFL.addView(mSubscriber.getView());
+                            }
+        }
+    }
+
+    private void turnCallType(boolean video){
+
+        //Open Audio Call
+        if(video) {
+            videoCall();
+        }else{
+            mCameraBtnAudio.setChecked(false);
+            mCameraPauseFullFL.setVisibility(View.GONE);
+            mSubscriberFL.setVisibility(View.GONE);
+            mPublisherFL.setVisibility(View.GONE);
+
+            audioCall();
         }
     }
 
@@ -523,14 +590,27 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     }
 
-    @Override
+    @Override // caller
     public void onVideoDisabled(SubscriberKit subscriberKit, String s) {
+        mCallerCamOpen = false;
+
+        if(!mSelfCamOpen) {
+                turnCallType(false);
+                  return;
+        }
         mCameraPauseFullFL.setVisibility(View.VISIBLE);
         mSubscriberFL.setVisibility(View.GONE);
     }
 
-    @Override
+    @Override // caller
     public void onVideoEnabled(SubscriberKit subscriberKit, String s) {
+        mCallerCamOpen = true;
+
+        if(!mVideoFlag) {
+                turnCallType(true);
+                // mSelfCamOpen = false;
+        }
+
         mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
     }
@@ -548,7 +628,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(!callEndedFlag && intent.getAction().equals(Message.RTC_CODE_REJECTED) ||
+            if(!mCallEndedFlag && intent.getAction().equals(Message.RTC_CODE_REJECTED) ||
                     intent.getAction().equals(Message.RTC_CODE_BUSY) ||
                     intent.getAction().equals(Message.RTC_CODE_CLOSE))
                              callEnded(intent.getAction());
@@ -558,6 +638,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     private void callEnded(String rtcCode){
+        mCallEndedFlag = true;
         mCallTXTanimation.cancel();
         mCallingSound.stop();
 
@@ -668,7 +749,7 @@ public class OutGoingCallActivity extends AppCompatActivity
             mSubscriberFL.removeAllViews();
         }
 
-        if(!callEndedFlag)
+        if(!mCallEndedFlag)
                callEnded(Message.RTC_CODE_CLOSE);
     }
 
