@@ -26,7 +26,11 @@
         tools:replace="android:supportsRtl">
         <activity android:name=".ui.AudioVideoCall.OutGoingCallActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            ></activity>
         <activity android:name=".ui.AudioVideoCall.IncomingCallActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"></activity>

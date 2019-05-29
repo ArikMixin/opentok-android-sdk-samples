@@ -320,9 +320,13 @@ public class OutGoingCallActivity extends AppCompatActivity
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                        if(callStartedFlag)
-                            sendXMPPmsg(Message.RTC_CODE_CLOSE);
-                        else
+                        if(callStartedFlag) {
+                            //sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                            //his.moveTaskToBack(true);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                OutGoingCallActivity.this.enterPictureInPictureMode();
+                            }
+                        }else
                             sendXMPPmsg(Message.RTC_CODE_REJECTED);
             break;
 
