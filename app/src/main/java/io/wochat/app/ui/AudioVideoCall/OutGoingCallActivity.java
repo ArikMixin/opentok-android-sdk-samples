@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
 import android.widget.Chronometer;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -93,7 +94,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private RTCcodeBR mRTCcodeBR;
     private String mSessionID = "";
     private ToggleButton mCameraBtnVideo, mCameraBtnAudio;
-
+    private ToggleButton mSpeakerIB, mMuteTB;
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
@@ -106,7 +107,6 @@ public class OutGoingCallActivity extends AppCompatActivity
     private boolean mCallEndedFlag;
     private boolean mCallerCamOpen = true;
     private boolean mSelfCamOpen = true;
-
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
                                                                      Manifest.permission.RECORD_AUDIO };
 
@@ -149,9 +149,11 @@ public class OutGoingCallActivity extends AppCompatActivity
         mUserPicAudioRL = (RelativeLayout) findViewById(R.id.user_pic_audio_rl);
         mPublisherFL = (FrameLayout) findViewById(R.id.publisher_fl);
         mSubscriberFL = (FrameLayout) findViewById(R.id.subscriber_fl);
+        mCameraPauseFullFL = (FrameLayout) findViewById(R.id.camera_pause_full_fl);
         mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_tb);
         mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_tb);
-        mCameraPauseFullFL = (FrameLayout) findViewById(R.id.camera_pause_full_fl);
+        mSpeakerIB = (ToggleButton) findViewById(R.id.speaker_iv);
+        mMuteTB = (ToggleButton) findViewById(R.id.mute_iv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -208,6 +210,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mPublisherFL.setOnTouchListener(this);
         mCameraBtnVideo.setOnClickListener(this);
         mCameraBtnAudio.setOnClickListener(this);
+        mCameraSwitchIV.setOnClickListener(this);
 
         if (mIsVideoCall)
                 videoCall();
@@ -325,6 +328,17 @@ public class OutGoingCallActivity extends AppCompatActivity
             case R.id.camera_btn_audio_tb:
                 cameraBtnAudio();
             break;
+
+            case R.id.camera_switch_iv:
+                       mPublisher.cycleCamera();
+                       mCameraSwitchIV.animate().rotationBy(360)
+                               .withStartAction(() -> mCameraSwitchIV.setEnabled(false))
+                               .withEndAction(() -> mCameraSwitchIV.setEnabled(true))
+                               .start();
+
+
+                break;
+
         }
     }
 

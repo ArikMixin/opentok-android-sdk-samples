@@ -92,12 +92,10 @@ public class IncomingCallActivity extends AppCompatActivity implements
     private String mSessionId;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
-    private ImageView mCameraSwitchIV;
     private ToggleButton mCameraBtnVideo, mCameraBtnAudio;
-
-
+    private ToggleButton mSpeakerIB, mMuteTB;
+    private ImageView mCameraSwitchIV;
     public static boolean activityActiveFlag;
-
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
@@ -150,9 +148,11 @@ public class IncomingCallActivity extends AppCompatActivity implements
         mDeclineInsideRL = (RelativeLayout) findViewById(R.id.decline_inside_rl);
         mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
+        mCameraPauseFullFL = (FrameLayout) findViewById(R.id.camera_pause_full_fl);
         mCameraBtnVideo = (ToggleButton) findViewById(R.id.camera_btn_video_tb);
         mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_tb);
-        mCameraPauseFullFL = (FrameLayout) findViewById(R.id.camera_pause_full_fl);
+        mSpeakerIB = (ToggleButton) findViewById(R.id.speaker_iv);
+        mMuteTB = (ToggleButton) findViewById(R.id.mute_iv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -192,7 +192,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
                 TranslateAnimation.ABSOLUTE, 0f,
                 TranslateAnimation.RELATIVE_TO_PARENT, 0f,
                 TranslateAnimation.RELATIVE_TO_PARENT, 0.1f);
-        mAnimation.setDuration(600);
+        mAnimation.setDuration(500);
         mAnimation.setRepeatCount(Animation.INFINITE);
         mAnimation.setRepeatMode(Animation.REVERSE);
         mAnimation.setInterpolator(new LinearInterpolator());
@@ -214,6 +214,7 @@ public class IncomingCallActivity extends AppCompatActivity implements
         mPublisherFL.setOnTouchListener(this);
         mCameraBtnVideo.setOnClickListener(this);
         mCameraBtnAudio.setOnClickListener(this);
+        mCameraSwitchIV.setOnClickListener(this);
 
         if (mIsVideoCall)
             videoCall();
@@ -341,6 +342,14 @@ public class IncomingCallActivity extends AppCompatActivity implements
                 break;
             case R.id.camera_btn_audio_tb:
                         cameraBtnAudio();
+                break;
+
+            case R.id.camera_switch_iv:
+                        mPublisher.cycleCamera();
+                        mCameraSwitchIV.animate().rotationBy(360)
+                                .withStartAction(() -> mCameraSwitchIV.setEnabled(false))
+                                .withEndAction(() -> mCameraSwitchIV.setEnabled(true))
+                                .start();
                 break;
         }
     }
