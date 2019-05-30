@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.os.Build;
@@ -109,6 +110,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
     private FrameLayout mEffectFL;
+    private FrameLayout cPipModePublisherFL;
     private float dX, dY, mCornerX, mCornerY ;
     private int screenHeight, screenWidth;
     private boolean callStartedFlag;
@@ -123,6 +125,10 @@ public class OutGoingCallActivity extends AppCompatActivity
     public static final String TOK_BOX_APIKEY = "46296242";
     public static final int RC_SETTINGS_SCREEN_PERM = 123;
     public static final int RC_VIDEO_APP_PERM = 124;
+
+
+    PictureInPictureParams pip_params;
+    Rational aspectRatio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,6 +169,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mSpeakerIB = (ToggleButton) findViewById(R.id.speaker_iv);
         mMuteTB = (ToggleButton) findViewById(R.id.mute_iv);
         mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
+        cPipModePublisherFL = (FrameLayout) findViewById(R.id.pip_mode_publisher_fl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -176,9 +183,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
 
-        //Minimize (PIP) feature don't work in versions lower than 24 - so hide the back nav btn
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
-                   mBackNavigationFL.setVisibility(View.GONE);
+        initPIP();
 
         //Set lang flag , language display name and pic
         mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
@@ -404,16 +409,62 @@ public class OutGoingCallActivity extends AppCompatActivity
         }
     }
 
+    private void initPIP(){
+        //Minimize (PIP) feature don't work in versions lower than 24 - so hide the back nav btn
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+                getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
+            mBackNavigationFL.setVisibility(View.GONE);
+
+        //Init picture-in-picture
+        aspectRatio = new Rational(1, 2);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)){
+            pip_params = new PictureInPictureParams.Builder()
+                    .setAspectRatio(aspectRatio)
+                    .build();
+            setPictureInPictureParams(pip_params);
+        }
+    }
     /**
      * Minimize feature (Picture-in-picture) work only from android 7 - (24)
      * Work only if call started
      */
     private void minimizeActivity(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                  OutGoingCallActivity.this.enterPictureInPictureMode();
 
-        //else -
-        // TODO: 5/30/2019 Create minimize feature for versions older than 7
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+               getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
+                        OutGoingCallActivity.this.enterPictureInPictureMode();
+
+            //else -
+            // TODO: 5/30/2019 Create minimize feature for versions older than android 7
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged (boolean isInPictureInPictureMode, Configuration newConfig) {
+            if (isInPictureInPictureMode) {
+                    // Hide the full-screen UI (controls, etc.) while in picture-in-
+                    mInsideCallBtnsCL.setVisibility(View.GONE);
+                    mBackNavigationFL.setVisibility(View.GONE);
+                    mTitleTV.setVisibility(View.GONE);
+
+
+                mPublisherFL.removeView(mPublisher.getView());
+                mPublisherFL.setVisibility(View.GONE);
+                cPipModePublisherFL.setVisibility(View.VISIBLE);
+                cPipModePublisherFL.addView(mPublisher.getView());
+
+            } else {
+                    // Restore the full-screen UI.
+                    mInsideCallBtnsCL.setVisibility(View.VISIBLE);
+                    mBackNavigationFL.setVisibility(View.VISIBLE);
+                    mTitleTV.setVisibility(View.VISIBLE);
+
+
+                cPipModePublisherFL.removeView(mPublisher.getView());
+                cPipModePublisherFL.setVisibility(View.GONE);
+                mPublisherFL.setVisibility(View.VISIBLE);
+                mPublisherFL.addView(mPublisher.getView());
+            }
     }
 
 
@@ -694,21 +745,6 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    public void onPictureInPictureModeChanged (boolean isInPictureInPictureMode, Configuration newConfig) {
-        if (isInPictureInPictureMode) {
-            // Hide the full-screen UI (controls, etc.) while in picture-in-
-            mInsideCallBtnsCL.setVisibility(View.GONE);
-            mBackNavigationFL.setVisibility(View.GONE);
-            mTitleTV.setVisibility(View.GONE);
-        } else {
-            // Restore the full-screen UI.
-            mInsideCallBtnsCL.setVisibility(View.VISIBLE);
-            mBackNavigationFL.setVisibility(View.VISIBLE);
-            mTitleTV.setVisibility(View.VISIBLE);
-        }
     }
 
     @Override

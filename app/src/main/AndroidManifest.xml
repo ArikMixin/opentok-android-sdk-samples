@@ -30,7 +30,8 @@
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
-            ></activity>
+            android:launchMode="singleTask" ></activity>
+            <!--android:launchMode="singleTask"-->
         <activity android:name=".ui.AudioVideoCall.IncomingCallActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"></activity>
