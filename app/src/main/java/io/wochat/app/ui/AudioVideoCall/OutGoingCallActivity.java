@@ -80,7 +80,7 @@ public class OutGoingCallActivity extends AppCompatActivity
             mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mDeclineCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
             mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV, mStatusTV;
-    private Chronometer mTimerChr;
+    private Chronometer mTimerChr , mPipModeTimerChr;
     private ImageView mCameraSwitchIV;
     private FrameLayout mBackNavigationFL, mCameraPauseFullFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL;
@@ -117,6 +117,10 @@ public class OutGoingCallActivity extends AppCompatActivity
     private boolean mCallEndedFlag;
     private boolean mCallerCamOpen = true;
     private boolean mSelfCamOpen = true;
+    private PictureInPictureParams pip_params;
+    private Rational aspectRatio;
+    private RelativeLayout mParticipantNameRL;
+
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
                                                                      Manifest.permission.RECORD_AUDIO };
 
@@ -125,10 +129,6 @@ public class OutGoingCallActivity extends AppCompatActivity
     public static final String TOK_BOX_APIKEY = "46296242";
     public static final int RC_SETTINGS_SCREEN_PERM = 123;
     public static final int RC_VIDEO_APP_PERM = 124;
-
-
-    PictureInPictureParams pip_params;
-    Rational aspectRatio;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,6 +152,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mParticipantLangVideoTV = (TextView) findViewById(R.id.participant_lang_video_tv);
         mStatusTV = (TextView) findViewById(R.id.status_tv);
         mTimerChr = (Chronometer) findViewById(R.id.timer_chr);
+//        mPipModeTimerChr = (Chronometer) findViewById(R.id.pip_mode_timer_chr);
         mParticipantPicAudioCIV = (CircleImageView) findViewById(R.id.participant_pic_audio_civ);
         mParticipantPicAudioFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_audio_civ);
         mParticipantPicVideoCIV = (CircleImageView) findViewById(R.id.participant_pic_video_civ);
@@ -170,6 +171,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mMuteTB = (ToggleButton) findViewById(R.id.mute_iv);
         mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
         cPipModePublisherFL = (FrameLayout) findViewById(R.id.pip_mode_publisher_fl);
+        mParticipantNameRL = (RelativeLayout) findViewById(R.id.participant_name_rl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -411,8 +413,8 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     private void initPIP(){
         //Minimize (PIP) feature don't work in versions lower than 24 - so hide the back nav btn
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
-                getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N ||
+                !getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
             mBackNavigationFL.setVisibility(View.GONE);
 
         //Init picture-in-picture
@@ -442,16 +444,35 @@ public class OutGoingCallActivity extends AppCompatActivity
     @Override
     public void onPictureInPictureModeChanged (boolean isInPictureInPictureMode, Configuration newConfig) {
             if (isInPictureInPictureMode) {
-                    // Hide the full-screen UI (controls, etc.) while in picture-in-
-                    mInsideCallBtnsCL.setVisibility(View.GONE);
-                    mBackNavigationFL.setVisibility(View.GONE);
-                    mTitleTV.setVisibility(View.GONE);
+                // Hide the full-screen UI - (picture-in-picture mode)
+                mInsideCallBtnsCL.setVisibility(View.GONE);
+                mBackNavigationFL.setVisibility(View.GONE);
+                mTitleTV.setVisibility(View.GONE);
+
+                    if (mVideoFlag){
+                        mPublisherFL.removeView(mPublisher.getView());
+                        mPublisherFL.setVisibility(View.GONE);
+                        cPipModePublisherFL.setVisibility(View.VISIBLE);
+                        cPipModePublisherFL.addView(mPublisher.getView());
+                        mMainVideoRL.setVisibility(View.GONE);
+                    }else {
+                        mParticipantNameRL.setVisibility(View.GONE);
+                        mParticipantLangAudioTV.setVisibility(View.GONE);
+                    }
+
+//                //Timer
+//                mTimerChr.get
+//                mPipModeTimerChr.setBase(SystemClock.elapsedRealtime());
+//                mTimerChr.setVisibility(View.GONE);
+//                mPipModeTimerChr.start();
+//                mTimerChr.stop();
 
 
-                mPublisherFL.removeView(mPublisher.getView());
-                mPublisherFL.setVisibility(View.GONE);
-                cPipModePublisherFL.setVisibility(View.VISIBLE);
-                cPipModePublisherFL.addView(mPublisher.getView());
+//                RelativeLayout.LayoutParams layoutParams =
+//                        (RelativeLayout.LayoutParams)mTimerChr.getLayoutParams();
+//                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
+//                layoutParams.setMargins(5, 0, 0, 0);
+//                mTimerChr.setLayoutParams(layoutParams);
 
             } else {
                     // Restore the full-screen UI.
@@ -459,11 +480,27 @@ public class OutGoingCallActivity extends AppCompatActivity
                     mBackNavigationFL.setVisibility(View.VISIBLE);
                     mTitleTV.setVisibility(View.VISIBLE);
 
+                        if(mVideoFlag) {
+                            mMainVideoRL.setVisibility(View.VISIBLE);
+                            cPipModePublisherFL.removeView(mPublisher.getView());
+                            cPipModePublisherFL.setVisibility(View.GONE);
+                            mPublisherFL.setVisibility(View.VISIBLE);
+                            mPublisherFL.addView(mPublisher.getView());
+                        }else{
+                            mParticipantNameRL.setVisibility(View.VISIBLE);
+                            mParticipantLangAudioTV.setVisibility(View.VISIBLE);
+                        }
 
-                cPipModePublisherFL.removeView(mPublisher.getView());
-                cPipModePublisherFL.setVisibility(View.GONE);
-                mPublisherFL.setVisibility(View.VISIBLE);
-                mPublisherFL.addView(mPublisher.getView());
+
+
+//                //Timer
+//                mTimerChr.setVisibility(View.VISIBLE);
+//                mTimerChr.setBase(SystemClock.elapsedRealtime());
+//                mTimerChr.start();
+//                mPipModeTimerChr.stop();
+//                mPipModeTimerChr.setVisibility(View.GONE);
+
+
             }
     }
 
@@ -787,11 +824,9 @@ public class OutGoingCallActivity extends AppCompatActivity
         }
 
         Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                mCallingSound.stop();
-                finish();
-            }
+        handler.postDelayed(() -> {
+            mCallingSound.stop();
+            finish();
         }, CLOSING_TIME);
     }
 
