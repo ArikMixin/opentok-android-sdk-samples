@@ -1,6 +1,7 @@
 package io.wochat.app.ui.AudioVideoCall;
 
 import android.Manifest;
+import android.app.PictureInPictureParams;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -8,16 +9,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
+import android.util.Rational;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -98,6 +102,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private String mSessionID = "";
     private ToggleButton mCameraBtnVideo, mCameraBtnAudio;
     private ToggleButton mSpeakerIB, mMuteTB;
+    private ConstraintLayout mInsideCallBtnsCL;
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
@@ -157,6 +162,7 @@ public class OutGoingCallActivity extends AppCompatActivity
         mCameraBtnAudio = (ToggleButton) findViewById(R.id.camera_btn_audio_tb);
         mSpeakerIB = (ToggleButton) findViewById(R.id.speaker_iv);
         mMuteTB = (ToggleButton) findViewById(R.id.mute_iv);
+        mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -688,6 +694,21 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged (boolean isInPictureInPictureMode, Configuration newConfig) {
+        if (isInPictureInPictureMode) {
+            // Hide the full-screen UI (controls, etc.) while in picture-in-
+            mInsideCallBtnsCL.setVisibility(View.GONE);
+            mBackNavigationFL.setVisibility(View.GONE);
+            mTitleTV.setVisibility(View.GONE);
+        } else {
+            // Restore the full-screen UI.
+            mInsideCallBtnsCL.setVisibility(View.VISIBLE);
+            mBackNavigationFL.setVisibility(View.VISIBLE);
+            mTitleTV.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
