@@ -23,7 +23,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.LinearInterpolator;
 import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
@@ -171,6 +170,10 @@ public class OutGoingCallActivity extends AppCompatActivity
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
 
+        //Minimize (PIP) feature don't work in versions lower than 24 - so hide the back nav btn
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
+                   mBackNavigationFL.setVisibility(View.GONE);
+
         //Set lang flag , language display name and pic
         mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
         try {
@@ -249,15 +252,15 @@ public class OutGoingCallActivity extends AppCompatActivity
         mPublisher.setPublisherListener(this);
 
         if(mIsVideoCall) { //Only if it is video call - show preview
-                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                                                                 BaseVideoRenderer.STYLE_VIDEO_FILL);
                 mPublisher.startPreview();
                 mSubscriberFL.addView(mPublisher.getView());
         }else{ // Audio call
-            Log.d("ttttttt", "startCameraPreview: ");
-            mPublisher.setPublishVideo(false);
-            // switch from loud speaker to phone speaker (voice session)
-            mSpeakerIB.setChecked(false);
-            AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
+                mPublisher.setPublishVideo(false);
+                // switch from loud speaker to phone speaker (voice session)
+                mSpeakerIB.setChecked(false);
+                AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
         }
     }
 
@@ -321,13 +324,9 @@ public class OutGoingCallActivity extends AppCompatActivity
         switch (view.getId()) {
             case R.id.back_navigation_fl:
                         if(callStartedFlag) {
-                            //sendXMPPmsg(Message.RTC_CODE_CLOSE);
-                            //his.moveTaskToBack(true);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        OutGoingCallActivity.this.enterPictureInPictureMode();
-                            }
+                             minimizeActivity();
                         }else
-                            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                             sendXMPPmsg(Message.RTC_CODE_REJECTED);
             break;
 
             case R.id.decline_civ:
@@ -381,12 +380,37 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        if(callStartedFlag)
-            sendXMPPmsg(Message.RTC_CODE_CLOSE);
-        else
-            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+//        super.onBackPressed();
+        if(callStartedFlag) {
+              minimizeActivity();
+        }else
+              sendXMPPmsg(Message.RTC_CODE_REJECTED);
     }
+
+    /**
+     * switches the activity into PIP mode instead of going into the background (Only inside a call)
+     */
+    @Override
+    public void onUserLeaveHint () {
+        // Minimize fetchers work only from android 7 - (24)
+        if (callStartedFlag) {
+              minimizeActivity();
+        }
+    }
+
+    /**
+     * Minimize feature (Picture-in-picture) work only from android 7 - (24)
+     * Work only if call started
+     */
+    private void minimizeActivity(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                  OutGoingCallActivity.this.enterPictureInPictureMode();
+
+        //else -
+        // TODO: 5/30/2019 Create minimize feature for versions older than 7
+    }
+
+
 
     private void cameraBtnAudio() {
         turnCallType(true);
