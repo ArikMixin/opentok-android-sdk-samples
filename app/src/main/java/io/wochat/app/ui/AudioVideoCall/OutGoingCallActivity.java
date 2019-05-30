@@ -324,7 +324,7 @@ public class OutGoingCallActivity extends AppCompatActivity
                             //sendXMPPmsg(Message.RTC_CODE_CLOSE);
                             //his.moveTaskToBack(true);
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                OutGoingCallActivity.this.enterPictureInPictureMode();
+                                        OutGoingCallActivity.this.enterPictureInPictureMode();
                             }
                         }else
                             sendXMPPmsg(Message.RTC_CODE_REJECTED);
