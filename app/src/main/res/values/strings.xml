@@ -102,5 +102,8 @@
     <string name="permissions_expl_out">This app needs access to your camera and mic to make video calls</string>
     <string name="permissions_expl_in">In order to answer this call you must confirm the permissions</string>
     <string name="connecting">Connecting....</string>
+    <string name="listening">Listening...</string>
+
+
 
 </resources>

@@ -377,9 +377,9 @@ public class IncomingCallActivity extends AppCompatActivity implements
          case R.id.speaker_iv:
 
                 if(isChecked)
-                    AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.SpeakerPhone);
-                else
                     AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
+                else
+                    AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.SpeakerPhone);
         break;
         }
     }

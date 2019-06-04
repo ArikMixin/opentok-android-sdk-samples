@@ -18,6 +18,7 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
@@ -28,6 +29,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.TranslateAnimation;
 import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
@@ -37,6 +40,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.opentok.android.AudioDeviceManager;
 import com.opentok.android.BaseAudioDevice;
 import com.opentok.android.BaseVideoRenderer;
@@ -76,21 +81,21 @@ public class OutGoingCallActivity extends AppCompatActivity
     private static final String TAG = "OutGoingCallActivity";
     private static final String TOKBOX = "TokBox";
 
-    private CircleImageView mMicFlagCIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
+    private CircleImageView mMicFlagCIV, mMicFlagP2T_CIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
             mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mDeclineCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
             mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV, mStatusTV;
-    private Chronometer mTimerChr , mPipModeTimerChr;
-    private ImageView mCameraSwitchIV;
+    private Chronometer mTimerChr;
+    private ImageView mCameraSwitchIV, mTranslatorMicIV, mTranslatorMicP2T_IV;
     private FrameLayout mBackNavigationFL, mCameraPauseFullFL;
-    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL;
+    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL, mTranslateRL, mLockRL;
     private String mFixedParticipantId;
     private Locale loc;
     private int mFlagDrawable;
     private String mFullLangName;
     private boolean mIsVideoCall;
     private String mParticipantId, mParticipantName, mParticipantLang, mParticipantPic, mConversationId;
-    private String mSelfId;
+    private String mSelfId, mSelfLang;
     private VideoAudioCallViewModel videoAudioCallViewModel;
     private VideoAudioCall mVideoAudioCall;
     private String errorMsg;
@@ -98,6 +103,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     private WCService mService;
     private MediaPlayer mCallingSound, mDeclineSound, mBusySound ;
     private AlphaAnimation mCallTXTanimation;
+    private TranslateAnimation mTranslateAnimation;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
     private String mSessionID = "";
@@ -111,7 +117,8 @@ public class OutGoingCallActivity extends AppCompatActivity
     private FrameLayout mSubscriberFL;
     private FrameLayout mEffectFL;
     private FrameLayout cPipModePublisherFL;
-    private float dX, dY, mCornerX, mCornerY ;
+    private RelativeLayout mPushToTalkFL;
+    private float dX, dY, mCornerX, mCornerY ,y1, y2,deltaY;
     private int screenHeight, screenWidth;
     private boolean callStartedFlag;
     private boolean mCallEndedFlag;
@@ -119,8 +126,11 @@ public class OutGoingCallActivity extends AppCompatActivity
     private boolean mSelfCamOpen = true;
     private PictureInPictureParams pip_params;
     private Rational aspectRatio;
-    private RelativeLayout mParticipantNameRL;
-
+    private RelativeLayout mParticipantNameRL, mDeclineRL;
+    private TextView mListeningTV;
+    private ImageView mArrowsIV;
+    private boolean mPush2talk_locked;
+    private ImageView mLockIV;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
                                                                      Manifest.permission.RECORD_AUDIO };
 
@@ -129,7 +139,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     public static final String TOK_BOX_APIKEY = "46296242";
     public static final int RC_SETTINGS_SCREEN_PERM = 123;
     public static final int RC_VIDEO_APP_PERM = 124;
-
+    static final int MIN_DISTANCE = 500;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,6 +151,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     private void initViews() {
         mMicFlagCIV = (CircleImageView) findViewById(R.id.mic_flag_civ);
+        mMicFlagP2T_CIV = (CircleImageView) findViewById(R.id.mic_flag_p2t_civ);
         mTitleTV = (TextView) findViewById(R.id.title_tv);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
         mBackNavigationFL = (FrameLayout) findViewById(R.id.back_navigation_fl);
@@ -172,6 +183,15 @@ public class OutGoingCallActivity extends AppCompatActivity
         mInsideCallBtnsCL = (ConstraintLayout) findViewById(R.id.inside_call_btns_cl);
         cPipModePublisherFL = (FrameLayout) findViewById(R.id.pip_mode_publisher_fl);
         mParticipantNameRL = (RelativeLayout) findViewById(R.id.participant_name_rl);
+        mTranslatorMicIV = (ImageView) findViewById(R.id.translator_mic_iv);
+        mTranslatorMicP2T_IV = (ImageView) findViewById(R.id.translator_mic_p2t_iv);
+        mPushToTalkFL = (RelativeLayout) findViewById(R.id.push_to_talk_fl);
+        mTranslateRL = (RelativeLayout) findViewById(R.id.translate_rl);
+        mDeclineRL = (RelativeLayout) findViewById(R.id.decline_rl);
+        mLockRL = (RelativeLayout) findViewById(R.id.lock_rl);
+        mListeningTV = (TextView) findViewById(R.id.listening_tv);
+        mArrowsIV = (ImageView) findViewById(R.id.arrows_iv);
+        mLockIV = (ImageView) findViewById(R.id.lock_iv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -179,23 +199,17 @@ public class OutGoingCallActivity extends AppCompatActivity
         mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
         mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
         mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
-
         mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
-//      mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
+        mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
 
         initPIP();
 
         //Set lang flag , language display name and pic
-        mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
-        try {
-            loc = new Locale(mParticipantLang);
-            mFullLangName = loc.getDisplayLanguage();
-        } catch (Exception e) {
-            Log.d(TAG,"OutGoingCallActivity - " + e.getMessage());
-                e.printStackTrace();
-        }
+        setLangAndDisplayName();
+
+        mMicFlagCIV.setEnabled(false);
 
         //Phone number
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
@@ -223,14 +237,28 @@ public class OutGoingCallActivity extends AppCompatActivity
         mCallTXTanimation.setRepeatMode(Animation.REVERSE);
         mStatusTV.startAnimation(mCallTXTanimation);
 
+        mTranslateAnimation = new TranslateAnimation(
+                TranslateAnimation.ABSOLUTE, 0f,
+                TranslateAnimation.ABSOLUTE, 0f,
+                TranslateAnimation.RELATIVE_TO_PARENT, 0f,
+                TranslateAnimation.RELATIVE_TO_PARENT, 0.1f);
+        mTranslateAnimation.setDuration(500);
+        mTranslateAnimation.setRepeatCount(Animation.INFINITE);
+        mTranslateAnimation.setRepeatMode(Animation.REVERSE);
+        mTranslateAnimation.setInterpolator(new LinearInterpolator());
+
+        mPushToTalkFL.setVisibility(View.VISIBLE);
+        mPushToTalkFL.setAlpha(0.0f);
+
         mRTCcodeBR = new RTCcodeBR();
 
         mBackNavigationFL.setOnClickListener(this);
         mDeclineCIV.setOnClickListener(this);
-        mPublisherFL.setOnTouchListener(this);
         mCameraBtnVideo.setOnClickListener(this);
         mCameraBtnAudio.setOnClickListener(this);
         mCameraSwitchIV.setOnClickListener(this);
+        mPublisherFL.setOnTouchListener(this);
+        mMicFlagCIV.setOnTouchListener(this);
         mMuteTB.setOnCheckedChangeListener(this);
         mSpeakerIB.setOnCheckedChangeListener(this);
 
@@ -238,6 +266,19 @@ public class OutGoingCallActivity extends AppCompatActivity
                 videoCall();
         else
                 audioCall();
+    }
+
+    private void setLangAndDisplayName() {
+            mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
+            try {
+                loc = new Locale(mParticipantLang);
+                mFullLangName = loc.getDisplayLanguage();
+                mMicFlagCIV.setImageResource(mFlagDrawable);
+                mMicFlagP2T_CIV.setImageResource(mFlagDrawable);
+            } catch (Exception e) {
+                Log.d(TAG, "OutGoingCallActivity - " + e.getMessage());
+                e.printStackTrace();
+            }
     }
 
     /**
@@ -265,15 +306,15 @@ public class OutGoingCallActivity extends AppCompatActivity
         mPublisher.setPublisherListener(this);
 
         if(mIsVideoCall) { //Only if it is video call - show preview
-                mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                                                                 BaseVideoRenderer.STYLE_VIDEO_FILL);
-                mPublisher.startPreview();
-                mSubscriberFL.addView(mPublisher.getView());
+                    mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                                                                     BaseVideoRenderer.STYLE_VIDEO_FILL);
+                    mPublisher.startPreview();
+                    mSubscriberFL.addView(mPublisher.getView());
         }else{ // Audio call
-                mPublisher.setPublishVideo(false);
-                // switch from loud speaker to phone speaker (voice session)
-                mSpeakerIB.setChecked(false);
-                AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
+                    mPublisher.setPublishVideo(false);
+                    // switch from loud speaker to phone speaker (voice session)
+                    mSpeakerIB.setChecked(false);
+                    AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
         }
     }
 
@@ -391,6 +432,150 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         }
     }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent event) {
+        switch(view.getId()){
+            case R.id.publisher_fl:
+                    publisherWindowTouch(view,event);
+                break;
+            case R.id.mic_flag_civ:
+                      micTranslateTouch(view,event); // Push to talk btn
+                break;
+        }
+        return true;
+    }
+
+    private void  publisherWindowTouch(View view, MotionEvent event){
+        switch (event.getAction()) {
+
+            case MotionEvent.ACTION_DOWN: //--Hold--
+                dX = view.getX() - event.getRawX();
+                dY = view.getY() - event.getRawY();
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                view.animate()
+                        .x(event.getRawX() + dX)
+                        .y(event.getRawY() + dY)
+                        .setDuration(0)
+                        .start();
+                break;
+
+            case MotionEvent.ACTION_UP: //--Release--
+
+                if(event.getRawX() < screenWidth / 2)
+                    mCornerX = 25;
+                else
+                    mCornerX = screenWidth - view.getWidth() -25; //  - 450
+
+                if(event.getRawY() < screenHeight / 2)
+                    mCornerY = 25;
+                else
+                    mCornerY = screenHeight - view.getHeight() -125; // 900
+
+                view.animate()
+                        .x(mCornerX)
+                        .y(mCornerY)
+                        .setDuration(400)
+                        .start();
+                break;
+            default:
+        }
+    }
+
+    private void micTranslateTouch(View view, MotionEvent event) {
+
+
+
+               switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN: //--Hold--
+                        mPush2talk_locked = false;
+                        mPublisherFL.setVisibility(View.GONE);
+                         mLockRL.setVisibility(View.VISIBLE);
+                        ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
+
+                        //SlideUp
+                        y1 = event.getY();
+
+                break;
+
+                case MotionEvent.ACTION_MOVE: //--Move--
+                     //SlideUp
+                         y2 = event.getY();
+                         deltaY = y2 - y1;
+
+                        if (Math.abs(deltaY) > MIN_DISTANCE && y2 < y1)
+                        {
+                                    //User lock the push 2 talk
+                                    mLockRL.setVisibility(View.GONE);
+                                    mTranslatorMicP2T_IV.setImageResource(R.drawable.interperter_locked);
+                                    // TODO: 6/3/2019 when release - send the voice to text (Make The Translation)
+                                    mPush2talk_locked = true;
+                        }
+                break;
+
+
+                case MotionEvent.ACTION_UP: //--Release--
+
+                         if(!mPush2talk_locked) {
+                                ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f)
+                                        .withEndAction(() -> mPublisherFL.setVisibility(View.VISIBLE));
+
+                             // TODO: 6/3/2019 when release - send the voice to text (Make The Translation)
+
+                         }
+
+                    break;
+
+            }
+
+
+
+
+
+
+
+
+    /*    switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN: //--Hold--
+                        mPublisherFL.setVisibility(View.GONE);
+                         mLockRL.setVisibility(View.VISIBLE);
+                        ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
+
+                        //SlideUp
+                        y1 = event.getY();
+
+                break;
+
+                case MotionEvent.ACTION_UP: //--Release--
+
+
+                        //SlideUp
+                        y2 = event.getY();
+                         deltaY = y2 - y1;
+                        if (Math.abs(deltaY) > MIN_DISTANCE)
+                        {
+                            //User lock the push 2 talk
+                            mLockRL.setVisibility(View.GONE);
+                            mTranslatorMicP2T_IV.setImageResource(R.drawable.interperter_locked);
+                        //    mTranslatorMicP2T_IV.setEnabled(true);
+                            // TODO: 6/3/2019 when release - send the voice to text (Make The Translation)
+
+                        }else{
+                            ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f)
+                                    .withEndAction(()-> mPublisherFL.setVisibility(View.VISIBLE));
+
+                            // TODO: 6/3/2019 when release - send the voice to text (Make The Translation)
+
+                        }
+
+                    break;
+
+            }*/
+
+    }
+
     @Override
     public void onBackPressed() {
 //        super.onBackPressed();
@@ -514,11 +699,6 @@ public class OutGoingCallActivity extends AppCompatActivity
         mSubscriberFL.setVisibility(View.VISIBLE);
         mPublisherFL.setVisibility(View.VISIBLE);
 
-//        if(mCallerCamOpen)
-//            mCameraPauseFullFL.setVisibility(View.VISIBLE);
-//        else
-//            mCameraPauseFullFL.setVisibility(View.GONE);
-
         if(mPublisher != null) { // When open video from audio call
             mPublisher.setPublishVideo(true);
             mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
@@ -570,49 +750,6 @@ public class OutGoingCallActivity extends AppCompatActivity
 
             audioCall();
         }
-    }
-
-    @Override
-    public boolean onTouch(View view, MotionEvent event) {
-        switch (event.getAction()) {
-
-            //Hold the view
-            case MotionEvent.ACTION_DOWN:
-                dX = view.getX() - event.getRawX();
-                dY = view.getY() - event.getRawY();
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-                view.animate()
-                        .x(event.getRawX() + dX)
-                        .y(event.getRawY() + dY)
-                        .setDuration(0)
-                        .start();
-                break;
-
-            //Release the view
-            case MotionEvent.ACTION_UP:
-
-                if(event.getRawX() < screenWidth / 2)
-                    mCornerX = 25;
-                else
-                    mCornerX = screenWidth - view.getWidth() -25; //  - 450
-
-                if(event.getRawY() < screenHeight / 2)
-                    mCornerY = 25;
-                else
-                    mCornerY = screenHeight - view.getHeight() -125; // 900
-
-                view.animate()
-                        .x(mCornerX)
-                        .y(mCornerY)
-                        .setDuration(400)
-                        .start();
-                break;
-            default:
-                return false;
-        }
-        return true;
     }
 
     //Send Massage to the receiver
@@ -779,7 +916,6 @@ public class OutGoingCallActivity extends AppCompatActivity
                 turnCallType(true);
                 // mSelfCamOpen = false;
         }
-
         mCameraPauseFullFL.setVisibility(View.GONE);
         mSubscriberFL.setVisibility(View.VISIBLE);
     }
@@ -790,9 +926,7 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     @Override
-    public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) {
-
-    }
+    public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) { }
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -832,10 +966,10 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     private void callStarted() {
         callStartedFlag = true;
+        mArrowsIV.startAnimation(mTranslateAnimation);
 
         //Stop sounds
         mCallingSound.stop();
-
         mCallTXTanimation.cancel();
         mStatusRL.setVisibility(View.GONE);
 
@@ -843,6 +977,21 @@ public class OutGoingCallActivity extends AppCompatActivity
         mTimerChr.setVisibility(View.VISIBLE);
         mTimerChr.setBase(SystemClock.elapsedRealtime());
         mTimerChr.start();
+
+        //Enable translate btn lang if self and participant have different languages
+        if (!mSelfLang.equals(mParticipantLang)) {
+                mMicFlagCIV.setEnabled(true);
+                mTranslatorMicIV.setEnabled(true);
+                mTranslatorMicIV.setImageResource(R.drawable.translator_mic_enabled);
+                mMicFlagCIV.bringToFront();
+
+                mTranslatorMicP2T_IV.setEnabled(true);
+                mTranslatorMicP2T_IV.setImageResource(R.drawable.translator_mic_enabled);
+                mMicFlagP2T_CIV.bringToFront();
+        }else{
+                mTranslatorMicIV.setEnabled(false);
+                mTranslatorMicIV.setImageResource(R.drawable.translator_mic_disabled);
+        }
     }
 
     //TokBox
@@ -878,7 +1027,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
             //*** Show the receiver video (Small Windows) Only for video calls
             if (mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER)
-                        animateAndAddView();
+                                                            animateAndAddView();
         }
     }
 
