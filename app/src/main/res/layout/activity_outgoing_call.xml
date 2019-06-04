@@ -475,21 +475,12 @@
 
 
 
-
-
-
-
-
-
-
-
-
     <RelativeLayout
         android:id="@+id/push_to_talk_fl"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#D2000000"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <!--lock rl-->
         <RelativeLayout
