@@ -7,8 +7,7 @@ import android.support.annotation.NonNull;
 import io.wochat.app.WCApplication;
 import io.wochat.app.WCRepository;
 import io.wochat.app.model.VideoAudioCall;
-import io.wochat.app.ui.AudioVideoCall.IncomingCallActivity;
-import io.wochat.app.ui.AudioVideoCall.OutGoingCallActivity;
+import io.wochat.app.ui.AudioVideoCall.CallActivity;
 
 public class VideoAudioCallViewModel extends AndroidViewModel {
     private WCRepository mRepository;
@@ -18,12 +17,12 @@ public class VideoAudioCallViewModel extends AndroidViewModel {
         mRepository = ((WCApplication) application).getRepository();
     }
 
-    public void createSessionsAndToken(OutGoingCallActivity outGoingCallActivity, String sessionType){
-            mRepository.createSession(outGoingCallActivity, sessionType);
+    public void createSessionsAndToken(CallActivity callActivity, String sessionType){
+            mRepository.createSession(callActivity, sessionType);
     }
 
-    public void createTokenInExistingSession(IncomingCallActivity outGoingCallActivity, String sessionId, String tokenRoleType){
-        mRepository.createToken(outGoingCallActivity, sessionId , tokenRoleType);
+    public void createTokenInExistingSession(CallActivity callActivity, String sessionId, String tokenRoleType){
+        mRepository.createToken(callActivity, sessionId , tokenRoleType);
     }
 
     public MutableLiveData<VideoAudioCall> getSessionAndToken() {

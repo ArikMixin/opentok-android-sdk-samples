@@ -68,7 +68,7 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 import com.opentok.android.Session;
 
-public class OutGoingCallActivity extends AppCompatActivity
+public class CallActivity extends AppCompatActivity
         implements View.OnClickListener,
         WCRepository.OnSessionResultListener,
         EasyPermissions.PermissionCallbacks,
@@ -77,22 +77,24 @@ public class OutGoingCallActivity extends AppCompatActivity
         View.OnTouchListener, SubscriberKit.VideoListener,
         CompoundButton.OnCheckedChangeListener {
 
-    private static final String TAG = "OutGoingCallActivity";
+    private static final String TAG = "CallActivity";
     private static final String TOKBOX = "TokBox";
 
+    private RelativeLayout mAcceptRL;
+    private CircleImageView mDeclineIncomingCIV, mAcceptIncomingCIV;
     private CircleImageView mMicFlagCIV, mMicFlagP2T_CIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
-            mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV, mDeclineCIV;
+            mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
             mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV, mStatusTV;
     private Chronometer mTimerChr;
     private ImageView mCameraSwitchIV, mTranslatorMicIV, mTranslatorMicP2T_IV;
     private FrameLayout mBackNavigationFL, mCameraPauseFullFL;
-    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL, mTranslateRL, mLockRL;
+    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL, mTranslateRL, mLockRL, mDeclineInsideRL;
     private String mFixedParticipantId;
     private Locale loc;
     private int mFlagDrawable;
     private String mFullLangName;
-    private boolean mIsVideoCall;
+    private boolean mIsVideoCall, mIsOutGoingCall;
     private String mParticipantId, mParticipantName, mParticipantLang, mParticipantPic, mConversationId;
     private String mSelfId, mSelfLang;
     private VideoAudioCallViewModel videoAudioCallViewModel;
@@ -100,19 +102,20 @@ public class OutGoingCallActivity extends AppCompatActivity
     private String errorMsg;
     private boolean mVideoFlag;
     private WCService mService;
-    private MediaPlayer mCallingSound, mDeclineSound, mBusySound ;
+    private MediaPlayer mCallingSound, mDeclineSound, mBusySound, mIncomingCallSound;
     private AlphaAnimation mCallTXTanima;
-    private TranslateAnimation mTranslateAnima;
+    private TranslateAnimation mTranslateAnima, mAcceptBtnAnim;
     private ScaleAnimation reSizeAnim;
     private Message message;
     private RTCcodeBR mRTCcodeBR;
-    private String mSessionID = "";
     private ToggleButton mCameraBtnVideo, mCameraBtnAudio;
     private ToggleButton mSpeakerIB, mMuteTB;
-    private ConstraintLayout mInsideCallBtnsCL;
+    private ConstraintLayout mInsideCallBtnsCL, mActionBtnsCL;
     private Session mSession;
     private Publisher mPublisher;
     private Subscriber mSubscriber;
+    private Stream mStream;
+    private String mSessionID;
     private FrameLayout mPublisherFL;
     private FrameLayout mSubscriberFL;
     private FrameLayout mEffectFL;
@@ -126,11 +129,12 @@ public class OutGoingCallActivity extends AppCompatActivity
     private boolean mSelfCamOpen = true;
     private PictureInPictureParams pip_params;
     private Rational aspectRatio;
-    private RelativeLayout mParticipantNameRL, mDeclineRL;
-    private TextView mListeningTV;
+    private RelativeLayout mParticipantNameRL, mDeclineRL, incomingCallBtnsRL, mConnectingRL;
+    private TextView mListeningTV, mConnectingTV;
     private ImageView mArrowsIV;
     private boolean mPush2talk_locked;
     private ImageView mLockIV;
+    volatile boolean sessitonRecivedFlag;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
 
@@ -141,17 +145,23 @@ public class OutGoingCallActivity extends AppCompatActivity
     public static final int RC_VIDEO_APP_PERM = 124;
     public static final int MIN_DISTANCE = 500;
     public static final int ANIMATION_DURATION = 500;
+    public static boolean activityActiveFlag;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_outgoing_call);
+        setContentView(R.layout.activity_call);
 
         initViews();
         requestPermissions();
     }
 
     private void initViews() {
+        activityActiveFlag = true;
+
+        mDeclineIncomingCIV = (CircleImageView) findViewById(R.id.decline_incoming_civ);
+        mAcceptIncomingCIV = (CircleImageView) findViewById(R.id.accept_incoming_civ);
+        mAcceptRL = (RelativeLayout) findViewById(R.id.accept_rl);
         mMicFlagCIV = (CircleImageView) findViewById(R.id.mic_flag_civ);
         mMicFlagP2T_CIV = (CircleImageView) findViewById(R.id.mic_flag_p2t_civ);
         mTitleTV = (TextView) findViewById(R.id.title_tv);
@@ -165,12 +175,10 @@ public class OutGoingCallActivity extends AppCompatActivity
         mParticipantLangVideoTV = (TextView) findViewById(R.id.participant_lang_video_tv);
         mStatusTV = (TextView) findViewById(R.id.status_tv);
         mTimerChr = (Chronometer) findViewById(R.id.timer_chr);
-//        mPipModeTimerChr = (Chronometer) findViewById(R.id.pip_mode_timer_chr);
         mParticipantPicAudioCIV = (CircleImageView) findViewById(R.id.participant_pic_audio_civ);
         mParticipantPicAudioFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_audio_civ);
         mParticipantPicVideoCIV = (CircleImageView) findViewById(R.id.participant_pic_video_civ);
         mParticipantPicVideoFlagCIV = (CircleImageView) findViewById(R.id.participant_pic_flag_video_civ);
-        mDeclineCIV = (CircleImageView) findViewById(R.id.decline_civ);
         mMainAudioRL = (RelativeLayout) findViewById(R.id.main_audio_rl);
         mMainVideoRL = (RelativeLayout) findViewById(R.id.main_video_rl);
         mStatusRL = (RelativeLayout) findViewById(R.id.status_rl);
@@ -194,6 +202,11 @@ public class OutGoingCallActivity extends AppCompatActivity
         mListeningTV = (TextView) findViewById(R.id.listening_tv);
         mArrowsIV = (ImageView) findViewById(R.id.arrows_iv);
         mLockIV = (ImageView) findViewById(R.id.lock_iv);
+        incomingCallBtnsRL = (RelativeLayout)findViewById(R.id.incoming_call_btns_rl);
+        mDeclineInsideRL = (RelativeLayout) findViewById(R.id.decline_inside_rl);
+        mConnectingRL = (RelativeLayout) findViewById(R.id.connecting_rl);
+        mActionBtnsCL = (ConstraintLayout) findViewById(R.id.action_btns_cl);
+        mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -201,10 +214,14 @@ public class OutGoingCallActivity extends AppCompatActivity
         mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
         mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
         mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+        mSessionID = getIntent().getStringExtra(Consts.INTENT_SESSION_ID);
+
+
         mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
         mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
+        mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
 
         initPIP();
 
@@ -229,10 +246,11 @@ public class OutGoingCallActivity extends AppCompatActivity
         //Sounds Init
         mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
         mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
+        mIncomingCallSound = MediaPlayer.create(this, R.raw.incoming_call);
         mBusySound = MediaPlayer.create(this, R.raw.phone_busy_signal);
-        mCallingSound.setLooping(true);
-        mCallingSound.start();
 
+
+        //***Animations init
         //Init calling animation
         mCallTXTanima = new AlphaAnimation(0.0f, 1.0f);
         mCallTXTanima.setDuration(1000);
@@ -254,15 +272,29 @@ public class OutGoingCallActivity extends AppCompatActivity
                 Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
         reSizeAnim.setDuration(ANIMATION_DURATION);
 
+        //Answer the call animation
+        mAcceptBtnAnim = new TranslateAnimation(
+                TranslateAnimation.ABSOLUTE, 0f,
+                TranslateAnimation.ABSOLUTE, 0f,
+                TranslateAnimation.RELATIVE_TO_PARENT, 0f,
+                TranslateAnimation.RELATIVE_TO_PARENT, 0.1f);
+        mAcceptBtnAnim.setDuration(500);
+        mAcceptBtnAnim.setRepeatCount(Animation.INFINITE);
+        mAcceptBtnAnim.setRepeatMode(Animation.REVERSE);
+        mAcceptBtnAnim.setInterpolator(new LinearInterpolator());
+        mAcceptRL.setAnimation(mAcceptBtnAnim);
+
         mPushToTalkFL.setVisibility(View.VISIBLE);
         mPushToTalkFL.setAlpha(0.0f);
 
         mRTCcodeBR = new RTCcodeBR();
 
+        mAcceptIncomingCIV.setOnClickListener(this);
+        mDeclineIncomingCIV.setOnClickListener(this);
+        mDeclineInsideRL.setOnClickListener(this);
+
         mBackNavigationFL.setOnClickListener(this);
-        mDeclineCIV.setOnClickListener(this);
         mCameraBtnVideo.setOnClickListener(this);
-     //   mMicFlagP2T_CIV.setOnClickListener(this);
         mCameraBtnAudio.setOnClickListener(this);
         mCameraSwitchIV.setOnClickListener(this);
         mPublisherFL.setOnTouchListener(this);
@@ -270,60 +302,35 @@ public class OutGoingCallActivity extends AppCompatActivity
         mMuteTB.setOnCheckedChangeListener(this);
         mSpeakerIB.setOnCheckedChangeListener(this);
 
+        //Outgoing or incoming call
+        if(mIsOutGoingCall)
+            outGoingCall();
+        else
+            incomingCall();
+
+        // Video Or Audio
         if (mIsVideoCall)
             videoCall();
         else
             audioCall();
     }
 
-    private void setLangAndDisplayName() {
-        mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
-        try {
-            loc = new Locale(mParticipantLang);
-            mFullLangName = loc.getDisplayLanguage();
-            mMicFlagCIV.setImageResource(mFlagDrawable);
-            mMicFlagP2T_CIV.setImageResource(mFlagDrawable);
-        } catch (Exception e) {
-            Log.d(TAG, "OutGoingCallActivity - " + e.getMessage());
-            e.printStackTrace();
-        }
+    private void outGoingCall() {
+        mInsideCallBtnsCL.setVisibility(View.VISIBLE);
+        mActionBtnsCL.setVisibility(View.VISIBLE);
+        mStatusRL.setVisibility(View.VISIBLE);
+
+        //Play calling sound in first
+        mCallingSound.setLooping(true);
+        mCallingSound.start();
     }
 
-    /**
-     * (1) Request permissions if the user has not yet approved them -
-     * (2) If there are permissions already, ask for a session and token and connect to the session
-     */
-    @AfterPermissionGranted(RC_VIDEO_APP_PERM)
-    private void requestPermissions() {
-        if (EasyPermissions.hasPermissions(this, perms)) {
+    private void incomingCall() {
+        incomingCallBtnsRL.setVisibility(View.VISIBLE);
 
-            //Show self camera Preview at first
-            startCameraPreview();
-
-            createSessionAndToken();
-        } else {
-            EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out),
-                    RC_VIDEO_APP_PERM, perms);
-        }
-    }
-
-    private void startCameraPreview() {
-        mPublisher = new Publisher.Builder(this)
-                // .videoTrack(mIsVideoCall)
-                .build();
-        mPublisher.setPublisherListener(this);
-
-        if(mIsVideoCall) { //Only if it is video call - show preview
-            mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                    BaseVideoRenderer.STYLE_VIDEO_FILL);
-            mPublisher.startPreview();
-            mSubscriberFL.addView(mPublisher.getView());
-        }else{ // Audio call
-            mPublisher.setPublishVideo(false);
-            // switch from loud speaker to phone speaker (voice session)
-            mSpeakerIB.setChecked(false);
-            AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
-        }
+        //Play incoming sound in first
+        mIncomingCallSound.setLooping(true);
+        mIncomingCallSound.start();
     }
 
     private void videoCall() {
@@ -351,16 +358,16 @@ public class OutGoingCallActivity extends AppCompatActivity
         //Set Participant Pic
         setPhotoByUrl(true);
 
-        mTitleTV.setText(R.string.out_video_call);
+        if(mIsOutGoingCall)
+            mTitleTV.setText(R.string.out_video_call);
+        else
+            mTitleTV.setText(R.string.in_video_call);
     }
 
     private void audioCall() {
         mVideoFlag = false;
 
         //OpenTok enable the speaker by default - we close it manually;
-
-//        if(mCameraPauseFullFL.getVisibility() == View.VISIBLE)
-//                 mCameraPauseFullFL.setVisibility(View.GONE);
         if(mMainVideoRL.getVisibility() == View.VISIBLE)
             mMainVideoRL.setVisibility(View.GONE);
         if(mCameraSwitchIV.getVisibility() == View.VISIBLE)
@@ -376,35 +383,97 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         //Set Participant Pic
         setPhotoByUrl(false);
-//
-//        mParticipantNumberTV.setText(mFixedParticipantId);
-        mTitleTV.setText(R.string.out_audio_call);
+
+        if(mIsOutGoingCall)
+            mTitleTV.setText(R.string.out_audio_call);
+        else
+            mTitleTV.setText(R.string.in_audio_call);
+    }
+
+    private void setLangAndDisplayName() {
+        mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
+        try {
+            loc = new Locale(mParticipantLang);
+            mFullLangName = loc.getDisplayLanguage();
+            mMicFlagCIV.setImageResource(mFlagDrawable);
+            mMicFlagP2T_CIV.setImageResource(mFlagDrawable);
+        } catch (Exception e) {
+            Log.d(TAG, "CallActivity - " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * (1) Request permissions if the user has not yet approved them -
+     * (2) If there are permissions already, ask for a session and token and connect to the session
+     */
+    @AfterPermissionGranted(RC_VIDEO_APP_PERM)
+    private void requestPermissions() {
+        if (EasyPermissions.hasPermissions(this, perms)) {
+
+            //Show self camera Preview at first
+            startCameraPreview();
+            createSessionAndToken();
+        } else {
+            EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out),
+                                                                              RC_VIDEO_APP_PERM, perms);
+        }
+    }
+
+    private void startCameraPreview() {
+        mPublisher = new Publisher.Builder(this)
+                // .videoTrack(mIsVideoCall)
+                .build();
+        mPublisher.setPublisherListener(this);
+
+        if(mIsVideoCall) { //Only if it is video call - show preview
+                    mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                                                                    BaseVideoRenderer.STYLE_VIDEO_FILL);
+                    mPublisher.startPreview();
+                    mSubscriberFL.addView(mPublisher.getView());
+        }else{ // Audio call
+                    mPublisher.setPublishVideo(false);
+                    // switch from loud speaker to phone speaker (voice session)
+                    mSpeakerIB.setChecked(false);
+                    AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
+        }
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.back_navigation_fl:
-                if(callStartedFlag) {
-                    minimizeActivity();
-                }else
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
-                break;
+                    if(callStartedFlag) {
+                        minimizeActivity();
+                    }else
+                        sendXMPPmsg(Message.RTC_CODE_REJECTED);
+            break;
 
-            case R.id.decline_civ:
+            case R.id.decline_incoming_civ:
                 if(callStartedFlag)
                     sendXMPPmsg(Message.RTC_CODE_CLOSE);
                 else
                     sendXMPPmsg(Message.RTC_CODE_REJECTED);
-                break;
+            break;
+
+            case R.id.accept_incoming_civ:
+                            callStarted();
+            break;
+
+            case R.id.decline_inside_rl:
+                if(callStartedFlag)
+                    sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                else
+                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
+            break;
 
             case R.id.camera_btn_video_tb:
                 cameraBtnVideo();
-                break;
+            break;
 
             case R.id.camera_btn_audio_tb:
-                cameraBtnAudio();
-                break;
+                    cameraBtnAudio();
+            break;
 
             case R.id.camera_switch_iv:
                 mPublisher.cycleCamera();
@@ -412,12 +481,7 @@ public class OutGoingCallActivity extends AppCompatActivity
                         .withStartAction(() -> mCameraSwitchIV.setEnabled(false))
                         .withEndAction(() -> mCameraSwitchIV.setEnabled(true))
                         .start();
-                break;
-//
-//            case R.id.mic_flag_p2t_civ:
-//                   sendPush2TalkMsg();
-//                break;
-
+            break;
         }
     }
 
@@ -440,8 +504,6 @@ public class OutGoingCallActivity extends AppCompatActivity
                 else
                     AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
                 break;
-
-
         }
     }
 
@@ -452,8 +514,6 @@ public class OutGoingCallActivity extends AppCompatActivity
                 publisherWindowTouch(view,event);
                 break;
             case R.id.mic_flag_civ:
-                Log.d("tttt", "!!!!");
-
                 micTranslateTouch(view,event); // Push to talk btn
                 break;
         }
@@ -500,6 +560,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     private void micTranslateTouch(View view, MotionEvent event) {
 
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: //--Hold--
                 mPush2talk_locked = false;
@@ -510,7 +571,6 @@ public class OutGoingCallActivity extends AppCompatActivity
 
                 //SlideUp
                 y1 = event.getY();
-
                 break;
 
             case MotionEvent.ACTION_MOVE: //--Move--
@@ -535,12 +595,7 @@ public class OutGoingCallActivity extends AppCompatActivity
                                 mLockRL.setVisibility(View.GONE);
                                 mTranslatorMicP2T_IV.setImageResource(R.drawable.interperter_locked);
                                 mMicFlagP2T_CIV.setEnabled(true);
-                                mMicFlagP2T_CIV.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                         sendPush2TalkMsg();
-                                    }
-                                });
+                                mMicFlagP2T_CIV.setOnClickListener(view1 -> sendPush2TalkMsg());
                             }
                             @Override
                             public void onAnimationRepeat(Animation animation) {
@@ -551,61 +606,12 @@ public class OutGoingCallActivity extends AppCompatActivity
                 }
                 break;
 
-
             case MotionEvent.ACTION_UP: //--Release--
-
-                        if(!mPush2talk_locked) {
+                        if(!mPush2talk_locked)
                                     sendPush2TalkMsg();
-                        }
 
                 break;
-
         }
-
-
-
-
-
-
-
-
-    /*    switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN: //--Hold--
-                        mPublisherFL.setVisibility(View.GONE);
-                         mLockRL.setVisibility(View.VISIBLE);
-                        ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
-
-                        //SlideUp
-                        y1 = event.getY();
-
-                break;
-
-                case MotionEvent.ACTION_UP: //--Release--
-
-
-                        //SlideUp
-                        y2 = event.getY();
-                         deltaY = y2 - y1;
-                        if (Math.abs(deltaY) > MIN_DISTANCE)
-                        {
-                            //User lock the push 2 talk
-                            mLockRL.setVisibility(View.GONE);
-                            mTranslatorMicP2T_IV.setImageResource(R.drawable.interperter_locked);
-                        //    mTranslatorMicP2T_IV.setEnabled(true);
-                            // TODO: 6/3/2019 when release - send the voice to text (Make The Translation)
-
-                        }else{
-                            ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f)
-                                    .withEndAction(()-> mPublisherFL.setVisibility(View.VISIBLE));
-
-                            // TODO: 6/3/2019 when release - send the voice to text (Make The Translation)
-
-                        }
-
-                    break;
-
-            }*/
-
     }
 
     public void sendPush2TalkMsg(){
@@ -613,6 +619,10 @@ public class OutGoingCallActivity extends AppCompatActivity
                 mPublisherFL.setVisibility(View.VISIBLE)
                 );
         mPushToTalkFL.setClickable(false);
+        mMicFlagP2T_CIV.setClickable(false);
+        mMicFlagP2T_CIV.setEnabled(false);
+        mMicFlagCIV.setClickable(true);
+        mMicFlagCIV.setEnabled(true);
     }
 
     @Override
@@ -659,7 +669,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
                 getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
-            OutGoingCallActivity.this.enterPictureInPictureMode();
+            CallActivity.this.enterPictureInPictureMode();
 
         //else -
         // TODO: 5/30/2019 Create minimize feature for versions older than android 7
@@ -684,20 +694,6 @@ public class OutGoingCallActivity extends AppCompatActivity
                 mParticipantLangAudioTV.setVisibility(View.GONE);
             }
 
-//                //Timer
-//                mTimerChr.get
-//                mPipModeTimerChr.setBase(SystemClock.elapsedRealtime());
-//                mTimerChr.setVisibility(View.GONE);
-//                mPipModeTimerChr.start();
-//                mTimerChr.stop();
-
-
-//                RelativeLayout.LayoutParams layoutParams =
-//                        (RelativeLayout.LayoutParams)mTimerChr.getLayoutParams();
-//                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
-//                layoutParams.setMargins(5, 0, 0, 0);
-//                mTimerChr.setLayoutParams(layoutParams);
-
         } else {
             // Restore the full-screen UI.
             mInsideCallBtnsCL.setVisibility(View.VISIBLE);
@@ -714,17 +710,6 @@ public class OutGoingCallActivity extends AppCompatActivity
                 mParticipantNameRL.setVisibility(View.VISIBLE);
                 mParticipantLangAudioTV.setVisibility(View.VISIBLE);
             }
-
-
-
-//                //Timer
-//                mTimerChr.setVisibility(View.VISIBLE);
-//                mTimerChr.setBase(SystemClock.elapsedRealtime());
-//                mTimerChr.start();
-//                mPipModeTimerChr.stop();
-//                mPipModeTimerChr.setVisibility(View.GONE);
-
-
         }
     }
 
@@ -744,7 +729,7 @@ public class OutGoingCallActivity extends AppCompatActivity
             mPublisherFL.addView(mPublisher.getView());
         }
 
-        if (mSubscriber != null && Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+        if (mSubscriber != null && Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
             ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
             mSubscriberFL.addView(mSubscriber.getView());
         }
@@ -769,7 +754,7 @@ public class OutGoingCallActivity extends AppCompatActivity
             mPublisher.setPublishVideo(true);
             mPublisherFL.addView(mPublisher.getView());
 
-            if (Build.VERSION.SDK_INT < OutGoingCallActivity.SCREEN_MINIMUM_VER) {
+            if (Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
                 ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
                 mSubscriberFL.addView(mSubscriber.getView());
             }
@@ -793,7 +778,7 @@ public class OutGoingCallActivity extends AppCompatActivity
 
     //Send Massage to the receiver
     public void sendXMPPmsg(String rtcCode){
-        message = new Message(mParticipantId, mSelfId, mConversationId,  mSessionID, "","",
+        message = new Message(mParticipantId, mSelfId, mConversationId, mSessionID, "","",
                 rtcCode, mVideoFlag, false);
 
         if ((mService != null) && (mService.isXmppConnected())){
@@ -820,26 +805,27 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     public void createSessionAndToken(){
+
         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
-        videoAudioCallViewModel.createSessionsAndToken(this,"RELAYED");
+
+        if(mIsOutGoingCall)
+             videoAudioCallViewModel.createSessionsAndToken(this,"RELAYED");
+        else
+             videoAudioCallViewModel.createTokenInExistingSession(this, mSessionID, "" + WCRepository.TokenRoleType.PUBLISHER);
+
     }
 
     @Override
     public void onSucceedCreateSession(StateData<String> success){
         mVideoAudioCall = videoAudioCallViewModel.getSessionAndToken().getValue();
-        Log.d(TAG, "Session and token received, session is: " + mVideoAudioCall.getSessionID()
-                + " , token is: " + mVideoAudioCall.getToken() );
-        mSessionID = mVideoAudioCall.getSessionID();
-        //Send Massage to the receiver (With the sessionID) - let the receiver know that video/audio call is coming
-        sendXMPPmsg(Message.RTC_CODE_OFFER);
-        //Create session connection via TokBox
-        connectToSession(mVideoAudioCall.getSessionID(), mVideoAudioCall.getToken());
-    }
 
-    public void connectToSession(String sessionID, String tokenID){
-        mSession = new Session.Builder(this, TOK_BOX_APIKEY, sessionID).build();
-        mSession.setSessionListener(this);
-        mSession.connect(tokenID);
+        if(mIsOutGoingCall) {
+             mSessionID = mVideoAudioCall.getSessionID(); // If outGoing call - create new SessionId
+                    //Send Massage to the receiver (With the sessionID) - let the receiver know that video/audio call is coming
+            sendXMPPmsg(Message.RTC_CODE_OFFER);
+        }
+        //Create session connection via TokBox
+        connectToSession(mSessionID, mVideoAudioCall.getToken());
     }
 
     @Override
@@ -851,6 +837,12 @@ public class OutGoingCallActivity extends AppCompatActivity
 
         Toast.makeText(this, "Failed to make a call: " + this.errorMsg, Toast.LENGTH_LONG).show();
         this.finish();
+    }
+
+    public void connectToSession(String sessionID, String tokenID){
+        mSession = new Session.Builder(this, TOK_BOX_APIKEY, sessionID).build();
+        mSession.setSessionListener(this);
+        mSession.connect(tokenID);
     }
 
     @Override
@@ -880,6 +872,10 @@ public class OutGoingCallActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        activityActiveFlag = false;
+
+        //Stop Sounds
+        mIncomingCallSound.stop();
         mCallingSound.stop();
         mDeclineSound.stop();
         mBusySound.stop();
@@ -891,8 +887,8 @@ public class OutGoingCallActivity extends AppCompatActivity
                 mSubscriber.destroy();
             }
             if(mPublisher != null){
-                mSession.unpublish(mPublisher);
-                mPublisher.destroy();
+                 mSession.unpublish(mPublisher);
+                 mPublisher.destroy();
             }
         }
     }
@@ -1004,18 +1000,34 @@ public class OutGoingCallActivity extends AppCompatActivity
     }
 
     private void callStarted() {
-        callStartedFlag = true;
-        mArrowsIV.startAnimation(mTranslateAnima);
+            callStartedFlag = true;
+            mArrowsIV.startAnimation(mTranslateAnima); // start PushToTalk arrow animation
+            mAcceptIncomingCIV.setEnabled(false);
+            mStatusRL.setVisibility(View.GONE);
 
-        //Stop sounds
-        mCallingSound.stop();
-        mCallTXTanima.cancel();
-        mStatusRL.setVisibility(View.GONE);
 
-        //User pic animation (When the status not sowed anymore)
-        mTimerChr.setVisibility(View.VISIBLE);
-        mTimerChr.setBase(SystemClock.elapsedRealtime());
-        mTimerChr.start();
+            incomingCallBtnsRL.setVisibility(View.GONE);
+
+            if(mIsOutGoingCall){
+                    //Stop sound
+                            mCallingSound.stop();
+                            mCallTXTanima.cancel();
+
+                            //Start Timer For Outgoing call
+                            mTimerChr.setVisibility(View.VISIBLE);
+                            mTimerChr.setBase(SystemClock.elapsedRealtime());
+                            mTimerChr.start();
+           }else{ // IncomingCall
+                    //Stop sound and accept call (jumping) animation
+                            mIncomingCallSound.stop();
+                            mAcceptBtnAnim.cancel();
+
+                            mInsideCallBtnsCL.setVisibility(View.VISIBLE);
+                             mConnectingTV.startAnimation(mCallTXTanima);
+                             mConnectingRL.setVisibility(View.VISIBLE);
+
+                            startIncomingCallThread();
+           }
 
         //Enable translate btn lang if self and participant have different languages
         if (!mSelfLang.equals(mParticipantLang)) {
@@ -1033,11 +1045,67 @@ public class OutGoingCallActivity extends AppCompatActivity
         }
     }
 
+    private void startIncomingCallThread() {
+
+        new Thread (() -> {
+
+            while (!sessitonRecivedFlag);
+
+            runOnUiThread(() -> {
+
+                mSession.publish(mPublisher);
+
+
+                if (mIsVideoCall && Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER){
+                         animateAndAddView();
+                }
+
+                if (mSubscriber == null) {
+                    mSubscriber = new Subscriber.Builder(CallActivity.this, mStream).build();
+                    mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                    mSubscriber.setVideoListener(CallActivity.this);
+                    mSession.subscribe(mSubscriber);
+
+                    //Hide the connection layout and start mTimerChr
+                    mActionBtnsCL.setVisibility(View.VISIBLE);
+                    mConnectingRL.setVisibility(View.GONE);
+                    mCallTXTanima.cancel();
+
+                    if(mIsVideoCall)
+                        mSubscriberFL.addView(mSubscriber.getView());
+
+                    //Set Publisher
+                    //*** Show the receiver video (Small Windows) Only for video calls
+                    if(mIsVideoCall && Build.VERSION.SDK_INT >= CallActivity.SCREEN_MINIMUM_VER) {
+                        animateAndAddView();
+                    }
+
+                    //Wait 2 seconds because of the api black screen - and then start timer and sent massage to caller
+                    new Handler().postDelayed(() -> {
+                        mTimerChr.setVisibility(View.VISIBLE);
+                        mTimerChr.setBase(SystemClock.elapsedRealtime());
+                        mTimerChr.start();
+
+                        sendXMPPmsg(Message.RTC_CODE_ANSWER);
+                    }, 2000);
+
+                    //Show inside a call btns
+                    mCameraBtnVideo.setVisibility(View.VISIBLE);
+                    mInsideCallBtnsCL.setVisibility(View.VISIBLE);
+                    if(mIsVideoCall)
+                        mCameraSwitchIV.setVisibility(View.VISIBLE);
+                }
+            });
+        }).start();
+    }
+
+
     //TokBox
     @Override
     public void onConnected(Session session) {
         Log.i(TOKBOX, "Session Connected");
-        mSession.publish(mPublisher);
+        if(mIsOutGoingCall)
+             mSession.publish(mPublisher);
     }
 
     @Override
@@ -1049,24 +1117,30 @@ public class OutGoingCallActivity extends AppCompatActivity
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Received");
 
-        //*** Show the receiver video (Small Windows) Only for video calls
-        if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER)
-            animateAndAddView();
+        if(mIsOutGoingCall) {
+                        //*** Show the receiver video (Small Windows) Only for video calls
+                        if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER)
+                                 animateAndAddView();
 
-        if (mSubscriber == null) {
-            mSubscriber = new Subscriber.Builder(OutGoingCallActivity.this, stream).build();
-            mSubscriber.setVideoListener(OutGoingCallActivity.this);
-            mSession.subscribe(mSubscriber);
+                        if (mSubscriber == null) {
+                                mSubscriber = new Subscriber.Builder(CallActivity.this, stream).build();
+                                mSubscriber.setVideoListener(CallActivity.this);
+                                mSession.subscribe(mSubscriber);
 
-            //Show the caller video (full screen) Only for video calls
-            if (mIsVideoCall) {
-                mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                mSubscriberFL.addView(mSubscriber.getView());
-            }
+                                //Show the caller video (full screen) Only for video calls
+                                if (mIsVideoCall) {
+                                    mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+                                                                                        BaseVideoRenderer.STYLE_VIDEO_FILL);
+                                    mSubscriberFL.addView(mSubscriber.getView());
+                                }
 
-            //*** Show the receiver video (Small Windows) Only for video calls
-            if (mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER)
-                animateAndAddView();
+                                //*** Show the receiver video (Small Windows) Only for video calls
+                                if (mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER)
+                                animateAndAddView();
+                         }
+        }else{
+                            this.mStream = stream;
+                            sessitonRecivedFlag = true;
         }
     }
 
@@ -1099,12 +1173,12 @@ public class OutGoingCallActivity extends AppCompatActivity
         Log.i(TOKBOX, "Stream Dropped");
 
         if (mSubscriber != null) {
-            mSubscriber = null;
-            mSubscriberFL.removeAllViews();
+                mSubscriber = null;
+                mSubscriberFL.removeAllViews();
         }
 
         if(!mCallEndedFlag)
-            callEnded(Message.RTC_CODE_CLOSE);
+                 callEnded(Message.RTC_CODE_CLOSE);
     }
 
     @Override

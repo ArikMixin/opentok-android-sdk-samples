@@ -586,7 +586,7 @@ public class WCRepository {
 
 
 	public LiveData<Contact> refreshContact(String participantId) {
-		getContactFromServer(participantId);
+			getContactFromServer(participantId);
 		return mContactDao.getContactLD(participantId);
 	}
 
@@ -797,6 +797,7 @@ public class WCRepository {
 						}
 
 					} catch (JSONException e) {
+
 						e.printStackTrace();
 						mIsDuringRefreshContacts.setValue(false);
 					}
@@ -1443,6 +1444,7 @@ public class WCRepository {
 					}
 
 				} catch (JSONException e) {
+					Log.d("testttttt", "error: " + e.getMessage());
 					e.printStackTrace();
 				}
 			}

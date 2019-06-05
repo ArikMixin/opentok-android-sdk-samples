@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/call_background"
-    tools:context=".ui.AudioVideoCall.OutGoingCallActivity">
+    tools:context=".ui.AudioVideoCall.CallActivity">
 
     <FrameLayout
         android:id="@+id/subscriber_fl"
@@ -282,6 +282,7 @@
     <!--Status and phone number-->
     <RelativeLayout
         android:id="@+id/status_rl"
+        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
@@ -310,91 +311,191 @@
             android:textSize="17dp" />
     </RelativeLayout>
 
+
+    <!--Incoming Calls Buttons -->
+    <RelativeLayout
+        android:id="@+id/incoming_call_btns_rl"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/decline_rl"
+            android:layout_alignParentLeft="true"
+            android:layout_marginBottom="40dp"
+            android:layout_marginLeft="80dp">
+
+            <io.wochat.app.components.CircleImageView
+                android:id="@+id/decline_incoming_civ"
+                android:layout_width="62dp"
+                android:layout_height="62dp"
+                android:layout_centerInParent="true"
+                android:src="@color/red">
+            </io.wochat.app.components.CircleImageView>
+
+            <ImageView
+                android:layout_centerInParent="true"
+                android:id="@+id/hang_up_iv"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_action_speaker" />
+
+            <TextView
+                android:layout_marginTop="40dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/decline_incoming_civ"
+                android:textColor="@color/white"
+                android:text="@string/decline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="80dp"
+            android:layout_marginBottom="40dp">
+
+            <RelativeLayout
+                android:layout_centerVertical="true"
+                android:id="@+id/accept_rl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <io.wochat.app.components.CircleImageView
+                    android:id="@+id/accept_incoming_civ"
+                    android:layout_width="62dp"
+                    android:layout_height="62dp"
+                    android:layout_centerInParent="true"
+                    android:src="@color/blue">
+                </io.wochat.app.components.CircleImageView>
+
+                <ImageView
+                    android:layout_centerInParent="true"
+                    android:id="@+id/accept_iv"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_accept_call" />
+            </RelativeLayout>
+
+            <TextView
+                android:layout_marginTop="40dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/accept_rl"
+                android:textColor="@color/white"
+                android:text="@string/accept"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+
+
+
     <!--Inside a call buttons-->
     <android.support.constraint.ConstraintLayout
         android:id="@+id/inside_call_btns_cl"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent">
-        <!--Buttons section-->
-        <ToggleButton
-            android:id="@+id/speaker_iv"
-            android:layout_width="68dp"
-            android:layout_height="68dp"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="30dp"
-            android:background="@drawable/speaker_selector"
-            android:checked="true"
-            android:scaleType="fitCenter"
-            android:textOff=""
-            android:textOn=""
-            app:layout_constraintBottom_toBottomOf="@+id/translate_rl"
-            app:layout_constraintEnd_toStartOf="@+id/translate_rl"
-            app:layout_constraintStart_toStartOf="parent"></ToggleButton>
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="gone">
 
 
-        <ToggleButton
-            android:id="@+id/mute_iv"
-            android:layout_width="68dp"
-            android:layout_height="68dp"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="30dp"
-            android:background="@drawable/mute_selector"
-            android:checked="false"
-            android:scaleType="fitCenter"
-            android:textOff=""
-            android:textOn=""
-            app:layout_constraintBottom_toBottomOf="@+id/translate_rl"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/translate_rl" />
 
-
-        <RelativeLayout
-            android:id="@+id/translate_rl"
-            android:layout_width="wrap_content"
+        <!--Action Buttons-->
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/action_btns_cl"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/decline_inside_rl"
             android:layout_marginBottom="35dp"
-            app:layout_constraintBottom_toTopOf="@+id/camera_switch_iv"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
+            android:visibility="gone"
+            >
 
 
-            <io.wochat.app.components.CircleImageView
-                android:visibility="visible"
-                android:id="@+id/mic_flag_civ"
-                android:layout_width="67dp"
-                android:layout_height="67dp"
-                android:layout_centerInParent="true"
-                android:alpha="0.3"
-                android:src="@drawable/flag_united_states_of_america" />
+
+            <ToggleButton
+                android:id="@+id/speaker_iv"
+                android:layout_width="68dp"
+                android:layout_height="68dp"
+                android:checked="true"
+                android:textOn=""
+                android:textOff=""
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="30dp"
+                android:scaleType="fitCenter"
+                android:background="@drawable/speaker_selector"
+                app:layout_constraintBottom_toBottomOf="@+id/translate_rl"
+                app:layout_constraintEnd_toStartOf="@+id/translate_rl"
+                app:layout_constraintStart_toStartOf="parent"></ToggleButton>
+
+
+            <ToggleButton
+                android:id="@+id/mute_iv"
+                android:layout_width="68dp"
+                android:layout_height="68dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="30dp"
+                android:scaleType="fitCenter"
+                android:background="@drawable/mute_selector"
+                android:textOn=""
+                android:textOff=""
+                android:checked="false"
+                app:layout_constraintBottom_toBottomOf="@+id/translate_rl"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/translate_rl" />
+
+
+            <RelativeLayout
+                android:id="@+id/translate_rl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="35dp"
+                app:layout_constraintBottom_toTopOf="@+id/camera_switch_iv"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+
+                <io.wochat.app.components.CircleImageView
+                    android:id="@+id/mic_flag_civ"
+                    android:layout_width="67dp"
+                    android:layout_height="67dp"
+                    android:layout_centerInParent="true"
+                    android:alpha="0.3"
+                    android:src="@drawable/flag_united_states_of_america" />
+
+                <ImageView
+                    android:id="@+id/translator_mic_iv"
+                    android:layout_width="68dp"
+                    android:layout_height="68dp"
+                    android:layout_marginTop="3dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/translator_mic_disabled" />
+
+            </RelativeLayout>
+
 
             <ImageView
+                android:id="@+id/camera_switch_iv"
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:src="@drawable/ic_camera_switch"
                 android:visibility="visible"
-                android:id="@+id/translator_mic_iv"
-                android:layout_width="68dp"
-                android:clickable="false"
-                android:layout_height="68dp"
-                android:layout_marginTop="3dp"
-                android:scaleType="fitCenter"
-                android:background="@drawable/translator_mic_disabled" />
-
-
-        </RelativeLayout>
-
-        <ImageView
-            android:id="@+id/camera_switch_iv"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:layout_marginBottom="35dp"
-            android:src="@drawable/ic_camera_switch"
-            android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/decline_rl"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+        </android.support.constraint.ConstraintLayout>
 
         <RelativeLayout
-            android:id="@+id/decline_rl"
+            android:id="@+id/decline_inside_rl"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="30dp"
@@ -403,7 +504,7 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <io.wochat.app.components.CircleImageView
-                android:id="@+id/decline_civ"
+                android:id="@+id/decline_inside_civ"
                 android:layout_width="62dp"
                 android:layout_height="62dp"
                 android:layout_centerInParent="true"
@@ -413,7 +514,7 @@
                 app:layout_constraintStart_toStartOf="parent"></io.wochat.app.components.CircleImageView>
 
             <ImageView
-                android:id="@+id/hang_up_iv"
+                android:id="@+id/hang_up_inside_iv"
                 android:layout_width="35dp"
                 android:layout_height="35dp"
                 android:layout_centerInParent="true"
@@ -424,7 +525,6 @@
                 app:layout_constraintStart_toStartOf="parent" />
 
         </RelativeLayout>
-
     </android.support.constraint.ConstraintLayout>
 
     <android.support.v7.widget.CardView
@@ -512,7 +612,7 @@
 
         </RelativeLayout>
 
-<!--        mic icon-->
+<!-- mic icon -->
         <RelativeLayout
             android:id="@+id/translate_p2t_rl"
             android:layout_width="wrap_content"
@@ -556,6 +656,24 @@
             android:textSize="13dp"
             android:visibility="visible" />
 
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:background="#88808080"
+        android:id="@+id/connecting_rl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_centerInParent="true"
+            android:id="@+id/connecting_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/connecting"
+            android:textColor="@color/white"
+            android:textSize="30dp"
+            />
     </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

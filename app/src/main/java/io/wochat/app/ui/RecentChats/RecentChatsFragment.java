@@ -33,7 +33,7 @@ import io.wochat.app.R;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.UnreadMessagesConversation;
 import io.wochat.app.db.entity.User;
-import io.wochat.app.ui.AudioVideoCall.OutGoingCallActivity;
+import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.MainActivity;
@@ -285,7 +285,7 @@ public class RecentChatsFragment extends Fragment  implements
 		else if(buttonID == CustomDialogViewHolder.BTN_PHONE)
 				isVideoCall = false;
 
-		Intent intent = new Intent(getContext(), OutGoingCallActivity.class);
+		Intent intent = new Intent(getContext(), CallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
@@ -296,6 +296,7 @@ public class RecentChatsFragment extends Fragment  implements
 		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideoCall);
+		intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
 		startActivity(intent);
 	}
 

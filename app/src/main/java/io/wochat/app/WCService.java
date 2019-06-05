@@ -1,10 +1,8 @@
 package io.wochat.app;
 
-import android.app.Activity;
 import android.app.Service;
 import android.arch.lifecycle.Lifecycle;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -13,9 +11,6 @@ import android.os.IBinder;
 import android.util.Log;
 
 
-import org.jivesoftware.smack.packet.Presence;
-
-import java.util.Date;
 import java.util.List;
 
 import io.wochat.app.db.WCSharedPreferences;
@@ -23,10 +18,9 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.logic.NotificationHelper;
+import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.ui.AudioVideoCall.IncomingCallActivity;
-import io.wochat.app.ui.AudioVideoCall.OutGoingCallActivity;
 import io.wochat.app.ui.Consts;
-import io.wochat.app.utils.Utils;
 
 
 public class WCService extends Service implements XMPPProvider.OnChatMessageListener {
@@ -49,7 +43,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	private final IBinder mBinder = new WCBinder();
 	private XMPPProvider mXMPPProvider;
 	private WCRepository mRepository;
-	private String mSelfUserId;
+	private String mSelfUserId, mSelfUserLang;
 	private AppObserverBR mAppObserverBR;
 	private AppExecutors mAppExecutors;
 	private String mCurrentConversationId;
@@ -231,6 +225,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 
 		mSelfUserId = WCSharedPreferences.getInstance(this).getUserId();
+		mSelfUserLang = WCSharedPreferences.getInstance(this).getUserLang();
 
 		if (mSelfUserId == null) {
 			Log.e(TAG, "init - no self user id");
@@ -420,7 +415,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 						    Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);
 				sendMessage(message_busy);
 		}else {
-				Intent intent = new Intent(this, IncomingCallActivity.class);
+
+				Intent intent = new Intent(this, CallActivity.class);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getParticipantId());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
@@ -429,10 +425,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				intent.putExtra(Consts.INTENT_CONVERSATION_ID, message.getId());
 				//intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 				intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
-				//intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 				//intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 				intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, message.getIsVideoRTC());
-				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		     	intent.putExtra(Consts.OUTGOING_CALL_FLAG, false);
+			    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				this.startActivity(intent);
 		}
 	}

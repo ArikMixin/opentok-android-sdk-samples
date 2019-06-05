@@ -420,7 +420,7 @@
         android:layout_marginLeft="80dp">
 
         <io.wochat.app.components.CircleImageView
-        android:id="@+id/decline_civ"
+        android:id="@+id/decline_incoming_civ"
         android:layout_width="62dp"
         android:layout_height="62dp"
         android:layout_centerInParent="true"
@@ -438,7 +438,7 @@
         <TextView
         android:layout_marginTop="40dp"
         android:layout_centerHorizontal="true"
-        android:layout_below="@+id/decline_civ"
+        android:layout_below="@+id/decline_incoming_civ"
         android:textColor="@color/white"
         android:text="@string/decline"
         android:layout_width="wrap_content"
@@ -459,7 +459,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <io.wochat.app.components.CircleImageView
-        android:id="@+id/accept_civ"
+        android:id="@+id/accept_incoming_civ"
         android:layout_width="62dp"
         android:layout_height="62dp"
         android:layout_centerInParent="true"
@@ -488,7 +488,6 @@
 
     </RelativeLayout>
 
-    <!--Inside a call btns-->
 
 
 
