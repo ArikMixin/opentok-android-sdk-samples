@@ -94,7 +94,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			//WEB RTC Messages (ANSWER, TEXT, CLOSE, REJECTED, BUSY, UPDATE_SESSION)
 			if (message.getRtcCode() != null && !message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
-				broadcastRTCcodeChanged(message.getRtcCode());
+				broadcastRTCcodeChanged(message.getRtcCode(), message.isRecording());
 				return;
 			}
 
@@ -398,9 +398,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 //		sendBroadcast(intent);
 //	}
 
-	private void broadcastRTCcodeChanged(String mRtcCode) {
+	private void broadcastRTCcodeChanged(String mRtcCode, boolean isRecording) {
 		Intent intent = new Intent();
 			intent.setAction(mRtcCode);
+			if(mRtcCode.equals(Message.RTC_CODE_UPDATE_SESSION))
+						intent.putExtra(Consts.IS_RECORDING, isRecording);
 		sendBroadcast(intent);
 	}
 

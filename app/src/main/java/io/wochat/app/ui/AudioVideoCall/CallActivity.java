@@ -11,7 +11,9 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -37,7 +39,6 @@ import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -135,7 +136,7 @@ public class CallActivity extends AppCompatActivity
     private TextView mListeningTV, mConnectingTV;
     private ImageView mArrowsIV;
     private boolean mPush2talk_locked;
-    private ImageView mLockIV;
+    private ImageView mLockIV, mRecordingStateAudioIV, mRecordingStateVideoIV;
     volatile boolean sessitonRecivedFlag;
     private Vibrator vibrator;
 
@@ -211,6 +212,9 @@ public class CallActivity extends AppCompatActivity
         mConnectingRL = (RelativeLayout) findViewById(R.id.connecting_rl);
         mActionBtnsCL = (ConstraintLayout) findViewById(R.id.action_btns_cl);
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
+/*        mRecordingStateAudioIV = (ImageView) findViewById(R.id.recording_state_audio_iv);
+        mRecordingStateVideoIV = (ImageView) findViewById(R.id.recording_state_video_iv);*/
+
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
@@ -451,14 +455,14 @@ public class CallActivity extends AppCompatActivity
                     if(callStartedFlag) {
                         minimizeActivity();
                     }else
-                        sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                        sendXMPPmsg(Message.RTC_CODE_REJECTED, false);
             break;
 
             case R.id.decline_incoming_civ:
                 if(callStartedFlag)
-                    sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                    sendXMPPmsg(Message.RTC_CODE_CLOSE,false);
                 else
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                    sendXMPPmsg(Message.RTC_CODE_REJECTED,false);
             break;
 
             case R.id.accept_incoming_civ:
@@ -467,9 +471,9 @@ public class CallActivity extends AppCompatActivity
 
             case R.id.decline_inside_rl:
                 if(callStartedFlag)
-                    sendXMPPmsg(Message.RTC_CODE_CLOSE);
+                    sendXMPPmsg(Message.RTC_CODE_CLOSE,false);
                 else
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED);
+                    sendXMPPmsg(Message.RTC_CODE_REJECTED,false);
             break;
 
             case R.id.camera_btn_video_tb:
@@ -568,6 +572,7 @@ public class CallActivity extends AppCompatActivity
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: //--Hold--
+                sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,true);
                 mPush2talk_locked = false;
                 mPushToTalkFL.setClickable(true);
                 mPublisherFL.setVisibility(View.GONE);
@@ -604,8 +609,7 @@ public class CallActivity extends AppCompatActivity
                                 mTranslatorMicP2T_IV.setImageResource(0);
                                 mTranslatorMicP2T_IV.setBackgroundResource(R.drawable.interperter_locked);
                                 mMicFlagP2T_CIV.setEnabled(true);
-                                mMicFlagP2T_CIV.setOnClickListener(view1 ->
-                                        sendPush2TalkMsg());
+                                mMicFlagP2T_CIV.setOnClickListener(view1 -> sendPush2TalkMsg());
                             }
                             @Override
                             public void onAnimationRepeat(Animation animation) {
@@ -625,16 +629,17 @@ public class CallActivity extends AppCompatActivity
     }
 
     public void sendPush2TalkMsg(){
-        ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
-                mPublisherFL.setVisibility(View.VISIBLE);
-                mTranslatorMicP2T_IV.setImageResource(0);
-                mTranslatorMicP2T_IV.setBackgroundResource(R.drawable.translator_mic_enabled);
-        });
-        mPushToTalkFL.setClickable(false);
-        mMicFlagP2T_CIV.setClickable(false);
-        mMicFlagP2T_CIV.setEnabled(false);
-        mMicFlagCIV.setClickable(true);
-        mMicFlagCIV.setEnabled(true);
+            sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,false);
+            ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
+                    mPublisherFL.setVisibility(View.VISIBLE);
+                    mTranslatorMicP2T_IV.setImageResource(0);
+                    mTranslatorMicP2T_IV.setBackgroundResource(R.drawable.translator_mic_enabled);
+            });
+            mPushToTalkFL.setClickable(false);
+            mMicFlagP2T_CIV.setClickable(false);
+            mMicFlagP2T_CIV.setEnabled(false);
+            mMicFlagCIV.setClickable(true);
+            mMicFlagCIV.setEnabled(true);
     }
 
     @Override
@@ -643,7 +648,7 @@ public class CallActivity extends AppCompatActivity
         if(callStartedFlag) {
             minimizeActivity();
         }else
-            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+            sendXMPPmsg(Message.RTC_CODE_REJECTED,false);
     }
 
     /**
@@ -789,9 +794,9 @@ public class CallActivity extends AppCompatActivity
     }
 
     //Send Massage to the receiver
-    public void sendXMPPmsg(String rtcCode){
+    public void sendXMPPmsg(String rtcCode, boolean isRecording){
         message = new Message(mParticipantId, mSelfId, mConversationId, mSessionID, "","",
-                rtcCode, mVideoFlag, false);
+                                                                              rtcCode, mVideoFlag, isRecording);
 
         if ((mService != null) && (mService.isXmppConnected())){
             mService.sendMessage(message);
@@ -816,6 +821,7 @@ public class CallActivity extends AppCompatActivity
         }
     }
 
+
     public void createSessionAndToken(){
 
         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
@@ -834,7 +840,7 @@ public class CallActivity extends AppCompatActivity
         if(mIsOutGoingCall) {
              mSessionID = mVideoAudioCall.getSessionID(); // If outGoing call - create new SessionId
                     //Send Massage to the receiver (With the sessionID) - let the receiver know that video/audio call is coming
-            sendXMPPmsg(Message.RTC_CODE_OFFER);
+            sendXMPPmsg(Message.RTC_CODE_OFFER, false);
         }
         //Create session connection via TokBox
         connectToSession(mSessionID, mVideoAudioCall.getToken());
@@ -870,6 +876,8 @@ public class CallActivity extends AppCompatActivity
             filter.addAction(Message.RTC_CODE_BUSY);
             filter.addAction(Message.RTC_CODE_CLOSE);
             filter.addAction(Message.RTC_CODE_ANSWER);
+            filter.addAction(Message.RTC_CODE_UPDATE_SESSION);
+
             registerReceiver(mRTCcodeBR,filter);
         } catch (Exception e) {}
     }
@@ -931,11 +939,11 @@ public class CallActivity extends AppCompatActivity
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
         if(perms.size() != 3)  //if the client not accept all 3 permissions reject the call (close the activity)
-            sendXMPPmsg(Message.RTC_CODE_REJECTED);
+            sendXMPPmsg(Message.RTC_CODE_REJECTED, false);
     }
     @Override
     public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
-        sendXMPPmsg(Message.RTC_CODE_REJECTED);
+        sendXMPPmsg(Message.RTC_CODE_REJECTED, false);
     }
 
     @Override
@@ -983,6 +991,9 @@ public class CallActivity extends AppCompatActivity
                 callEnded(intent.getAction());
             else if(intent.getAction().equals(Message.RTC_CODE_ANSWER))
                 callStarted();
+           else if(intent.getAction().equals(Message.RTC_CODE_UPDATE_SESSION)) {
+                         recordingState(intent.getBooleanExtra(Consts.IS_RECORDING,false));
+            }
         }
     }
 
@@ -1094,7 +1105,7 @@ public class CallActivity extends AppCompatActivity
                         mTimerChr.setBase(SystemClock.elapsedRealtime());
                         mTimerChr.start();
 
-                        sendXMPPmsg(Message.RTC_CODE_ANSWER);
+                        sendXMPPmsg(Message.RTC_CODE_ANSWER, false);
                     }, 2000);
 
                     //Show inside a call btns
@@ -1210,4 +1221,18 @@ public class CallActivity extends AppCompatActivity
         Log.e(TOKBOX, "Publisher error: " + opentokError.getMessage());
     }
 
+    private void recordingState(boolean isRecording) {
+
+        if (mIsVideoCall) {
+                if (isRecording)
+                       Picasso.get().load(R.drawable.recording_state).into(mParticipantPicVideoCIV);
+                else
+                      setPhotoByUrl(true);
+        } else {
+                 if (isRecording)
+                       Picasso.get().load(R.drawable.recording_state).into(mParticipantPicVideoCIV);
+                 else
+                      setPhotoByUrl(false);
+        }
+    }
 }
