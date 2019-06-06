@@ -19,7 +19,6 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.logic.NotificationHelper;
 import io.wochat.app.ui.AudioVideoCall.CallActivity;
-import io.wochat.app.ui.AudioVideoCall.IncomingCallActivity;
 import io.wochat.app.ui.Consts;
 
 
@@ -409,7 +408,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	private void OpenIncomingCallActivity(Message message, Contact contact) {
 
 		//If incoming activity open send BUSY back to sender
-		if(IncomingCallActivity.activityActiveFlag) {
+		if(CallActivity.activityActiveFlag) {
 				Message message_busy = new Message(message.getParticipantId(), mSelfUserId, message.getConversationId(),
 							message.getSessionID(), "", "",
 						    Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);

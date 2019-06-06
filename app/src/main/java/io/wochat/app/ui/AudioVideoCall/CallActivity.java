@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.view.ViewCompat;
@@ -135,6 +136,8 @@ public class CallActivity extends AppCompatActivity
     private boolean mPush2talk_locked;
     private ImageView mLockIV;
     volatile boolean sessitonRecivedFlag;
+    private Vibrator vibrator;
+
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
 
@@ -207,6 +210,7 @@ public class CallActivity extends AppCompatActivity
         mConnectingRL = (RelativeLayout) findViewById(R.id.connecting_rl);
         mActionBtnsCL = (ConstraintLayout) findViewById(R.id.action_btns_cl);
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
         mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
@@ -585,6 +589,9 @@ public class CallActivity extends AppCompatActivity
 
                     //start lock Animation
                     if (!mPush2talk_locked) {
+
+                        vibrator.vibrate(400);
+
                         mLockIV.startAnimation(reSizeAnim);
                         reSizeAnim.setAnimationListener(new Animation.AnimationListener() {
                             @Override
@@ -595,7 +602,8 @@ public class CallActivity extends AppCompatActivity
                                 mLockRL.setVisibility(View.GONE);
                                 mTranslatorMicP2T_IV.setImageResource(R.drawable.interperter_locked);
                                 mMicFlagP2T_CIV.setEnabled(true);
-                                mMicFlagP2T_CIV.setOnClickListener(view1 -> sendPush2TalkMsg());
+                                mMicFlagP2T_CIV.setOnClickListener(view1 ->
+                                        sendPush2TalkMsg());
                             }
                             @Override
                             public void onAnimationRepeat(Animation animation) {
