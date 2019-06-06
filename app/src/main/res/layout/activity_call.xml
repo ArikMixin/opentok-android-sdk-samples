@@ -70,7 +70,7 @@
             android:layout_marginRight="30dp"
             android:text=""
             android:textColor="@color/white"
-            android:textSize="14dp"
+            android:textSize="15dp"
             android:visibility="gone" />
     </RelativeLayout>
 
@@ -574,13 +574,14 @@
 
 
 
+    <!--push to talk-->
 
     <RelativeLayout
         android:id="@+id/push_to_talk_fl"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#D2000000"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <!--lock rl-->
         <RelativeLayout
@@ -635,10 +636,11 @@
                 android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:layout_marginTop="3dp"
-                android:background="@drawable/translator_mic_disabled"
+                android:background="@drawable/translator_mic_enabled"
                 android:clickable="false"
                 android:scaleType="fitCenter"
                 android:visibility="visible" />
+
         </RelativeLayout>
 
 

@@ -600,7 +600,8 @@ public class CallActivity extends AppCompatActivity
                             @Override
                             public void onAnimationEnd(Animation animation) {
                                 mLockRL.setVisibility(View.GONE);
-                                mTranslatorMicP2T_IV.setImageResource(R.drawable.interperter_locked);
+                                mTranslatorMicP2T_IV.setImageResource(0);
+                                mTranslatorMicP2T_IV.setBackgroundResource(R.drawable.interperter_locked);
                                 mMicFlagP2T_CIV.setEnabled(true);
                                 mMicFlagP2T_CIV.setOnClickListener(view1 ->
                                         sendPush2TalkMsg());
@@ -623,9 +624,11 @@ public class CallActivity extends AppCompatActivity
     }
 
     public void sendPush2TalkMsg(){
-        ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->
-                mPublisherFL.setVisibility(View.VISIBLE)
-                );
+        ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
+                mPublisherFL.setVisibility(View.VISIBLE);
+                mTranslatorMicP2T_IV.setImageResource(0);
+                mTranslatorMicP2T_IV.setBackgroundResource(R.drawable.translator_mic_enabled);
+        });
         mPushToTalkFL.setClickable(false);
         mMicFlagP2T_CIV.setClickable(false);
         mMicFlagP2T_CIV.setEnabled(false);
