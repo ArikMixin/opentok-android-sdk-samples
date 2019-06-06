@@ -1027,8 +1027,6 @@ public class CallActivity extends AppCompatActivity
             mArrowsIV.startAnimation(mTranslateAnima); // start PushToTalk arrow animation
             mAcceptIncomingCIV.setEnabled(false);
             mStatusRL.setVisibility(View.GONE);
-
-
             incomingCallBtnsRL.setVisibility(View.GONE);
 
             if(mIsOutGoingCall){
@@ -1040,6 +1038,9 @@ public class CallActivity extends AppCompatActivity
                             mTimerChr.setVisibility(View.VISIBLE);
                             mTimerChr.setBase(SystemClock.elapsedRealtime());
                             mTimerChr.start();
+                             // Close & Open Camera button visible only after call started ( Timer Starts )
+                            mCameraBtnAudio.setVisibility(View.VISIBLE);
+                            mCameraBtnVideo.setVisibility(View.VISIBLE);
            }else{ // IncomingCall
                     //Stop sound and accept call (jumping) animation
                             mIncomingCallSound.stop();
@@ -1104,6 +1105,9 @@ public class CallActivity extends AppCompatActivity
                         mTimerChr.setVisibility(View.VISIBLE);
                         mTimerChr.setBase(SystemClock.elapsedRealtime());
                         mTimerChr.start();
+                        // Close & Open Camera button visible only after call started ( Timer Starts )
+                        mCameraBtnAudio.setVisibility(View.VISIBLE);
+                        mCameraBtnVideo.setVisibility(View.VISIBLE);
 
                         sendXMPPmsg(Message.RTC_CODE_ANSWER, false);
                     }, 2000);
@@ -1233,6 +1237,19 @@ public class CallActivity extends AppCompatActivity
                        Picasso.get().load(R.drawable.recording_state).into(mParticipantPicVideoCIV);
                  else
                       setPhotoByUrl(false);
+        }
+
+        //Disable translator button if other side is recording now
+        if (isRecording) {
+            mMicFlagCIV.setEnabled(false);
+            mMicFlagCIV.setAlpha(0.3f);
+            mTranslatorMicIV.setEnabled(false);
+            mTranslatorMicIV.setImageResource(R.drawable.translator_mic_disabled);
+        }else{
+            mMicFlagCIV.setEnabled(true);
+            mMicFlagCIV.setAlpha(1f);
+            mTranslatorMicIV.setEnabled(true);
+            mTranslatorMicIV.setImageResource(R.drawable.translator_mic_enabled);
         }
     }
 }

@@ -175,6 +175,7 @@
 
                     <ToggleButton
                         android:id="@+id/camera_btn_video_tb"
+                        android:visibility="gone"
                         android:layout_width="35dp"
                         android:layout_height="35dp"
                         android:layout_alignParentRight="true"
@@ -224,6 +225,7 @@
 
                 <ToggleButton
                     android:id="@+id/camera_btn_audio_tb"
+                    android:visibility="gone"
                     android:layout_width="35dp"
                     android:layout_height="35dp"
                     android:layout_centerInParent="true"
