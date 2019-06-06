@@ -37,6 +37,7 @@ import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -1043,16 +1044,12 @@ public class CallActivity extends AppCompatActivity
         //Enable translate btn lang if self and participant have different languages
         if (!mSelfLang.equals(mParticipantLang)) {
             mMicFlagCIV.setEnabled(true);
+            mMicFlagCIV.setAlpha(1f);
             mTranslatorMicIV.setEnabled(true);
             mTranslatorMicIV.setImageResource(R.drawable.translator_mic_enabled);
-            mMicFlagCIV.bringToFront();
-
             mTranslatorMicP2T_IV.setEnabled(true);
-            mTranslatorMicP2T_IV.setImageResource(R.drawable.translator_mic_enabled);
-            mMicFlagP2T_CIV.bringToFront();
         }else{
             mTranslatorMicIV.setEnabled(false);
-            mTranslatorMicIV.setImageResource(R.drawable.translator_mic_disabled);
         }
     }
 
