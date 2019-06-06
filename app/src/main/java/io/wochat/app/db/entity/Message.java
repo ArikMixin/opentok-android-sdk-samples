@@ -596,7 +596,8 @@ public class Message implements IMessage,
 		else if (isGroupMessage() && !isOutgoing()){
 			String сolorString = Integer.toString(senderColor, 16);
 			//String сolorString = String.format("%X", Color.GREEN).substring(2);
-			String title = "<font color=\"#%s\">" + Utils.getUserFirstName(getSenderName()) + "</font><BR>";
+			//String title = "<font color=\"#%s\">" + Utils.getUserFirstName(getSenderName()) + "</font><BR>";
+			String title = "<font color=\"#%s\">" + getSenderName() + "</font><BR>";
 			//String title = "<font color='#EE0000'>" + Utils.getUserFirstName(getSenderName()) + "</font><BR>";
 			return String.format(title + getText(), сolorString);
 

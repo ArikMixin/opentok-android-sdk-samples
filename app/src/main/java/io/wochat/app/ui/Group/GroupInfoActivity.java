@@ -88,6 +88,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private LinearLayout mAddMembersLL;
 	private LinearLayout mQuitGroupLL;
 	private CardView mAddMembersCV;
+	private CardView mQuitGroupCV;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +105,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		mGroupMembersLL = (LinearLayout)findViewById(R.id.group_members_ll);
 		mAddMembersLL = (LinearLayout)findViewById(R.id.add_members_ll);
 		mQuitGroupLL = (LinearLayout)findViewById(R.id.quit_group_ll);
+		mQuitGroupCV = (CardView)findViewById(R.id.quit_group_cv);
 
 		mAddMembersCV = (CardView)findViewById(R.id.add_members_cv);
 
@@ -127,6 +129,7 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 			mGroupViewModel.getMembersContact(mConversationId).observe(this, groupMemberContacts -> {
 				mGroupMemberContacts = groupMemberContacts;
 				init();
+				invalidateOptionsMenu();
 			});
 		});
 
@@ -166,6 +169,12 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 			mAddMembersCV.setVisibility(View.VISIBLE);
 		else
 			mAddMembersCV.setVisibility(View.GONE);
+		if(mConversation.isSelfInGroup()){
+			mQuitGroupCV.setVisibility(View.VISIBLE);
+		}
+		else {
+			mQuitGroupCV.setVisibility(View.GONE);
+		}
 	}
 
 
@@ -178,7 +187,9 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.menu_group_info, menu);
+		if ((mConversation != null) && (mConversation.isSelfInGroup()))
+			inflater.inflate(R.menu.menu_group_info, menu);
+
 		return true;
 	}
 
@@ -192,6 +203,8 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 				break;
 
 			case R.id.action_picture:
+				if (!mSelfIsAdmin)
+					return super.onOptionsItemSelected(item);
 				StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
 				StrictMode.setVmPolicy(builder.build());
 				mCameraPhotoFileUri = ImagePickerUtil.getCaptureImageOutputUri(this);
@@ -201,6 +214,8 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 				break;
 
 			case R.id.action_edit:
+				if (!mSelfIsAdmin)
+					return super.onOptionsItemSelected(item);
 				showNameAlertDialog(mConversation.getGroupName());
 				break;
 		}
@@ -269,11 +284,10 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 			View view = LayoutInflater.from(this).inflate(R.layout.group_member_item, null);
 			populateMember(view, memberContact);
 
-			view.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					openMemberMenu((GroupMemberContact)v.getTag());
-				}
+			view.setOnClickListener(v -> {
+				if(!mConversation.isSelfInGroup()) // no operation if not in group
+					return;
+				openMemberMenu((GroupMemberContact)v.getTag());
 			});
 			mGroupMembersLL.addView(view);
 
@@ -301,6 +315,8 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private View.OnClickListener mMemberActionClickListener = new View.OnClickListener() {
 		@Override
 		public void onClick(View v) {
+			if(!mConversation.isSelfInGroup()) // no operation if not in group
+				return;
 			GroupMemberContact gmc = (GroupMemberContact)v.getTag();
 			mBottomSheetDialog.dismiss();
 			switch (v.getId()){

@@ -139,6 +139,7 @@ public class NotificationHelper {
 			.setSmallIcon(R.drawable.ic_notif)
 			.setGroupSummary(true)
 			.setGroup(data.conversationId)
+			.setAutoCancel(true)
 			.setPriority(NotificationCompat.PRIORITY_HIGH)
 			//.setDefaults(Notification.DEFAULT_ALL)
 			.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
@@ -183,6 +184,7 @@ public class NotificationHelper {
 			.setVisibility(Notification.VISIBILITY_PUBLIC)
 			.setGroup(data.conversationId)
 			.addPerson(data.contactName)
+			.setAutoCancel(true)
 			//.setFullScreenIntent(pendingIntent, true)
 			.setContentIntent(pendingIntent);
 

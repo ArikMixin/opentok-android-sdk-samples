@@ -109,7 +109,10 @@ public class ConversationActivity extends PermissionActivity implements
 	DateFormatter.Formatter,
 	MessageInput.ButtonClickListener,
 	MessageHolders.ContentChecker<Message>,
-	MessagesListAdapter.SelectionListener, SpeechToTextUtil.SpeechUtilsSTTListener, MessagesListAdapter.OnMessageForwardListener<Message> {
+	MessagesListAdapter.SelectionListener,
+	SpeechToTextUtil.SpeechUtilsSTTListener,
+	MessagesListAdapter.OnMessageForwardListener<Message>,
+	View.OnClickListener {
 
 	private static final String TAG = "ConversationActivity";
 	private static final int REQUEST_SELECT_IMAGE_VIDEO 	= 1;
@@ -272,27 +275,9 @@ public class ConversationActivity extends PermissionActivity implements
 		mContactNameTV = (TextView) findViewById(R.id.contact_name_tv);
 		mContactDetailsTV = (TextView) findViewById(R.id.contact_details_tv);
 		mContactDetailsTV.setText("");
+		mContactDetailsTV.setOnClickListener(this);
 		mContactNameTV.setText(mParticipantName);
-		mContactNameTV.setOnClickListener(v -> {
-			if (mIsGroup) {
-				Intent intent = new Intent(this, GroupInfoActivity.class);
-				intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
-				intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
-				intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
-				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
-				startActivity(intent);
-			}
-			else {
-				Intent intent = new Intent(this, ContactInfoActivity.class);
-				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
-				intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
-				intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
-				intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
-				startActivity(intent);
-			}
-
-
-		});
+		mContactNameTV.setOnClickListener(this);
 
 
 
@@ -420,7 +405,7 @@ public class ConversationActivity extends PermissionActivity implements
 				mContactNameTV.setText(mParticipantName);
 				mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
 
-				if (mIsGroup) {
+				if (mConversation.isSelfInGroup()) {
 					mNotInGroupMsgTV.setVisibility(View.GONE);
 					mMessageInput.setVisibility(View.VISIBLE);
 				}
@@ -2150,6 +2135,31 @@ public class ConversationActivity extends PermissionActivity implements
 			}
 		}
 		return "";
+
+	}
+
+	@Override
+	public void onClick(View v) {
+		switch (v.getId()){
+			case R.id.contact_name_tv:
+			case R.id.contact_details_tv:
+				if (mIsGroup) {
+					Intent intent = new Intent(this, GroupInfoActivity.class);
+					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+					intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
+					intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
+					startActivity(intent);
+				}
+				else {
+					Intent intent = new Intent(this, ContactInfoActivity.class);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
+					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
+					intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
+					startActivity(intent);
+				}
+		}
 
 	}
 

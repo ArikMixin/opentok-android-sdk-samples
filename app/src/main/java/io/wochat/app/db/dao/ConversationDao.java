@@ -140,8 +140,7 @@ public interface ConversationDao {
 		"group_description = :description , " +
 		"group_image_url = :image_url , " +
 		"group_created_date = :created_date , " +
-		"group_created_by = :created_by , " +
-		"is_self_in_group = 1 " +
+		"group_created_by = :created_by " +
 		"WHERE conversation_id =:id" )
 	void updateGroupData(String id, String groupName, String description, String image_url, Date created_date, String created_by);
 
@@ -202,5 +201,16 @@ public interface ConversationDao {
 		"is_self_in_group = 0 " +
 		"WHERE conversation_id =:conversationId")
 	void leaveGroup(String conversationId);
+
+
+	@Query("UPDATE conversation_table SET  " +
+		"is_self_in_group = 1 " +
+		"WHERE conversation_id =:conversationId")
+	void updateSelfInGroupTrue(String conversationId);
+
+	@Query("UPDATE conversation_table SET  " +
+		"is_self_in_group = 0 " +
+		"WHERE conversation_id =:conversationId")
+	void updateSelfInGroupFalse(String conversationId);
 
 }
