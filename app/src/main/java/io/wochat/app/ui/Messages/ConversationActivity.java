@@ -82,6 +82,7 @@ import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
 import io.wochat.app.ui.Group.GroupInfoActivity;
 import io.wochat.app.ui.Languages.LanguageSelectorDialog;
+import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.SpeechToTextUtil;
@@ -186,6 +187,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private List<GroupMember> mGroupMembers;
 	private GroupViewModel mGroupViewModel;
 	private TextView mNotInGroupMsgTV;
+	private boolean mIsFromPushNotifivation;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -268,6 +270,11 @@ public class ConversationActivity extends PermissionActivity implements
 		if(getIntent().hasExtra(Consts.INTENT_CLICK_FROM_NOTIFICATION)){
 			mClickedFromNotifivation = getIntent().getBooleanExtra(Consts.INTENT_CLICK_FROM_NOTIFICATION, false);
 		}
+
+		if(getIntent().hasExtra(Consts.INTENT_IS_FROM_PUSH_NOTIFICATION)){
+			mIsFromPushNotifivation = getIntent().getBooleanExtra(Consts.INTENT_IS_FROM_PUSH_NOTIFICATION, false);
+		}
+
 
 		mSelfContact = new Contact(mSelfId, mSelfLang, mSelfName, mSelfPicUrl);
 		mParticipantContact = new Contact(mParticipantId, mParticipantLang, mParticipantName, mParticipantPic);
@@ -627,6 +634,11 @@ public class ConversationActivity extends PermissionActivity implements
 					mInputMessageReplyLayout.setVisibility(View.GONE);
 				}
 				else {
+					Log.e(TAG, "isTaskRoot: " + isTaskRoot());
+					if (isTaskRoot()){
+						Intent intent = new Intent(this, MainActivity.class);
+						startActivity(intent);
+					}
 					finish();
 					return true;
 				}

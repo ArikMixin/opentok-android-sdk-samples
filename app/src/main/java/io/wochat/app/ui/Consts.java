@@ -16,6 +16,7 @@ public class Consts {
 	public static final String INTENT_SELF_PIC_URL = "INTENT_SELF_PIC_URL";
 	public static final String INTENT_SELF_NAME = "INTENT_SELF_NAME";
 	public static final String INTENT_CLICK_FROM_NOTIFICATION = "INTENT_CLICK_FROM_NOTIFICATION";
+	public static final String INTENT_IS_FROM_PUSH_NOTIFICATION = "INTENT_IS_FROM_PUSH_NOTIFICATION";
 	public static final String INTENT_LAST_ONLINE = "INTENT_LAST_ONLINE";
 	public static final String INTENT_IS_ONLINE = "INTENT_IS_ONLINE";
 }

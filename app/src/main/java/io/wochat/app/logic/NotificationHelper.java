@@ -62,13 +62,13 @@ public class NotificationHelper {
 
 			repo.getNotificationDataForGroupEvent(message, contact, data -> {
 				if (data != null)
-					showNotification(application.getApplicationContext(), data);
+					showNotification(application.getApplicationContext(), data, true);
 			});
 		}
 		else {
 			repo.getNotificationData(message, contact, data -> {
 				if (data != null)
-					showNotification(application.getApplicationContext(), data);
+					showNotification(application.getApplicationContext(), data, true);
 			});
 		}
 	}
@@ -78,11 +78,13 @@ public class NotificationHelper {
 		ContactServer contactServer = contact != null? contact.getContactServer() : null;
 		repo.getNotificationData(message, contactServer, data -> {
 			if (data != null)
-				showNotification(application.getApplicationContext(), data);
+				showNotification(application.getApplicationContext(), data, false);
 		});
 	}
 
-	private static void showNotification(Context context, NotificationData data){
+	private static void showNotification(Context context, NotificationData data, boolean isPush){
+
+		Log.e(TAG, "showNotification: " + data.body + ", from push: " + isPush);
 
 		//createNotificationChannel(context);
 
@@ -111,6 +113,7 @@ public class NotificationHelper {
 		intent.putExtra(Consts.INTENT_SELF_PIC_URL, data.selfUser.getProfilePicUrl());
 
 		intent.putExtra(Consts.INTENT_CLICK_FROM_NOTIFICATION, true);
+		intent.putExtra(Consts.INTENT_IS_FROM_PUSH_NOTIFICATION, isPush);
 
 
 
