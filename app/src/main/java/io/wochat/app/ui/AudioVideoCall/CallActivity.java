@@ -12,6 +12,7 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -64,6 +65,7 @@ import io.wochat.app.db.entity.Message;
 import io.wochat.app.model.StateData;
 import io.wochat.app.model.VideoAudioCall;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.utils.SpeechToTextUtil;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -78,7 +80,8 @@ public class CallActivity extends AppCompatActivity
         Session.SessionListener,
         PublisherKit.PublisherListener,
         View.OnTouchListener, SubscriberKit.VideoListener,
-        CompoundButton.OnCheckedChangeListener {
+        CompoundButton.OnCheckedChangeListener,
+        SpeechToTextUtil.SpeechUtilsSTTListener, AudioManager.OnAudioFocusChangeListener {
 
     private static final String TAG = "CallActivity";
     private static final String TOKBOX = "TokBox";
@@ -139,7 +142,7 @@ public class CallActivity extends AppCompatActivity
     private ImageView mLockIV, mRecordingStateAudioIV, mRecordingStateVideoIV;
     volatile boolean sessitonRecivedFlag;
     private Vibrator vibrator;
-
+    private boolean mPauseSessiton;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
 
@@ -231,6 +234,8 @@ public class CallActivity extends AppCompatActivity
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
+
+        SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
 
         initPIP();
 
@@ -569,7 +574,6 @@ public class CallActivity extends AppCompatActivity
 
     private void micTranslateTouch(View view, MotionEvent event) {
 
-
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: //--Hold--
                 sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,true);
@@ -579,8 +583,30 @@ public class CallActivity extends AppCompatActivity
                 mLockRL.setVisibility(View.VISIBLE);
                 ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
 
+               // mSession.unpublish(mPublisher);
+
+/*                ((AudioManager)this.getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_SYSTEM,true);
+                AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);*/
+
+              //  mPublisher.onPause();
+                mPublisher.setPublishAudio(false);
+                mSubscriber.setSubscribeToAudio(false);
+
+//              mSubscriber.setSubscribeToAudio(false); // audio off*/
+
+               // mSession.disconnect();
+              //  mSession.disconnect();
+
+
+//                mSession.connect
+//              mSubscriber.setSubscribeToAudio(false); // audio off*/
+                // mPauseSessiton = true;
+
+                SpeechToTextUtil.getInstance().startSpeechToText();
+
                 //SlideUp
                 y1 = event.getY();
+
                 break;
 
             case MotionEvent.ACTION_MOVE: //--Move--
@@ -629,7 +655,22 @@ public class CallActivity extends AppCompatActivity
     }
 
     public void sendPush2TalkMsg(){
-            sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,false);
+       // mSession.publish(mPublisher);
+
+        SpeechToTextUtil.getInstance().stopSpeechToText();
+//        mPublisher.setPublishAudio(true);
+//        mSubscriber.setSubscribeToAudio(true); // audio off
+    /*    mSession.connect(mVideoAudioCall.getToken());
+
+        ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+        mPublisherFL.addView(mPublisher.getView());
+*/
+        // mSession.connect(mVideoAudioCall.getToken());
+      //  mSession.publish(mPublisher);
+
+        mPauseSessiton = false;
+
+        sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,false);
             ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
                     mPublisherFL.setVisibility(View.VISIBLE);
                     mTranslatorMicP2T_IV.setImageResource(0);
@@ -976,12 +1017,32 @@ public class CallActivity extends AppCompatActivity
     }
 
     @Override
-    public void onVideoDisableWarning(SubscriberKit subscriberKit) {
+    public void onVideoDisableWarning(SubscriberKit subscriberKit) { }
+    @Override
+    public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) { }
 
+    @Override
+    public void onSpeechToTextResult(String text, int duration) {
+        Log.d("SpeechToTextUtil", "text: " + text);
     }
 
     @Override
-    public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) { }
+    public void onBeginningOfSpeechToText() {
+    }
+
+    @Override
+    public void onEndOfSpeechToText() {
+    }
+
+    @Override
+    public void onErrorOfSpeechToText(int resourceString) {
+    }
+
+    @Override
+    public void onAudioFocusChange(int i) {
+
+    }
+
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -1136,6 +1197,7 @@ public class CallActivity extends AppCompatActivity
         Log.i(TOKBOX, "Session Disconnected");
     }
 
+
     @Override
     public void onStreamReceived(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Received");
@@ -1194,6 +1256,8 @@ public class CallActivity extends AppCompatActivity
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Dropped");
+        if(mPauseSessiton)
+            return;
 
         if (mSubscriber != null) {
                 mSubscriber = null;
@@ -1241,6 +1305,7 @@ public class CallActivity extends AppCompatActivity
 
         //Disable translator button if other side is recording now
         if (isRecording) {
+            mPauseSessiton = true;
             mMicFlagCIV.setEnabled(false);
             mMicFlagCIV.setAlpha(0.3f);
             mTranslatorMicIV.setEnabled(false);
