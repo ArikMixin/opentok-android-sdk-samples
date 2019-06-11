@@ -582,26 +582,6 @@ public class CallActivity extends AppCompatActivity
                 mPublisherFL.setVisibility(View.GONE);
                 mLockRL.setVisibility(View.VISIBLE);
                 ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
-
-               // mSession.unpublish(mPublisher);
-
-/*                ((AudioManager)this.getSystemService(Context.AUDIO_SERVICE)).setStreamMute(AudioManager.STREAM_SYSTEM,true);
-                AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);*/
-
-              //  mPublisher.onPause();
-                mPublisher.setPublishAudio(false);
-                mSubscriber.setSubscribeToAudio(false);
-
-//              mSubscriber.setSubscribeToAudio(false); // audio off*/
-
-               // mSession.disconnect();
-              //  mSession.disconnect();
-
-
-//                mSession.connect
-//              mSubscriber.setSubscribeToAudio(false); // audio off*/
-                // mPauseSessiton = true;
-
                 SpeechToTextUtil.getInstance().startSpeechToText();
 
                 //SlideUp
@@ -655,19 +635,7 @@ public class CallActivity extends AppCompatActivity
     }
 
     public void sendPush2TalkMsg(){
-       // mSession.publish(mPublisher);
-
         SpeechToTextUtil.getInstance().stopSpeechToText();
-//        mPublisher.setPublishAudio(true);
-//        mSubscriber.setSubscribeToAudio(true); // audio off
-    /*    mSession.connect(mVideoAudioCall.getToken());
-
-        ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
-        mPublisherFL.addView(mPublisher.getView());
-*/
-        // mSession.connect(mVideoAudioCall.getToken());
-      //  mSession.publish(mPublisher);
-
         mPauseSessiton = false;
 
         sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,false);
