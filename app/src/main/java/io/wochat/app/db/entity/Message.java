@@ -517,10 +517,12 @@ public class Message implements IMessage,
 		showTranslationFlag = null;
 	}
 
+	// for stub messages fixtures
 	public Message(String id, Contact contact, String text, String messageLang) {
         this(id, contact, text, messageLang, System.currentTimeMillis());
     }
 
+	// for stub messages fixtures
     public Message(String id, Contact contact, String messageText, String messageLang, long timestamp) {
 		this.showNonTranslated = null;
 		this.showTranslationFlag = null;
@@ -1164,6 +1166,33 @@ public class Message implements IMessage,
 		return newMessage;
 	}
 
+	public Message generateForwardMessageForGroup(String selfId, String groupId, String groupName, String selfLang){
+		Message newMessage = fromJson(toJson());
+		newMessage.messageId = UUID.randomUUID().toString();
+		newMessage.groupId = groupId;
+		newMessage.groupName = groupName;
+		newMessage.participantId = null;
+		newMessage.senderId = selfId;
+		newMessage.conversationId = groupId;
+		newMessage.recipients = new String[]{};
+		newMessage.groups = new String[]{groupId};
+		//newMessage.timestamp = System.currentTimeMillis()/1000;
+		newMessage.timestampMilli = System.currentTimeMillis();
+		newMessage.ackStatus = ACK_STATUS_PENDING;
+		newMessage.translatedLanguage = null; // in order to invoke translation to the new participant language
+		newMessage.messageLanguage = selfLang;
+		if (selfId.equals(senderId)){ // outgoing - remove translation
+			newMessage.translatedText = null;
+		}
+		else { // incoming - check if translated
+			if ((translatedText != null) && (!translatedText.equals(""))){
+				newMessage.messageText = translatedText;  // take the text that was translated to me and put it as the message text
+				newMessage.messageLanguage = translatedLanguage; // my language
+			}
+		}
+
+		return newMessage;
+	}
 
 
 	private String getGroupEventMessage() {

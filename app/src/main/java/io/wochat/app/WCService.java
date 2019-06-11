@@ -155,8 +155,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				List<Message> msgs = mRepository.getOutgoingPendingMessages();
 				mAppExecutors.networkIO().execute(() -> {
 					subscribe(convList);
-					if ((msgs != null) && (!msgs.isEmpty()))
+					if ((msgs != null) && (!msgs.isEmpty())) {
 						sendMessages(msgs);
+					}
 				});
 
 			});
@@ -312,11 +313,32 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void sendMessage(Message message){
 		//message.setDuration(message.getDuration()/1000);
 		Log.e(TAG, "sendMessage: " + message.toJson());
-		mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
+		if (message.isGroupMessage() && (message.getParticipantId() == null)){
+			String[] ids = message.getRecipients();
+			List<String> participantIds = new ArrayList<>();
+			for (int i=0; i<ids.length ; i++){
+				participantIds.add(ids[i]);
+			}
+			sendGroupMessageWithIds(message, participantIds, message.getSenderId());
+		}
+		else
+			mXMPPProvider.sendStringMessage(message.toJson(), message.getParticipantId(), message.getConversationId());
+	}
+
+	public void sendGroupMessageWithIds(Message message, List<String> participantIds, String selfId) {
+		for (String id : participantIds){
+			if(id.equals(selfId)) {
+				participantIds.remove(id);
+				break;
+			}
+		}
+		Log.e(TAG, "sendGroupMessageWithIds count: " + participantIds.size());
+		mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
 	}
 
 
 	public void sendGroupMessage(Message message, List<GroupMember> groupMembers, String selfId) {
+		Log.e(TAG, "sendGroupMessage count: " + groupMembers.size());
 		List<String> participantIds = new ArrayList<>();
 		for (GroupMember groupMember : groupMembers){
 			if(!groupMember.getUserId().equals(selfId))
@@ -325,6 +347,24 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
 	}
 
+	public void sendGroupMessagesWithIds(List<Message> messages, List<String> participantIds, String selfId){
+		for (String id : participantIds){
+			if(id.equals(selfId)) {
+				participantIds.remove(id);
+				break;
+			}
+		}
+
+		Log.e(TAG, "sendGroupMessagesWithIds count: " + messages.size());
+		for (Message  message : messages) {
+			if (message.isImage()){
+				if ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty())) // make sure media was uploaded
+					mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
+			}
+			else
+				mXMPPProvider.sendGroupStringMessage(message.toJson(), participantIds, message.getConversationId());
+		}
+	}
 
 	public void sendGroupMessages(List<Message> messages, List<GroupMember> groupMembers, String selfId){
 		List<String> participantIds = new ArrayList<>();
@@ -333,7 +373,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				participantIds.add(groupMember.getUserId());
 		}
 
-		Log.e(TAG, "sendMessages count: " + messages.size());
+		Log.e(TAG, "sendGroupMessages count: " + messages.size());
 		for (Message  message : messages) {
 			if (message.isImage()){
 				if ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty())) // make sure media was uploaded

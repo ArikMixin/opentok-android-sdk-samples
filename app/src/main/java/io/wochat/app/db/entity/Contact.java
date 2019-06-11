@@ -159,6 +159,14 @@ public class Contact implements IContact {
 			return null;
 	}
 
+	@Override
+	public String getStatus() {
+		if ((contactServer != null)&& (contactServer.getStatus() != null) && (!contactServer.getStatus().equals("")))
+			return contactServer.getStatus();
+		else
+			return null;
+	}
+
 	public String getLocalOSId(){
 		if (contactLocal != null)
 			return contactLocal.getOSId();

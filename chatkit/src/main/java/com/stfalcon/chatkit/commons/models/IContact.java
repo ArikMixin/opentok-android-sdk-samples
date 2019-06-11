@@ -24,4 +24,5 @@ public interface IContact {
     String getName();
     String getDisplayName();
     String getAvatar();
+    String getStatus();
 }

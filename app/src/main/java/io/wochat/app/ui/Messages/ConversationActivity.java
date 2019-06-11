@@ -52,6 +52,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.chrisbanes.photoview.PhotoView;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
@@ -63,6 +65,7 @@ import com.stfalcon.chatkit.utils.DateFormatter;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -76,8 +79,10 @@ import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.model.ContactOrGroup;
 import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.Contact.ContactGroupsMultiSelectorActivity;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
 import io.wochat.app.ui.Group.GroupInfoActivity;
@@ -175,7 +180,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private Contact mParticipantContact;
 	private boolean mIsInMsgSelectionMode;
 	private int mSelectedMessageCount;
-	private String mForwardContactId;
+	private ContactOrGroup mForwardContactOrGroupSingle;
 	private MessageReplyLayout mInputMessageReplyLayout;
 	private boolean mClickedFromNotifivation;
 	private SupportedLanguagesViewModel mSupportedLanguagesViewModel;
@@ -658,7 +663,7 @@ public class ConversationActivity extends PermissionActivity implements
 				actionCopy();
 				break;
 			case R.id.action_frwrd:
-				Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+				Intent intent = new Intent(this, ContactGroupsMultiSelectorActivity.class);
 				intent.putExtra(Consts.INTENT_TITLE, getString(R.string.search_frwrd_to));
 				intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_send);
 				startActivityForResult(intent, REQUEST_SELECT_CONTACTS);
@@ -734,8 +739,10 @@ public class ConversationActivity extends PermissionActivity implements
 	public boolean onSubmit(CharSequence input) {
 		String msgText = input.toString();
 		Message message;
-		if (mIsGroup)
+		if (mIsGroup) {
 			message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
+			message.setRecipients(getGroupMembersArray());
+		}
 		else
 			message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
 
@@ -767,6 +774,15 @@ public class ConversationActivity extends PermissionActivity implements
 
 	}
 
+
+	private String[] getGroupMembersArray(){
+		String[] res = new String[mGroupMembers.size()];
+		int i=0;
+		for (GroupMember groupMember : mGroupMembers){
+			res[i++] = groupMember.getUserId();
+		}
+		return res;
+	}
 
 	@Override
 	public void onClick(int buttonId) {
@@ -861,7 +877,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onMessageForward(Message message) {
-		Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+		Intent intent = new Intent(this, ContactGroupsMultiSelectorActivity.class);
 		intent.putExtra(Consts.INTENT_TITLE, getString(R.string.search_frwrd_to));
 		intent.putExtra(Consts.INTENT_MESSAGE_OBJ, message.toJson());
 		intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_send);
@@ -1440,8 +1456,12 @@ public class ConversationActivity extends PermissionActivity implements
 		else if (requestCode == REQUEST_SELECT_CONTACTS){
 			if (resultCode == Activity.RESULT_OK) {
 				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
+				String contactsGroupObj = intent.getStringExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT);
+				Type listType = new TypeToken<List<ContactOrGroup>>() {}.getType();
+				Gson gson = new Gson();
+				List<ContactOrGroup> contactsGroupList = gson.fromJson(contactsGroupObj, listType);
 				ArrayList<Message> selectedMessages = mMessagesAdapter.getSelectedMessages();
-				forwardMessagesToContacts(contacts, selectedMessages);
+				forwardMessagesToContactsGroups(contactsGroupList, selectedMessages);
 			}
 		}
 		else if (requestCode == REQUEST_SELECT_CONTACTS_W_MSG){
@@ -1449,9 +1469,13 @@ public class ConversationActivity extends PermissionActivity implements
 				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
 				String messageString = intent.getStringExtra(Consts.INTENT_MESSAGE_OBJ);
 				Message message = Message.fromJson(messageString);
+				String contactsGroupObj = intent.getStringExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT);
+				Type listType = new TypeToken<List<ContactOrGroup>>() {}.getType();
+				Gson gson = new Gson();
+				List<ContactOrGroup> contactsGroupList = gson.fromJson(contactsGroupObj, listType);
 				ArrayList<Message> selectedMessages = new ArrayList<>();
 				selectedMessages.add(message);
-				forwardMessagesToContacts(contacts, selectedMessages);
+				forwardMessagesToContactsGroups(contactsGroupList, selectedMessages);
 			}
 		}
 	}
@@ -1576,6 +1600,7 @@ public class ConversationActivity extends PermissionActivity implements
 	};
 
 	private void addGroupInfo(Message message) {
+		message.setRecipients(getGroupMembersArray());
 		message.setGroupName(mParticipantName);
 		message.setGroupId(mConversationId);
 		message.setGroups(new String[]{mConversationId});
@@ -1636,8 +1661,9 @@ public class ConversationActivity extends PermissionActivity implements
 	private void submitTempSpeechableMessage(String text, int duration) {
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, text, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
-		if (mIsGroup)
+		if (mIsGroup) {
 			addGroupInfo(message);
+		}
 
 
 		if (isMagicButtonOn()) {
@@ -2007,22 +2033,22 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 
-	private void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
-		Log.e(TAG, "forwardMessagesToContacts, num contacts: " + contacts.length + " , num msgs: " + messages.size());
+	private void forwardMessagesToContactsGroups(List<ContactOrGroup> contactOrGroupList, ArrayList<Message> messages) {
+		Log.e(TAG, "forwardMessagesToContactsGroups, num contacts: " + contactOrGroupList.size() + " , num msgs: " + messages.size());
 
-		int totalMessagesToSend = contacts.length * messages.size();
+		int totalMessagesToSend = contactOrGroupList.size() * messages.size();
 
-		if (contacts.length == 1)
-			mForwardContactId = contacts[0];
+		if (contactOrGroupList.size() == 1)
+			mForwardContactOrGroupSingle = contactOrGroupList.get(0);
 		else
-			mForwardContactId = null;
+			mForwardContactOrGroupSingle = null;
 
-		mConversationViewModel.forwardMessagesToContacts(contacts, messages);
+		mConversationViewModel.forwardMessagesToContactsGroups(contactOrGroupList, messages);
 		mMessagesAdapter.unselectAllItems();
 
-		Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() observe");
+		Log.e(TAG, "forwardMessagesToContactsGroups, getOutgoingPendingMessages() observe");
 		mConversationViewModel.getOutgoingPendingMessagesLD().observe(this, pendingMessages -> {
-			Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() result: " + pendingMessages.size());
+			Log.e(TAG, "forwardMessagesToContactsGroups, getOutgoingPendingMessages() result: " + pendingMessages.size());
 
 			if ((pendingMessages != null)&&(pendingMessages.size()>= totalMessagesToSend)) {
 
@@ -2031,10 +2057,14 @@ public class ConversationActivity extends PermissionActivity implements
 				else
 					mService.sendMessages(pendingMessages);
 
-				Log.e(TAG, "forwardMessagesToContacts, mForwardContactId: " + mForwardContactId);
-				if (mForwardContactId != null) {
-					String conversationId = Conversation.getConversationId(mSelfId, mForwardContactId);
-					Log.e(TAG, "forwardMessagesToContacts, new conversationId: " + conversationId);
+				Log.e(TAG, "forwardMessagesToContactsGroups, mForwardContactOrGroupSingle: " + mForwardContactOrGroupSingle);
+				if (mForwardContactOrGroupSingle != null) {
+					String conversationId;
+					if (mForwardContactOrGroupSingle.isContact())
+						conversationId = Conversation.getConversationId(mSelfId, mForwardContactOrGroupSingle.getContact().getId());
+					else
+						conversationId = mForwardContactOrGroupSingle.getConversation().getId();
+					Log.e(TAG, "forwardMessagesToContactsGroups, new conversationId: " + conversationId);
 					mConversationViewModel.getConversationLD(conversationId).observe(this, conversation -> {
 						OpenConversationActivity(conversation);
 					});

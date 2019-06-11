@@ -213,4 +213,8 @@ public interface ConversationDao {
 		"WHERE conversation_id =:conversationId")
 	void updateSelfInGroupFalse(String conversationId);
 
+
+	@Query("SELECT * from conversation_table WHERE is_group = 1 ORDER BY last_message_timestamp ASC")
+	public LiveData<List<Conversation>> getAllGroupConversationsLD();
+
 }

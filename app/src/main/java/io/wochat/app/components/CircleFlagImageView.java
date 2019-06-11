@@ -15,6 +15,7 @@ import com.squareup.picasso.Picasso;
 
 import io.wochat.app.R;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.model.ContactOrGroup;
 import io.wochat.app.utils.Utils;
 
 public class CircleFlagImageView extends LinearLayout {
@@ -178,6 +179,18 @@ public class CircleFlagImageView extends LinearLayout {
 		setInfo(picUrl, language, contact.getInitials());
 	}
 
+	public void setContactOrGroup(ContactOrGroup contactOrGroup, boolean isChecked, boolean isCanceled){
+		mIsChecked = isChecked;
+		mIsCanceled = isCanceled;
+		String picUrl = contactOrGroup.getAvatar();
+		String language;
+		if (contactOrGroup.isContact())
+			language = contactOrGroup.getContact().getLanguage();
+		else
+			language = "";
+		setInfo(picUrl, language, contactOrGroup.getInitials());
+	}
+
 
 	public void displayFlag(boolean withFlag){
 		mWithFlag = withFlag;
@@ -218,5 +231,11 @@ public class CircleFlagImageView extends LinearLayout {
 		}
 	}
 
+	public void setChecked(boolean checked) {
+		mIsChecked = checked;
+	}
 
+	public void setCanceled(boolean canceled) {
+		mIsCanceled = canceled;
+	}
 }

@@ -54,6 +54,7 @@ import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.GroupMemberMessage;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.Notif;
+import io.wochat.app.model.ContactOrGroup;
 import io.wochat.app.model.ConversationAndItsGroupMembers;
 import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.model.SupportedLanguage;
@@ -806,6 +807,41 @@ public class WCRepository {
 	public LiveData<List<Contact>> getServerContactsWithoutSelf() {
 		return mContactDao.getServerContactsWithoutSelf(mSharedPreferences.getUserId());
 	}
+
+	public LiveData<List<ContactOrGroup>> getServerContactsWithoutSelfCOG(){
+		LiveData<List<Contact>> ld = mContactDao.getServerContactsWithoutSelf(mSharedPreferences.getUserId());
+
+		LiveData<List<ContactOrGroup>> res = Transformations.map(ld, new Function<List<Contact>, List<ContactOrGroup>>() {
+			@Override
+			public List<ContactOrGroup> apply(List<Contact> input) {
+				List<ContactOrGroup> list = new ArrayList<>();
+				for (Contact contact: input){
+					ContactOrGroup contactOrGroup = new ContactOrGroup();
+					contactOrGroup.setContact(contact);
+					list.add(contactOrGroup);
+				}
+				return list;
+			}
+		});
+		return res;
+	}
+
+
+	public LiveData<List<ContactOrGroup>> getGroupsCOG(){
+		LiveData<List<Conversation>> ld = mConversationDao.getAllGroupConversationsLD();
+
+		LiveData<List<ContactOrGroup>> res = Transformations.map(ld, input -> {
+			List<ContactOrGroup> list = new ArrayList<>();
+			for (Conversation conversation : input){
+				ContactOrGroup contactOrGroup = new ContactOrGroup();
+				contactOrGroup.setConversation(conversation);
+				list.add(contactOrGroup);
+			}
+			return list;
+		});
+		return res;
+	}
+
 
 	public MutableLiveData<Boolean> getIsDuringRefreshContacts() {
 		return mIsDuringRefreshContacts;
@@ -2149,6 +2185,50 @@ public class WCRepository {
 		});
 
 	}
+
+
+	public void forwardMessagesToContactsGroups(List<ContactOrGroup> contactOrGroupList, ArrayList<Message> messages) {
+		mAppExecutors.diskIO().execute(() -> {
+
+			Collections.sort(messages, (m1, m2) -> (int) (m1.getTimestampMilli() - m2.getTimestampMilli()));
+
+			for (ContactOrGroup contactOrGroup : contactOrGroupList) {
+				for (Message message : messages) {
+					if (contactOrGroup.isContact()) {
+						Contact contact = contactOrGroup.getContact();
+						Message newMessage = message.generateForwardMessage(mSharedPreferences.getUserId(),
+							contact.getId(),
+							contact.getLanguage());
+						addNewOutgoingMessage(newMessage);
+					}
+					else {
+						Conversation conversation = contactOrGroup.getConversation();
+						List<GroupMember> members = mGroupDao.getMembers(conversation.getId());
+						String[] ids = new String[members.size()];
+						int i=0;
+						for (GroupMember groupMember : members){
+							ids[i++] = groupMember.getUserId();
+						}
+						Message newMessage = message.generateForwardMessageForGroup(mSharedPreferences.getUserId(),
+							conversation.getConversationId(),
+							conversation.getGroupName(),
+							mSharedPreferences.getUserLang());
+						newMessage.setRecipients(ids);
+						addNewOutgoingMessage(newMessage);
+
+					}
+
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+					}
+				}
+			}
+		});
+
+
+	}
+
 
 
 	public void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
