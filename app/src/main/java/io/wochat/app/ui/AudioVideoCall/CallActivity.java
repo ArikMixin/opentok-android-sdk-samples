@@ -596,13 +596,7 @@ public class CallActivity extends AppCompatActivity
                 mPublisher.setPublishAudio(false);
                 mSubscriber.setSubscribeToAudio(false);
 
-//                customAudioDevice.stopCapturer();
-//                customAudioDevice.destroyCapturer();
-             //   customAudioDevice = null;
-
                 AudioDeviceManager.getAudioDevice().stopCapturer();
-                 //AudioDeviceManager.getAudioDevice().destroyCapturer();
-
                 SpeechToTextUtil.getInstance().startSpeechToText();
 
                 //SlideUp
@@ -656,16 +650,8 @@ public class CallActivity extends AppCompatActivity
     }
 
     public void sendPush2TalkMsg(){
-//        customAudioDevice.initCapturer();
-//        customAudioDevice.startCapturer();
-
-      //   AudioDeviceManager.getAudioDevice().initCapturer();
-    //     AudioDeviceManager.getAudioDevice().startCapturer();
-
-        // mSession.connect(mVideoAudioCall.getToken());
 
         AudioDeviceManager.getAudioDevice().startCapturer();
-
         mPublisher.setPublishAudio(true);
         mSubscriber.setSubscribeToAudio(true);
 
