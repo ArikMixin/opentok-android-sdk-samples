@@ -11,10 +11,8 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -65,6 +63,7 @@ import io.wochat.app.db.entity.Message;
 import io.wochat.app.model.StateData;
 import io.wochat.app.model.VideoAudioCall;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.utils.CustomAudioDevice;
 import io.wochat.app.utils.SpeechToTextUtil;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.VideoAudioCallViewModel;
@@ -79,9 +78,11 @@ public class CallActivity extends AppCompatActivity
         EasyPermissions.PermissionCallbacks,
         Session.SessionListener,
         PublisherKit.PublisherListener,
-        View.OnTouchListener, SubscriberKit.VideoListener,
+        View.OnTouchListener,
+        SubscriberKit.VideoListener,
         CompoundButton.OnCheckedChangeListener,
-        SpeechToTextUtil.SpeechUtilsSTTListener, AudioManager.OnAudioFocusChangeListener {
+        SpeechToTextUtil.SpeechUtilsSTTListener,
+        AudioManager.OnAudioFocusChangeListener {
 
     private static final String TAG = "CallActivity";
     private static final String TOKBOX = "TokBox";
@@ -142,7 +143,7 @@ public class CallActivity extends AppCompatActivity
     private ImageView mLockIV, mRecordingStateAudioIV, mRecordingStateVideoIV;
     volatile boolean sessitonRecivedFlag;
     private Vibrator vibrator;
-    private boolean mPauseSessiton;
+    private CustomAudioDevice customAudioDevice;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
 
@@ -235,7 +236,14 @@ public class CallActivity extends AppCompatActivity
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
 
+
+        //Init audio and SpeechToTextUtil
         SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
+        customAudioDevice = new CustomAudioDevice(CallActivity.this);
+        customAudioDevice.initCapturer();
+    ///    customAudioDevice.startCapturer();
+        if(AudioDeviceManager.getAudioDevice() == null )
+                    AudioDeviceManager.setAudioDevice(customAudioDevice);
 
         initPIP();
 
@@ -582,6 +590,14 @@ public class CallActivity extends AppCompatActivity
                 mPublisherFL.setVisibility(View.GONE);
                 mLockRL.setVisibility(View.VISIBLE);
                 ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
+//
+                mPublisher.setPublishAudio(false);
+                mSubscriber.setSubscribeToAudio(false);
+
+                customAudioDevice.stopCapturer();
+//                customAudioDevice.destroyCapturer();
+//                customAudioDevice = null;
+
                 SpeechToTextUtil.getInstance().startSpeechToText();
 
                 //SlideUp
@@ -628,15 +644,21 @@ public class CallActivity extends AppCompatActivity
 
             case MotionEvent.ACTION_UP: //--Release--
                         if(!mPush2talk_locked)
-                                    sendPush2TalkMsg();
+                                     sendPush2TalkMsg();
 
                 break;
         }
     }
 
     public void sendPush2TalkMsg(){
-        SpeechToTextUtil.getInstance().stopSpeechToText();
-        mPauseSessiton = false;
+        customAudioDevice = new CustomAudioDevice(CallActivity.this);
+        customAudioDevice.initCapturer();
+        customAudioDevice.startCapturer();
+//        AudioDeviceManager.setAudioDevice(customAudioDevice);
+     //  mSession.connect(mVideoAudioCall.getToken());
+
+        mPublisher.setPublishAudio(true);
+        mSubscriber.setSubscribeToAudio(true);
 
         sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,false);
             ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
@@ -867,6 +889,7 @@ public class CallActivity extends AppCompatActivity
     }
 
     public void connectToSession(String sessionID, String tokenID){
+     // mSession = new Session(this, TOK_BOX_APIKEY, sessionID);
         mSession = new Session.Builder(this, TOK_BOX_APIKEY, sessionID).build();
         mSession.setSessionListener(this);
         mSession.connect(tokenID);
@@ -920,6 +943,11 @@ public class CallActivity extends AppCompatActivity
                  mPublisher.destroy();
             }
         }
+
+        customAudioDevice.stopCapturer();
+        customAudioDevice.destroyCapturer();
+
+
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -1052,7 +1080,9 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void callStarted() {
-            callStartedFlag = true;
+       // customAudioDevice.startCapturer();
+
+        callStartedFlag = true;
             mArrowsIV.startAnimation(mTranslateAnima); // start PushToTalk arrow animation
             mAcceptIncomingCIV.setEnabled(false);
             mStatusRL.setVisibility(View.GONE);
@@ -1224,8 +1254,6 @@ public class CallActivity extends AppCompatActivity
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Dropped");
-        if(mPauseSessiton)
-            return;
 
         if (mSubscriber != null) {
                 mSubscriber = null;
@@ -1273,7 +1301,6 @@ public class CallActivity extends AppCompatActivity
 
         //Disable translator button if other side is recording now
         if (isRecording) {
-            mPauseSessiton = true;
             mMicFlagCIV.setEnabled(false);
             mMicFlagCIV.setAlpha(0.3f);
             mTranslatorMicIV.setEnabled(false);
