@@ -155,7 +155,7 @@ public class SpeechToTextUtil implements
 				break;
 
 		}
-		Log.e(TAG, "RecognitionListener onError: " + error);
+		Log.e(TAG, "RecognitionListener onError: " + resourceString);
 		if ((mSpeechUtilsSTTListener != null) && (error != SpeechRecognizer.ERROR_CLIENT))
 			mSpeechUtilsSTTListener.onErrorOfSpeechToText(resourceString);
 	}

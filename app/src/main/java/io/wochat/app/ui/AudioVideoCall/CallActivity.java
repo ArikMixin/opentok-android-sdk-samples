@@ -651,6 +651,11 @@ public class CallActivity extends AppCompatActivity
 
     public void sendPush2TalkMsg(){
 
+
+       // SpeechToTextUtil.getInstance().onEndOfSpeech();
+       SpeechToTextUtil.getInstance().stopSpeechToText();
+      // SpeechToTextUtil.getInstance().onEndOfSpeech();
+
         AudioDeviceManager.getAudioDevice().startCapturer();
         mPublisher.setPublishAudio(true);
         mSubscriber.setSubscribeToAudio(true);
@@ -939,9 +944,8 @@ public class CallActivity extends AppCompatActivity
             }
         }
 
-//        customAudioDevice.stopCapturer();
-//        customAudioDevice.destroyCapturer();
-
+        AudioDeviceManager.getAudioDevice().stopCapturer();
+        AudioDeviceManager.getAudioDevice().destroyCapturer();
 
     }
 
@@ -1027,6 +1031,7 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onErrorOfSpeechToText(int resourceString) {
+        //the same like ConversationActivity
     }
 
     @Override
