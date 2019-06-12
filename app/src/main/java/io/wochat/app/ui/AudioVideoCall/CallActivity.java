@@ -654,7 +654,7 @@ public class CallActivity extends AppCompatActivity
 
        // SpeechToTextUtil.getInstance().onEndOfSpeech();
        SpeechToTextUtil.getInstance().stopSpeechToText();
-      // SpeechToTextUtil.getInstance().onEndOfSpeech();
+    // SpeechToTextUtil.getInstance().onEndOfSpeech();
 
         AudioDeviceManager.getAudioDevice().startCapturer();
         mPublisher.setPublishAudio(true);
