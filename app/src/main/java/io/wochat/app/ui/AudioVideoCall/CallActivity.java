@@ -1331,13 +1331,10 @@ public class CallActivity extends AppCompatActivity
     }
 
     @Override
-    public void onBeginPlaying() {
-
-    }
+    public void onBeginPlaying(){}
 
     @Override
     public void onFinishedPlaying() {
         AudioDeviceManager.getAudioDevice().startRenderer();
     }
-
 }
