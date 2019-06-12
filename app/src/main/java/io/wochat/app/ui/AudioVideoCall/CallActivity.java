@@ -651,10 +651,8 @@ public class CallActivity extends AppCompatActivity
 
     public void sendPush2TalkMsg(){
 
-
-       // SpeechToTextUtil.getInstance().onEndOfSpeech();
        SpeechToTextUtil.getInstance().stopSpeechToText();
-    // SpeechToTextUtil.getInstance().onEndOfSpeech();
+      // SpeechToTextUtil.getInstance().onEndOfSpeech();
 
         AudioDeviceManager.getAudioDevice().startCapturer();
         mPublisher.setPublishAudio(true);
@@ -1031,7 +1029,11 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onErrorOfSpeechToText(int resourceString) {
-        //the same like ConversationActivity
+        if (resourceString != 0)
+            Toast.makeText(this, getString(resourceString), Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(this, "Speech recognition error", Toast.LENGTH_SHORT).show();
+
     }
 
     @Override
