@@ -240,10 +240,12 @@ public class CallActivity extends AppCompatActivity
         //Init audio and SpeechToTextUtil
         SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
         customAudioDevice = new CustomAudioDevice(CallActivity.this);
-        customAudioDevice.initCapturer();
+      //  customAudioDevice.initCapturer();
     ///    customAudioDevice.startCapturer();
         if(AudioDeviceManager.getAudioDevice() == null )
                     AudioDeviceManager.setAudioDevice(customAudioDevice);
+        AudioDeviceManager.getAudioDevice().initCapturer();
+
 
         initPIP();
 
@@ -594,9 +596,12 @@ public class CallActivity extends AppCompatActivity
                 mPublisher.setPublishAudio(false);
                 mSubscriber.setSubscribeToAudio(false);
 
-                customAudioDevice.stopCapturer();
+//                customAudioDevice.stopCapturer();
 //                customAudioDevice.destroyCapturer();
-//                customAudioDevice = null;
+             //   customAudioDevice = null;
+
+                AudioDeviceManager.getAudioDevice().stopCapturer();
+                 //AudioDeviceManager.getAudioDevice().destroyCapturer();
 
                 SpeechToTextUtil.getInstance().startSpeechToText();
 
@@ -651,11 +656,15 @@ public class CallActivity extends AppCompatActivity
     }
 
     public void sendPush2TalkMsg(){
-        customAudioDevice = new CustomAudioDevice(CallActivity.this);
-        customAudioDevice.initCapturer();
-        customAudioDevice.startCapturer();
-//        AudioDeviceManager.setAudioDevice(customAudioDevice);
-     //  mSession.connect(mVideoAudioCall.getToken());
+//        customAudioDevice.initCapturer();
+//        customAudioDevice.startCapturer();
+
+      //   AudioDeviceManager.getAudioDevice().initCapturer();
+    //     AudioDeviceManager.getAudioDevice().startCapturer();
+
+        // mSession.connect(mVideoAudioCall.getToken());
+
+        AudioDeviceManager.getAudioDevice().startCapturer();
 
         mPublisher.setPublishAudio(true);
         mSubscriber.setSubscribeToAudio(true);
@@ -944,8 +953,8 @@ public class CallActivity extends AppCompatActivity
             }
         }
 
-        customAudioDevice.stopCapturer();
-        customAudioDevice.destroyCapturer();
+//        customAudioDevice.stopCapturer();
+//        customAudioDevice.destroyCapturer();
 
 
     }
