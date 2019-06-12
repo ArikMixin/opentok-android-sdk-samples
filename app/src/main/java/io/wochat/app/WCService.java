@@ -39,6 +39,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	public static final String IS_TYPING_EXTRA = "IS_TYPING_EXTRA";
 
+	public static final String IS_RECORDING = "IS_RECORDING";
+	public static final String RTC_MESSAGE = "RTC_MESSAGE";
+	public static final String RTC_MESSAGE_LANGUAGE = "MESSAGE LANGUAGE";
+
 	private final IBinder mBinder = new WCBinder();
 	private XMPPProvider mXMPPProvider;
 	private WCRepository mRepository;
@@ -94,7 +98,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			//WEB RTC Messages (ANSWER, TEXT, CLOSE, REJECTED, BUSY, UPDATE_SESSION)
 			if (message.getRtcCode() != null && !message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
-				broadcastRTCcodeChanged(message.getRtcCode(), message.isRecording());
+						broadcastRTCcodeChanged(message.getRtcCode(), message.isRecording(), message.getMessage(),message.getMessageLanguage());
 				return;
 			}
 
@@ -398,11 +402,15 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 //		sendBroadcast(intent);
 //	}
 
-	private void broadcastRTCcodeChanged(String mRtcCode, boolean isRecording) {
+	private void broadcastRTCcodeChanged(String mRtcCode, boolean isRecording, String message, String messageLanguage) {
 		Intent intent = new Intent();
 			intent.setAction(mRtcCode);
 			if(mRtcCode.equals(Message.RTC_CODE_UPDATE_SESSION))
-						intent.putExtra(Consts.IS_RECORDING, isRecording);
+						intent.putExtra(IS_RECORDING, isRecording);
+		if(mRtcCode.equals(Message.RTC_CODE_TEXT)) {
+						intent.putExtra(RTC_MESSAGE, message);
+		}				intent.putExtra(RTC_MESSAGE_LANGUAGE, messageLanguage);
+
 		sendBroadcast(intent);
 	}
 
