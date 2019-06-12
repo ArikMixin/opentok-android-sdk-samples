@@ -246,6 +246,7 @@ public class CallActivity extends AppCompatActivity
         if(AudioDeviceManager.getAudioDevice() == null )
                     AudioDeviceManager.setAudioDevice(customAudioDevice);
         AudioDeviceManager.getAudioDevice().initCapturer();
+        AudioDeviceManager.getAudioDevice().initRenderer();
 
 
         initPIP();
@@ -944,7 +945,8 @@ public class CallActivity extends AppCompatActivity
 
         AudioDeviceManager.getAudioDevice().stopCapturer();
         AudioDeviceManager.getAudioDevice().destroyCapturer();
-
+        AudioDeviceManager.getAudioDevice().stopRenderer();
+        AudioDeviceManager.getAudioDevice().destroyRenderer();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -1017,7 +1019,8 @@ public class CallActivity extends AppCompatActivity
     @Override
     public void onSpeechToTextResult(String text, int duration) {
         Log.d(TAG, "onSpeechToTextResult: " + text);
-        sendXMPPmsg(Message.RTC_CODE_TEXT,text, false);
+        if(!text.equals(""))
+             sendXMPPmsg(Message.RTC_CODE_TEXT,text, false);
     }
 
     @Override
@@ -1321,6 +1324,8 @@ public class CallActivity extends AppCompatActivity
 
     private void fireTextToSpeech(String msg, String msg_lang) {
         Log.d(TAG, "msg: " + msg + " \n msg_lang: "  + msg_lang );
+
+        AudioDeviceManager.getAudioDevice().stopRenderer();
         TextToSpeechUtil.getInstance().setLanguage(msg_lang);
         TextToSpeechUtil.getInstance().startTextToSpeech(msg, this);
     }
@@ -1332,7 +1337,7 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onFinishedPlaying() {
-
+        AudioDeviceManager.getAudioDevice().startRenderer();
     }
 
 }
