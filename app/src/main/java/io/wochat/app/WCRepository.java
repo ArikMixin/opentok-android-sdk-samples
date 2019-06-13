@@ -64,8 +64,6 @@ import io.wochat.app.utils.Utils;
  */
 public class WCRepository {
 
-
-
 	public interface OnSaveMessageToDBListener {
 		void OnSaved(boolean success, Message savedMessage, Contact participant);
 	}
@@ -112,6 +110,8 @@ public class WCRepository {
 	private MutableLiveData<List<SupportedLanguage>> mSupportLanguages;
 	private MutableLiveData<StateData<Void>> mUserProfileEditResult;
 	private MutableLiveData<VideoAudioCall> mSessionsAndToken;
+	private MutableLiveData<String> mTranslationFromPush2Talk;
+
 
 	private SpeechToTextUtil mSpeechToTextUtil;
 	private UserDao mUserDao;
@@ -163,6 +163,7 @@ public class WCRepository {
 		mUserVerificationResult = new MutableLiveData<>();
 		mUploadProfilePicResult = new MutableLiveData<>();
 		mSessionsAndToken = new MutableLiveData<>();
+		mTranslationFromPush2Talk = new MutableLiveData<>();
 
 		mUploadImageResult = new MutableLiveData<>();
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
@@ -318,6 +319,7 @@ public class WCRepository {
 						User user = gson.fromJson(response.toString(), User.class);
 						mSharedPreferences.saveUserLanguage(user.getLanguage());
 						mSharedPreferences.saveUserLanguageLocale(user.getLanguageLocale());
+						mSpeechToTextUtil.changeLanguage(user.getLanguageLocale());
 
 						ContactServer contactServer = gson.fromJson(response.toString(), ContactServer.class);
 						Contact contact = new Contact();
@@ -398,6 +400,13 @@ public class WCRepository {
 		return mSessionsAndToken;
 	}
 
+	public MutableLiveData<String> getTranslationFromPush2Talk(){
+		return mTranslationFromPush2Talk;}
+
+	public void resetTranslatedText() {
+		mTranslationFromPush2Talk.setValue(null);
+	}
+
 //	public String getUserCountryCode() {
 //		return mSharedPreferences.getUserCountryCode();
 //	}
@@ -414,6 +423,8 @@ public class WCRepository {
 	public LiveData<User> getSelfUser() {
 		return mSelfUser;
 	}
+
+
 
 
 	public void uploadAudio(Message message, byte[] mediaFileBytes) {
@@ -1782,11 +1793,11 @@ public class WCRepository {
 				if (isSuccess) {
 					mAppExecutors.diskIO().execute(() -> {
 							mUserDao.updateUserLanguage(languageCode);
+							mUserDao.updateUserLanguageLocale(languageCode);
 							mSharedPreferences.saveUserLanguage(languageCode);
 							mSharedPreferences.saveUserLanguageLocale(getLanguageLocale);
 							//Change SpeechToText Language
-							mSpeechToTextUtil.changeLanguge(getLanguageLocale);
-
+							mSpeechToTextUtil.changeLanguage(getLanguageLocale);
 					});
 				}
 				else if (errorLogic != null) {
@@ -2091,17 +2102,17 @@ public class WCRepository {
 							Log.e(TAG, "translate res: " + response.toString());
 							try {
 								String translatedText = response.getString("message");
-								Log.d("ArikTest", "translate: " + translatedText + " fromLamg: " + fromLamg + " ,selfLang:  " + selfLang);
+								mTranslationFromPush2Talk.setValue(translatedText);
 							} catch (JSONException e) {
 								e.printStackTrace();
-								Log.e("ArikTest", "error" + e.getMessage());
+								Log.d(TAG, "Error - translate failed" + e.getMessage());
 
 							}
 
 						} else if (errorLogic != null)
-							Log.e("ArikTest", "translate res: error" + errorLogic);
+							Log.d(TAG, "Error - translate failed" + errorLogic);
 						else if (errorComm != null)
-							Log.e("ArikTest", "translate res: error" + errorComm);
+							Log.d(TAG, "Error - translate failed" + errorComm);
 					});
 		});
 	}

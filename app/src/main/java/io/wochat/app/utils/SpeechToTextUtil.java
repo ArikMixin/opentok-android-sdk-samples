@@ -83,7 +83,6 @@ public class SpeechToTextUtil implements
 
 
 	public void init(Context context, String packageName, String selfLangLocale){
-		Log.d("Arikkkkk", "selfLangLocale: " + selfLangLocale);
 		mSelfLangLocale = selfLangLocale;
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
 		mSpeechRecognizer.setRecognitionListener(this);
@@ -97,7 +96,7 @@ public class SpeechToTextUtil implements
 
 	}
 
-	public void changeLanguge(String updatedLangLocale) {
+	public void changeLanguage(String updatedLangLocale) {
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, updatedLangLocale);
 	}
 

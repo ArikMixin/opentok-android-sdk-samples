@@ -2,6 +2,7 @@ package io.wochat.app.ui.AudioVideoCall;
 
 import android.Manifest;
 import android.app.PictureInPictureParams;
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -19,6 +20,7 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -230,24 +232,25 @@ public class CallActivity extends AppCompatActivity
         mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
         mSessionID = getIntent().getStringExtra(Consts.INTENT_SESSION_ID);
 
-
         mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
         mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
 
+        videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+        videoAudioCallViewModel.getTranslatedText().observe(this, textToPlay -> {if(textToPlay != null) fireTextToSpeech(textToPlay);});
+
         initPIP(); // Picture-to-picture (Minimize feature) initialization
 
         //Init audio and SpeechToTextUtil
+        TextToSpeechUtil.getInstance().setLanguage(mSelfLang); //Play in users language
         SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
         customAudioDevice = new CustomAudioDevice(CallActivity.this);
         if(AudioDeviceManager.getAudioDevice() == null )
                     AudioDeviceManager.setAudioDevice(customAudioDevice);
         AudioDeviceManager.getAudioDevice().initCapturer();
         AudioDeviceManager.getAudioDevice().initRenderer();
-
-
 
         //Set lang flag , language display name and pic
         setLangAndDisplayName();
@@ -594,6 +597,7 @@ public class CallActivity extends AppCompatActivity
                 ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
 
                 AudioDeviceManager.getAudioDevice().stopCapturer();
+              AudioDeviceManager.getAudioDevice().stopRenderer();
                 SpeechToTextUtil.getInstance().startSpeechToText();
 
                 //SlideUp
@@ -648,7 +652,8 @@ public class CallActivity extends AppCompatActivity
 
     public void sendPush2TalkMsg(){
 
-       SpeechToTextUtil.getInstance().stopSpeechToText();
+        SpeechToTextUtil.getInstance().stopSpeechToText();
+        AudioDeviceManager.getAudioDevice().startRenderer();
         AudioDeviceManager.getAudioDevice().startCapturer();
 
         sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,"",false);
@@ -846,8 +851,6 @@ public class CallActivity extends AppCompatActivity
 
     public void createSessionAndToken(){
 
-        videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
-
         if(mIsOutGoingCall)
              videoAudioCallViewModel.createSessionsAndToken(this,"RELAYED");
         else
@@ -935,10 +938,12 @@ public class CallActivity extends AppCompatActivity
             }
         }
 
-        AudioDeviceManager.getAudioDevice().stopCapturer();
-        AudioDeviceManager.getAudioDevice().destroyCapturer();
-        AudioDeviceManager.getAudioDevice().stopRenderer();
-        AudioDeviceManager.getAudioDevice().destroyRenderer();
+        videoAudioCallViewModel.resetTranslatedText();
+       AudioDeviceManager.getAudioDevice().stopCapturer();
+       AudioDeviceManager.getAudioDevice().destroyCapturer();
+       AudioDeviceManager.getAudioDevice().stopRenderer();
+       AudioDeviceManager.getAudioDevice().destroyRenderer();
+       finish();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -1024,8 +1029,9 @@ public class CallActivity extends AppCompatActivity
            else if(intent.getAction().equals(Message.RTC_CODE_UPDATE_SESSION))
                          recordingState(intent.getBooleanExtra(WCService.IS_RECORDING,false));
            else if(intent.getAction().equals(Message.RTC_CODE_TEXT)){
-                         fireTextToSpeech(intent.getStringExtra(WCService.RTC_MESSAGE),
-                                                     intent.getStringExtra(WCService.RTC_MESSAGE_LANGUAGE));
+                videoAudioCallViewModel.translateText(intent.getStringExtra(WCService.RTC_MESSAGE),
+                                                intent.getStringExtra(WCService.RTC_MESSAGE_LANGUAGE));
+
             }
           }
 
@@ -1315,16 +1321,11 @@ public class CallActivity extends AppCompatActivity
     }
 
 
-    private void fireTextToSpeech(String msg, String fromLang) {
-        Log.d("ArikTest", "msg: " + msg + " \n msg_lang: "  + fromLang );
-
-        //Translate the incoming msg to users language (mSelfLang) before you play TTS
-        videoAudioCallViewModel.translateText(msg, fromLang);
-
-       //  call view model to translate
+    private void fireTextToSpeech(String textToPlay) {
+         //call view model to translate
+        AudioDeviceManager.getAudioDevice().stopCapturer();
         AudioDeviceManager.getAudioDevice().stopRenderer();
-        TextToSpeechUtil.getInstance().setLanguage(mSelfLang); //Play in users language
-        TextToSpeechUtil.getInstance().startTextToSpeech(msg, this);
+        TextToSpeechUtil.getInstance().startTextToSpeech(textToPlay, this);
     }
 
     @Override
@@ -1332,7 +1333,8 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onFinishedPlaying() {
-        TextToSpeechUtil.getInstance().stopTextToSpeech();
+          TextToSpeechUtil.getInstance().stopTextToSpeech();
+        AudioDeviceManager.getAudioDevice().startCapturer();
         AudioDeviceManager.getAudioDevice().startRenderer();
     }
 }

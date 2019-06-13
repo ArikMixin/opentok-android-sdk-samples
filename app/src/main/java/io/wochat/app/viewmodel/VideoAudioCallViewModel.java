@@ -2,6 +2,7 @@ package io.wochat.app.viewmodel;
 
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
+import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import io.wochat.app.WCApplication;
@@ -25,11 +26,21 @@ public class VideoAudioCallViewModel extends AndroidViewModel {
         mRepository.createToken(callActivity, sessionId , tokenRoleType);
     }
 
-    public MutableLiveData<VideoAudioCall> getSessionAndToken() {
-       return mRepository.getSessionsAndToken();
-    }
 
     public void translateText(String textToTranslate, String fromLang){
         mRepository.translate(textToTranslate, fromLang);
     }
+
+    public void resetTranslatedText() {
+         mRepository.resetTranslatedText();
+    }
+
+    public LiveData<VideoAudioCall> getSessionAndToken() {
+        return mRepository.getSessionsAndToken();
+    }
+
+    public LiveData<String> getTranslatedText() {
+        return mRepository.getTranslationFromPush2Talk();
+    }
+
 }

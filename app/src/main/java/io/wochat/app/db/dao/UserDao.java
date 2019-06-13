@@ -76,6 +76,9 @@ public interface UserDao {
 	@Query("UPDATE user_table SET language=:languageCode")
 	void updateUserLanguage(String languageCode);
 
+	@Query("UPDATE user_table SET language=:languageLocale")
+	void updateUserLanguageLocale(String languageLocale);
+
 	@Query("UPDATE user_table SET countryCode=:countryCode")
 	void updateUserCountryCode(String countryCode);
 }

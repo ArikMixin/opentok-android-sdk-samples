@@ -142,6 +142,7 @@ public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlaye
 
 
 	public boolean setLanguage(String langCode){
+		Log.d("langCode", "langCode: " + langCode);
 		Locale locale = new Locale(langCode);
 		int isSupported = mTextToSpeech.isLanguageAvailable(locale);
 		if (isSupported >= 0) {
