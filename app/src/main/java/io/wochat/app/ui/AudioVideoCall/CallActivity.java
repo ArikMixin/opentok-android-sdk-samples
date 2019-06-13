@@ -1009,30 +1009,6 @@ public class CallActivity extends AppCompatActivity
     public void onVideoDisableWarningLifted(SubscriberKit subscriberKit) { }
 
     @Override
-    public void onSpeechToTextResult(String text, int duration) {
-        Log.d(TAG, "onSpeechToTextResult: " + text);
-        if(!text.equals(""))
-             sendXMPPmsg(Message.RTC_CODE_TEXT,text, false);
-    }
-
-    @Override
-    public void onBeginningOfSpeechToText() {
-    }
-
-    @Override
-    public void onEndOfSpeechToText() {
-    }
-
-    @Override
-    public void onErrorOfSpeechToText(int resourceString) {
-        if (resourceString != 0)
-            Toast.makeText(this, getString(resourceString), Toast.LENGTH_SHORT).show();
-        else
-            Toast.makeText(this, "Speech recognition error", Toast.LENGTH_SHORT).show();
-
-    }
-
-    @Override
     public void onAudioFocusChange(int i) {
 
     }
@@ -1314,13 +1290,40 @@ public class CallActivity extends AppCompatActivity
         }
     }
 
-    private void fireTextToSpeech(String msg, String msg_lang) {
-        Log.d(TAG, "msg: " + msg + " \n msg_lang: "  + msg_lang );
+    @Override
+    public void onSpeechToTextResult(String text, int duration) {
+        Log.d("ArikTest", "onSpeechToTextResult: " + text);
+        if(!text.equals(""))
+            sendXMPPmsg(Message.RTC_CODE_TEXT,text, false);
+    }
 
-//        call view model to translate
-//        msg msg_lang
+    @Override
+    public void onBeginningOfSpeechToText() {
+    }
+
+    @Override
+    public void onEndOfSpeechToText() {
+    }
+
+    @Override
+    public void onErrorOfSpeechToText(int resourceString) {
+        if (resourceString != 0)
+            Toast.makeText(this, getString(resourceString), Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(this, "Speech recognition error", Toast.LENGTH_SHORT).show();
+
+    }
+
+
+    private void fireTextToSpeech(String msg, String fromLang) {
+        Log.d("ArikTest", "msg: " + msg + " \n msg_lang: "  + fromLang );
+
+        //Translate the incoming msg to users language (mSelfLang) before you play TTS
+        videoAudioCallViewModel.translateText(msg, fromLang);
+
+       //  call view model to translate
         AudioDeviceManager.getAudioDevice().stopRenderer();
-        TextToSpeechUtil.getInstance().setLanguage(mSelfLang);
+        TextToSpeechUtil.getInstance().setLanguage(mSelfLang); //Play in users language
         TextToSpeechUtil.getInstance().startTextToSpeech(msg, this);
     }
 

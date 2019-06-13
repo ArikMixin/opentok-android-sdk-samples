@@ -28,4 +28,8 @@ public class VideoAudioCallViewModel extends AndroidViewModel {
     public MutableLiveData<VideoAudioCall> getSessionAndToken() {
        return mRepository.getSessionsAndToken();
     }
+
+    public void translateText(String textToTranslate, String fromLang){
+        mRepository.translate(textToTranslate, fromLang);
+    }
 }

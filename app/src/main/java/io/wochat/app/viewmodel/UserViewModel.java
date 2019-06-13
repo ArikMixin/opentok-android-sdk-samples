@@ -39,8 +39,8 @@ public class UserViewModel extends AndroidViewModel {
 		mRepository.uploadUpdatedProfilePic(profilePicByte);
 	}
 
-	public void updateUserLanguage(String languageCode) {
-		mRepository.updateUserLanguage(languageCode);
+	public void updateUserLanguage(String languageCode, String getLanguageLocale) {
+		mRepository.updateUserLanguage(languageCode, getLanguageLocale);
 	}
 
 	public void updateUserCountryCode(String countryCode) {

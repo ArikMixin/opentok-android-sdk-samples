@@ -14,6 +14,9 @@ public class SupportedLanguage {
 	@SerializedName("language")
 	private String languageCode;
 
+	@SerializedName("language_locale")
+	private String languageLocale;
+
 	@SerializedName("country_code")
 	private String countryCode;
 
@@ -39,6 +42,14 @@ public class SupportedLanguage {
 
 	public void setCountryCode(String countryCode) {
 		this.countryCode = countryCode;
+	}
+
+	public String getLanguageLocale() {
+		return languageLocale;
+	}
+
+	public void setLanguageLocale(String countryCode) {
+		this.languageLocale = languageLocale;
 	}
 
 	public static SupportedLanguage fromJson (String json) {

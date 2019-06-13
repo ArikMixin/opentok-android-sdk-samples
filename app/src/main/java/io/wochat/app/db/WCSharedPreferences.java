@@ -11,6 +11,7 @@ public class WCSharedPreferences {
 	private static final String SMS_CODE = "SMS_CODE";
 	private static final String USER_ID = "USER_ID";
 	private static final String USER_LANG = "USER_LANG";
+	private static final String USER_LANG_LOCALE = "USER_LANG_LOCALE";
 	private static final String USER_COUNTRY_CODE = "USER_COUNTRY_CODE";
 	private static final String USER_PHONE_NUM = "USER_PHONE_NUM";
 	private static final String TOKEN = "TOKEN";
@@ -25,6 +26,7 @@ public class WCSharedPreferences {
 	private static WCSharedPreferences mInstance;
 	private String mUserId;
 	private String mUserLang;
+	private String mUserLangLocale;
 
 	public static WCSharedPreferences getInstance(Context context) {
 		if (mInstance == null) {
@@ -67,12 +69,24 @@ public class WCSharedPreferences {
 		mSharedPreferences.edit().putString(USER_LANG, language).commit();
 	}
 
+	public void saveUserLanguageLocale(String language) {
+			mUserLangLocale = language;
+
+		mSharedPreferences.edit().putString(USER_LANG_LOCALE, language).commit();
+	}
+
 	public String getUserLang(){
 		if (mUserLang == null) // cashing
 			mUserLang = mSharedPreferences.getString(USER_LANG, "EN");
 		if (mUserLang.equals("IW"))
 			mUserLang = "HE";
 		return mUserLang;
+	}
+
+	public String getUserLangLocale(){
+		if (mUserLangLocale == null) // cashing
+					mUserLangLocale = mSharedPreferences.getString(USER_LANG_LOCALE, "en-US");
+		return mUserLangLocale;
 	}
 
 	public String getUserId(){

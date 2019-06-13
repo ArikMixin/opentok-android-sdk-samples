@@ -113,7 +113,7 @@ public class WCRepository {
 	private MutableLiveData<StateData<Void>> mUserProfileEditResult;
 	private MutableLiveData<VideoAudioCall> mSessionsAndToken;
 
-
+	private SpeechToTextUtil mSpeechToTextUtil;
 	private UserDao mUserDao;
 	private ContactDao mContactDao;
 	private ConversationDao mConversationDao;
@@ -197,8 +197,8 @@ public class WCRepository {
 		ttsu.init(application, mSharedPreferences.getUserLang());
 
 
-		SpeechToTextUtil speechToTextUtil =  SpeechToTextUtil.getInstance();
-		speechToTextUtil.init(application, application.getPackageName(), mSharedPreferences.getUserLang());
+		 mSpeechToTextUtil =  SpeechToTextUtil.getInstance();
+		 mSpeechToTextUtil.init(application, application.getPackageName(), mSharedPreferences.getUserLangLocale());
 	}
 
 
@@ -317,6 +317,7 @@ public class WCRepository {
 						Gson gson = new Gson();
 						User user = gson.fromJson(response.toString(), User.class);
 						mSharedPreferences.saveUserLanguage(user.getLanguage());
+						mSharedPreferences.saveUserLanguageLocale(user.getLanguageLocale());
 
 						ContactServer contactServer = gson.fromJson(response.toString(), ContactServer.class);
 						Contact contact = new Contact();
@@ -1244,7 +1245,6 @@ public class WCRepository {
 
 	}
 
-
 	private void translate(Message message, boolean isIncoming) {
 		mAppExecutors.networkIO().execute(() -> {
 			boolean needTranslation1, needTranslationMagic;
@@ -1776,15 +1776,18 @@ public class WCRepository {
 		});
 	}
 
-	public void updateUserLanguage(String languageCode) {
+	public void updateUserLanguage(String languageCode, String getLanguageLocale) {
     	mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.updateUserLanguage(languageCode, (isSuccess, errorLogic, errorComm, response) -> {
 				if (isSuccess) {
 					mAppExecutors.diskIO().execute(() -> {
-						mUserDao.updateUserLanguage(languageCode);
-						mSharedPreferences.saveUserLanguage(languageCode);
-					});
+							mUserDao.updateUserLanguage(languageCode);
+							mSharedPreferences.saveUserLanguage(languageCode);
+							mSharedPreferences.saveUserLanguageLocale(getLanguageLocale);
+							//Change SpeechToText Language
+							mSpeechToTextUtil.changeLanguge(getLanguageLocale);
 
+					});
 				}
 				else if (errorLogic != null) {
 					mUserProfileEditResult.setValue(new StateData<Void>().errorLogic(errorLogic));
@@ -2074,6 +2077,32 @@ public class WCRepository {
 				else if (errorComm != null)
 					onSessionResultListener.onFailedCreateSession(new StateData<String>().errorComm(errorComm));
 			}
+		});
+	}
+
+	//Video Audio calls translation (Push 2 Talk)
+	public void translate(String textToTranslate, String fromLamg) {
+		mAppExecutors.networkIO().execute(() -> {
+			String selfLang = mSharedPreferences.getUserLang();
+
+			mWochatApi.translate("", fromLamg, selfLang, textToTranslate,
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								Log.d("ArikTest", "translate: " + translatedText + " fromLamg: " + fromLamg + " ,selfLang:  " + selfLang);
+							} catch (JSONException e) {
+								e.printStackTrace();
+								Log.e("ArikTest", "error" + e.getMessage());
+
+							}
+
+						} else if (errorLogic != null)
+							Log.e("ArikTest", "translate res: error" + errorLogic);
+						else if (errorComm != null)
+							Log.e("ArikTest", "translate res: error" + errorComm);
+					});
 		});
 	}
 }

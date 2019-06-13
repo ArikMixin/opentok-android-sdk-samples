@@ -31,7 +31,6 @@ public class SpeechToTextUtil implements
 		mSpeechToTextUtil = null;
 	}
 
-
 	public interface SpeechUtilsSTTListener {
 		void onSpeechToTextResult(String text, int duration);
 		void onBeginningOfSpeechToText();
@@ -50,7 +49,7 @@ public class SpeechToTextUtil implements
 	private static final String TAG = "SpeechToTextUtil";
 
 	private static SpeechToTextUtil mSpeechToTextUtil;
-	private String mSelfLang;
+	private String mSelfLangLocale;
 
 	private void destroy(){
 		Log.e(TAG, "destroy");
@@ -83,12 +82,13 @@ public class SpeechToTextUtil implements
 
 
 
-	public void init(Context context, String packageName, String selfLang){
-		mSelfLang = selfLang;
+	public void init(Context context, String packageName, String selfLangLocale){
+		Log.d("Arikkkkk", "selfLangLocale: " + selfLangLocale);
+		mSelfLangLocale = selfLangLocale;
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
 		mSpeechRecognizer.setRecognitionListener(this);
 		mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, mSelfLang);
+		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, mSelfLangLocale);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, packageName);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
@@ -96,6 +96,11 @@ public class SpeechToTextUtil implements
 	//	mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 60000); // Arik - stop after 1 minute recording
 
 	}
+
+	public void changeLanguge(String updatedLangLocale) {
+		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, updatedLangLocale);
+	}
+
 
 	@Override
 	public void onReadyForSpeech(Bundle params) {

@@ -517,6 +517,14 @@ public class WochatApi {
 
 	}
 
+	public void  getLanguageLocale( OnServerResponseListener lsnr) {
+
+		String url = BASE_URL + "user/language_locale";
+
+		sendRequestAndHandleResult(Request.Method.GET, url, null, lsnr);
+
+	}
+
 
 
 	private void sendRequestAndHandleResult(int method, String url, JSONObject jsonObject, final OnServerResponseListener lsnr){

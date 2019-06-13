@@ -1471,6 +1471,7 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void submitTempSpeechableMessage(String text, int duration) {
+		Log.d("test", "text: " + text);
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, text, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
 

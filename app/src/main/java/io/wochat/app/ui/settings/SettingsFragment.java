@@ -123,7 +123,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 		if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_SUPPORTED_LANGUAGE) {
 			String json = data.getStringExtra(SupportedLanguagesActivity.INTENT_LANGUAGE_CODE);
 			SupportedLanguage supportedLanguage = SupportedLanguage.fromJson(json);
-			mUserViewModel.updateUserLanguage(supportedLanguage.getLanguageCode());
+			mUserViewModel.updateUserLanguage(supportedLanguage.getLanguageCode(), supportedLanguage.getLanguageLocale());
 			mUserViewModel.updateUserCountryCode(supportedLanguage.getCountryCode());
 		}
 	}
