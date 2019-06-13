@@ -592,9 +592,6 @@ public class CallActivity extends AppCompatActivity
                 mPublisherFL.setVisibility(View.GONE);
                 mLockRL.setVisibility(View.VISIBLE);
                 ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
-//
-                mPublisher.setPublishAudio(false);
-                mSubscriber.setSubscribeToAudio(false);
 
                 AudioDeviceManager.getAudioDevice().stopCapturer();
                 SpeechToTextUtil.getInstance().startSpeechToText();
@@ -652,10 +649,7 @@ public class CallActivity extends AppCompatActivity
     public void sendPush2TalkMsg(){
 
        SpeechToTextUtil.getInstance().stopSpeechToText();
-      //SpeechToTextUtil.getInstance().onEndOfSpeech();
         AudioDeviceManager.getAudioDevice().startCapturer();
-        mPublisher.setPublishAudio(true);
-        mSubscriber.setSubscribeToAudio(true);
 
         sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,"",false);
             ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
@@ -945,8 +939,6 @@ public class CallActivity extends AppCompatActivity
         AudioDeviceManager.getAudioDevice().destroyCapturer();
         AudioDeviceManager.getAudioDevice().stopRenderer();
         AudioDeviceManager.getAudioDevice().destroyRenderer();
-      /*  customAudioDevice.stopRenderer();
-        customAudioDevice.destroyRenderer();*/
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -1337,6 +1329,7 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onFinishedPlaying() {
+        TextToSpeechUtil.getInstance().stopTextToSpeech();
         AudioDeviceManager.getAudioDevice().startRenderer();
     }
 }

@@ -131,7 +131,7 @@ public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlaye
 			Log.e(TAG, "TextToSpeech UtteranceProgressListener onDone");
 			if (mTextToSpeechPlayingListener != null)
 				mTextToSpeechPlayingListener.onFinishedPlaying();
-		}
+	}
 
 		@Override  // google api callback
 		public void onError(String utteranceId) {
