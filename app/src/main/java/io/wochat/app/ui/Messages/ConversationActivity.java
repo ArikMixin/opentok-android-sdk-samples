@@ -2053,7 +2053,7 @@ public class ConversationActivity extends PermissionActivity implements
 			if ((pendingMessages != null)&&(pendingMessages.size()>= totalMessagesToSend)) {
 
 				if (mIsGroup)
-					mService.sendGroupMessages(pendingMessages, mGroupMembers, mSelfId);
+					mService.sendGroupMessages(pendingMessages, mSelfId);
 				else
 					mService.sendMessages(pendingMessages);
 

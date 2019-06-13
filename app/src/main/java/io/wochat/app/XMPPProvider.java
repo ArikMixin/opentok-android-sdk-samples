@@ -561,6 +561,9 @@ class XMPPProvider {
 
 	public void sendGroupStringMessage(String theMessage, List<String> participantIds, String conversationId){
 
+		if (participantIds.size() == 0)
+			return;
+
 		Log.e(TAG, "sendGroupStringMessage msg: " +
 			theMessage + " , participants: " +
 			Utils.LogList(Log.ERROR, TAG, participantIds));

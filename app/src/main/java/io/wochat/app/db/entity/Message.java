@@ -1146,6 +1146,9 @@ public class Message implements IMessage,
 		newMessage.messageId = UUID.randomUUID().toString();
 		newMessage.participantId = participantId;
 		newMessage.senderId = selfId;
+		newMessage.groupId = null;
+		newMessage.groups = new String[]{};
+		newMessage.groupName = null;
 		newMessage.conversationId = Conversation.getConversationId(participantId, selfId);
 		newMessage.recipients = new String[]{participantId};
 		//newMessage.timestamp = System.currentTimeMillis()/1000;

@@ -116,11 +116,11 @@ public class RecentChatsFragment extends Fragment  implements
 		mConversationViewModel.getConversationListLD().observe(this, conversations -> {
 			mConversation = conversations;
 			if (conversations != null) {
-				Log.e("AAA", "conversations count: " + conversations.size());
+				//Log.e("AAA", "conversations count: " + conversations.size());
 				mEmptyFrameCL.setVisibility(Utils.booleanToVisibilityInvisible(conversations.isEmpty()));
-				for(Conversation cc : conversations) {
-					Log.e("AAA", "conversations: " + cc.toString());
-				}
+//				for(Conversation cc : conversations) {
+//					Log.e("AAA", "conversations: " + cc.toString());
+//				}
 				initAdapter();
 
 				String conversationId = ((MainActivity) getActivity()).getIntentConversationId();
@@ -131,7 +131,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 			}
 			else {
-				Log.e("AAA", "conversations: null");
+				//Log.e("AAA", "conversations: null");
 			}
 		});
 

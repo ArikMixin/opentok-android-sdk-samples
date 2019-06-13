@@ -346,7 +346,10 @@ public class Conversation implements IDialog{
 	public String getLastMessageTextToDisplay() {
 		if (isGroup()){
 			String firstName = Utils.getUserFirstName(mLastMessageSenderName);
-			return firstName + ": " + getLastMessageTextToDisplayInner();
+			if (Utils.isNullOrEmpty(firstName))
+				return getLastMessageTextToDisplayInner();
+			else
+				return firstName + ": " + getLastMessageTextToDisplayInner();
 		}
 		else {
 			return getLastMessageTextToDisplayInner();

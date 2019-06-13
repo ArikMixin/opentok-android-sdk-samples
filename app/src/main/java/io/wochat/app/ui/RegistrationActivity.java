@@ -536,7 +536,7 @@ public class RegistrationActivity extends PermissionActivity {
 			public void onClick(View v) {
 				Intent photoPickerIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
 				photoPickerIntent.setType("image/*");
-				photoPickerIntent.putExtra("crop", "true");
+				//photoPickerIntent.putExtra("crop", "true");
 				photoPickerIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
 				startActivityForResult(photoPickerIntent, REQUEST_SELECT_PHOTO);
 			}

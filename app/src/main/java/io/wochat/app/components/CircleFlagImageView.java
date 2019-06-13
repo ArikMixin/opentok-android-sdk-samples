@@ -189,6 +189,10 @@ public class CircleFlagImageView extends LinearLayout {
 		else
 			language = "";
 		setInfo(picUrl, language, contactOrGroup.getInitials());
+		if ((!isCanceled) && (!isChecked) && (contactOrGroup.isGroup()))
+			mContactFlagCIV.setVisibility(INVISIBLE);
+		else
+			mContactFlagCIV.setVisibility(VISIBLE);
 	}
 
 

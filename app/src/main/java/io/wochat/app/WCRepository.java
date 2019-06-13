@@ -1297,7 +1297,20 @@ public class WCRepository {
 
 		mAppExecutors.diskIO().execute(() -> {
 
+			// if I leaft the group, ignore incomming messages
+			if (mConversationDao.hasConversation(message.getConversationId())){
+				Conversation conv = mConversationDao.getConversation(message.getConversationId());
+				if (conv.isGroup()) {
+					boolean isSelfInGroup = mGroupDao.isSelfInGroupB(message.getConversationId());
+					if (!isSelfInGroup) {
+						listener.OnSaved(false, message, null);
+						return;
+					}
+				}
+			}
+
 			if (message.getMessageType().equals(Message.MSG_TYPE_GROUP_EVENT)) {
+
 				handleGroupEvent(message, resources);
 				listener.OnSaved(true, message, null);
 				return;
@@ -1469,6 +1482,21 @@ public class WCRepository {
 		boolean conversationHasMessages = mConversationDao.hasMessages(message.getGroupId());
 
 		mMessageDao.insert(message);
+
+		int unreadMessagesCount = mMessageDao.getUnreadMessagesCountConversation(message.getConversationId());
+		mConversationDao.updateIncoming(
+			message.getConversationId(),
+			message.getMessageId(),
+			message.getTimestampMilli(),
+			message.getText(),
+			message.getSenderId(),
+			message.getSenderName(),
+			message.getAckStatus(),
+			message.getMessageType(),
+			message.getDurationMili(),
+			unreadMessagesCount);
+
+
 
 		switch (message.getEventCode()){
 
@@ -2119,21 +2147,21 @@ public class WCRepository {
 
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
-				if (message.getMediaLocalUri() != null) {
+				if ((Utils.isNotNullAndNotEmpty(message.getMediaLocalUri())) && (Utils.isNullOrEmpty(message.getMediaUrl()))) {
 					byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));
 					uploadImage(message, bytes);
 				}
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
 
-				if (message.getMediaLocalUri() != null) {
+				if ((Utils.isNotNullAndNotEmpty(message.getMediaLocalUri())) && (Utils.isNullOrEmpty(message.getMediaUrl()))) {
 					File mediaFile = new File(new URI(message.getMediaLocalUri()));
 					byte[] mediaFileBytes = Files.toByteArray(mediaFile);
 					uploadVideo(message, mediaFileBytes);
 				}
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_AUDIO)) {
-				if (message.getMediaLocalUri() != null) {
+				if ((Utils.isNotNullAndNotEmpty(message.getMediaLocalUri())) && (Utils.isNullOrEmpty(message.getMediaUrl()))) {
 					File mediaFile = new File(new URI(message.getMediaLocalUri()));
 					byte[] mediaFileBytes = Files.toByteArray(mediaFile);
 					uploadAudio(message, mediaFileBytes);
@@ -2189,14 +2217,14 @@ public class WCRepository {
 
 	public void forwardMessagesToContactsGroups(List<ContactOrGroup> contactOrGroupList, ArrayList<Message> messages) {
 		mAppExecutors.diskIO().execute(() -> {
-
+			String selfId = mSharedPreferences.getUserId();
 			Collections.sort(messages, (m1, m2) -> (int) (m1.getTimestampMilli() - m2.getTimestampMilli()));
 
 			for (ContactOrGroup contactOrGroup : contactOrGroupList) {
 				for (Message message : messages) {
 					if (contactOrGroup.isContact()) {
 						Contact contact = contactOrGroup.getContact();
-						Message newMessage = message.generateForwardMessage(mSharedPreferences.getUserId(),
+						Message newMessage = message.generateForwardMessage(selfId,
 							contact.getId(),
 							contact.getLanguage());
 						addNewOutgoingMessage(newMessage);
@@ -2204,12 +2232,19 @@ public class WCRepository {
 					else {
 						Conversation conversation = contactOrGroup.getConversation();
 						List<GroupMember> members = mGroupDao.getMembers(conversation.getId());
+						for (GroupMember groupMember : members){
+							if (groupMember.getUserId().equals(selfId)){
+								members.remove(groupMember);
+								break;
+							}
+						}
+
 						String[] ids = new String[members.size()];
 						int i=0;
 						for (GroupMember groupMember : members){
 							ids[i++] = groupMember.getUserId();
 						}
-						Message newMessage = message.generateForwardMessageForGroup(mSharedPreferences.getUserId(),
+						Message newMessage = message.generateForwardMessageForGroup(selfId,
 							conversation.getConversationId(),
 							conversation.getGroupName(),
 							mSharedPreferences.getUserLang());

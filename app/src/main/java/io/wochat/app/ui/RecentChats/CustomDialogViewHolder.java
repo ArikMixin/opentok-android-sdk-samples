@@ -67,7 +67,9 @@ public class CustomDialogViewHolder
 			return;
 		}
 
-
+		if (conversation.getLastMessageType().equals(Message.MSG_TYPE_GROUP_EVENT)){
+			mMsgTypeIV.setVisibility(View.GONE);
+		}
 
         if (conversation.getLastMessageAckStatus()!= null) {
 			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());

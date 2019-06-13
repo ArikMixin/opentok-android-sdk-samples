@@ -112,10 +112,12 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			boolean res = mRepository.handleIncomingMessage(message, getResources(), new WCRepository.OnSaveMessageToDBListener() {
 				@Override
 				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
-					sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
-					if (isMessageOfUserNotificationType(savedMessage)){
-						if (!message.getConversationId().equals(mCurrentConversationId)){
-							NotificationHelper.handleNotificationIncomingMessage(getApplication(), savedMessage, contact);
+					if (success) {
+						sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
+						if (isMessageOfUserNotificationType(savedMessage)) {
+							if (!message.getConversationId().equals(mCurrentConversationId)) {
+								NotificationHelper.handleNotificationIncomingMessage(getApplication(), savedMessage, contact);
+							}
 						}
 					}
 				}
@@ -247,10 +249,13 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	@Override
 	public void onDestroy() {
 		if (mAppObserverBR != null) {
-			mAppObserverBR = null;
 			try {
 				unregisterReceiver(mAppObserverBR);
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
+			}
+			finally {
+				mAppObserverBR = null;
 			}
 
 		}
@@ -366,11 +371,12 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		}
 	}
 
-	public void sendGroupMessages(List<Message> messages, List<GroupMember> groupMembers, String selfId){
+	public void sendGroupMessages(List<Message> messages, String selfId){
 		List<String> participantIds = new ArrayList<>();
-		for (GroupMember groupMember : groupMembers){
-			if(!groupMember.getUserId().equals(selfId))
-				participantIds.add(groupMember.getUserId());
+		String[] recipients = messages.get(0).getRecipients();
+		for (int i=0; i<recipients.length; i++){
+			if(!recipients[i].equals(selfId))
+				participantIds.add(recipients[i]);
 		}
 
 		Log.e(TAG, "sendGroupMessages count: " + messages.size());
