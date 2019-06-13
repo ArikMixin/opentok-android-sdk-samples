@@ -943,7 +943,6 @@ public class CallActivity extends AppCompatActivity
        AudioDeviceManager.getAudioDevice().destroyCapturer();
        AudioDeviceManager.getAudioDevice().stopRenderer();
        AudioDeviceManager.getAudioDevice().destroyRenderer();
-       finish();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
