@@ -237,19 +237,17 @@ public class CallActivity extends AppCompatActivity
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
 
+        initPIP(); // Picture-to-picture (Minimize feature) initialization
 
         //Init audio and SpeechToTextUtil
         SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
         customAudioDevice = new CustomAudioDevice(CallActivity.this);
-      //  customAudioDevice.initCapturer();
-    ///    customAudioDevice.startCapturer();
         if(AudioDeviceManager.getAudioDevice() == null )
                     AudioDeviceManager.setAudioDevice(customAudioDevice);
         AudioDeviceManager.getAudioDevice().initCapturer();
         AudioDeviceManager.getAudioDevice().initRenderer();
 
 
-        initPIP();
 
         //Set lang flag , language display name and pic
         setLangAndDisplayName();
@@ -947,6 +945,8 @@ public class CallActivity extends AppCompatActivity
         AudioDeviceManager.getAudioDevice().destroyCapturer();
         AudioDeviceManager.getAudioDevice().stopRenderer();
         AudioDeviceManager.getAudioDevice().destroyRenderer();
+      /*  customAudioDevice.stopRenderer();
+        customAudioDevice.destroyRenderer();*/
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -1325,13 +1325,15 @@ public class CallActivity extends AppCompatActivity
     private void fireTextToSpeech(String msg, String msg_lang) {
         Log.d(TAG, "msg: " + msg + " \n msg_lang: "  + msg_lang );
 
+//        call view model to translate
+//        msg msg_lang
         AudioDeviceManager.getAudioDevice().stopRenderer();
-        TextToSpeechUtil.getInstance().setLanguage(msg_lang);
+        TextToSpeechUtil.getInstance().setLanguage(mSelfLang);
         TextToSpeechUtil.getInstance().startTextToSpeech(msg, this);
     }
 
     @Override
-    public void onBeginPlaying(){}
+    public void onBeginPlaying(){ }
 
     @Override
     public void onFinishedPlaying() {
