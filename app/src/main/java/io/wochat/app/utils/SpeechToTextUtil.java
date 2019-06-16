@@ -81,7 +81,6 @@ public class SpeechToTextUtil implements
 	}
 
 
-
 	public void init(Context context, String packageName, String selfLangLocale){
 		mSelfLangLocale = selfLangLocale;
 		mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
@@ -91,9 +90,10 @@ public class SpeechToTextUtil implements
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, packageName);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+		// Arik - stop after 1 minute recording
 		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 60000);
-		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 60000); // Arik - stop after 1 minute recording
-		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 60000); // Arik - stop after 1 minute recording
+		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 60000);
+		mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 60000);
 	}
 
 	public void changeLanguage(String updatedLangLocale) {
