@@ -146,6 +146,7 @@ public class CallActivity extends AppCompatActivity
     volatile boolean sessitonRecivedFlag;
     private Vibrator vibrator;
     private CustomAudioDevice customAudioDevice;
+    private boolean mAudioDriveStrted;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
 
@@ -418,8 +419,8 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void setLangAndDisplayName() {
-        if(mParticipantLang.equals("IW")) mParticipantLang = "HE";
-        if(mSelfId.equals("IW")) mSelfId = "HE";
+//        if(mParticipantLang.equals("IW")) mParticipantLang = "HE";
+//        if(mSelfId.equals("IW")) mSelfId = "HE";
 
         mFlagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
         try {
@@ -593,6 +594,7 @@ public class CallActivity extends AppCompatActivity
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: //--Hold--
                 sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,"",true);
+                mAudioDriveStrted = false;
                 mPush2talk_locked = false;
                 mPushToTalkFL.setClickable(true);
                 mPublisherFL.setVisibility(View.GONE);
@@ -1313,9 +1315,12 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onEndOfSpeechToText() {
-        Log.d("SpeechToTextUtil", "!!!!!!!!!!!!: ");
-        AudioDeviceManager.getAudioDevice().startRenderer();
-        AudioDeviceManager.getAudioDevice().startCapturer();
+        Log.d("SpeechToTextUtil", "!!!!!!!!!!!!: " + AudioDeviceManager.getAudioDevice().getCaptureSettings());
+            if(!mAudioDriveStrted) {
+                AudioDeviceManager.getAudioDevice().startRenderer();
+                AudioDeviceManager.getAudioDevice().startCapturer();
+                mAudioDriveStrted = true;
+            }
     }
 
     @Override
@@ -1327,9 +1332,10 @@ public class CallActivity extends AppCompatActivity
     }
 
 
+    //Text To Speech
     private void fireTextToSpeech(String textToPlay) {
          //call view model to translate
-        AudioDeviceManager.getAudioDevice().stopCapturer();
+      //  AudioDeviceManager.getAudioDevice().stopCapturer();
         AudioDeviceManager.getAudioDevice().stopRenderer();
         TextToSpeechUtil.getInstance().startTextToSpeech(textToPlay, this);
     }
@@ -1339,8 +1345,8 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onFinishedPlaying() {
-          TextToSpeechUtil.getInstance().stopTextToSpeech();
-        AudioDeviceManager.getAudioDevice().startCapturer();
+        TextToSpeechUtil.getInstance().stopTextToSpeech();
+     //   AudioDeviceManager.getAudioDevice().startCapturer();
         AudioDeviceManager.getAudioDevice().startRenderer();
     }
 }

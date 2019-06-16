@@ -167,7 +167,7 @@ public class SpeechToTextUtil implements
 		if ((mSpeechUtilsSTTListener != null) && (error != SpeechRecognizer.ERROR_CLIENT))
 			mSpeechUtilsSTTListener.onErrorOfSpeechToText(resourceString);
 
-		//End Speech in any case - even if the error is 0 - no recording at all - for few seconds
+		//End the speechRecognizer in any case - even if the error is 0 (no recording at all - for few seconds)
 		if(resourceString == 0)
 				onEndOfSpeech();
 	}
