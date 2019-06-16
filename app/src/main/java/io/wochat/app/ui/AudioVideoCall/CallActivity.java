@@ -238,7 +238,8 @@ public class CallActivity extends AppCompatActivity
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
 
         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
-        videoAudioCallViewModel.getTranslatedText().observe(this, textToPlay -> {if(textToPlay != null) fireTextToSpeech(textToPlay);});
+        videoAudioCallViewModel.getTranslatedText().observe(this, textToPlay -> {if(textToPlay != null)
+                                                                                fireTextToSpeech(textToPlay);});
 
         initPIP(); // Picture-to-picture (Minimize feature) initialization
 
@@ -599,7 +600,7 @@ public class CallActivity extends AppCompatActivity
                 ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
 
                 AudioDeviceManager.getAudioDevice().stopCapturer();
-                AudioDeviceManager.getAudioDevice().stopRenderer();
+              AudioDeviceManager.getAudioDevice().stopRenderer();
                 SpeechToTextUtil.getInstance().startSpeechToText();
 
                 //SlideUp
@@ -655,8 +656,8 @@ public class CallActivity extends AppCompatActivity
     public void sendPush2TalkMsg(){
 
       SpeechToTextUtil.getInstance().stopSpeechToText();
-//        AudioDeviceManager.getAudioDevice().startRenderer();
-//        AudioDeviceManager.getAudioDevice().startCapturer();
+        AudioDeviceManager.getAudioDevice().startRenderer();
+        AudioDeviceManager.getAudioDevice().startCapturer();
 
         sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,"",false);
             ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
@@ -856,7 +857,8 @@ public class CallActivity extends AppCompatActivity
         if(mIsOutGoingCall)
              videoAudioCallViewModel.createSessionsAndToken(this,"RELAYED");
         else
-             videoAudioCallViewModel.createTokenInExistingSession(this, mSessionID, "" + WCRepository.TokenRoleType.PUBLISHER);
+             videoAudioCallViewModel.createTokenInExistingSession(this, mSessionID,
+                                                  "" + WCRepository.TokenRoleType.PUBLISHER);
 
     }
 
@@ -1301,9 +1303,6 @@ public class CallActivity extends AppCompatActivity
     public void onSpeechToTextResult(String text, int duration) {
         if(!text.equals(""))
             sendXMPPmsg(Message.RTC_CODE_TEXT,text, false);
-            SpeechToTextUtil.getInstance().destroy();
-            AudioDeviceManager.getAudioDevice().startRenderer();
-            AudioDeviceManager.getAudioDevice().startCapturer();
     }
 
     @Override
