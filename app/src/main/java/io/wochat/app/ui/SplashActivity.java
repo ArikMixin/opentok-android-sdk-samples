@@ -15,6 +15,9 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
+
+import io.fabric.sdk.android.Fabric;
 import io.wochat.app.R;
 import io.wochat.app.utils.TextViewLinkMovementMethod;
 import io.wochat.app.viewmodel.UserViewModel;
@@ -41,6 +44,9 @@ public class SplashActivity extends PermissionActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		Fabric.with(this, new Crashlytics());
+
 		setContentView(R.layout.activity_splash);
 		boolean hasPermissions = hasPermissions();
 

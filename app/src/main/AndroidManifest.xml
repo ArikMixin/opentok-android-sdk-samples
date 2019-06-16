@@ -157,6 +157,12 @@
             android:name=".ui.ContactInfo.ContactInfoMediaActivity"
             android:screenOrientation="portrait">
         </activity>
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="fb27fc86a5303c50787093362afd771e39d87589"
+            />
+
     </application>
 
 </manifest>
