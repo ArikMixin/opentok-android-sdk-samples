@@ -654,13 +654,12 @@ public class CallActivity extends AppCompatActivity
     }
 
     public void sendPush2TalkMsg(){
-
+        Log.d(TAG, "sendPush2TalkMsg: ");
         SpeechToTextUtil.getInstance().stopSpeechToText();
-
-        AudioDeviceManager.getAudioDevice().startRenderer();
-        AudioDeviceManager.getAudioDevice().startCapturer();
-
+//        AudioDeviceManager.getAudioDevice().startRenderer();
+//        AudioDeviceManager.getAudioDevice().startCapturer();
         sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,"",false);
+
             ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
                     mPublisherFL.setVisibility(View.VISIBLE);
                     mTranslatorMicP2T_IV.setImageResource(0);
@@ -1302,16 +1301,21 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onSpeechToTextResult(String text, int duration) {
+        Log.d(TAG, "onSpeechToTextResult: ");
         if(!text.equals(""))
             sendXMPPmsg(Message.RTC_CODE_TEXT,text, false);
     }
 
     @Override
     public void onBeginningOfSpeechToText() {
+        Log.d(TAG, "onBeginningOfSpeechToText: ");
     }
 
     @Override
     public void onEndOfSpeechToText() {
+        Log.d("SpeechToTextUtil", "!!!!!!!!!!!!: ");
+        AudioDeviceManager.getAudioDevice().startRenderer();
+        AudioDeviceManager.getAudioDevice().startCapturer();
     }
 
     @Override

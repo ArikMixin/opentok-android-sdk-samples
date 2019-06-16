@@ -9,6 +9,8 @@ import android.speech.SpeechRecognizer;
 import android.support.annotation.StringRes;
 import android.util.Log;
 
+import com.opentok.android.AudioDeviceManager;
+
 import java.util.ArrayList;
 
 import io.wochat.app.R;
@@ -164,6 +166,10 @@ public class SpeechToTextUtil implements
 		Log.e(TAG, "RecognitionListener onError: " + resourceString);
 		if ((mSpeechUtilsSTTListener != null) && (error != SpeechRecognizer.ERROR_CLIENT))
 			mSpeechUtilsSTTListener.onErrorOfSpeechToText(resourceString);
+
+		//End Speech in any case - even if the error is 0 - no recording at all - for few seconds
+		if(resourceString == 0)
+				onEndOfSpeech();
 	}
 
 	@Override
