@@ -605,6 +605,7 @@ public class CallActivity extends AppCompatActivity
               AudioDeviceManager.getAudioDevice().stopRenderer();
                 SpeechToTextUtil.getInstance().startSpeechToText();
 
+
                 //SlideUp
                 y1 = event.getY();
 
@@ -1315,6 +1316,7 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onEndOfSpeechToText() {
+
         Log.d("SpeechToTextUtil", "!!!!!!!!!!!!: " + AudioDeviceManager.getAudioDevice().getCaptureSettings());
             if(!mAudioDriveStrted) {
                 AudioDeviceManager.getAudioDevice().startRenderer();
