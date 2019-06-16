@@ -30,7 +30,6 @@ import android.util.Rational;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -91,8 +90,7 @@ public class CallActivity extends AppCompatActivity
     private static final String TAG = "CallActivity";
     private static final String TOKBOX = "TokBox";
 
-    private RelativeLayout mAcceptRL;
-    private CircleImageView mDeclineIncomingCIV, mAcceptIncomingCIV;
+    private CircleImageView mAcceptIncomingCIV;
     private CircleImageView mMicFlagCIV, mMicFlagP2T_CIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
             mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV;
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
@@ -100,7 +98,8 @@ public class CallActivity extends AppCompatActivity
     private Chronometer mTimerChr;
     private ImageView mCameraSwitchIV, mTranslatorMicIV, mTranslatorMicP2T_IV;
     private FrameLayout mBackNavigationFL, mCameraPauseFullFL;
-    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL, mTranslateRL, mLockRL, mDeclineInsideRL;
+    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL, mTranslateRL, mLockRL;
+    private ImageView mDeclineInsideIV, mDeclineIncomingIV, mAcceptIV;
     private String mFixedParticipantId;
     private Locale loc;
     private int mFlagDrawable;
@@ -178,9 +177,8 @@ public class CallActivity extends AppCompatActivity
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
                        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        mDeclineIncomingCIV = (CircleImageView) findViewById(R.id.decline_incoming_civ);
-        mAcceptIncomingCIV = (CircleImageView) findViewById(R.id.accept_incoming_civ);
-        mAcceptRL = (RelativeLayout) findViewById(R.id.accept_rl);
+        mDeclineIncomingIV = (ImageView) findViewById(R.id.decline_incoming_iv);
+        mAcceptIV = (ImageView) findViewById(R.id.accept_iv);
         mMicFlagCIV = (CircleImageView) findViewById(R.id.mic_flag_civ);
         mMicFlagP2T_CIV = (CircleImageView) findViewById(R.id.mic_flag_p2t_civ);
         mTitleTV = (TextView) findViewById(R.id.title_tv);
@@ -222,7 +220,7 @@ public class CallActivity extends AppCompatActivity
         mArrowsIV = (ImageView) findViewById(R.id.arrows_iv);
         mLockIV = (ImageView) findViewById(R.id.lock_iv);
         incomingCallBtnsRL = (RelativeLayout)findViewById(R.id.incoming_call_btns_rl);
-        mDeclineInsideRL = (RelativeLayout) findViewById(R.id.decline_inside_rl);
+        mDeclineInsideIV = (ImageView) findViewById(R.id.decline_inside_iv);
         mConnectingRL = (RelativeLayout) findViewById(R.id.connecting_rl);
         mActionBtnsCL = (ConstraintLayout) findViewById(R.id.action_btns_cl);
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
@@ -317,16 +315,16 @@ public class CallActivity extends AppCompatActivity
         mAcceptBtnAnim.setRepeatCount(Animation.INFINITE);
         mAcceptBtnAnim.setRepeatMode(Animation.REVERSE);
         mAcceptBtnAnim.setInterpolator(new LinearInterpolator());
-        mAcceptRL.setAnimation(mAcceptBtnAnim);
+        mAcceptIV.setAnimation(mAcceptBtnAnim);
 
         mPushToTalkFL.setVisibility(View.VISIBLE);
         mPushToTalkFL.setAlpha(0.0f);
 
         mRTCcodeBR = new RTCcodeBR();
 
-        mAcceptIncomingCIV.setOnClickListener(this);
-        mDeclineIncomingCIV.setOnClickListener(this);
-        mDeclineInsideRL.setOnClickListener(this);
+        mAcceptIV.setOnClickListener(this);
+        mDeclineIncomingIV.setOnClickListener(this);
+        mDeclineInsideIV.setOnClickListener(this);
 
         mBackNavigationFL.setOnClickListener(this);
         mCameraBtnVideo.setOnClickListener(this);
@@ -487,18 +485,18 @@ public class CallActivity extends AppCompatActivity
                         sendXMPPmsg(Message.RTC_CODE_REJECTED,"", false);
             break;
 
-            case R.id.decline_incoming_civ:
+            case R.id.decline_incoming_iv:
                 if(callStartedFlag)
                     sendXMPPmsg(Message.RTC_CODE_CLOSE,"",false);
                 else
                     sendXMPPmsg(Message.RTC_CODE_REJECTED,"",false);
             break;
 
-            case R.id.accept_incoming_civ:
+            case R.id.accept_iv:
                             callStarted();
             break;
 
-            case R.id.decline_inside_rl:
+            case R.id.decline_inside_iv:
                 if(callStartedFlag)
                     sendXMPPmsg(Message.RTC_CODE_CLOSE,"",false);
                 else
@@ -1080,7 +1078,7 @@ public class CallActivity extends AppCompatActivity
 
         callStartedFlag = true;
             mArrowsIV.startAnimation(mTranslateAnima); // start PushToTalk arrow animation
-            mAcceptIncomingCIV.setEnabled(false);
+            mAcceptIV.setEnabled(false);
             mStatusRL.setVisibility(View.GONE);
             incomingCallBtnsRL.setVisibility(View.GONE);
 

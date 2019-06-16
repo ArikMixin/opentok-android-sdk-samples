@@ -107,9 +107,6 @@
                     app:civ_border_overlay="true"
                     app:civ_border_width="0.1dp" />
 
-
-
-
                 <io.wochat.app.components.CircleImageView
                     android:id="@+id/participant_pic_flag_video_civ"
                     android:layout_width="35dp"
@@ -360,26 +357,20 @@
             android:layout_marginBottom="40dp"
             android:layout_marginLeft="80dp">
 
-            <io.wochat.app.components.CircleImageView
-                android:id="@+id/decline_incoming_civ"
+            <ImageView
                 android:layout_width="62dp"
                 android:layout_height="62dp"
+                android:id="@+id/decline_incoming_iv"
+                android:src="@drawable/ic_hangup"
                 android:layout_centerInParent="true"
-                android:src="@color/red">
-            </io.wochat.app.components.CircleImageView>
-
-            <ImageView
-                android:layout_centerInParent="true"
-                android:id="@+id/hang_up_iv"
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_action_speaker" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"/>
 
             <TextView
                 android:layout_marginTop="40dp"
                 android:layout_centerHorizontal="true"
-                android:layout_below="@+id/decline_incoming_civ"
+                android:layout_below="@+id/decline_incoming_iv"
                 android:textColor="@color/white"
                 android:text="@string/decline"
                 android:layout_width="wrap_content"
@@ -394,32 +385,21 @@
             android:layout_marginRight="80dp"
             android:layout_marginBottom="40dp">
 
-            <RelativeLayout
-                android:layout_centerVertical="true"
-                android:id="@+id/accept_rl"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <io.wochat.app.components.CircleImageView
-                    android:id="@+id/accept_incoming_civ"
-                    android:layout_width="62dp"
-                    android:layout_height="62dp"
-                    android:layout_centerInParent="true"
-                    android:src="@color/blue">
-                </io.wochat.app.components.CircleImageView>
+            <ImageView
+                android:layout_width="62dp"
+                android:layout_height="62dp"
+                android:id="@+id/accept_iv"
+                android:src="@drawable/ic_answer"
+                android:layout_centerInParent="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"/>
 
-                <ImageView
-                    android:layout_centerInParent="true"
-                    android:id="@+id/accept_iv"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_accept_call" />
-            </RelativeLayout>
 
             <TextView
                 android:layout_marginTop="40dp"
                 android:layout_centerHorizontal="true"
-                android:layout_below="@+id/accept_rl"
+                android:layout_below="@+id/accept_iv"
                 android:textColor="@color/white"
                 android:text="@string/accept"
                 android:layout_width="wrap_content"
@@ -445,7 +425,7 @@
             android:id="@+id/action_btns_cl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toTopOf="@+id/decline_inside_rl"
+            app:layout_constraintBottom_toTopOf="@+id/decline_inside_iv"
             android:layout_marginBottom="35dp"
             android:visibility="gone"
             >
@@ -522,37 +502,16 @@
                 app:layout_constraintStart_toStartOf="parent" />
         </android.support.constraint.ConstraintLayout>
 
-        <RelativeLayout
-            android:id="@+id/decline_inside_rl"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:layout_width="62dp"
+            android:layout_height="62dp"
+            android:id="@+id/decline_inside_iv"
+            android:src="@drawable/ic_hangup"
             android:layout_marginBottom="30dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintStart_toStartOf="parent"/>
 
-            <io.wochat.app.components.CircleImageView
-                android:id="@+id/decline_inside_civ"
-                android:layout_width="62dp"
-                android:layout_height="62dp"
-                android:layout_centerInParent="true"
-                android:src="@color/red"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"></io.wochat.app.components.CircleImageView>
-
-            <ImageView
-                android:id="@+id/hang_up_inside_iv"
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:layout_centerInParent="true"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_action_speaker"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
-
-        </RelativeLayout>
     </android.support.constraint.ConstraintLayout>
 
     <android.support.v7.widget.CardView
