@@ -938,7 +938,7 @@ public class CallActivity extends AppCompatActivity
             }
         }
 
-        videoAudioCallViewModel.resetTranslatedText();
+       videoAudioCallViewModel.resetTranslatedText();
        AudioDeviceManager.getAudioDevice().stopCapturer();
        AudioDeviceManager.getAudioDevice().destroyCapturer();
        AudioDeviceManager.getAudioDevice().stopRenderer();
@@ -1273,12 +1273,12 @@ public class CallActivity extends AppCompatActivity
                 if (isRecording)
                        Picasso.get().load(R.drawable.recording_state).into(mParticipantPicVideoCIV);
                 else
-                      setPhotoByUrl(true);
+                       setPhotoByUrl(true);
         } else {
                  if (isRecording)
                        Picasso.get().load(R.drawable.recording_state).into(mParticipantPicVideoCIV);
                  else
-                      setPhotoByUrl(false);
+                       setPhotoByUrl(false);
         }
 
         //Disable translator button if other side is recording now
