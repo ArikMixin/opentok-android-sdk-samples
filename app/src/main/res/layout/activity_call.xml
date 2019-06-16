@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="@drawable/call_background"
     tools:context=".ui.AudioVideoCall.CallActivity">
-
     <FrameLayout
         android:id="@+id/subscriber_fl"
         android:layout_width="match_parent"

@@ -30,6 +30,8 @@ import android.util.Rational;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
@@ -164,12 +166,17 @@ public class CallActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call);
 
+
+
         initViews();
         requestPermissions();
     }
 
     private void initViews() {
         activityActiveFlag = true;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+                       getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
         mDeclineIncomingCIV = (CircleImageView) findViewById(R.id.decline_incoming_civ);
         mAcceptIncomingCIV = (CircleImageView) findViewById(R.id.accept_incoming_civ);
