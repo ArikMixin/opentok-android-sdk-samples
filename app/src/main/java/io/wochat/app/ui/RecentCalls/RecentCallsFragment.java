@@ -42,7 +42,7 @@ public class RecentCallsFragment extends Fragment {
 	private void initView() {
 		mViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);
 		mViewModel.getConversationListLD().observe(this,calls -> {
-			Log.d(TAG, "calls.size(): ");
+			Log.d(TAG, "calls.size(): " + calls.size());
 		});
 	}
 

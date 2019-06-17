@@ -496,29 +496,23 @@ public class CallActivity extends AppCompatActivity
                     if(callStartedFlag) {
                         minimizeActivity();
                     }else
-                        sendXMPPmsg(Message.RTC_CODE_REJECTED,"", false);
+                        sendXMPPmsg(Message.RTC_CODE_CLOSE,"", false);
             break;
 
             case R.id.decline_incoming_iv:
-                if(callStartedFlag)
-                    sendXMPPmsg(Message.RTC_CODE_CLOSE,"",false);
-                else
                     sendXMPPmsg(Message.RTC_CODE_REJECTED,"",false);
-            break;
-
-            case R.id.accept_iv:
-                            callStarted();
             break;
 
             case R.id.decline_inside_iv:
-                if(callStartedFlag)
                     sendXMPPmsg(Message.RTC_CODE_CLOSE,"",false);
-                else
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED,"",false);
             break;
 
+            case R.id.accept_iv:
+                callStarted();
+                break;
+
             case R.id.camera_btn_video_tb:
-                cameraBtnVideo();
+                    cameraBtnVideo();
             break;
 
             case R.id.camera_btn_audio_tb:
@@ -1048,6 +1042,8 @@ public class CallActivity extends AppCompatActivity
     private class RTCcodeBR extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+
+            Log.d("intent", "onReceive: " + intent.getAction());
             if(!mCallEndedFlag && intent.getAction().equals(Message.RTC_CODE_REJECTED) ||
                     intent.getAction().equals(Message.RTC_CODE_BUSY) ||
                     intent.getAction().equals(Message.RTC_CODE_CLOSE))
@@ -1079,8 +1075,14 @@ public class CallActivity extends AppCompatActivity
             mBusySound.setLooping(true);
             mBusySound.start();
         }else if(rtcCode.equals(Message.RTC_CODE_CLOSE)){
-            mTimerChr.stop();
-            mTitleTV.setText(getResources().getString(R.string.call_ended));
+            if(callStartedFlag) {
+                mTimerChr.stop();
+                mTitleTV.setText(getResources().getString(R.string.call_ended));
+            }else{
+                mCallingSound.stop();
+                finish();
+                return;
+            }
         }
 
         // Update call info after call is finished
