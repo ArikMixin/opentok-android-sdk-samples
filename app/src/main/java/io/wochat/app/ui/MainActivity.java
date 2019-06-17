@@ -40,6 +40,7 @@ import io.wochat.app.db.entity.User;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
+import io.wochat.app.ui.RecentCalls.RecentCallsFragment;
 import io.wochat.app.ui.RecentChats.RecentChatsFragment;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.viewmodel.ContactViewModel;

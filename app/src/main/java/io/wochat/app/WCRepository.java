@@ -36,11 +36,13 @@ import java.util.Map;
 import io.wochat.app.com.WochatApi;
 import io.wochat.app.db.WCDatabase;
 import io.wochat.app.db.WCSharedPreferences;
+import io.wochat.app.db.dao.CallDao;
 import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ConversationDao;
 import io.wochat.app.db.dao.MessageDao;
 import io.wochat.app.db.dao.NotifDao;
 import io.wochat.app.db.dao.UserDao;
+import io.wochat.app.db.entity.Call;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.ContactServer;
@@ -117,6 +119,7 @@ public class WCRepository {
 	private UserDao mUserDao;
 	private ContactDao mContactDao;
 	private ConversationDao mConversationDao;
+	private CallDao mCallDao;
 	private MessageDao mMessageDao;
 	private NotifDao mNotifDao;
 	private LiveData<List<User>> mAllUsers;
@@ -178,6 +181,7 @@ public class WCRepository {
 		mUserDao = mDatabase.userDao();
 		mContactDao = mDatabase.contactDao();
 		mConversationDao = mDatabase.conversationDao();
+		mCallDao = mDatabase.callfDao();
 		mMessageDao = mDatabase.messageDao();
 		mNotifDao = mDatabase.notifDao();
 		mSelfUser = mUserDao.getFirstUser();
@@ -965,6 +969,13 @@ public class WCRepository {
 		return mConversationDao.getAllConversations();
 	}
 
+	public LiveData<List<Call>> getAllCallsLD() {
+		return mCallDao.getAllCallsLD();
+	}
+
+	public void  updateCall(Integer callId, String callDuration, String callState) {
+		 mCallDao.updateCall(callId, callDuration, callState);
+	}
 
 	public boolean hasConversation(String conversationId) {
 		return mConversationDao.hasConversation(conversationId);
@@ -972,6 +983,10 @@ public class WCRepository {
 
 	public void addNewConversation(Conversation conversation) {
 		mAppExecutors.diskIO().execute(() -> mConversationDao.insert(conversation));
+	}
+
+	public void addNewCall(Call call) {
+		mAppExecutors.diskIO().execute(() -> mCallDao.insert(call));
 	}
 
 	public LiveData<List<Message>> getUnreadMessagesConversation(String conversationId) {

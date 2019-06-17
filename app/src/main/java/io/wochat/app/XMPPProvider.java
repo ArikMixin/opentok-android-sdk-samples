@@ -267,7 +267,7 @@ class XMPPProvider {
 //						});
 
 //						Presence presence = new Presence(Presence.Type.available);
-//						presence.setStatus("Online!");
+//						presence.setCallState("Online!");
 //						presence.setPriority(1);
 //						Log.e(TAG, "sendStanza called");
 //						mConnection.sendStanza(presence);
@@ -286,7 +286,7 @@ class XMPPProvider {
 					if (mConnection.isAuthenticated()) {
 						sendSelfPresence();
 //						Presence presence = new Presence(Presence.Type.available);
-//						presence.setStatus("Online!");
+//						presence.setCallState("Online!");
 //						presence.setPriority(1);
 //						Log.e(TAG, "sendStanza called");
 //						mConnection.sendStanza(presence);

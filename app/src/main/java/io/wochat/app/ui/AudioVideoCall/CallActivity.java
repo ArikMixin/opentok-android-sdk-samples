@@ -61,6 +61,7 @@ import io.wochat.app.R;
 import io.wochat.app.WCRepository;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleImageView;
+import io.wochat.app.db.entity.Call;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.model.StateData;
 import io.wochat.app.model.VideoAudioCall;
@@ -160,12 +161,14 @@ public class CallActivity extends AppCompatActivity
     public static final int ANIMATION_DURATION = 500;
     public static boolean activityActiveFlag;
 
+    public static final String CALL_MISSED  = "CALL_MISSED";
+    public static final String CALL_INCOMING  = "CALL_INCOMING";
+    public static final String CALL_OUTGOING  = "OUTGOING";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call);
-
-
 
         initViews();
         requestPermissions();
@@ -243,22 +246,34 @@ public class CallActivity extends AppCompatActivity
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
 
+        /**View Model **/
         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
         videoAudioCallViewModel.getTranslatedText().observe(this, textToPlay -> {if(textToPlay != null)
-                                                                                fireTextToSpeech(textToPlay);});
+                                                                                             fireTextToSpeech(textToPlay);});
+        //*** Save call details to roomDB (For recent calls section)
+        // CALL_MISSED - is a default status - need to change it in the end of a call , call Duration - update in the end of a call;
+        String  mCallState;
+        if(mIsOutGoingCall)
+            mCallState = CALL_OUTGOING;
+        else
+            mCallState = CALL_MISSED; // nly after the call (if user answer - update to CALL_OUTGOING status;
+        Call call = new Call(mParticipantId, mParticipantName, mParticipantPic,
+                                    mParticipantLang, mIsVideoCall, mCallState, System.currentTimeMillis(),0);
+        videoAudioCallViewModel.addNewCall(call);
 
+        /**Picture-to-Picture-mode (Minimize)**/
         initPIP(); // Picture-to-picture (Minimize feature) initialization
 
-        //Init audio and SpeechToTextUtil
+        /**SpeechToTextUtil and Audio Driver initialization**/
         TextToSpeechUtil.getInstance().setLanguage(mSelfLang); //Play in users language
         SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
         customAudioDevice = new CustomAudioDevice(CallActivity.this);
-        if(AudioDeviceManager.getAudioDevice() == null )
+      if(AudioDeviceManager.getAudioDevice() == null )
                     AudioDeviceManager.setAudioDevice(customAudioDevice);
         AudioDeviceManager.getAudioDevice().initCapturer();
         AudioDeviceManager.getAudioDevice().initRenderer();
 
-        //Set lang flag , language display name and pic
+        /**Language(Flag), display name, and pic initialization**/
         setLangAndDisplayName();
 
         mMicFlagCIV.setEnabled(false);
@@ -276,15 +291,14 @@ public class CallActivity extends AppCompatActivity
         screenHeight = getResources().getDisplayMetrics().heightPixels;
         screenWidth = getResources().getDisplayMetrics().widthPixels;
 
-        //Sounds Init
+        /**Sounds (ringing etc.) initialization**/
         mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
         mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
         mIncomingCallSound = MediaPlayer.create(this, R.raw.incoming_call);
         mBusySound = MediaPlayer.create(this, R.raw.phone_busy_signal);
 
 
-        //***Animations init
-        //Init calling animation
+        /**Animation initialization**/
         mCallTXTanima = new AlphaAnimation(0.0f, 1.0f);
         mCallTXTanima.setDuration(1000);
         mCallTXTanima.setRepeatCount(Animation.INFINITE);
@@ -950,11 +964,14 @@ public class CallActivity extends AppCompatActivity
             }
         }
 
-       videoAudioCallViewModel.resetTranslatedText();
-       AudioDeviceManager.getAudioDevice().stopCapturer();
-       AudioDeviceManager.getAudioDevice().destroyCapturer();
-       AudioDeviceManager.getAudioDevice().stopRenderer();
-       AudioDeviceManager.getAudioDevice().destroyRenderer();
+           videoAudioCallViewModel.resetTranslatedText();
+
+        if(mAudioDriveStrted) {
+            AudioDeviceManager.getAudioDevice().stopCapturer();
+            AudioDeviceManager.getAudioDevice().stopRenderer();
+        }
+        AudioDeviceManager.getAudioDevice().destroyCapturer();
+        AudioDeviceManager.getAudioDevice().destroyRenderer();
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -1065,6 +1082,9 @@ public class CallActivity extends AppCompatActivity
             mTimerChr.stop();
             mTitleTV.setText(getResources().getString(R.string.call_ended));
         }
+
+        // Update call info after call is finished
+        // videoAudioCallViewModel.updateCall()
 
         Handler handler = new Handler();
         handler.postDelayed(() -> {
@@ -1321,12 +1341,10 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onEndOfSpeechToText() {
-
-        Log.d("SpeechToTextUtil", "!!!!!!!!!!!!: " + AudioDeviceManager.getAudioDevice().getCaptureSettings());
             if(!mAudioDriveStrted) {
-                AudioDeviceManager.getAudioDevice().startRenderer();
-                AudioDeviceManager.getAudioDevice().startCapturer();
-                mAudioDriveStrted = true;
+                    AudioDeviceManager.getAudioDevice().startRenderer();
+                    AudioDeviceManager.getAudioDevice().startCapturer();
+                    mAudioDriveStrted = true;
             }
     }
 
@@ -1341,8 +1359,8 @@ public class CallActivity extends AppCompatActivity
 
     //Text To Speech
     private void fireTextToSpeech(String textToPlay) {
-         //call view model to translate
-      //  AudioDeviceManager.getAudioDevice().stopCapturer();
+        // call view model to translate
+       //  AudioDeviceManager.getAudioDevice().stopCapturer();
         AudioDeviceManager.getAudioDevice().stopRenderer();
         TextToSpeechUtil.getInstance().startTextToSpeech(textToPlay, this);
     }
