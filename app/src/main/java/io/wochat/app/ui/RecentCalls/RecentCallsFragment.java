@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,24 +14,40 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
+import com.squareup.picasso.Picasso;
+import com.stfalcon.chatkit.commons.ImageLoader;
+import com.stfalcon.chatkit.dialogs.DialogsList;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
+import com.stfalcon.chatkit.utils.DateFormatter;
+
+import java.util.Date;
+import java.util.List;
 
 import io.wochat.app.R;
 import io.wochat.app.db.entity.Call;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.RecentChats.CustomDialogViewHolder;
 import io.wochat.app.ui.settings.SettingsActivity;
+import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.RecentCallsViewModel;
 
 
-public class RecentCallsFragment extends Fragment {
+public class RecentCallsFragment extends Fragment  implements
+		DialogsListAdapter.OnDialogClickListener<Call>,
+		DialogsListAdapter.OnDialogLongClickListener<Call>,
+		DialogsListAdapter.OnButtonClickListener<Call>, DateFormatter.Formatter{
 
 	private RecentCallsViewModel mViewModel;
 	private static final String TAG = "RecentCallsFragment";
 	protected DialogsListAdapter<Call> dialogsAdapter;
-
+	private List<Call> mCalls;
+	private ConstraintLayout mEmptyFrameCL;
 	private View view;
+	protected ImageLoader imageLoader;
+	private DialogsList dialogsList;
 
 	public static RecentCallsFragment newInstance() { return new RecentCallsFragment();
 	}
@@ -46,12 +63,45 @@ public class RecentCallsFragment extends Fragment {
 	}
 
 	private void initView() {
+		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
+		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
+
 		mViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);
 		mViewModel.getConversationListLD().observe(this,calls -> {
-			Log.d(TAG, "calls.size(): " + calls.size());
+			mCalls = calls;
+            if (calls != null && calls.size() > 0)  {
+                Log.e(TAG, "calls count: " + calls.size());
+                mEmptyFrameCL.setVisibility((View.GONE));
+				initAdapter();
+            } else {
+                Log.e(TAG, "calls null");
+            }
 		});
 
-		//initAdapter();
+		imageLoader = new ImageLoader() {
+			@Override
+			public void loadImageWPlaceholder(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
+				if ((url != null)&& (url.equals("")))
+					url = null;
+				Picasso.get().load(url).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
+
+			}
+
+			@Override
+			public void loadImageCenterCrop(ImageView imageView, @Nullable String url, @Nullable Object payload) {
+				Picasso.get().load(url).resize(300,300).centerCrop().into(imageView);
+			}
+
+			@Override
+			public void loadImageCenter(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
+				Picasso.get().load(url).into(imageView);
+			}
+
+			@Override
+			public void loadImageNoPlaceholder(ImageView imageView, int resourceId) {
+				Picasso.get().load(resourceId).into(imageView);
+			}
+		};
 	}
 
 	@Override
@@ -80,23 +130,43 @@ public class RecentCallsFragment extends Fragment {
 		return super.onOptionsItemSelected(item);
 	}
 
-//	private void initAdapter() {
-//		dialogsAdapter = new DialogsListAdapter<>(
-//				R.layout.item_custom_dialog_view_holder_new,
-//				CustomDialogViewHolder.class,
-//				imageLoader);
-//
-//		//dialogsAdapter.setItems(DialogsFixtures.getDialogs());
-//		dialogsAdapter.setItems(mConversation);
-//
-//		dialogsAdapter.setOnDialogClickListener(this);
-//
-//		dialogsAdapter.setOnDialogLongClickListener(this);
-//
-//		dialogsAdapter.setOnButtonClickListener(this);
-//
-//		dialogsAdapter.setDatesFormatter(this);
-//
-//		dialogsList.setAdapter(dialogsAdapter);
-//	}
+	private void initAdapter() {
+		dialogsAdapter = new DialogsListAdapter<>(
+				R.layout.item_recent_calls_view_holder,
+				RecentCallsViewHolder.class,
+				imageLoader);
+
+		//dialogsAdapter.setItems(DialogsFixtures.getDialogs());
+		dialogsAdapter.setItems(mCalls);
+
+		dialogsAdapter.setOnDialogClickListener(this);
+
+		dialogsAdapter.setOnDialogLongClickListener(this);
+
+		dialogsAdapter.setOnButtonClickListener(this);
+
+		dialogsAdapter.setDatesFormatter(this);
+
+		dialogsList.setAdapter(dialogsAdapter);
+	}
+
+	@Override
+	public void onDialogClick(Call dialog) {
+
+	}
+
+	@Override
+	public void onDialogLongClick(Call dialog) {
+
+	}
+
+	@Override
+	public void onButtonClick(Call dialog, int i) {
+
+	}
+
+	@Override
+	public String format(Date date) {
+		return null;
+	}
 }

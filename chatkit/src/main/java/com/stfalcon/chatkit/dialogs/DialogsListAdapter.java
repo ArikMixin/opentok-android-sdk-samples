@@ -670,14 +670,17 @@ public class DialogsListAdapter<DIALOG extends IDialog>
             //Set Date
             String formattedDate = null;
 
-            if ((dialog.getLastMessageId() != null)&&(!dialog.getLastMessageId().equals(""))) {
-                Date lastMessageDate = dialog.getLastMessageCreatedDate();
-                if (datesFormatter != null) formattedDate = datesFormatter.format(lastMessageDate);
-                tvDate.setText(formattedDate == null
-                        ? getDateString(lastMessageDate)
-                        : formattedDate);
-            } else {
-                tvDate.setText(null);
+            if(tvDate != null) {
+                if ((dialog.getLastMessageId() != null) && (!dialog.getLastMessageId().equals(""))) {
+                    Date lastMessageDate = dialog.getLastMessageCreatedDate();
+                    if (datesFormatter != null)
+                        formattedDate = datesFormatter.format(lastMessageDate);
+                    tvDate.setText(formattedDate == null
+                            ? getDateString(lastMessageDate)
+                            : formattedDate);
+                } else {
+                    tvDate.setText(null);
+                }
             }
 
             //Set Dialog avatar
@@ -694,17 +697,20 @@ public class DialogsListAdapter<DIALOG extends IDialog>
 //                    && ((dialog.getLastMessageId() != null)&&(!dialog.getLastMessageId().equals(""))) ? VISIBLE : GONE);
 
             //Set Last message text
-            if ((dialog.getLastMessageId() != null)&&(!dialog.getLastMessageId().equals(""))) {
-                tvLastMessage.setText(dialog.getLastMessageTextToDisplay());
-            } else {
-                tvLastMessage.setText(null);
+            if(tvLastMessage != null) {
+                if ((dialog.getLastMessageId() != null) && (!dialog.getLastMessageId().equals(""))) {
+                    tvLastMessage.setText(dialog.getLastMessageTextToDisplay());
+                } else {
+                    tvLastMessage.setText(null);
+                }
             }
 
             //Set Unread message count bubble
-            tvBubble.setText(String.valueOf(dialog.getUnreadMessagesCount()));
-            tvBubble.setVisibility(dialogStyle.isDialogUnreadBubbleEnabled() &&
-                    dialog.getUnreadMessagesCount() > 0 ? VISIBLE : GONE);
-
+            if(tvBubble != null) { // No bubble in calls tab
+                tvBubble.setText(String.valueOf(dialog.getUnreadMessagesCount()));
+                tvBubble.setVisibility(dialogStyle.isDialogUnreadBubbleEnabled() &&
+                        dialog.getUnreadMessagesCount() > 0 ? VISIBLE : GONE);
+            }
             container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

@@ -95,9 +95,14 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void onNewIncomingMessage(String msg, String conversationId) {
 		try {
 			Message message = Message.fromJson(msg);
-
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
 					broadcastTypingSignal(conversationId, message.isTyping());
+				return;
+			}
+
+			//Open IncomingCallActivity Activity if video call received
+			if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
+				openIncomingCallActivity(message);
 				return;
 			}
 
@@ -110,7 +115,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			//Video Audio - CallEvent
 			if (message.getEventCode() != null){
-					broadcastCallEvent(message);
+				broadcastCallEvent(message);
 				return;
 			}
 
@@ -133,11 +138,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 						if (!message.getConversationId().equals(mCurrentConversationId)){
 							NotificationHelper.handleNotificationIncomingMessage(getApplication(), savedMessage, contact);
 						}
-					}
-
-					//Open IncomingCallActivity Activity if video call received
-					if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
-							OpenIncomingCallActivity(message, contact);
 					}
 				}
 			});
@@ -425,42 +425,44 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		sendBroadcast(intent);
 	}
 
-	private void broadcastCallEvent(Message massage) {
+	private void broadcastCallEvent(Message message) {
 
-		if(massage.getEventCode().equals(Message.MISSED_VIDEO_CALL))
+		if(message.getEventCode().equals(Message.MISSED_VIDEO_CALL))
 				isVideo = true;
 		else
 				isVideo = false;
 
+		//if call activity open - close;
 		if(CallActivity.activityActiveFlag) {
 				Intent intent = new Intent();
 				intent.setAction(CALL_EVENT);
 				sendBroadcast(intent);
-		} else{
+		}
 			// TODO: 6/18/2019  - show notification about missing call
 				//sendPushNotification();
-		}
 
 		//Update resent call;
-		 contact = new Contact(massage.getParticipantId());
-		 call = new Call(massage.getParticipantId(), contact.getName(), contact.getAvatar(), contact.getLanguage(),
-								isVideo, CallActivity.CALL_MISSED, massage.getTimestampMilli(),0);
+		 contact = mRepository.getParticipantContact(message.getSenderId());
+		 call = new Call(message.getSenderId(), contact.getName(), contact.getAvatar(), contact.getLanguage(),
+								isVideo, CallActivity.CALL_MISSED, message.getTimestampMilli(),0);
 			mRepository.addNewCall(call);
 	}
 
 
-	private void OpenIncomingCallActivity(Message message, Contact contact) {
+	private void openIncomingCallActivity(Message message) {
 
 		//If incoming activity open send BUSY back to sender
 		if(CallActivity.activityActiveFlag) {
-				Message message_busy = new Message(message.getParticipantId(), mSelfUserId, message.getConversationId(),
+				Message message_busy = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(),
 							message.getSessionID(), "", "",
 						    Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);
 				sendMessage(message_busy);
 		}else {
+				contact = mRepository.getParticipantContact(message.getSenderId());
+			Log.d("arik2", "message.getSenderId(): " + 		contact.getName() + " , mSelfUserId " + mSelfUserId);
 
-				Intent intent = new Intent(this, CallActivity.class);
-				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getParticipantId());
+			Intent intent = new Intent(this, CallActivity.class);
+				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getSenderId());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());

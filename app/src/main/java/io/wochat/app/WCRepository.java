@@ -1042,6 +1042,7 @@ public class WCRepository {
 				contact = mContactDao.getContact(participantId);
 			}
 
+
 			boolean res = true;
 			message.setParticipantId(message.getSenderId());
 			message.setRecipients(new String[]{mSharedPreferences.getUserId()});
@@ -1080,11 +1081,6 @@ public class WCRepository {
 					break;
 				case Message.MSG_TYPE_GIF:
 					break;
-                case Message.MSG_TYPE_WEBRTC_CALL:
-				// message.setAckStatus(Message.ACK_STATUS_RECEIVED); NOT RELEVANT TO WEBRTC CALLS
-				//	res = handleIncomingWEBRTC_Call(wcService,message);
-					listener.OnSaved(res, message, contact);
-                    break;
 			}
 
 
@@ -2130,5 +2126,23 @@ public class WCRepository {
 							Log.d(TAG, "Error - translate failed" + errorComm);
 					});
 		});
+	}
+
+	public Contact getParticipantContact(String participantId){
+		Log.d("arik", "participantId: " + participantId);
+		Contact contact;
+
+		if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
+			contact = mContactDao.getContact(participantId);
+			Log.d("arik", "participantId: " + contact.getName());
+
+			return contact;
+		} else { // no contact, no conversation
+			contact = new Contact(participantId);
+			Log.d("arik", "participantId: " + contact.getName());
+
+			return contact;
+		}
+
 	}
 }

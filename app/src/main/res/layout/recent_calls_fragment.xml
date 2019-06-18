@@ -7,11 +7,48 @@
     android:layout_height="match_parent"
     tools:context=".ui.RecentCalls.RecentCallsFragment">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Calls"/>
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/empty_frame_fl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="No Calls"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+            android:textColor="@color/chat_empty_text"
+            android:textStyle="italic"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+    <com.stfalcon.chatkit.dialogs.DialogsList
+        android:id="@+id/dialogsList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:dialogDividerLeftPadding="0dp"
+        app:dialogMessageTextSize="13sp"
+        app:dialogMessageTextColor="@color/font_gray_1"
+        app:dialogUnreadMessageTextColor="@color/font_gray_1"
+        app:dialogTitleTextSize="16sp"
+        app:dialogTitleTextColor="@color/black"
+        app:dialogAvatarHeight="43dp"
+        app:dialogAvatarWidth="43dp"
+        app:dialogTitleTextStyle="normal"
+        app:dialogUnreadBubbleBackgroundColor="@color/white"
+        app:dialogUnreadBubbleTextColor="@color/app_blue"
+        app:dialogItemBackground="@color/white"
+        app:dialogUnreadItemBackground="@color/white"
+        app:dialogUnreadTitleTextStyle="normal"
+        app:dialogDateColor="@color/black"
+        app:dialogUnreadDateColor="@color/black"
+        app:dialogDateSize="11sp"/>
 
 </FrameLayout>

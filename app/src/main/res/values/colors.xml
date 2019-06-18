@@ -89,6 +89,9 @@
     <color name="green">#008000</color>
     <color name="blue">#0000FF</color>
     <color name="navy">#000080</color>
+    <color name="azure">#0275D4</color>
+
+
 
     <color name="badge_selected">#ffffff</color>
     <color name="badge_not_selected">#E0E0E0</color>

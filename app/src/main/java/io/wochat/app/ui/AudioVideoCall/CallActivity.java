@@ -166,7 +166,7 @@ public class CallActivity extends AppCompatActivity
 
     public static final String CALL_MISSED  = "CALL_MISSED";
     public static final String CALL_INCOMING  = "CALL_INCOMING";
-    public static final String CALL_OUTGOING  = "OUTGOING";
+    public static final String CALL_OUTGOING  = "CALL_OUTGOING";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -848,6 +848,7 @@ public class CallActivity extends AppCompatActivity
 
     //Send Massage to the receiver
     public void sendXMPPmsg(String rtcCode, String msgFromPTT ,boolean isRecording){
+        Log.d("arik", "rtcCode: " + rtcCode);
         message = new Message(mParticipantId, mSelfId, mConversationId, mSessionID, msgFromPTT,mSelfLang,
                                                                               rtcCode, mVideoFlag, isRecording);
 

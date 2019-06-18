@@ -1,129 +1,99 @@
 package io.wochat.app.ui.RecentCalls;
 
+import android.annotation.SuppressLint;
+import android.graphics.Color;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
-
+import java.util.Date;
 import io.wochat.app.R;
 import io.wochat.app.components.CircleFlagImageView;
+import io.wochat.app.db.entity.Call;
 import io.wochat.app.db.entity.Contact;
-import io.wochat.app.db.entity.Conversation;
-import io.wochat.app.db.entity.Message;
-import io.wochat.app.utils.Utils;
+import io.wochat.app.ui.AudioVideoCall.CallActivity;
+import io.wochat.app.utils.DateFormatter;
 
 
 /*
  * Created by Anton Bevza on 1/18/17.
  */
 public class RecentCallsViewHolder
-        extends DialogsListAdapter.DialogViewHolder<Conversation> implements View.OnClickListener {
+        extends DialogsListAdapter.DialogViewHolder<Call> implements View.OnClickListener {
 
     private final ImageView mCocheIV;
 	private final CircleFlagImageView mAvatarcfiv;
 	private final ImageView mMsgTypeIV;
 	private final ImageButton mCameraIB, mPhoneIB;
-	private Conversation conversation;
+	private final TextView mCallStatusTV, mCallDateTV;
+	private Call conversation;
+	private String mCallType;
+	private View itemView;
+	private Date dateD;
 
 	public static final int BTN_CAMERA = 1;
 	public static final int BTN_PHONE = 2;
-    //private View onlineIndicator;
 
     public RecentCallsViewHolder(View itemView) {
         super(itemView);
         //onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
-        mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
+		mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
 		mMsgTypeIV = (ImageView)itemView.findViewById(R.id.dialogMsgTypeIV);
 		mAvatarcfiv = (CircleFlagImageView) itemView.findViewById(R.id.dialogAvatar);
 		mCameraIB = (ImageButton)itemView.findViewById(R.id.camera_ib);
 		mPhoneIB = (ImageButton)itemView.findViewById(R.id.phone_ib);
+		mCallStatusTV = (TextView)itemView.findViewById(R.id.call_tatus_tv);
+		mCallDateTV = (TextView)itemView.findViewById(R.id.call_date_tv);
 
 		mCameraIB.setOnClickListener(this);
 		mPhoneIB.setOnClickListener(this);
-    }
 
-    @Override
-    public void onBind(Conversation conversation) {
-        super.onBind(conversation);
+		this.itemView = itemView;
+	}
 
-		mCameraIB.setTag(conversation);
-		mPhoneIB.setTag(conversation);
+	@SuppressLint("SetTextI18n")
+	@Override
+    public void onBind(Call call) {
+        super.onBind(call);
 
-		mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
-			conversation.getParticipantLanguage(),
-			Contact.getInitialsFromName(conversation.getParticipantName()));
+		mCameraIB.setTag(call);
+		mPhoneIB.setTag(call);
 
-		if (conversation.getLastMessageId() == null){
-			mCocheIV.setVisibility(View.GONE);
-			mMsgTypeIV.setVisibility(View.GONE);
-			return;
+		mAvatarcfiv.setInfo(call.getParticipantProfilePicUrl(),
+			call.getParticipantLanguage(),
+			Contact.getInitialsFromName(call.getParticipantName()));
+
+		if(!call.isVideoCall()) {
+			mMsgTypeIV.setImageResource(R.drawable.phone_grey);
+			mCallType = itemView.getContext().getString(R.string.audio);
+		}else{
+			mCallType = itemView.getContext().getString(R.string.video);
 		}
 
-        if (conversation.getLastMessageAckStatus()!= null) {
-			boolean isIncoming = conversation.getLastMessageSenderId().equals(conversation.getParticipantId());
-			mCocheIV.setVisibility(Utils.booleanToVisibilityGone(!isIncoming));
-
-			if (conversation.getLastMessageType().equals(Message.MSG_TYPE_VIDEO)){
-				mMsgTypeIV.setVisibility(View.VISIBLE);
-				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_video_dark);
-			}
-			else if (conversation.getLastMessageType().equals(Message.MSG_TYPE_IMAGE)){
-				mMsgTypeIV.setVisibility(View.VISIBLE);
-				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_camera_dark);
-			}
-			else if ((conversation.getLastMessageType().equals(Message.MSG_TYPE_AUDIO))||
-					 (conversation.getLastMessageType().equals(Message.MSG_TYPE_SPEECHABLE))){
-				mMsgTypeIV.setVisibility(View.VISIBLE);
-				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_mic_dark);
-			}
-			else if (conversation.getLastMessageType().equals(Message.MSG_TYPE_GIF)){
-				mMsgTypeIV.setVisibility(View.VISIBLE);
-				imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_gif_dark);
-			}
-			else {
-				mMsgTypeIV.setVisibility(View.GONE);
-			}
-
-			switch (conversation.getLastMessageAckStatus()) {
-				case Message.ACK_STATUS_PENDING:
-					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_pending);
-					break;
-				case Message.ACK_STATUS_READ:
-					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_seen);
-					break;
-				case Message.ACK_STATUS_RECEIVED:
-					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_arrived);
-					break;
-				case Message.ACK_STATUS_SENT:
-					imageLoader.loadImageNoPlaceholder(mCocheIV, R.drawable.coche_sent);
-					break;
-
-			}
+//		//Call Status
+		if(call.getCallState().equals(CallActivity.CALL_INCOMING))
+				mCallStatusTV.setText(itemView.getContext().getString(R.string.incoming) + " "
+					+ mCallType  + " " +  itemView.getContext().getString(R.string.call));
+		else if (call.getCallState().equals(CallActivity.CALL_OUTGOING))
+				mCallStatusTV.setText(itemView.getContext().getString(R.string.outgoing) + " "
+					+ mCallType  + " " +  itemView.getContext().getString(R.string.call));
+		else if(call.getCallState().equals(CallActivity.CALL_MISSED)) {
+			mCallStatusTV.setTextColor(Color.RED);
+			mCallStatusTV.setText(itemView.getContext().getString(R.string.missed) + " "
+					+ mCallType  + " " +  itemView.getContext().getString(R.string.call));
 		}
-		else
-			mCocheIV.setVisibility(View.GONE);
 
-//        if (conversationComplete.getConversation().isGroup()) {
-//            onlineIndicator.setVisibility(View.GONE);
-//        } else {
-//            //boolean isOnline = dialog.getUsers().get(0).isOnline();
-//            boolean isOnline = true;
-//            onlineIndicator.setVisibility(View.VISIBLE);
-//            if (isOnline) {
-//                onlineIndicator.setBackgroundResource(R.drawable.shape_bubble_online);
-//            } else {
-//                onlineIndicator.setBackgroundResource(R.drawable.shape_bubble_offline);
-//            }
-//        }
-
-
+		dateD = new Date(call.getCallStartTimeStamp());
+		mCallDateTV.setText(DateFormatter.format(dateD, DateFormatter.Template.TIME));
     }
 
 	@Override
 	public void onClick(View v) {
 
-		 conversation = (Conversation) v.getTag();
+		 conversation = (Call) v.getTag();
 
 		switch(v.getId()){
 			case R.id.camera_ib:

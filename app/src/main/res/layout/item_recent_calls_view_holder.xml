@@ -1,0 +1,150 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:id="@id/dialogRootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_marginTop="8dp"
+        android:id="@id/dialogContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+      >
+
+
+        <io.wochat.app.components.CircleFlagImageView
+            android:id="@id/dialogAvatar"
+            android:layout_width="@dimen/dialog_avatar_width"
+            android:layout_height="@dimen/dialog_avatar_height"
+            android:layout_marginStart="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:elevation="10dp"
+            app:layout_constraintTop_toTopOf="@+id/dialogName"/>
+
+        <TextView
+            android:id="@id/dialogName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:ellipsize="end"
+            android:fontFamily="@string/font_fontFamily_medium"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="5sp"
+            android:maxLines="1"
+            android:maxWidth="220dp"
+            android:text="Natasha Gamble Natasha Gamble Natasha Gamble Natasha Gamble"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <LinearLayout
+            android:id="@+id/center_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="2dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toStartOf="@+id/phone_ib"
+            app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
+            app:layout_constraintTop_toBottomOf="@+id/dialogName">
+
+
+
+
+            <ImageView
+                android:id="@+id/dialogMsgTypeIV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="0dp"
+                android:src="@drawable/msg_in_video_dark"
+                />
+
+
+            <TextView
+                android:id="@+id/call_tatus_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:layout_marginStart="5dp"
+                android:ellipsize="end"
+                android:gravity="top"
+                android:maxLines="1"
+                android:maxWidth="200dp"
+                android:textColor="@color/font_gray_1"
+                android:textSize="14sp"/>
+
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/call_date_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="20dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:text="yesterday"
+            android:textColor="@color/azure"
+            android:textSize="12sp"
+            app:layout_constraintStart_toEndOf="@+id/dialogAvatar"
+            app:layout_constraintTop_toBottomOf="@+id/center_layout"/>
+
+
+        <ImageButton
+            android:id="@+id/camera_ib"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:background="@color/transparent"
+            app:layout_constraintBottom_toBottomOf="@+id/dialogAvatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/dialogAvatar"
+            app:srcCompat="@drawable/video_camera"/>
+
+        <ImageButton
+            android:id="@+id/phone_ib"
+            android:paddingTop="20dp"
+            android:paddingBottom="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:background="@color/transparent"
+            app:layout_constraintBottom_toBottomOf="@+id/dialogAvatar"
+            app:layout_constraintEnd_toStartOf="@+id/camera_ib"
+            app:layout_constraintTop_toTopOf="@+id/dialogAvatar"
+            app:layout_constraintVertical_bias="0.476"
+            app:srcCompat="@drawable/phone"/>
+
+
+    </android.support.constraint.ConstraintLayout>
+
+
+    <FrameLayout
+        android:layout_below="@+id/dialogContainer"
+        android:id="@id/dialogDividerContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="8dp"
+        >
+
+        <View
+            android:id="@id/dialogDivider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/dialog_divider"/>
+
+    </FrameLayout>
+
+</RelativeLayout>

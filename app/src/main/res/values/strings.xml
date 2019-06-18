@@ -103,7 +103,11 @@
     <string name="permissions_expl_in">In order to answer this call you must confirm the permissions</string>
     <string name="connecting">Connecting....</string>
     <string name="listening">Listening...</string>
-
-
+    <string name="audio">Audio</string>
+    <string name="video">Video</string>
+    <string name="missed">Missed</string>
+    <string name="incoming">Incoming</string>
+    <string name="outgoing">Outgoing</string>
+    <string name="call">Call</string>
 
 </resources>

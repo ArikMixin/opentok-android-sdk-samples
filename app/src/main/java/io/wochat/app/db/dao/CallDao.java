@@ -13,7 +13,7 @@ import io.wochat.app.db.entity.Call;
 @Dao
 public interface CallDao {
 
-    @Query("SELECT * from call_table ORDER BY call_start_timestamp ASC")
+    @Query("SELECT * from call_table ORDER BY call_start_timestamp DESC")
 	public LiveData<List<Call>> getAllCallsLD();
 
 	@Insert
