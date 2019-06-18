@@ -160,6 +160,20 @@ public class Message implements IMessage,
 
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface RTC_CODE {}
+
+
+	// CallEvent (video audio call)
+	public static final String MISSED_VOICE_CALL = "MISSED_VOICE_CALL";
+	public static final String MISSED_VIDEO_CALL = "MISSED_VIDEO_CALL";
+
+	@StringDef({
+			MISSED_VOICE_CALL,
+			MISSED_VIDEO_CALL,
+	})
+
+	@Retention(RetentionPolicy.SOURCE)
+	public @interface CALL_EVENT_CODE {}
+
 	/**********************************************/
 	@PrimaryKey
 	@NonNull
@@ -374,6 +388,25 @@ public class Message implements IMessage,
 	@ColumnInfo(name = "is_recording")
 	@Expose
 	private boolean isRecording;
+	/**********************************************/
+
+	//CallEvent
+	@SerializedName("event_code")
+	@ColumnInfo(name = "event_code")
+	@Expose
+	private @CALL_EVENT_CODE
+	String eventCode;
+	/**********************************************/
+	@SerializedName("acting_user")
+	@ColumnInfo(name = "acting_user")
+	@Expose
+	private String actingUser;
+	/**********************************************/
+	@SerializedName("other_user")
+	@ColumnInfo(name = "other_user")
+	@Expose
+	private String otherUser;
+	/**********************************************/
 
 //	private Image image;
 //  private int status;
@@ -437,7 +470,22 @@ public class Message implements IMessage,
 		this.isRecording = isRecording;
 	}
 
+	// Video Audio Calls - CallEvents - (MISSED CALLS)
+	public Message(String participantId, String selfId, String conversationId, String eventCode,String actingUser, String otherUser ,String callEvent) {
+		//Base:
+		this.messageId = UUID.randomUUID().toString();
+		this.messageType = MSG_TYPE_WEBRTC_CALL;
+		this.conversationId = conversationId;
+		this.senderId = selfId;
+		this.participantId = participantId;
+		this.recipients = new String[]{participantId};
+		this.timestampMilli = System.currentTimeMillis();
 
+		//CallEvent
+		this.eventCode = eventCode;
+		this.actingUser = actingUser;
+		this.otherUser = otherUser;
+	}
 
 
 //	public Message(String participantId, String selfId, String conversationId, Uri localUri, String messageLang) {
@@ -1061,6 +1109,35 @@ public class Message implements IMessage,
 	public void setIsRecording(boolean isRecording) {
 		this.isRecording = isRecording;
 	}
+
+
+
+
+
+	public String getEventCode() {
+		return eventCode;
+	}
+	public void setEventCode(String eventCode) {
+		this.eventCode = eventCode;
+	}
+
+	public String getActingUser() {
+		return actingUser;
+	}
+	public void setActingUser(String actingUser) {
+		this.actingUser = actingUser;
+	}
+
+	public String getOtherUser() {
+		return otherUser;
+	}
+	public void setOtherUser(String otherUser) {
+		this.otherUser = otherUser;
+	}
+
+
+
+
 
 
 

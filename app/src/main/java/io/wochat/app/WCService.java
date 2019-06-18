@@ -14,6 +14,7 @@ import android.util.Log;
 import java.util.List;
 
 import io.wochat.app.db.WCSharedPreferences;
+import io.wochat.app.db.entity.Call;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.Message;
@@ -42,10 +43,14 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public static final String IS_RECORDING = "IS_RECORDING";
 	public static final String RTC_MESSAGE = "RTC_MESSAGE";
 	public static final String RTC_MESSAGE_LANGUAGE = "MESSAGE LANGUAGE";
+	public static final String CALL_EVENT = "CALL_EVENT";
 
 	private final IBinder mBinder = new WCBinder();
 	private XMPPProvider mXMPPProvider;
 	private WCRepository mRepository;
+	private Contact contact;
+	private Call call;
+	private boolean isVideo;
 	private String mSelfUserId, mSelfUserLang;
 	private AppObserverBR mAppObserverBR;
 	private AppExecutors mAppExecutors;
@@ -98,7 +103,14 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			//WEB RTC Messages (ANSWER, TEXT, CLOSE, REJECTED, BUSY, UPDATE_SESSION)
 			if (message.getRtcCode() != null && !message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
-						broadcastRTCcodeChanged(message.getRtcCode(), message.isRecording(), message.getMessage(),message.getMessageLanguage());
+						broadcastWebRTC(message.getRtcCode(), message.isRecording(),
+															message.getMessage(),message.getMessageLanguage());
+				return;
+			}
+
+			//Video Audio - CallEvent
+			if (message.getEventCode() != null){
+					broadcastCallEvent(message);
 				return;
 			}
 
@@ -123,7 +135,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 						}
 					}
 
-					Log.d("arik_test", "OnSaved: " + message.getRtcCode());
 					//Open IncomingCallActivity Activity if video call received
 					if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
 							OpenIncomingCallActivity(message, contact);
@@ -393,7 +404,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		});
 	}
 
-//	private void broadcastRTCcodeChanged(boolean rejectedFlag) {
+//	private void broadcastWebRTC(boolean rejectedFlag) {
 //		Intent intent = new Intent();
 //		if(rejectedFlag)
 //			intent.setAction(Message.RTC_CODE_REJECTED);
@@ -402,16 +413,39 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 //		sendBroadcast(intent);
 //	}
 
-	private void broadcastRTCcodeChanged(String mRtcCode, boolean isRecording, String message, String messageLanguage) {
+	private void broadcastWebRTC(String mRtcCode, boolean isRecording, String message, String messageLanguage) {
 		Intent intent = new Intent();
 			intent.setAction(mRtcCode);
-			if(mRtcCode.equals(Message.RTC_CODE_UPDATE_SESSION))
+		if(mRtcCode.equals(Message.RTC_CODE_UPDATE_SESSION))
 						intent.putExtra(IS_RECORDING, isRecording);
 		if(mRtcCode.equals(Message.RTC_CODE_TEXT)) {
 						intent.putExtra(RTC_MESSAGE, message);
 		}				intent.putExtra(RTC_MESSAGE_LANGUAGE, messageLanguage);
 
 		sendBroadcast(intent);
+	}
+
+	private void broadcastCallEvent(Message massage) {
+
+		if(massage.getEventCode().equals(Message.MISSED_VIDEO_CALL))
+				isVideo = true;
+		else
+				isVideo = false;
+
+		if(CallActivity.activityActiveFlag) {
+				Intent intent = new Intent();
+				intent.setAction(CALL_EVENT);
+				sendBroadcast(intent);
+		} else{
+			// TODO: 6/18/2019  - show notification about missing call
+				//sendPushNotification();
+		}
+
+		//Update resent call;
+		 contact = new Contact(massage.getParticipantId());
+		 call = new Call(massage.getParticipantId(), contact.getName(), contact.getAvatar(), contact.getLanguage(),
+								isVideo, CallActivity.CALL_MISSED, massage.getTimestampMilli(),0);
+			mRepository.addNewCall(call);
 	}
 
 

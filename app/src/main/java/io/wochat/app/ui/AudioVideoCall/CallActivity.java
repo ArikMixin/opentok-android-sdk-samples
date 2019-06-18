@@ -15,6 +15,7 @@ import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Build;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
@@ -149,6 +150,8 @@ public class CallActivity extends AppCompatActivity
     private Vibrator vibrator;
     private CustomAudioDevice customAudioDevice;
     private boolean mAudioDriveStrted;
+    private Call call;
+    private CountDownTimer countDownTimer;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
 
@@ -246,20 +249,18 @@ public class CallActivity extends AppCompatActivity
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
 
+        startMissedCallTimer();
         /**View Model **/
         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
         videoAudioCallViewModel.getTranslatedText().observe(this, textToPlay -> {if(textToPlay != null)
                                                                                              fireTextToSpeech(textToPlay);});
         //*** Save call details to roomDB (For recent calls section)
         // CALL_MISSED - is a default status - need to change it in the end of a call , call Duration - update in the end of a call;
-        String  mCallState;
-        if(mIsOutGoingCall)
-            mCallState = CALL_OUTGOING;
-        else
-            mCallState = CALL_MISSED; // nly after the call (if user answer - update to CALL_OUTGOING status;
-        Call call = new Call(mParticipantId, mParticipantName, mParticipantPic,
-                                    mParticipantLang, mIsVideoCall, mCallState, System.currentTimeMillis(),0);
-        videoAudioCallViewModel.addNewCall(call);
+        if(mIsOutGoingCall) {
+            call = new Call(mParticipantId, mParticipantName, mParticipantPic,
+                    mParticipantLang, mIsVideoCall, CALL_OUTGOING, System.currentTimeMillis(), 0);
+            videoAudioCallViewModel.addNewCall(call);
+        }
 
         /**Picture-to-Picture-mode (Minimize)**/
         initPIP(); // Picture-to-picture (Minimize feature) initialization
@@ -268,10 +269,10 @@ public class CallActivity extends AppCompatActivity
         TextToSpeechUtil.getInstance().setLanguage(mSelfLang); //Play in users language
         SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
         customAudioDevice = new CustomAudioDevice(CallActivity.this);
-      if(AudioDeviceManager.getAudioDevice() == null )
-                    AudioDeviceManager.setAudioDevice(customAudioDevice);
-        AudioDeviceManager.getAudioDevice().initCapturer();
-        AudioDeviceManager.getAudioDevice().initRenderer();
+//      if(AudioDeviceManager.getAudioDevice() == null )
+//                    AudioDeviceManager.setAudioDevice(customAudioDevice);
+//        AudioDeviceManager.getAudioDevice().initCapturer();
+//        AudioDeviceManager.getAudioDevice().initRenderer();
 
         /**Language(Flag), display name, and pic initialization**/
         setLangAndDisplayName();
@@ -461,6 +462,12 @@ public class CallActivity extends AppCompatActivity
     private void requestPermissions() {
         if (EasyPermissions.hasPermissions(this, perms)) {
 
+            //SetAudio Drive init
+            if(AudioDeviceManager.getAudioDevice() == null )
+                    AudioDeviceManager.setAudioDevice(customAudioDevice);
+            AudioDeviceManager.getAudioDevice().initCapturer();
+            AudioDeviceManager.getAudioDevice().initRenderer();
+
             //Show self camera Preview at first
             startCameraPreview();
             createSessionAndToken();
@@ -508,7 +515,7 @@ public class CallActivity extends AppCompatActivity
             break;
 
             case R.id.accept_iv:
-                callStarted();
+                    callStarted();
                 break;
 
             case R.id.camera_btn_video_tb:
@@ -1043,19 +1050,21 @@ public class CallActivity extends AppCompatActivity
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            Log.d("intent", "onReceive: " + intent.getAction());
+            Log.d(TAG, "onReceive: " + intent.getAction());
             if(!mCallEndedFlag && intent.getAction().equals(Message.RTC_CODE_REJECTED) ||
                     intent.getAction().equals(Message.RTC_CODE_BUSY) ||
                     intent.getAction().equals(Message.RTC_CODE_CLOSE))
                 callEnded(intent.getAction());
             else if(intent.getAction().equals(Message.RTC_CODE_ANSWER))
                 callStarted();
-           else if(intent.getAction().equals(Message.RTC_CODE_UPDATE_SESSION))
+            else if(intent.getAction().equals(Message.RTC_CODE_UPDATE_SESSION))
                          recordingState(intent.getBooleanExtra(WCService.IS_RECORDING,false));
-           else if(intent.getAction().equals(Message.RTC_CODE_TEXT)){
-                videoAudioCallViewModel.translateText(intent.getStringExtra(WCService.RTC_MESSAGE),
-                                                intent.getStringExtra(WCService.RTC_MESSAGE_LANGUAGE));
-
+            else if(intent.getAction().equals(Message.RTC_CODE_TEXT)){
+                    videoAudioCallViewModel.translateText(intent.getStringExtra(WCService.RTC_MESSAGE),
+                                                    intent.getStringExtra(WCService.RTC_MESSAGE_LANGUAGE));
+            }
+            else if(intent.getAction().equals(WCService.CALL_EVENT)) {
+                    finish();
             }
           }
 
@@ -1126,7 +1135,12 @@ public class CallActivity extends AppCompatActivity
                              mConnectingRL.setVisibility(View.VISIBLE);
 
                             startIncomingCallThread();
-           }
+
+                //incoming call
+                    call = new Call(mParticipantId, mParticipantName, mParticipantPic,
+                                        mParticipantLang, mIsVideoCall, CALL_INCOMING, System.currentTimeMillis(),0);
+                videoAudioCallViewModel.addNewCall(call);
+            }
 
         //Enable translate btn lang if self and participant have different languages
         if (!mSelfLang.equals(mParticipantLang)) {
@@ -1138,6 +1152,26 @@ public class CallActivity extends AppCompatActivity
         }else{
             mTranslatorMicIV.setEnabled(false);
         }
+    }
+
+    private void callMissed() {
+//        call = new Call(mParticipantId, mParticipantName, mParticipantPic,
+//                mParticipantLang, mIsVideoCall, CALL_MISSED, System.currentTimeMillis(),0);
+//        videoAudioCallViewModel.addNewCall(call);
+    String eventCode;
+    if(mIsVideoCall)
+        eventCode = Message.MISSED_VIDEO_CALL;
+    else
+        eventCode = Message.MISSED_VOICE_CALL;
+
+        //Send Missed MSG;
+        message = new Message(mParticipantId, mSelfId, mConversationId,
+                eventCode, mSelfId,mParticipantId,"");
+
+        if ((mService != null) && (mService.isXmppConnected())){
+            mService.sendMessage(message);
+        }
+        finish();
     }
 
     private void startIncomingCallThread() {
@@ -1375,5 +1409,23 @@ public class CallActivity extends AppCompatActivity
         TextToSpeechUtil.getInstance().stopTextToSpeech();
      //   AudioDeviceManager.getAudioDevice().startCapturer();
         AudioDeviceManager.getAudioDevice().startRenderer();
+    }
+
+    private void startMissedCallTimer() {
+        if(mIsOutGoingCall) {
+            countDownTimer =  new CountDownTimer(30000, 1000) {
+
+                public void onTick(long millisUntilFinished) {
+                    if(callStartedFlag)
+                        countDownTimer.cancel();
+                }
+
+                public void onFinish() {
+                    if(!callStartedFlag)
+                   callMissed();
+                }
+
+            }.start();
+        }
     }
 }

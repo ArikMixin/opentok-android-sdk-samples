@@ -14,7 +14,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
+
 import io.wochat.app.R;
+import io.wochat.app.db.entity.Call;
+import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.ui.RecentChats.CustomDialogViewHolder;
 import io.wochat.app.ui.settings.SettingsActivity;
 import io.wochat.app.viewmodel.RecentCallsViewModel;
 
@@ -23,6 +28,7 @@ public class RecentCallsFragment extends Fragment {
 
 	private RecentCallsViewModel mViewModel;
 	private static final String TAG = "RecentCallsFragment";
+	protected DialogsListAdapter<Call> dialogsAdapter;
 
 	private View view;
 
@@ -44,6 +50,8 @@ public class RecentCallsFragment extends Fragment {
 		mViewModel.getConversationListLD().observe(this,calls -> {
 			Log.d(TAG, "calls.size(): " + calls.size());
 		});
+
+		//initAdapter();
 	}
 
 	@Override
@@ -61,7 +69,6 @@ public class RecentCallsFragment extends Fragment {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 
-
 		int id = item.getItemId();
 
 		if (id == R.id.action_settings) {
@@ -71,6 +78,25 @@ public class RecentCallsFragment extends Fragment {
 		}
 
 		return super.onOptionsItemSelected(item);
-
 	}
+
+//	private void initAdapter() {
+//		dialogsAdapter = new DialogsListAdapter<>(
+//				R.layout.item_custom_dialog_view_holder_new,
+//				CustomDialogViewHolder.class,
+//				imageLoader);
+//
+//		//dialogsAdapter.setItems(DialogsFixtures.getDialogs());
+//		dialogsAdapter.setItems(mConversation);
+//
+//		dialogsAdapter.setOnDialogClickListener(this);
+//
+//		dialogsAdapter.setOnDialogLongClickListener(this);
+//
+//		dialogsAdapter.setOnButtonClickListener(this);
+//
+//		dialogsAdapter.setDatesFormatter(this);
+//
+//		dialogsList.setAdapter(dialogsAdapter);
+//	}
 }
