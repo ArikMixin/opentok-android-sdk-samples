@@ -1078,6 +1078,7 @@ public class CallActivity extends AppCompatActivity
 
     private void callEnded(String rtcCode){
         mCallEndedFlag = true;
+        countDownTimer.cancel();
         mCallTXTanima.cancel();
         mCallingSound.stop();
 
@@ -1111,9 +1112,8 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void callStarted() {
-       // customAudioDevice.startCapturer();
-
-        callStartedFlag = true;
+            callStartedFlag = true;
+            countDownTimer.cancel();
             mArrowsIV.startAnimation(mTranslateAnima); // start PushToTalk arrow animation
             mAcceptIV.setEnabled(false);
             mStatusRL.setVisibility(View.GONE);
@@ -1161,6 +1161,7 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void callMissed() {
+        Log.d("arik_test", "callMissed: ");
 //        call = new Call(mParticipantId, mParticipantName, mParticipantPic,
 //                mParticipantLang, mIsVideoCall, CALL_MISSED, System.currentTimeMillis(),0);
 //        videoAudioCallViewModel.addNewCall(call);
@@ -1418,20 +1419,22 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void startMissedCallTimer() {
-        if(mIsOutGoingCall) {
-            countDownTimer =  new CountDownTimer(30000, 1000) {
+        int timeInMilis;
 
-                public void onTick(long millisUntilFinished) {
-                    if(callStartedFlag)
-                        countDownTimer.cancel();
-                }
+        if(mIsOutGoingCall)
+            timeInMilis = 30000;
+        else
+            timeInMilis = 60000;
 
+            countDownTimer =  new CountDownTimer(timeInMilis, 1000) {
+                public void onTick(long millisUntilFinished) { }
                 public void onFinish() {
-                    if(!callStartedFlag)
-                   callMissed();
+                    if(!callStartedFlag && mIsOutGoingCall) // In outgoing call - send MissedEvent msg
+                            callMissed();
+                    else if(!callStartedFlag && !mIsOutGoingCall)
+                            finish(); // In Incoming call - finish after 1 minute (if not closed yed by sender)
                 }
+         }.start();
 
-            }.start();
-        }
     }
 }

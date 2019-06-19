@@ -14,9 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
-import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.dialogs.DialogsList;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
@@ -72,21 +70,22 @@ public class RecentCallsFragment extends Fragment  implements
 	private void initView() {
 		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
 		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
+		mCallsViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);
+		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
+		initAdapter();
 
 		//	ViewModel
-		mCallsViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);
-		mCallsViewModel.getConversationListLD().observe(this, calls -> {
-			mCalls = calls;
-            if (calls != null && calls.size() > 0)  {
-                Log.e(TAG, "calls count: " + calls.size());
-                mEmptyFrameCL.setVisibility((View.GONE));
-				initAdapter();
-            } else {
-                Log.e(TAG, "calls null");
-            }
-		});
+		mCallsViewModel.getCallsListLD().observe(this, calls -> {
+			Log.e(TAG, "calls count: " + calls.size());
 
-		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
+			if (calls != null && calls.size() > 0)
+				mEmptyFrameCL.setVisibility((View.GONE));
+			else
+				mEmptyFrameCL.setVisibility((View.VISIBLE));
+
+            dialogsAdapter.setItems(calls); // notifyDataSetChanged
+        });
+
 		mUserViewModel.getSelfUser().observe(this, user -> {
 			if (user != null) {
 				mSelfUser = user;
@@ -116,7 +115,6 @@ public class RecentCallsFragment extends Fragment  implements
 	public boolean onOptionsItemSelected(MenuItem item) {
 
 		int id = item.getItemId();
-
 		if (id == R.id.action_settings) {
 			Intent intent = new Intent(getContext(), SettingsActivity.class);
 			startActivity(intent);
@@ -187,9 +185,6 @@ public class RecentCallsFragment extends Fragment  implements
 				R.layout.item_recent_calls_view_holder,
 				RecentCallsViewHolder.class,
 				imageLoader);
-
-		//dialogsAdapter.setItems(DialogsFixtures.getDialogs());
-		dialogsAdapter.setItems(mCalls);
 
 		dialogsAdapter.setOnDialogClickListener(this);
 

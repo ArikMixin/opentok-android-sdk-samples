@@ -24,7 +24,7 @@ public class RecentCallsViewModel extends AndroidViewModel{
         mRepository.deleteCall(callID);
     }
 
-    public LiveData<List<Call>> getConversationListLD(){
+    public LiveData<List<Call>> getCallsListLD(){
         return mRepository.getAllCallsLD();
     }
 }
