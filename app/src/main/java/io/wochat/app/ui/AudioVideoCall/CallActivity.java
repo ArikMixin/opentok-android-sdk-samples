@@ -848,7 +848,6 @@ public class CallActivity extends AppCompatActivity
 
     //Send Massage to the receiver
     public void sendXMPPmsg(String rtcCode, String msgFromPTT ,boolean isRecording){
-        Log.d("arik", "rtcCode: " + rtcCode);
         message = new Message(mParticipantId, mSelfId, mConversationId, mSessionID, msgFromPTT,mSelfLang,
                                                                               rtcCode, mVideoFlag, isRecording);
 

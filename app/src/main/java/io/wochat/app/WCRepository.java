@@ -2129,18 +2129,12 @@ public class WCRepository {
 	}
 
 	public Contact getParticipantContact(String participantId){
-		Log.d("arik", "participantId: " + participantId);
 		Contact contact;
-
 		if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
 			contact = mContactDao.getContact(participantId);
-			Log.d("arik", "participantId: " + contact.getName());
-
 			return contact;
 		} else { // no contact, no conversation
 			contact = new Contact(participantId);
-			Log.d("arik", "participantId: " + contact.getName());
-
 			return contact;
 		}
 

@@ -3,6 +3,7 @@ package io.wochat.app.ui.RecentCalls;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -16,6 +17,7 @@ import io.wochat.app.db.entity.Call;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.utils.DateFormatter;
+import io.wochat.app.utils.Utils;
 
 
 /*
@@ -88,8 +90,7 @@ public class RecentCallsViewHolder
 					+ mCallType  + " " +  itemView.getContext().getString(R.string.call));
 		}
 
-		dateD = new Date(call.getCallStartTimeStamp());
-		mCallDateTV.setText(DateFormatter.format(dateD, DateFormatter.Template.TIME));
+		mCallDateTV.setText(Utils.dateFormatter(itemView.getContext(), new Date(call.getCallStartTimeStamp())));
     }
 
 	@Override
