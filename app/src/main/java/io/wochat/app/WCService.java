@@ -438,19 +438,18 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				intent.setAction(CALL_EVENT);
 				sendBroadcast(intent);
 		}
-			// TODO: 6/18/2019  - show notification about missing call
-				//sendPushNotification();
+		 // TODO: 6/18/2019  - show notification about missing call
 
-		//Update resent call;
+
+        //Update resent call;
 		 contact = mRepository.getParticipantContact(message.getSenderId());
 		 call = new Call(message.getSenderId(), contact.getName(), contact.getAvatar(), contact.getLanguage(),
 								isVideo, CallActivity.CALL_MISSED, message.getTimestampMilli(),0);
-			mRepository.addNewCall(call);
+		 mRepository.addNewCall(call);
 	}
 
 
 	private void openIncomingCallActivity(Message message) {
-
 		//If incoming activity open send BUSY back to sender
 		if(CallActivity.activityActiveFlag) {
 				Message message_busy = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(),
@@ -459,9 +458,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				sendMessage(message_busy);
 		}else {
 				contact = mRepository.getParticipantContact(message.getSenderId());
-			Log.d("arik2", "message.getSenderId(): " + 		contact.getName() + " , mSelfUserId " + mSelfUserId);
-
-			Intent intent = new Intent(this, CallActivity.class);
+				Intent intent = new Intent(this, CallActivity.class);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getSenderId());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());

@@ -27,12 +27,14 @@ import java.util.List;
 
 import io.wochat.app.R;
 import io.wochat.app.db.entity.Call;
-import io.wochat.app.db.entity.Conversation;
-import io.wochat.app.ui.MainActivity;
+import io.wochat.app.db.entity.User;
+import io.wochat.app.ui.AudioVideoCall.CallActivity;
+import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.RecentChats.CustomDialogViewHolder;
 import io.wochat.app.ui.settings.SettingsActivity;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.RecentCallsViewModel;
+import io.wochat.app.viewmodel.UserViewModel;
 
 
 public class RecentCallsFragment extends Fragment  implements
@@ -40,7 +42,8 @@ public class RecentCallsFragment extends Fragment  implements
 		DialogsListAdapter.OnDialogLongClickListener<Call>,
 		DialogsListAdapter.OnButtonClickListener<Call>, DateFormatter.Formatter{
 
-	private RecentCallsViewModel mViewModel;
+	private RecentCallsViewModel mCallsViewModel;
+	private UserViewModel mUserViewModel;
 	private static final String TAG = "RecentCallsFragment";
 	protected DialogsListAdapter<Call> dialogsAdapter;
 	private List<Call> mCalls;
@@ -48,6 +51,10 @@ public class RecentCallsFragment extends Fragment  implements
 	private View view;
 	protected ImageLoader imageLoader;
 	private DialogsList dialogsList;
+	private User mSelfUser;
+	private String mSelfUserId;
+	private String mSelfUserLang;
+	private String mSelfUserName;
 
 	public static RecentCallsFragment newInstance() { return new RecentCallsFragment();
 	}
@@ -66,8 +73,9 @@ public class RecentCallsFragment extends Fragment  implements
 		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
 		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
 
-		mViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);
-		mViewModel.getConversationListLD().observe(this,calls -> {
+		//	ViewModel
+		mCallsViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);
+		mCallsViewModel.getConversationListLD().observe(this, calls -> {
 			mCalls = calls;
             if (calls != null && calls.size() > 0)  {
                 Log.e(TAG, "calls count: " + calls.size());
@@ -78,30 +86,20 @@ public class RecentCallsFragment extends Fragment  implements
             }
 		});
 
-		imageLoader = new ImageLoader() {
-			@Override
-			public void loadImageWPlaceholder(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
-				if ((url != null)&& (url.equals("")))
-					url = null;
-				Picasso.get().load(url).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
-
+		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
+		mUserViewModel.getSelfUser().observe(this, user -> {
+			if (user != null) {
+				mSelfUser = user;
+				mSelfUserId = user.getUserId();
+				mSelfUserLang = user.getLanguage();
+				mSelfUserName = user.getUserName();
 			}
-
-			@Override
-			public void loadImageCenterCrop(ImageView imageView, @Nullable String url, @Nullable Object payload) {
-				Picasso.get().load(url).resize(300,300).centerCrop().into(imageView);
+			else {
+				mSelfUserId = null;
+				mSelfUserLang = null;
+				mSelfUserName = null;
 			}
-
-			@Override
-			public void loadImageCenter(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
-				Picasso.get().load(url).into(imageView);
-			}
-
-			@Override
-			public void loadImageNoPlaceholder(ImageView imageView, int resourceId) {
-				Picasso.get().load(resourceId).into(imageView);
-			}
-		};
+		});
 	}
 
 	@Override
@@ -109,12 +107,10 @@ public class RecentCallsFragment extends Fragment  implements
 		super.onActivityCreated(savedInstanceState);
 	}
 
-
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.menu_main_activity3, menu);
 	}
-
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -126,8 +122,64 @@ public class RecentCallsFragment extends Fragment  implements
 			startActivity(intent);
 			return true;
 		}
-
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onDialogClick(Call call) {
+		if(CallActivity.activityActiveFlag)
+			return; // Prevent multi open
+		Intent intent = new Intent(getContext(), CallActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, call.getParticipantId());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, call.getParticipantName());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, call.getParticipantLanguage());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, call.getParticipantProfilePicUrl());
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, call.getId());
+		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, call.isVideoCall());
+		intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
+		startActivity(intent);
+	}
+
+	@Override
+	public void onDialogLongClick(Call call) {
+		Log.d("call", "call: " + call.getCallID());
+		// TODO: 6/19/2019 create delete mechanism
+		mCallsViewModel.deleteCall(call.getCallID());
+	}
+
+	@Override
+	public void onButtonClick(Call call, int buttonID) {
+		if(CallActivity.activityActiveFlag)
+			return; // Prevent multi open
+
+		boolean isVideoCall = false;
+		if(buttonID == CustomDialogViewHolder.BTN_CAMERA)
+			isVideoCall = true;
+		else if(buttonID == CustomDialogViewHolder.BTN_PHONE)
+			isVideoCall = false;
+
+		Intent intent = new Intent(getContext(), CallActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, call.getParticipantId());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, call.getParticipantName());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, call.getParticipantLanguage());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, call.getParticipantProfilePicUrl());
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, call.getId());
+		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideoCall);
+		intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
+		startActivity(intent);
+	}
+
+	@Override
+	public String format(Date date) {
+		return Utils.dateFormatter(getContext(), date);
 	}
 
 	private void initAdapter() {
@@ -148,25 +200,5 @@ public class RecentCallsFragment extends Fragment  implements
 		dialogsAdapter.setDatesFormatter(this);
 
 		dialogsList.setAdapter(dialogsAdapter);
-	}
-
-	@Override
-	public void onDialogClick(Call dialog) {
-
-	}
-
-	@Override
-	public void onDialogLongClick(Call dialog) {
-
-	}
-
-	@Override
-	public void onButtonClick(Call dialog, int i) {
-
-	}
-
-	@Override
-	public String format(Date date) {
-		return null;
 	}
 }

@@ -278,8 +278,9 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public void onButtonClick(Conversation conversation, int buttonID) {
+		if(CallActivity.activityActiveFlag)
+			return; // Prevent multi open
 		boolean isVideoCall = false;
-
 		if(buttonID == CustomDialogViewHolder.BTN_CAMERA)
 				isVideoCall = true;
 		else if(buttonID == CustomDialogViewHolder.BTN_PHONE)

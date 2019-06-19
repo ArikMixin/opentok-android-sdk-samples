@@ -989,6 +989,10 @@ public class WCRepository {
 		mAppExecutors.diskIO().execute(() -> mCallDao.insert(call));
 	}
 
+	public void deleteCall(Integer callId) {
+		mAppExecutors.diskIO().execute(() -> mCallDao.deleteCall(callId));
+	}
+
 	public LiveData<List<Message>> getUnreadMessagesConversation(String conversationId) {
 		return mMessageDao.getUnreadMessagesConversationLD(conversationId);
 	}

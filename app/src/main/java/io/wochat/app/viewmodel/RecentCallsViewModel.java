@@ -20,6 +20,10 @@ public class RecentCallsViewModel extends AndroidViewModel{
         mRepository = ((WCApplication) application).getRepository();
     }
 
+    public void deleteCall(Integer callID) {
+        mRepository.deleteCall(callID);
+    }
+
     public LiveData<List<Call>> getConversationListLD(){
         return mRepository.getAllCallsLD();
     }

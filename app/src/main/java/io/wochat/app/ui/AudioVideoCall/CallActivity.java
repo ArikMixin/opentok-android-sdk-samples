@@ -855,6 +855,12 @@ public class CallActivity extends AppCompatActivity
             mService.sendMessage(message);
         }
 
+        if(rtcCode.equals(Message.RTC_CODE_REJECTED)){ //Incoming call rejected - treat it as an incoming call
+            call = new Call(mParticipantId, mParticipantName, mParticipantPic,
+                    mParticipantLang, mIsVideoCall, CALL_INCOMING, System.currentTimeMillis(), 0);
+            videoAudioCallViewModel.addNewCall(call);
+        }
+
         if(rtcCode.equals(Message.RTC_CODE_REJECTED) || rtcCode.equals(Message.RTC_CODE_CLOSE))
             finish();
     }
@@ -1137,7 +1143,7 @@ public class CallActivity extends AppCompatActivity
                             startIncomingCallThread();
 
                 //incoming call
-                    call = new Call(mParticipantId, mParticipantName, mParticipantPic,
+                call = new Call(mParticipantId, mParticipantName, mParticipantPic,
                                         mParticipantLang, mIsVideoCall, CALL_INCOMING, System.currentTimeMillis(),0);
                 videoAudioCallViewModel.addNewCall(call);
             }

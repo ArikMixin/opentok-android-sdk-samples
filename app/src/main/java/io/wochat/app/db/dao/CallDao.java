@@ -25,5 +25,14 @@ public interface CallDao {
 			"WHERE call_id =:callID ")
 	public void updateCall(Integer callID , String callDuration, String callState);
 
+	@Query("DELETE FROM call_table WHERE call_id =:callID ")
+	public void deleteCall(Integer callID);
 
+/*	@Query("UPDATE call_table SET  " +
+			"call_state = :callState , " +
+			"call_duration = :callDuration  " +
+			"WHERE call_id =:callID ")
+	public void deleteCalls(Integer callID);
+	*/
 }
+
