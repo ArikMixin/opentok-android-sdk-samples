@@ -2,7 +2,7 @@ package io.wochat.app.ui.RecentCalls;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
-import android.util.Log;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -29,7 +29,7 @@ public class RecentCallsViewHolder
 	private final ImageView mMsgTypeIV;
 	private final ImageButton mCameraIB, mPhoneIB;
 	private final TextView mCallStatusTV, mCallDateTV;
-	private Call conversation;
+	private Call mCall;
 	private String mCallType;
 	private View itemView;
 	private Date dateD;
@@ -67,20 +67,22 @@ public class RecentCallsViewHolder
 			Contact.getInitialsFromName(call.getParticipantName()));
 
 		if(!call.isVideoCall()) {
-			mMsgTypeIV.setImageResource(R.drawable.phone_grey);
-			mCallType = itemView.getContext().getString(R.string.audio);
+                mMsgTypeIV.setImageResource(R.drawable.phone_grey);
+                mCallType = itemView.getContext().getString(R.string.audio);
 		}else{
-			mCallType = itemView.getContext().getString(R.string.video);
+		    	mCallType = itemView.getContext().getString(R.string.video);
 		}
 
-//		//Call Status
-		if(call.getCallState().equals(CallActivity.CALL_INCOMING))
-				mCallStatusTV.setText(itemView.getContext().getString(R.string.incoming) + " "
-					+ mCallType  + " " +  itemView.getContext().getString(R.string.call));
-		else if (call.getCallState().equals(CallActivity.CALL_OUTGOING))
-				mCallStatusTV.setText(itemView.getContext().getString(R.string.outgoing) + " "
-					+ mCallType  + " " +  itemView.getContext().getString(R.string.call));
-		else if(call.getCallState().equals(CallActivity.CALL_MISSED)) {
+		//Call Status (Missed OutGoing Incoming)
+		if(call.getCallState().equals(CallActivity.CALL_INCOMING)) {
+            mCallStatusTV.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.font_gray_1));
+            mCallStatusTV.setText(itemView.getContext().getString(R.string.incoming) + " "
+                    + mCallType + " " + itemView.getContext().getString(R.string.call));
+        }else if (call.getCallState().equals(CallActivity.CALL_OUTGOING)) {
+            mCallStatusTV.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.font_gray_1));
+            mCallStatusTV.setText(itemView.getContext().getString(R.string.outgoing) + " "
+                    + mCallType + " " + itemView.getContext().getString(R.string.call));
+        }else if(call.getCallState().equals(CallActivity.CALL_MISSED)) {
 			mCallStatusTV.setTextColor(Color.RED);
 			mCallStatusTV.setText(itemView.getContext().getString(R.string.missed) + " "
 					+ mCallType  + " " +  itemView.getContext().getString(R.string.call));
@@ -93,14 +95,14 @@ public class RecentCallsViewHolder
 	@Override
 	public void onClick(View v) {
 
-		 conversation = (Call) v.getTag();
+		 mCall = (Call) v.getTag();
 
 		switch(v.getId()){
 			case R.id.camera_ib:
-					onButtonClickListener.onButtonClick(conversation, BTN_CAMERA);
+					onButtonClickListener.onButtonClick(mCall, BTN_CAMERA);
 				break;
 			case R.id.phone_ib:
-					onButtonClickListener.onButtonClick(conversation, BTN_PHONE);
+					onButtonClickListener.onButtonClick(mCall, BTN_PHONE);
 				break;
 		}
 	}

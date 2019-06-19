@@ -1,6 +1,5 @@
 package io.wochat.app.ui.RecentChats;
 
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -26,7 +25,7 @@ public class CustomDialogViewHolder
 	private final CircleFlagImageView mAvatarcfiv;
 	private final ImageView mMsgTypeIV;
 	private final ImageButton mCameraIB, mPhoneIB;
-	private Conversation conversation;
+	private Conversation mConversation;
 
 	public static final int BTN_CAMERA = 1;
 	public static final int BTN_PHONE = 2;
@@ -125,14 +124,14 @@ public class CustomDialogViewHolder
 	@Override
 	public void onClick(View v) {
 
-		 conversation = (Conversation) v.getTag();
+		 mConversation = (Conversation) v.getTag();
 
 		switch(v.getId()){
 			case R.id.camera_ib:
-					onButtonClickListener.onButtonClick(conversation, BTN_CAMERA);
+					onButtonClickListener.onButtonClick(mConversation, BTN_CAMERA);
 				break;
 			case R.id.phone_ib:
-					onButtonClickListener.onButtonClick(conversation, BTN_PHONE);
+					onButtonClickListener.onButtonClick(mConversation, BTN_PHONE);
 				break;
 		}
 	}

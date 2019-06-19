@@ -307,6 +307,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 
 	private void initAdapter() {
+
 		dialogsAdapter = new DialogsListAdapter<>(
 			R.layout.item_custom_dialog_view_holder_new,
 			CustomDialogViewHolder.class,
@@ -322,6 +323,8 @@ public class RecentChatsFragment extends Fragment  implements
 		dialogsAdapter.setOnButtonClickListener(this);
 
 		dialogsAdapter.setDatesFormatter(this);
+
+		dialogsAdapter.setHasStableIds(true);
 
 		dialogsList.setAdapter(dialogsAdapter);
 	}
