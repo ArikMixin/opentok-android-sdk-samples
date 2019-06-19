@@ -329,8 +329,10 @@ public class NotificationHelper {
                 intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideo);
                 intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
 			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addCategory(Intent.CATEGORY_HOME);
 
-		/****************************************************************************************************/
+
+        /****************************************************************************************************/
 		PendingIntent pendingIntent = PendingIntent.getActivity(application.getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(application.getApplicationContext(), getChanggelId());
 		GlobalNotificationBuilder.setNotificationCompatBuilderInstance(builder);
