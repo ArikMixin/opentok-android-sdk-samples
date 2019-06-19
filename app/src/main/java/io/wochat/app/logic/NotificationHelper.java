@@ -24,10 +24,12 @@ import java.util.UUID;
 import io.wochat.app.R;
 import io.wochat.app.WCApplication;
 import io.wochat.app.WCRepository;
+import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.model.NotificationData;
+import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
@@ -308,24 +310,43 @@ public class NotificationHelper {
 		}
 	}
 
+	public static void showMissedCallNotification(Application application, Message message, Contact contact, boolean isVideo) {
+			String callType;
+			if (isVideo)
+				callType = "Video";
+			else
+				callType = "Audio";
 
+		NotificationManagerCompat notificationManager = NotificationManagerCompat.from(application.getApplicationContext());
+			Intent intent = new Intent(application.getApplicationContext(), CallActivity.class);
+                intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getSenderId());
+                intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
+                intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
+                intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
+                intent.putExtra(Consts.INTENT_CONVERSATION_ID, contact.getId());
+                intent.putExtra(Consts.INTENT_SELF_ID, WCSharedPreferences.getInstance(application.getApplicationContext()).getUserId());
+                intent.putExtra(Consts.INTENT_SELF_LANG, WCSharedPreferences.getInstance(application.getApplicationContext()).getUserLang());
+                intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideo);
+                intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		/****************************************************************************************************/
+		PendingIntent pendingIntent = PendingIntent.getActivity(application.getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(application.getApplicationContext(), getChanggelId());
+		GlobalNotificationBuilder.setNotificationCompatBuilderInstance(builder);
+		builder
+				.setContentTitle("Missed " + callType + " Call" )
+				.setContentText("from " + contact.getName())
+				.setSmallIcon(R.drawable.ic_notif)
+				.setDefaults(NotificationCompat.DEFAULT_ALL)
+				.setPriority(NotificationCompat.PRIORITY_HIGH)
+				.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
+				.setColor(ContextCompat.getColor(application.getApplicationContext().getApplicationContext(), R.color.colorPrimary))
+				.setCategory(Notification.CATEGORY_MESSAGE)
+				.setVisibility(Notification.VISIBILITY_PUBLIC)
+				.setFullScreenIntent(pendingIntent, true)
+				.setContentIntent(pendingIntent);
+		Notification notification = builder.build();
+		notificationManager.notify( message.getId(),NOTIFICATION_ID, notification);
+	}
 }

@@ -438,14 +438,15 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				intent.setAction(CALL_EVENT);
 				sendBroadcast(intent);
 		}
-		 // TODO: 6/18/2019  - show notification about missing call
-
 
         //Update resent call;
 		 contact = mRepository.getParticipantContact(message.getSenderId());
 		 call = new Call(message.getSenderId(), contact.getName(), contact.getAvatar(), contact.getLanguage(),
 								isVideo, CallActivity.CALL_MISSED, message.getTimestampMilli(),0);
 		 mRepository.addNewCall(call);
+
+		//Open missed notification in any case
+		NotificationHelper.showMissedCallNotification(getApplication(), message, contact, isVideo);
 	}
 
 
