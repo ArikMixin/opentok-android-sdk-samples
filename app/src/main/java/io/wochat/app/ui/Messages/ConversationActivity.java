@@ -413,7 +413,6 @@ public class ConversationActivity extends PermissionActivity implements
 
 		mConversationViewModel.getConversationLD(mConversationId).observe(this, conversation -> {
 			mConversation = conversation;
-			Log.d("arik", "mIsGroup: " + mConversation.isGroup());
 			mIsGroup = mConversation.isGroup();
 			if (mIsGroup){
 				mParticipantPic = mConversation.getGroupImageUrl();

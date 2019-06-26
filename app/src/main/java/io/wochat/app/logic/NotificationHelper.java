@@ -76,6 +76,7 @@ public class NotificationHelper {
 	}
 
 	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
+		message.setMessageText("ARIKKK");
 		WCRepository repo = ((WCApplication) application).getRepository();
 		ContactServer contactServer = contact != null? contact.getContactServer() : null;
 		repo.getNotificationData(message, contactServer, data -> {
@@ -85,7 +86,6 @@ public class NotificationHelper {
 	}
 
 	private static void showNotification(Context context, NotificationData data, boolean isPush){
-		Log.d("arik", "!!!!!! " + data.body);
 		Log.e(TAG, "showNotification: " + data.body + ", from push: " + isPush);
 
 		//createNotificationChannel(context);

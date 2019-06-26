@@ -25,7 +25,7 @@
         android:supportsRtl="false"
         android:theme="@style/AppTheme"
         tools:replace="android:supportsRtl">
-        <activity android:name=".ui.AudioVideoCall.CallActivity"
+         <activity android:name=".ui.AudioVideoCall.CallActivity"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
@@ -34,8 +34,6 @@
             android:supportsPictureInPicture="true"
             android:launchMode="singleTask"
         ></activity>
-
-
 
         <activity
             android:name=".ui.Group.NewGroupActivity"

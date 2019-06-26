@@ -129,14 +129,16 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			/*****************************************************************************************/
 
+			Log.d("arik", "111: " + message.getText());
+
 			boolean res = mRepository.handleIncomingMessage(message, getResources(), new WCRepository.OnSaveMessageToDBListener() {
 				@Override
 				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
 					if (success) {
 						sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
 						if (isMessageOfUserNotificationType(savedMessage)) {
-							if (!message.getConversationId().equals(mCurrentConversationId)) {
-								Log.d("arik", "OnSaved: " + savedMessage.getText());
+							if (!message.getConversationId().equals(mCurrentConversationId)) { // If the user not in a conversation	 chat - fire notification
+									Log.d("arik", "222: " + savedMessage.getText());
 								NotificationHelper.handleNotificationIncomingMessage(getApplication(), savedMessage, contact);
 							}
 						}
@@ -281,7 +283,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		}
 		if (mXMPPProvider != null)
 			mXMPPProvider.disconnectAsync();
-		unregisterReceiver(mAppObserverBR);
+		if(mAppObserverBR != null)
+				unregisterReceiver(mAppObserverBR);
 		super.onDestroy();
 	}
 
@@ -573,8 +576,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 						    Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);
 				sendMessage(message_busy);
 		}else {
-				contact = mRepository.getParticipantContact(message.getSenderId());
-				Intent intent = new Intent(this, CallActivity.class);
+			contact = mRepository.getParticipantContact(message.getSenderId());
+			Intent intent = new Intent(this, CallActivity.class);
 				intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getSenderId());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
 				intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
@@ -585,8 +588,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 				intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, message.getIsVideoRTC());
 		     	intent.putExtra(Consts.OUTGOING_CALL_FLAG, false);
-	//			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-			//	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			//	intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 	//			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 				this.startActivity(intent);
 		}

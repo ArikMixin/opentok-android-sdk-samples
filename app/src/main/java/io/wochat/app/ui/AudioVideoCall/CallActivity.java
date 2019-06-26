@@ -1141,6 +1141,9 @@ public class CallActivity extends AppCompatActivity
                              // Close & Open Camera button visible only after call started ( Timer Starts )
                             mCameraBtnAudio.setVisibility(View.VISIBLE);
                             mCameraBtnVideo.setVisibility(View.VISIBLE);
+
+                            if(!mIsVideoCall)
+                                AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
            }else{ // IncomingCall
                     //Stop sound and accept call (jumping) animation
                             mIncomingCallSound.stop();
@@ -1164,7 +1167,6 @@ public class CallActivity extends AppCompatActivity
         if(mSelfLang_temp.equals("IW")) mSelfLang_temp = "HE";
         if(mParticipantLang_temp.equals("IW")) mParticipantLang_temp = "HE";
 
-        Log.d("arik", "mParticipantLang_temp: " + mParticipantLang_temp  + " , mSelfLang_temp:  " +mSelfLang_temp);
         //Enable translate btn lang if self and participant have different languages
         if (!mSelfLang_temp.equals(mParticipantLang_temp)) {
                 mMicFlagCIV.setEnabled(true);

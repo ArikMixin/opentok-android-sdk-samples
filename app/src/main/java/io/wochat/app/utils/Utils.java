@@ -269,13 +269,13 @@ public class Utils {
 			res = "Yesterday, " + theTime;
 		}
 		else if(DateFormatter.isPastWeek(date)){
-			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_OF_WEEK)+ " " + theTime;
+			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_OF_WEEK)+ ", " + theTime;
 		}
 		else if (DateFormatter.isCurrentYear(date)) {
-			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_MONTH)+ " " + theTime;
+			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_MONTH)+ ", " + theTime;
 		}
 		else {
-			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_MONTH_YEAR)+ " " + theTime;
+			res = DateFormatter.format(date, DateFormatter.Template.STRING_DAY_MONTH_YEAR)+ ", " + theTime;
 		}
 		Log.e(TAG, "dateFormatter for: " + date.toString() + "  ,  long: " + date.getTime() + "  ,  result: " + res);
 		return res;
