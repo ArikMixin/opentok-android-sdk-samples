@@ -5,6 +5,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
@@ -36,6 +37,7 @@ import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.SplashActivity;
 import io.wochat.app.utils.Utils;
+import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 
 import static android.support.v4.text.TextDirectionHeuristicsCompat.LTR;
 
@@ -76,9 +78,21 @@ public class NotificationHelper {
 	}
 
 	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
-		message.setMessageText("ARIKKK");
 		WCRepository repo = ((WCApplication) application).getRepository();
-		ContactServer contactServer = contact != null? contact.getContactServer() : null;
+
+		//If this is a text massage - translate first, and only then -> show notification
+		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
+			repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
+				message.setMessageText(listener);
+					getContactServer(repo, application , message , contact);
+			});
+		}else{
+				getContactServer(repo, application , message , contact);
+		}
+	}
+
+	private static void getContactServer(WCRepository repo, Application application, Message message, Contact contact){
+		ContactServer contactServer = contact != null ? contact.getContactServer() : null;
 		repo.getNotificationData(message, contactServer, data -> {
 			if (data != null)
 				showNotification(application.getApplicationContext(), data, false);

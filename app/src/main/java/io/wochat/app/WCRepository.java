@@ -1681,6 +1681,10 @@ public class WCRepository {
 		void onTranslationResult(Message message);
 	}
 
+	public interface TranslationStringResultListener {
+		void onTranslatedStringResult(String translatedMsg);
+	}
+
 	private void translate(Message message, boolean isIncoming, final TranslationResultListener listener) {
 		mAppExecutors.networkIO().execute(() -> {
 			Log.e("GIL", "translate: " + message.toJson());
@@ -1906,6 +1910,56 @@ public class WCRepository {
 
 		});
 
+	}
+
+	//Video Audio calls translation (Push 2 Talk)
+	public void translate(String textToTranslate, String toLang) {
+		mAppExecutors.networkIO().execute(() -> {
+			String selfLang = mSharedPreferences.getUserLang();
+
+			mWochatApi.translate("", toLang, selfLang, textToTranslate,
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								mTranslationFromPush2Talk.setValue(translatedText);
+							} catch (JSONException e) {
+								e.printStackTrace();
+								Log.d(TAG, "Error - translate failed" + e.getMessage());
+
+							}
+
+						} else if (errorLogic != null)
+							Log.d(TAG, "Error - translate failed" + errorLogic);
+						else if (errorComm != null)
+							Log.d(TAG, "Error - translate failed" + errorComm);
+					});
+		});
+	}
+
+	// translation in a notification
+	public void translate(String textToTranslate, String toLang ,final TranslationStringResultListener listener) {
+		mAppExecutors.networkIO().execute(() -> {
+			String selfLang = mSharedPreferences.getUserLang();
+
+			mWochatApi.translate("", toLang, selfLang, textToTranslate,
+					(isSuccess, errorLogic, errorComm, response) -> {
+						if ((isSuccess) && (response != null)) {
+							Log.e(TAG, "translate res: " + response.toString());
+							try {
+								String translatedText = response.getString("message");
+								listener.onTranslatedStringResult(translatedText);
+							} catch (JSONException e) {
+								e.printStackTrace();
+								Log.d(TAG, "Error - translate failed" + e.getMessage());
+							}
+						} else if (errorLogic != null)
+							Log.d(TAG, "Error - translate failed" + errorLogic);
+						else if (errorComm != null)
+							Log.d(TAG, "Error - translate failed" + errorComm);
+					});
+		});
 	}
 
 	private boolean handleIncomingMessageImage(Message message) {
@@ -2887,32 +2941,6 @@ public class WCRepository {
 				else if (errorComm != null)
 					onSessionResultListener.onFailedCreateSession(new StateData<String>().errorComm(errorComm));
 			}
-		});
-	}
-
-	//Video Audio calls translation (Push 2 Talk)
-	public void translate(String textToTranslate, String fromLamg) {
-		mAppExecutors.networkIO().execute(() -> {
-			String selfLang = mSharedPreferences.getUserLang();
-
-			mWochatApi.translate("", fromLamg, selfLang, textToTranslate,
-					(isSuccess, errorLogic, errorComm, response) -> {
-						if ((isSuccess) && (response != null)) {
-							Log.e(TAG, "translate res: " + response.toString());
-							try {
-								String translatedText = response.getString("message");
-								mTranslationFromPush2Talk.setValue(translatedText);
-							} catch (JSONException e) {
-								e.printStackTrace();
-								Log.d(TAG, "Error - translate failed" + e.getMessage());
-
-							}
-
-						} else if (errorLogic != null)
-							Log.d(TAG, "Error - translate failed" + errorLogic);
-						else if (errorComm != null)
-							Log.d(TAG, "Error - translate failed" + errorComm);
-					});
 		});
 	}
 
