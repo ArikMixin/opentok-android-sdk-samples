@@ -220,6 +220,14 @@ public class ContactSelectorActivity extends AppCompatActivity implements Contac
 
 	@Override
 	public void onNewGroupSelected() {
+		Intent resultIntent = new Intent();
+		resultIntent.putExtra(Consts.INTENT_PARTICIPANT_ID, "");
+		resultIntent.putExtra(Consts.INTENT_PARTICIPANT_NAME, "");
+		resultIntent.putExtra(Consts.INTENT_PARTICIPANT_LANG, "");
+		resultIntent.putExtra(Consts.INTENT_PARTICIPANT_PIC, "");
+		resultIntent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, "");
+		setResult(RESULT_OK, resultIntent);
+		finish();
 
 	}
 

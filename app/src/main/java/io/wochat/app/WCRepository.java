@@ -1,9 +1,12 @@
 package io.wochat.app;
 
 import android.app.Application;
+import android.arch.core.util.Function;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
+import android.arch.lifecycle.Transformations;
 import android.content.ContentResolver;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -39,6 +42,7 @@ import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.dao.CallDao;
 import io.wochat.app.db.dao.ContactDao;
 import io.wochat.app.db.dao.ConversationDao;
+import io.wochat.app.db.dao.GroupDao;
 import io.wochat.app.db.dao.MessageDao;
 import io.wochat.app.db.dao.NotifDao;
 import io.wochat.app.db.dao.UserDao;
@@ -48,8 +52,13 @@ import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.ContactServer;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
+import io.wochat.app.db.entity.GroupMember;
+import io.wochat.app.db.entity.GroupMemberMessage;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.db.entity.Notif;
+import io.wochat.app.model.ContactOrGroup;
+import io.wochat.app.model.ConversationAndItsGroupMembers;
+import io.wochat.app.db.entity.GroupMemberContact;
 import io.wochat.app.model.SupportedLanguage;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.model.NotificationData;
@@ -60,6 +69,7 @@ import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.SpeechToTextUtil;
 import io.wochat.app.utils.TextToSpeechUtil;
 import io.wochat.app.utils.Utils;
+
 
 /**
  * Repository handling the work with products and comments.
@@ -105,6 +115,8 @@ public class WCRepository {
 	private MutableLiveData<StateData<String>> mUploadProfilePicResult;
 	private MutableLiveData<StateData<String>> mUserConfirmRegistrationResult;
 	private MutableLiveData<StateData<Message>> mUploadImageResult;
+	private MutableLiveData<StateData<Conversation>> mCreateGroupResult;
+	private MutableLiveData<StateData<String>> mUploadOnlyImageResult;
 	private MutableLiveData<Boolean> mIsDuringRefreshContacts;
 	private MutableLiveData<List<Message>> mMarkAsReadAffectedMessages;
 	private Map<String, ContactLocal> mLocalContact;
@@ -118,6 +130,7 @@ public class WCRepository {
 	private SpeechToTextUtil mSpeechToTextUtil;
 	private UserDao mUserDao;
 	private ContactDao mContactDao;
+	private GroupDao mGroupDao;
 	private ConversationDao mConversationDao;
 	private CallDao mCallDao;
 	private MessageDao mMessageDao;
@@ -169,6 +182,8 @@ public class WCRepository {
 		mTranslationFromPush2Talk = new MutableLiveData<>();
 
 		mUploadImageResult = new MutableLiveData<>();
+		mCreateGroupResult = new MutableLiveData<>();
+		mUploadOnlyImageResult = new MutableLiveData<>();
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
 		mIsDuringRefreshContacts = new MutableLiveData<>();
 		mIsDuringRefreshContacts.setValue(false);
@@ -180,6 +195,8 @@ public class WCRepository {
 		//mAllWords = mWordDao.getAlphabetizedWords();
 		mUserDao = mDatabase.userDao();
 		mContactDao = mDatabase.contactDao();
+		mGroupDao = mDatabase.groupDao();
+
 		mConversationDao = mDatabase.conversationDao();
 		mCallDao = mDatabase.callfDao();
 		mMessageDao = mDatabase.messageDao();
@@ -396,6 +413,15 @@ public class WCRepository {
 		return mUploadImageResult;
 	}
 
+	public MutableLiveData<StateData<String>> getUploadOnlyImageResult() {
+		return mUploadOnlyImageResult;
+	}
+
+	public MutableLiveData<StateData<Conversation>> getCreateGroupResult() {
+		return mCreateGroupResult;
+	}
+
+
 	public MutableLiveData<StateData<String>> getUserConfirmRegistrationResult() {
 		return mUserConfirmRegistrationResult;
 	}
@@ -426,6 +452,10 @@ public class WCRepository {
 
 	public LiveData<User> getSelfUser() {
 		return mSelfUser;
+	}
+
+	public String getSelfUserId() {
+		return mSharedPreferences.getUserId();
 	}
 
 
@@ -509,46 +539,266 @@ public class WCRepository {
 
 	public void uploadImage(Message message, byte[] bytes) {
 		mAppExecutors.networkIO().execute(() -> {
-			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, new WochatApi.OnServerResponseListener() {
-				@Override
-				public void OnServerResponse(boolean isSuccess, String errorLogic, Throwable errorComm, JSONObject response) {
-					Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
-					if (isSuccess) {
-						try {
-							String imageUrl = response.getString("url");
-							String imageThumbUrl = response.getString("thumb_url");
-							message.setMediaThumbnailUrl(imageThumbUrl);
-							message.setMediaUrl(imageUrl);
-							Picasso.get().load(imageThumbUrl).fetch(new Callback() { // pre load it
-								@Override
-								public void onSuccess() {
-									updateMessageOnly(message);
-									mUploadImageResult.setValue(new StateData<Message>().success(message));
-								}
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+				Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+				if (isSuccess) {
+					try {
+						String imageUrl = response.getString("url");
+						String imageThumbUrl = response.getString("thumb_url");
+						message.setMediaThumbnailUrl(imageThumbUrl);
+						message.setMediaUrl(imageUrl);
+						Picasso.get().load(imageThumbUrl).fetch(new Callback() { // pre load it
+							@Override
+							public void onSuccess() {
+								updateMessageOnly(message);
+								mUploadImageResult.setValue(new StateData<Message>().success(message));
+							}
 
-								@Override
-								public void onError(Exception e) {
-									mUploadImageResult.setValue(new StateData<Message>().errorComm(e));
-								}
-							});
+							@Override
+							public void onError(Exception e) {
+								mUploadImageResult.setValue(new StateData<Message>().errorComm(e));
+							}
+						});
 //							updateMessageOnly(message);
 //							mUploadImageResult.setValue(new StateData<Message>().success(message));
-						} catch (JSONException e) {
-							e.printStackTrace();
-						}
-
-					}
-					else if (errorLogic != null) {
-						mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+					} catch (JSONException e) {
+						e.printStackTrace();
 					}
 
-					else if (errorComm != null) {
-						mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
-					}
+				}
+				else if (errorLogic != null) {
+					mUploadImageResult.setValue(new StateData<Message>().errorLogic(errorLogic));
+				}
+
+				else if (errorComm != null) {
+					mUploadImageResult.setValue(new StateData<Message>().errorComm(errorComm));
 				}
 			});
 
 		});
+	}
+
+
+
+	private ConversationAndItsGroupMembers handleGroupResult(JSONObject response, Resources resources){
+		try {
+			String name = response.getString("name");
+			String description = response.getString("description");
+			String image_url = response.getString("image_url");
+			String id = response.getString("id");
+			int created_date = response.getInt("created_date");
+			String created_by = response.getString("created_by");
+			JSONArray participantsArray = response.getJSONArray("participants");
+			ArrayList<GroupMember> gml = new ArrayList<>();
+			Gson gson = new Gson();
+
+			GroupMember.initMemberColorIndex();
+
+			String selfId = mSharedPreferences.getUserId();
+			boolean isSelfInGroup = false;
+
+			for (int j=0; j< participantsArray.length(); j++){
+				String p = participantsArray.getString(j);
+				GroupMember gm = gson.fromJson(p, GroupMember.class);
+				gm.setGroupId(id);
+				gm.setColor(GroupMember.getNextMemberColor(resources));
+				Contact contact = mContactDao.getContact(gm.getUserId());
+				if (contact != null)
+					gm.setUserName(contact.getDisplayName());
+				gml.add(gm);
+				if(gm.getUserId().equals(selfId))
+					isSelfInGroup = true;
+
+			}
+
+			Conversation conversation = new Conversation(id, name, description, image_url, created_by, created_date);
+			conversation.setSelfInGroup(isSelfInGroup);
+
+			Log.e(TAG, "gml: " + gml.toString());
+
+			ConversationAndItsGroupMembers cgm = new ConversationAndItsGroupMembers();
+			cgm.setConversation(conversation);
+			cgm.setGroupMembers(gml);
+			return cgm;
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+	}
+
+	public void createNewGroup(String groupName, byte[] bytes, List<Contact> contactList, Resources resources){
+		mAppExecutors.networkIO().execute(() -> {
+
+			String[] contactArray = new String[contactList.size()];
+			int i=0;
+			for (Contact contact : contactList){
+				contactArray[i++] = contact.getContactId();
+			}
+			if (bytes != null) {
+				mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+					if (isSuccess) {
+						try {
+							String imageUrl = response.getString("url");
+							mWochatApi.createNewGroup(groupName, imageUrl, contactArray, (isSuccess1, errorLogic1, errorComm1, response1) -> {
+								if (isSuccess1) {
+									mAppExecutors.diskIO().execute(() -> {
+										ConversationAndItsGroupMembers cgm = handleGroupResult(response1, resources);
+										Log.e(TAG, "gml: " + cgm.getGroupMembers().toString());
+										mConversationDao.insert(cgm.getConversation());
+										mGroupDao.insert(cgm.getGroupMembers());
+										Message groupCreatedMessage = Message.getGroupCreatedMessageSelf(
+											cgm.getConversation().getConversationId(),
+											cgm.getConversation().getGroupName(),
+											mSharedPreferences.getUserId());
+										mMessageDao.insert(groupCreatedMessage);
+										mAppExecutors.mainThread().execute(() -> {
+											mCreateGroupResult.setValue(new StateData<Conversation>().success(cgm.getConversation()));
+										});
+									});
+
+									Log.e(TAG, "createNewGroup: " + response1.toString());
+								}
+								else if (errorLogic1 != null) {
+									mCreateGroupResult.setValue(new StateData<Conversation>().errorLogic(errorLogic1));
+								}
+
+								else if (errorComm1 != null) {
+									mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm1));
+								}
+
+							});
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+					else if (errorLogic != null) {
+						mCreateGroupResult.setValue(new StateData<Conversation>().errorLogic(errorLogic));
+					}
+
+					else if (errorComm != null) {
+						mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm));
+					}
+				});
+			}
+			else {// no pic
+				mWochatApi.createNewGroup(groupName, null, contactArray, (isSuccess1, errorLogic1, errorComm1, response1) -> {
+					if (isSuccess1) {
+						mAppExecutors.diskIO().execute(() -> {
+							ConversationAndItsGroupMembers cgm = handleGroupResult(response1, resources);
+							Log.e(TAG, "gml: " + cgm.getGroupMembers().toString());
+							mConversationDao.insert(cgm.getConversation());
+							mGroupDao.insert(cgm.getGroupMembers());
+							Message groupCreatedMessage = Message.getGroupCreatedMessageSelf(
+								cgm.getConversation().getConversationId(),
+								cgm.getConversation().getGroupName(),
+								mSharedPreferences.getUserId());
+							mMessageDao.insert(groupCreatedMessage);
+
+							mAppExecutors.mainThread().execute(() -> {
+								mCreateGroupResult.setValue(new StateData<Conversation>().success(cgm.getConversation()));
+							});
+						});
+
+						Log.e(TAG, "createNewGroup: " + response1.toString());
+					}
+					else if (errorLogic1 != null) {
+						mCreateGroupResult.setValue(new StateData<Conversation>().errorLogic(errorLogic1));
+					}
+
+					else if (errorComm1 != null) {
+						mCreateGroupResult.setValue(new StateData<Conversation>().errorComm(errorComm1));
+					}
+
+				});
+
+			}
+
+
+		});
+	}
+
+	public void updateGroupName(String groupId, String newName, Resources resources){
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.updateGroupName(groupId, newName, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						mConversationDao.updateGroupName(groupId, newName);
+					});
+				}
+			});
+		});
+	}
+	public void updateGroupImage(String groupId, byte[] bytes, Resources resources){
+		mAppExecutors.networkIO().execute(() -> {
+
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					try {
+						String imageUrl = response.getString("url");
+						String imageThumbUrl = response.getString("thumb_url");
+						mWochatApi.updateGroupImage(groupId, imageUrl, imageThumbUrl, (isSuccess1, errorLogic1, errorComm1, response1) -> {
+							if (isSuccess1){
+								mAppExecutors.diskIO().execute(() -> {
+									//ConversationAndItsGroupMembers cgm = handleGroupResult(response1, resources);
+									mConversationDao.updateGroupImage(groupId, imageUrl);
+								});
+							}
+							else if (errorLogic != null) {
+							}
+
+							else if (errorComm != null) {
+							}
+
+						});
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+
+
+
+		});
+	}
+
+	public MutableLiveData<StateData<String>> uploadImage(byte[] bytes) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.dataUploadFile(bytes, mWochatApi.UPLOAD_MIME_TYPE_IAMGE, (isSuccess, errorLogic, errorComm, response) -> {
+				Log.e(TAG, "OnServerResponse uploadImage - isSuccess: " + isSuccess + ", error: " + errorLogic + ", response: " + response);
+				if (isSuccess) {
+					try {
+						String imageUrl = response.getString("url");
+						String imageThumbUrl = response.getString("thumb_url");
+						Picasso.get().load(imageThumbUrl).fetch(new Callback() { // pre load it
+							@Override
+							public void onSuccess() {
+								mUploadOnlyImageResult.setValue(new StateData<String>().success(imageUrl));
+							}
+
+							@Override
+							public void onError(Exception e) {
+								mUploadOnlyImageResult.setValue(new StateData<String>().errorComm(e));
+							}
+						});
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+
+				}
+				else if (errorLogic != null) {
+					mUploadOnlyImageResult.setValue(new StateData<String>().errorLogic(errorLogic));
+				}
+
+				else if (errorComm != null) {
+					mUploadOnlyImageResult.setValue(new StateData<String>().errorComm(errorComm));
+				}
+			});
+
+		});
+		return mUploadOnlyImageResult;
 	}
 
 	public void insert(User user) {
@@ -590,6 +840,41 @@ public class WCRepository {
 	public LiveData<List<Contact>> getServerContactsWithoutSelf() {
 		return mContactDao.getServerContactsWithoutSelf(mSharedPreferences.getUserId());
 	}
+
+	public LiveData<List<ContactOrGroup>> getServerContactsWithoutSelfCOG(){
+		LiveData<List<Contact>> ld = mContactDao.getServerContactsWithoutSelf(mSharedPreferences.getUserId());
+
+		LiveData<List<ContactOrGroup>> res = Transformations.map(ld, new Function<List<Contact>, List<ContactOrGroup>>() {
+			@Override
+			public List<ContactOrGroup> apply(List<Contact> input) {
+				List<ContactOrGroup> list = new ArrayList<>();
+				for (Contact contact: input){
+					ContactOrGroup contactOrGroup = new ContactOrGroup();
+					contactOrGroup.setContact(contact);
+					list.add(contactOrGroup);
+				}
+				return list;
+			}
+		});
+		return res;
+	}
+
+
+	public LiveData<List<ContactOrGroup>> getGroupsCOG(){
+		LiveData<List<Conversation>> ld = mConversationDao.getAllGroupConversationsLD();
+
+		LiveData<List<ContactOrGroup>> res = Transformations.map(ld, input -> {
+			List<ContactOrGroup> list = new ArrayList<>();
+			for (Conversation conversation : input){
+				ContactOrGroup contactOrGroup = new ContactOrGroup();
+				contactOrGroup.setConversation(conversation);
+				list.add(contactOrGroup);
+			}
+			return list;
+		});
+		return res;
+	}
+
 
 	public MutableLiveData<Boolean> getIsDuringRefreshContacts() {
 		return mIsDuringRefreshContacts;
@@ -669,7 +954,28 @@ public class WCRepository {
 				mConversationDao.updateConversationWithContactData(contact.getId(), contact.getName(), contact.getLanguage(), contact.getAvatar());
 			});
 		});
+	}
 
+	public void insertContacts(ContactServer[] contactsServer) {
+		mAppExecutors.diskIO().execute(() -> {
+			Contact contact;
+			for (int i=0; i<contactsServer.length; i++) {
+				if (mContactDao.hasContact(contactsServer[i].getUserId())) {
+					contact = mContactDao.getContact(contactsServer[i].getUserId());
+					contact.setContactServer(contactsServer[i]);
+					mContactDao.updateForce(contact);
+				}
+				else {
+					contact = new Contact(contactsServer[i]);
+					mContactDao.insert(contact);
+				}
+
+				// update redundant fields
+				mConversationDao.updateConversationWithContactData(contact.getId(), contact.getName(), contact.getLanguage(), contact.getAvatar());
+				mMessageDao.updateMessagesActingUserWithContactName(contact.getId(), contact.getName());
+				mMessageDao.updateMessagesOtherUserWithContactName(contact.getId(), contact.getName());
+			}
+		});
 	}
 
 
@@ -946,6 +1252,10 @@ public class WCRepository {
 		ConversationAndItsMessages caim = new ConversationAndItsMessages();
 		caim.setConversation(mConversationDao.getConversation(conversationId));
 		caim.setMessages(mMessageDao.getMessagesForConversation(conversationId));
+		if (caim.getConversation().isGroup()) {
+			List<GroupMember> members = mGroupDao.getMembers(conversationId);
+			caim.setGroupMembers(members);
+		}
 		return caim;
 	}
 
@@ -965,8 +1275,22 @@ public class WCRepository {
 		return mConversationDao.getConversation(conversationId);
 	}
 
-	public List<Conversation> getAllConversations() {
-		return mConversationDao.getAllConversations();
+	public List<ConversationAndItsGroupMembers> getAllConversationsAndItsMembers() {
+		List<ConversationAndItsGroupMembers> res = new ArrayList<>();
+		List<Conversation> convs = mConversationDao.getAllConversations();
+		for(Conversation conversation : convs){
+			ConversationAndItsGroupMembers caigm = new ConversationAndItsGroupMembers();
+			caigm.setConversation(conversation);
+			if(conversation.isGroup()){
+				List<GroupMember> fml = mGroupDao.getMembers(conversation.getId());
+				caigm.setGroupMembers(fml);
+			}
+			else
+				caigm.setGroupMembers(null);
+
+			res.add(caigm);
+		}
+		return res;
 	}
 
 	public LiveData<List<Call>> getAllCallsLD() {
@@ -1014,11 +1338,31 @@ public class WCRepository {
 		});
 	}
 
-	public boolean handleIncomingMessage(Message message, final OnSaveMessageToDBListener listener) {
+	public boolean handleIncomingMessage(Message message, Resources resources, final OnSaveMessageToDBListener listener) {
 		if (message == null)
 			return false;
 
 		mAppExecutors.diskIO().execute(() -> {
+
+			// if I leaft the group, ignore incomming messages
+			if (mConversationDao.hasConversation(message.getConversationId())){
+				Conversation conv = mConversationDao.getConversation(message.getConversationId());
+				if (conv.isGroup()) {
+					boolean isSelfInGroup = mGroupDao.isSelfInGroupB(message.getConversationId());
+					if (!isSelfInGroup) {
+						listener.OnSaved(false, message, null);
+						return;
+					}
+				}
+			}
+
+			if (message.getMessageType().equals(Message.MSG_TYPE_GROUP_EVENT)) {
+
+				handleGroupEvent(message, resources);
+				listener.OnSaved(true, message, null);
+				return;
+			}
+
 			Contact contact;
 			String participantId = message.getSenderId();
 
@@ -1028,30 +1372,53 @@ public class WCRepository {
 
 				if (mContactDao.hasContact(participantId)) {  // has contact, no conversation
 					contact = mContactDao.getContact(participantId);
-					Conversation conversation = new Conversation(participantId, selfId);
+					Conversation conversation = new Conversation(message.getConversationId(), participantId, selfId);
 					conversation.setParticipantName(contact.getName());
 					conversation.setParticipantLanguage(contact.getLanguage());
 					conversation.setParticipantProfilePicUrl(contact.getAvatar());
+					message.setSenderName(contact.getName());
+					if(message.isGroupMessage()){
+						int color = mGroupDao.getMemberColor(message.getConversationId(), message.getSenderId());
+						message.setSenderColor(color);
+						conversation.setGroup(true);
+						getGroupDetailsAndInsertToDB(conversation.getId(), resources);
+					}
 					mConversationDao.insert(conversation);
 				}
 				else { // no contact, no conversation
 					contact = new Contact(participantId);
 					mContactDao.insert(contact);
 					getContactFromServer(participantId);
-					Conversation conversation = new Conversation(participantId, selfId);
+					Conversation conversation = new Conversation(message.getConversationId(), participantId, selfId);
+					if(message.isGroupMessage()){
+						int color = mGroupDao.getMemberColor(message.getConversationId(), message.getSenderId());
+						message.setSenderColor(color);
+						conversation.setGroup(true);
+						getGroupDetailsAndInsertToDB(conversation.getId(), resources);
+					}
 					mConversationDao.insert(conversation);
 				}
 			}
 			else {
 				contact = mContactDao.getContact(participantId);
+				if (contact == null){
+					contact = new Contact(participantId);
+					mContactDao.insert(contact);
+					getContactFromServer(participantId);
+				}
+				if(message.isGroupMessage()) {
+					int color = mGroupDao.getMemberColor(message.getConversationId(), message.getSenderId());
+					message.setSenderColor(color);
+				}
 			}
 
 
 			boolean res = true;
 			message.setParticipantId(message.getSenderId());
 			message.setRecipients(new String[]{mSharedPreferences.getUserId()});
-			String convId = Conversation.getConversationId(message.getSenderId(), message.getRecipients()[0]);
-			message.setConversationId(convId);
+			message.setSenderName(contact.getDisplayName());
+			//String convId = Conversation.getConversationId(message.getSenderId(), message.getRecipients()[0]);
+			//message.setConversationId(message.getConversationId());
 			switch (message.getMessageType()) {
 				case Message.MSG_TYPE_TEXT:
 					message.setAckStatus(Message.ACK_STATUS_RECEIVED);
@@ -1092,22 +1459,175 @@ public class WCRepository {
 		return true;
 	}
 
+
+	private void handleGroupEvent(Message message, Resources resources){
+		String groupId;
+		String memberId;
+
+		if (!mContactDao.hasContact(message.getSenderId())){
+			Contact contact = new Contact(message.getSenderId());
+			mContactDao.insert(contact);
+		}
+
+		if (!mConversationDao.hasConversation(message.getConversationId())) {
+			Conversation conversation = new Conversation();
+			conversation.setGroup(true);
+			conversation.setParticipantId(null);
+			conversation.setConversationId(message.getConversationId());
+			conversation.setParticipantName(null);
+			conversation.setParticipantLanguage(null);
+			conversation.setGroupName(message.getGroupName());
+			mConversationDao.insert(conversation);
+			//getGroupDetailsAndInsertToDB(conversation.getId(), resources);
+		}
+
+
+		// handle missing users
+		List<String> list = new ArrayList<>();
+		Contact contact;
+		String actingUser = message.getActingUser();
+		String otherUser = message.getOtherUser();
+		String selfId = mSharedPreferences.getUserId();
+
+		if (Utils.isNotNullAndNotEmpty(actingUser)) {
+			if (actingUser.equals(selfId)) {
+				message.setActingUserName("You");
+			}
+			else if (mContactDao.hasContact(actingUser)) {
+				contact = mContactDao.getContact(actingUser);
+				message.setActingUserName(contact.getName());
+			}
+			else {
+				contact = new Contact(actingUser);
+				mContactDao.insert(contact);
+				list.add(actingUser);
+				message.setActingUserName(actingUser);
+			}
+		}
+
+		if (Utils.isNotNullAndNotEmpty(otherUser)) {
+			if (otherUser.equals(selfId)) {
+				message.setOtherUserName("You");
+			}
+			else if (mContactDao.hasContact(otherUser)) {
+				contact = mContactDao.getContact(otherUser);
+				message.setOtherUserName(contact.getName());
+			}
+			else {
+				contact = new Contact(otherUser);
+				mContactDao.insert(contact);
+				list.add(otherUser);
+				message.setOtherUserName(otherUser);
+			}
+		}
+
+		if (list.size()>0)
+			getContactsFromServer(list.toArray(new String[0]));
+
+		message.setShouldBeDisplayed(true);
+
+		boolean conversationHasMessages = mConversationDao.hasMessages(message.getGroupId());
+
+		mMessageDao.insert(message);
+
+		int unreadMessagesCount = mMessageDao.getUnreadMessagesCountConversation(message.getConversationId());
+		mConversationDao.updateIncoming(
+			message.getConversationId(),
+			message.getMessageId(),
+			message.getTimestampMilli(),
+			message.getText(),
+			message.getSenderId(),
+			message.getSenderName(),
+			message.getAckStatus(),
+			message.getMessageType(),
+			message.getDurationMili(),
+			unreadMessagesCount);
+
+
+
+		switch (message.getEventCode()){
+
+//			**************   inner implementation in EVENT_CODE_USER_ADDED  **********
+//			case Message.EVENT_CODE_GROUP_CREATED:
+//				groupId = message.getGroupId();
+//				getGroupDetailsAndInsertToDB(groupId, resources);
+//				break;
+//			**************************************************************************
+
+			case Message.EVENT_CODE_USER_ADDED:
+				if (!conversationHasMessages) { // add Group Created msg only for new conversation, not for re-added
+					Message groupCreatedMessage = Message.getGroupCreatedMessage(message);
+					mMessageDao.insert(groupCreatedMessage);
+				}
+				groupId = message.getGroupId();
+				mGroupDao.joinBackGroup(groupId);
+				getGroupDetailsAndInsertToDB(groupId, resources);
+				break;
+
+
+			case Message.EVENT_CODE_USER_REMOVED:
+				groupId = message.getGroupId();
+				getGroupDetailsAndInsertToDB(groupId, resources);
+				break;
+
+			case Message.EVENT_CODE_USER_LEFT:
+				groupId = message.getGroupId();
+				getGroupDetailsAndInsertToDB(groupId, resources);
+				break;
+
+			case Message.EVENT_CODE_MADE_ADMIN:
+				memberId = message.getOtherUser();
+				groupId = message.getGroupId();
+				mGroupDao.makeAdmin(groupId, memberId);
+				break;
+
+			case Message.EVENT_CODE_REMOVED_ADMIN:
+				memberId = message.getOtherUser();
+				groupId = message.getGroupId();
+				mGroupDao.removeAdmin(groupId, memberId);
+				break;
+
+			case Message.EVENT_CODE_ICON_CHANGED:
+				groupId = message.getGroupId();
+				getGroupDetailsAndInsertToDB(groupId, resources);
+				break;
+
+			case Message.EVENT_CODE_NAME_CHANGED:
+				groupId = message.getGroupId();
+				String name = message.getGroupName();
+				mConversationDao.updateGroupName(groupId, name);
+				break;
+		}
+
+	}
+
 	private boolean handleAcknowledgmentMessage(Message message) {
 		mDatabase.runInTransaction(() -> {
 			switch (message.getAckStatus()) {
 				case Message.ACK_STATUS_SENT:
-					mMessageDao.updateAckStatusToSent(message.getOriginalMessageId());
-					mConversationDao.updateLastMessageAck(message.getConversationId(), message.getOriginalMessageId(), message.getAckStatus());
-					break;
 				case Message.ACK_STATUS_RECEIVED:
-					mMessageDao.updateAckStatusToReceived(message.getOriginalMessageId());
-					mConversationDao.updateLastMessageAck(message.getConversationId(), message.getOriginalMessageId(), message.getAckStatus());
-					break;
 				case Message.ACK_STATUS_READ:
-					mMessageDao.updateAckStatusToRead(message.getOriginalMessageId());
-					mConversationDao.updateLastMessageAck(message.getConversationId(), message.getOriginalMessageId(), message.getAckStatus());
+					Message originalMessage = mMessageDao.getMessageObj(message.getOriginalMessageId());
+					if (originalMessage == null)
+						return;
+					if (originalMessage.isGroupMessage()){
+						GroupMemberMessage gmm = new GroupMemberMessage();
+						gmm.setAckStatus(message.getAckStatus());
+						gmm.setGroupId(originalMessage.getConversationId());
+						gmm.setMessageId(message.getOriginalMessageId());
+						gmm.setUserId(message.getSenderId());
+						mGroupDao.insert(gmm);
+						List<String> ld = mGroupDao.getMembersMessagesAckStatus(message.getOriginalMessageId());
+						Collections.sort(ld, Message.getAckStatusComperator());
+						@Message.ACK_STATUS String ackStatus = ld.get(0);
+						mMessageDao.updateAckStatus(message.getOriginalMessageId(), ackStatus);
+						mConversationDao.updateLastMessageAck(message.getConversationId(), message.getOriginalMessageId(), ackStatus);
+					}
+					else {
+						mMessageDao.updateAckStatus(message.getOriginalMessageId(), message.getAckStatus());
+						mConversationDao.updateLastMessageAck(message.getConversationId(), message.getOriginalMessageId(), message.getAckStatus());
+					}
 					break;
-
 			}
 		});
 		return true;
@@ -1177,7 +1697,7 @@ public class WCRepository {
 				toLanguage = message.getTranslatedLanguage();
 			}
 
-			needTranslation1 = (!fromLanguage.equals(toLanguage));
+			needTranslation1 = (!fromLanguage.equals(toLanguage));//gil
 			needTranslationMagic = message.isMagic();
 
 			if (needTranslation1 && needTranslationMagic) {  // translate to 2 language, regular and magic
@@ -1470,10 +1990,35 @@ public class WCRepository {
 					}
 
 				} catch (JSONException e) {
-					Log.d("testttttt", "error: " + e.getMessage());
 					e.printStackTrace();
 				}
 			}
+		});
+
+	}
+
+
+	private void getContactsFromServer(String[] participantIds) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.userGetContacts(participantIds, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					JSONArray jsonContactArray = null;
+					try {
+						jsonContactArray = response.getJSONArray("contacts");
+						ContactServer[] contactServerArray = new ContactServer[jsonContactArray.length()];
+						for (int i=0; i<jsonContactArray.length(); i++) {
+							JSONObject jsonContactObj = jsonContactArray.getJSONObject(i);
+							Gson gson = new Gson();
+							ContactServer contactServer = gson.fromJson(jsonContactObj.toString(), ContactServer.class);
+							contactServerArray[i] = contactServer;
+						}
+						insertContacts(contactServerArray);
+
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+			});
 		});
 
 	}
@@ -1486,11 +2031,13 @@ public class WCRepository {
 			if (needTranslationMagic)
 				messageText = message.getForceTranslatedText();
 			else if (needTranslation1)
-				messageText = "";
+				//messageText = "";
+				messageText = message.getMessageText();
 			else
 				messageText = message.getMessageText();
 
 			mMessageDao.insert(message);
+
 			int unreadMessagesCount = mMessageDao.getUnreadMessagesCountConversation(message.getConversationId());
 			mConversationDao.updateIncoming(
 				message.getConversationId(),
@@ -1498,6 +2045,7 @@ public class WCRepository {
 				message.getTimestampMilli(),
 				messageText,
 				message.getSenderId(),
+				message.getSenderName(),
 				message.getAckStatus(),
 				message.getMessageType(),
 				message.getDurationMili(),
@@ -1533,8 +2081,31 @@ public class WCRepository {
 //	}
 	public void updateAckStatusToSent(Message message) {
 		mAppExecutors.diskIO().execute(() -> {
-			mMessageDao.updateAckStatusToSent(message.getMessageId());
-			mConversationDao.updateLastMessageAck(message.getConversationId(), message.getMessageId(), Message.ACK_STATUS_SENT);
+			String seldId = mSharedPreferences.getUserId();
+			if (message.isGroupMessage()){
+				Log.e(TAG, "updateAckStatusToSent for group message: " + message.toJson());
+				List<GroupMember> members = mGroupDao.getMembers(message.getConversationId());
+				for (GroupMember groupMember : members) {
+					if (!groupMember.getUserId().equals(seldId)) {
+						GroupMemberMessage gmm = new GroupMemberMessage();
+						gmm.setAckStatus(Message.ACK_STATUS_SENT);
+						gmm.setGroupId(message.getConversationId());
+						gmm.setMessageId(message.getMessageId());
+						gmm.setUserId(groupMember.getUserId());
+						Log.e(TAG, "updateAckStatusToSent GroupMemberMessage: " + gmm.toString());
+						mGroupDao.insert(gmm);
+					}
+				}
+				mMessageDao.updateAckStatusToSent(message.getMessageId());
+				mConversationDao.updateLastMessageAck(message.getConversationId(), message.getMessageId(), Message.ACK_STATUS_SENT);
+
+
+			}
+			else {
+				Log.e(TAG, "updateAckStatusToSent: " + message.toJson());
+				mMessageDao.updateAckStatusToSent(message.getMessageId());
+				mConversationDao.updateLastMessageAck(message.getConversationId(), message.getMessageId(), Message.ACK_STATUS_SENT);
+			}
 		});
 
 	}
@@ -1559,6 +2130,7 @@ public class WCRepository {
 			message.getTimestampMilli(),
 			message.getMessageText(),
 			message.getSenderId(),
+			message.getSenderName(),
 			message.getAckStatus(),
 			message.getMessageType(),
 			message.getDurationMili());
@@ -1582,11 +2154,14 @@ public class WCRepository {
 			message.showOriginalMessage();
 			message.setShouldBeDisplayed(true);
 
+			if(message.isGroupMessage()){
+				message.setSenderName("You");
+			}
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
 
 				String selfLang = mSharedPreferences.getUserLang();
-				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
+				boolean needTranslation1 = (message.getTranslatedLanguage() != null)&&(!message.getTranslatedLanguage().equals(selfLang));
 				boolean needTranslationMagic = message.isMagic();
 
 				if (needTranslation1 || needTranslationMagic) {
@@ -1608,7 +2183,7 @@ public class WCRepository {
 			if (message.getMessageType().equals(Message.MSG_TYPE_SPEECHABLE)) {
 
 				String selfLang = mSharedPreferences.getUserLang();
-				boolean needTranslation1 = (!message.getTranslatedLanguage().equals(selfLang));
+				boolean needTranslation1 = (message.getTranslatedLanguage() != null)&&(!message.getTranslatedLanguage().equals(selfLang));
 				boolean needTranslationMagic = message.isMagic();
 
 				if (needTranslation1 || needTranslationMagic)
@@ -1616,21 +2191,21 @@ public class WCRepository {
 
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_IMAGE)) {
-				if (message.getMediaLocalUri() != null) {
+				if ((Utils.isNotNullAndNotEmpty(message.getMediaLocalUri())) && (Utils.isNullOrEmpty(message.getMediaUrl()))) {
 					byte[] bytes = ImagePickerUtil.getImageBytes(mContentResolver, Uri.parse(message.getMediaLocalUri()));
 					uploadImage(message, bytes);
 				}
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
 
-				if (message.getMediaLocalUri() != null) {
+				if ((Utils.isNotNullAndNotEmpty(message.getMediaLocalUri())) && (Utils.isNullOrEmpty(message.getMediaUrl()))) {
 					File mediaFile = new File(new URI(message.getMediaLocalUri()));
 					byte[] mediaFileBytes = Files.toByteArray(mediaFile);
 					uploadVideo(message, mediaFileBytes);
 				}
 			}
 			else if (message.getMessageType().equals(Message.MSG_TYPE_AUDIO)) {
-				if (message.getMediaLocalUri() != null) {
+				if ((Utils.isNotNullAndNotEmpty(message.getMediaLocalUri())) && (Utils.isNullOrEmpty(message.getMediaUrl()))) {
 					File mediaFile = new File(new URI(message.getMediaLocalUri()));
 					byte[] mediaFileBytes = Files.toByteArray(mediaFile);
 					uploadAudio(message, mediaFileBytes);
@@ -1639,7 +2214,7 @@ public class WCRepository {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			Log.e(TAG, "error: message: " + message.toString());
+			Log.e(TAG, "error: message: " + message.toString() + e.getMessage());
 		}
 
 	}
@@ -1660,6 +2235,7 @@ public class WCRepository {
 						lastMessage.getTimestampMilli(),
 						lastMessage.getMessageText(),
 						lastMessage.getSenderId(),
+						lastMessage.getSenderName(),
 						lastMessage.getAckStatus(),
 						lastMessage.getMessageType(),
 						lastMessage.getDurationMili());
@@ -1671,6 +2247,7 @@ public class WCRepository {
 						lastMessage.getTimestampMilli(),
 						lastMessage.getText(),
 						lastMessage.getSenderId(),
+						lastMessage.getSenderName(),
 						lastMessage.getAckStatus(),
 						lastMessage.getMessageType(),
 						lastMessage.getDurationMili(),
@@ -1680,6 +2257,57 @@ public class WCRepository {
 		});
 
 	}
+
+
+	public void forwardMessagesToContactsGroups(List<ContactOrGroup> contactOrGroupList, ArrayList<Message> messages) {
+		mAppExecutors.diskIO().execute(() -> {
+			String selfId = mSharedPreferences.getUserId();
+			Collections.sort(messages, (m1, m2) -> (int) (m1.getTimestampMilli() - m2.getTimestampMilli()));
+
+			for (ContactOrGroup contactOrGroup : contactOrGroupList) {
+				for (Message message : messages) {
+					if (contactOrGroup.isContact()) {
+						Contact contact = contactOrGroup.getContact();
+						Message newMessage = message.generateForwardMessage(selfId,
+							contact.getId(),
+							contact.getLanguage());
+						addNewOutgoingMessage(newMessage);
+					}
+					else {
+						Conversation conversation = contactOrGroup.getConversation();
+						List<GroupMember> members = mGroupDao.getMembers(conversation.getId());
+						for (GroupMember groupMember : members){
+							if (groupMember.getUserId().equals(selfId)){
+								members.remove(groupMember);
+								break;
+							}
+						}
+
+						String[] ids = new String[members.size()];
+						int i=0;
+						for (GroupMember groupMember : members){
+							ids[i++] = groupMember.getUserId();
+						}
+						Message newMessage = message.generateForwardMessageForGroup(selfId,
+							conversation.getConversationId(),
+							conversation.getGroupName(),
+							mSharedPreferences.getUserLang());
+						newMessage.setRecipients(ids);
+						addNewOutgoingMessage(newMessage);
+
+					}
+
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+					}
+				}
+			}
+		});
+
+
+	}
+
 
 
 	public void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
@@ -1802,17 +2430,18 @@ public class WCRepository {
 		});
 	}
 
-	public void updateUserLanguage(String languageCode, String getLanguageLocale) {
-    	mAppExecutors.networkIO().execute(() -> {
+	public void updateUserLanguage(String languageCode, String languageLocale) {
+
+		mAppExecutors.networkIO().execute(() -> {
 			mWochatApi.updateUserLanguage(languageCode, (isSuccess, errorLogic, errorComm, response) -> {
 				if (isSuccess) {
 					mAppExecutors.diskIO().execute(() -> {
-							mUserDao.updateUserLanguage(languageCode);
-							mUserDao.updateUserLanguageLocale(languageCode);
-							mSharedPreferences.saveUserLanguage(languageCode);
-							mSharedPreferences.saveUserLanguageLocale(getLanguageLocale);
-							//Change SpeechToText Language
-							mSpeechToTextUtil.changeLanguage(getLanguageLocale);
+						mUserDao.updateUserLanguage(languageCode);
+						mUserDao.updateUserLanguageLocale(languageCode);
+						mSharedPreferences.saveUserLanguage(languageCode);
+						mSharedPreferences.saveUserLanguageLocale(languageLocale);
+						//Change SpeechToText Language
+						mSpeechToTextUtil.changeLanguage(languageLocale);
 					});
 				}
 				else if (errorLogic != null) {
@@ -1822,6 +2451,7 @@ public class WCRepository {
 					mUserProfileEditResult.setValue(new StateData<Void>().errorComm(errorComm));
 				}
 			});
+
 		});
 	}
 
@@ -1868,8 +2498,140 @@ public class WCRepository {
 	}
 
 
+
+	public void getNotificationDataForGroupEvent(Message message, ContactServer contactServer, NotificationDataListener listener) {
+		if ((message == null)||(!message.isGroupEvent())) {
+			Log.e(TAG, "getNotificationDataForGroupEvent: null or not group event - exit ");
+			return;
+		}
+		mAppExecutors.diskIO().execute(() -> {
+
+			Notif notif = mNotifDao.getNotification(message.getId());
+			if (notif != null){
+				listener.onNotificationDataResult(null);
+				return;
+			}
+
+
+			NotificationData data = new NotificationData();
+
+			Contact actingUser;
+			Contact otherUser;
+			String actingUserId = message.getActingUser();
+			String otherUserId = message.getOtherUser();
+			if ((Utils.isNotNullAndNotEmpty(actingUserId))&&(!mContactDao.hasContact(actingUserId))) {
+				actingUser = new Contact(actingUserId);
+				mContactDao.insert(actingUser);
+			}
+			else {
+				actingUser = mContactDao.getContact(actingUserId);
+			}
+
+			if ((Utils.isNotNullAndNotEmpty(otherUserId))&&(!mContactDao.hasContact(otherUserId))) {
+				otherUser = new Contact(otherUserId);
+				mContactDao.insert(otherUser);
+			}
+			else {
+				otherUser = mContactDao.getContact(otherUserId);
+			}
+
+
+
+			data.contact = null;
+			data.contactName = message.getGroupName();
+			data.selfUser = mUserDao.getSelfUser();
+
+			Conversation conversation;
+
+			if(!mConversationDao.hasConversation(message.getConversationId())){
+				conversation = new Conversation();
+				conversation.setParticipantId(null);
+				conversation.setConversationId(message.getConversationId());
+				conversation.setParticipantName(null);
+				conversation.setParticipantLanguage(null);
+				conversation.setGroupName(message.getGroupName());
+				try {
+					Log.e(TAG, "ERROR getNotificationData: message.getConversationId: " +  message.getConversationId());
+					Log.e(TAG, "ERROR getNotificationData: insert conversation: " +  conversation.toString());
+					mConversationDao.insert(conversation);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			else {
+				conversation = mConversationDao.getConversation(message.getConversationId());
+			}
+
+			data.conversation = conversation;
+			data.title =message.getGroupName();
+			data.conversationId = message.getGroupId();
+			data.messageId = message.getId();
+
+
+			Notif newNotif = new Notif();
+			newNotif.setMessageId(data.messageId);
+			newNotif.setCanceled(false);
+			newNotif.setDisplayed(true);
+			newNotif.setContactId(contactServer.getUserId());
+			newNotif.setConversationId(data.conversationId);
+			newNotif.setTimestamp(new Date());
+			mNotifDao.insert(newNotif);
+
+
+			message.setActingUserName(actingUser.getName());
+			message.setOtherUserName(otherUser.getName());
+			data.body = message.getGroupEventNotificationMessage();
+
+			Log.e(TAG, "getNotificationData, text: " + data.body);
+
+			mAppExecutors.mainThread().execute(() -> {
+				Log.e(TAG, "getNotificationData, download: " + data.conversation.getGroupImageUrl());
+
+				if (data.conversation.getGroupImageUrl() == null){
+					Log.e(TAG, "getNotificationData, no profile image");
+					data.largeIcon = null;
+					listener.onNotificationDataResult(data);
+					return;
+				}
+
+				try {
+					Picasso.get().load(data.conversation.getGroupImageUrl()).error(R.drawable.profile_circle).into(new Target() {
+						@Override
+						public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+							Log.e(TAG, "getNotificationData, onBitmapLoaded");
+							data.largeIcon = Utils.getCircleBitmap(bitmap);
+							listener.onNotificationDataResult(data);
+						}
+
+						@Override
+						public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+							Log.e(TAG, "getNotificationData, onBitmapFailed");
+							data.largeIcon = null;
+							listener.onNotificationDataResult(data);
+						}
+
+						@Override
+						public void onPrepareLoad(Drawable placeHolderDrawable) {
+							Log.e(TAG, "getNotificationData, onPrepareLoad");
+						}
+					});
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e(TAG, "getNotificationData, onBitmapFailed");
+					data.largeIcon = null;
+					listener.onNotificationDataResult(data);
+				}
+			});
+
+
+
+		});
+	}
+
+
 	public void getNotificationData(Message message, ContactServer contactServer, NotificationDataListener listener) {
-    	if ((message == null)||(contactServer == null)) {
+    	if (message == null) {
 			Log.e(TAG, "getNotificationData: null - exit ");
     		return;
 		}
@@ -1883,26 +2645,36 @@ public class WCRepository {
 
 
 			NotificationData data = new NotificationData();
-			Contact contact;
 
-			if (!mContactDao.hasContact(contactServer.getUserId())){
-				contact = new Contact(contactServer);
-				mContactDao.insert(contact);
+			Contact contact;
+			if (contactServer != null) {
+				if (!mContactDao.hasContact(contactServer.getUserId())) {
+					contact = new Contact(contactServer);
+					mContactDao.insert(contact);
+				}
+				else {
+					contact = mContactDao.getContact(contactServer.getUserId());
+				}
+				data.contact = contact;
+				data.contactName = contact.getName();
 			}
 			else {
-				contact = mContactDao.getContact(contactServer.getUserId());
+				data.contact = null;
+				data.contactName = "";
 			}
-			data.contact = contact;
+
 
 			data.selfUser = mUserDao.getSelfUser();
 
 			Conversation conversation;
 
 			if(!mConversationDao.hasConversation(message.getConversationId())){
-				conversation = new Conversation(contact.getId(), mSharedPreferences.getUserId());
-				conversation.setParticipantName(contact.getName());
-				conversation.setParticipantLanguage(contact.getLanguage());
-				conversation.setParticipantProfilePicUrl(contact.getAvatar());
+				conversation = new Conversation();
+				conversation.setConversationId(message.getConversationId());
+				conversation.setParticipantId(data.contact != null?data.contact.getId():null);
+				conversation.setParticipantName(data.contactName);
+				conversation.setParticipantLanguage(data.contact != null?data.contact.getLanguage():null);
+				conversation.setParticipantProfilePicUrl(data.contact != null?data.contact.getAvatar():null);
 				try {
 					Log.e(TAG, "ERROR getNotificationData: message.getConversationId: " +  message.getConversationId());
 					Log.e(TAG, "ERROR getNotificationData: insert conversation: " +  conversation.toString());
@@ -1918,9 +2690,9 @@ public class WCRepository {
 
 			data.conversation = conversation;
 
-    		data.title =contact.getDisplayName();
+    		data.title =data.contact != null?data.contact.getDisplayName():null;
     		if (data.title == null)
-				data.title = contactServer.getUserName();
+				data.title = data.contact != null?data.contact.getContactServer().getUserName():null;
 			if (data.title == null)
 				data.title = "";
 
@@ -1932,13 +2704,16 @@ public class WCRepository {
 			newNotif.setMessageId(data.messageId);
 			newNotif.setCanceled(false);
 			newNotif.setDisplayed(true);
-			newNotif.setContactId(data.contact.getId());
+			newNotif.setContactId(data.contact != null?data.contact.getId():null);
 			newNotif.setConversationId(data.conversationId);
 			newNotif.setTimestamp(new Date());
 			mNotifDao.insert(newNotif);
 
 
 			switch (message.getMessageType()){
+				case Message.MSG_TYPE_GROUP_EVENT:
+					data.body = message.getGroupEventNotificationMessage();
+					break;
 				case Message.MSG_TYPE_TEXT:
 					if ((message.getTranslatedText() != null)&&(!message.getTranslatedText().isEmpty()))
 						data.body = message.getTranslatedText();
@@ -1964,8 +2739,17 @@ public class WCRepository {
 			Log.e(TAG, "getNotificationData, text: " + data.body);
 
 			mAppExecutors.mainThread().execute(() -> {
-				Log.e(TAG, "getNotificationData, download: " + contactServer.getProfilePicUrl());
-				if (contactServer.getProfilePicUrl() == null){
+				String imageUrl;
+				if (conversation.isGroup())
+					imageUrl = conversation.getGroupImageUrl();
+				else
+					imageUrl = contactServer.getProfilePicUrl();
+
+				Log.e(TAG, "getNotificationData, download: " + imageUrl);
+
+
+
+				if (imageUrl == null){
 					Log.e(TAG, "getNotificationData, no profile image");
 					data.largeIcon = null;
 					listener.onNotificationDataResult(data);
@@ -1973,7 +2757,7 @@ public class WCRepository {
 				}
 
 				try {
-					Picasso.get().load(contactServer.getProfilePicUrl()).error(R.drawable.profile_circle).into(new Target() {
+					Picasso.get().load(imageUrl).error(R.drawable.profile_circle).into(new Target() {
 						@Override
 						public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
 							Log.e(TAG, "getNotificationData, onBitmapLoaded");
@@ -2143,4 +2927,207 @@ public class WCRepository {
 		}
 
 	}
+
+
+	public LiveData<String> getMessageGroupStatus(String messageId){
+		LiveData<List<String>> ld = mGroupDao.getMembersMessagesAckStatusLD(messageId);
+
+		LiveData<String> res = Transformations.map(ld, input -> {
+			Collections.sort(input, Message.getAckStatusComperator());
+			return input.get(0);
+		});
+		return res;
+	}
+
+
+	public void getAllUserGroupsDetails(Resources resources){
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.getAllUserGroupsDetails(mSharedPreferences.getUserId(),
+				(isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						List<ConversationAndItsGroupMembers> conversationAndItsMembersList = new ArrayList<>();
+						for(int i=0; i<response.length(); i++){
+							try {
+								JSONObject object = response.getJSONObject(i);
+								ConversationAndItsGroupMembers cgm = handleGroupResult(object, resources);
+								conversationAndItsMembersList.add(cgm);
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						}
+						mAppExecutors.diskIO().execute(() -> {
+							for(ConversationAndItsGroupMembers caigm : conversationAndItsMembersList){
+								updateDBWithGroupData(caigm.getConversation().getId(), caigm);
+							}
+						});
+
+					});
+				}
+			});
+		});
+
+	}
+
+	public void getGroupDetailsAndInsertToDB(String groupId, Resources resources){
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.getGroupDetails(groupId, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						ConversationAndItsGroupMembers cgm = handleGroupResult(response, resources);
+						updateDBWithGroupData(groupId, cgm);
+					});
+				}
+			});
+		});
+	}
+
+	private void updateDBWithGroupData(String groupId, ConversationAndItsGroupMembers cgm){
+		List<String> contactsIds = new ArrayList<>();
+
+		String selfId = mSharedPreferences.getUserId();
+		boolean isSelfInGroup = false;
+		for(GroupMember groupMember : cgm.getGroupMembers()){
+			if (groupMember.getUserId().equals(selfId))
+				isSelfInGroup = true;
+			if(!mContactDao.hasContact(groupMember.getUserId())){
+				Contact contact = new Contact(groupMember.getUserId());
+				mContactDao.insert(contact);
+				contactsIds.add(groupMember.getUserId());
+			}
+		}
+
+		if (mConversationDao.hasConversation(groupId)) {
+			//mConversationDao.update(cgm.getConversation());
+			Conversation conv = cgm.getConversation();
+			mConversationDao.updateGroupData(
+				groupId,
+				conv.getGroupName(),
+				conv.getGroupDescription(),
+				conv.getGroupImageUrl(),
+				conv.getGroupCreatedDate(),
+				conv.getGroupCreatedBy());
+		}
+		else
+			mConversationDao.insert(cgm.getConversation());
+		if (isSelfInGroup)
+			mConversationDao.updateSelfInGroupTrue(groupId);
+		else
+			mConversationDao.updateSelfInGroupFalse(groupId);
+
+		mGroupDao.removeMembers(groupId); // handle the case if user where added or deleted
+		mGroupDao.insert(cgm.getGroupMembers());
+
+		if (contactsIds.size() > 0) {
+			String[] contactArray = contactsIds.toArray(new String[0]);
+			getContactsFromServer(contactArray);
+		}
+	}
+
+
+	public LiveData<List<GroupMember>> getMembersLD(String groupId){
+		return mGroupDao.getMembersLD(groupId);
+	}
+
+
+	public LiveData<List<GroupMemberContact>> getMembersContact(String groupId){
+		return mGroupDao.getMembersContacts(groupId);
+	}
+
+//	public LiveData<List<GroupMemberContact>> getMembersContactOldBad(String groupId){
+//		LiveData<List<GroupMember>> members = mGroupDao.getMembersLD(groupId);
+//
+//		LiveData<List<GroupMemberContact>> res = Transformations.map(members, input -> {
+//			List<GroupMemberContact> gmcList = new ArrayList<>();
+//			for(GroupMember groupMember : input){
+//				GroupMemberContact gmc = new GroupMemberContact();
+//				gmc.setGroupMember(groupMember);
+//				Contact contact = mContactDao.getContact(groupMember.getUserId());
+//				gmc.setContact(contact);
+//				gmcList.add(gmc);
+//			}
+//			return gmcList;
+//		});
+//		return res;
+//
+//	}
+
+	public void removeAdmin(String groupId, String memberId) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.removeAdminFromGroup(groupId, memberId, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() -> {
+						mGroupDao.removeAdmin(groupId, memberId);
+					});
+				}
+			});
+		});
+	}
+
+	public void makeAdmin(String groupId, String memberId) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.makeAdminToGroup(groupId, memberId, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess) {
+					mAppExecutors.diskIO().execute(() -> {
+						mGroupDao.makeAdmin(groupId, memberId);
+					});
+				}
+			});
+		});
+	}
+
+	public void removeMember(String groupId, String memberId, Resources resources) {
+		mAppExecutors.networkIO().execute(() -> {
+			String[] contactArray = new String[1];
+			contactArray[0] = memberId;
+			mWochatApi.removeContactsFromGroup(groupId, contactArray, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						ConversationAndItsGroupMembers cgm = handleGroupResult(response, resources);
+						mGroupDao.removeMember(groupId, memberId);
+					});
+				}
+			});
+		});
+	}
+
+	public void addMembers(String groupId, String[] memberIds, Resources resources) {
+		mAppExecutors.networkIO().execute(() -> {
+			mWochatApi.addContactsToGroup(groupId, memberIds, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						ConversationAndItsGroupMembers cgm = handleGroupResult(response, resources);
+						updateDBWithGroupData(groupId, cgm);
+					});
+				}
+			});
+		});
+	}
+
+
+	public void leaveGroup(String groupId) {
+		mAppExecutors.networkIO().execute(() -> {
+			String[] contactArray = new String[1];
+			String selfId = mSharedPreferences.getUserId();
+			contactArray[0] = selfId;
+			mWochatApi.removeContactsFromGroup(groupId, contactArray, (isSuccess, errorLogic, errorComm, response) -> {
+				if (isSuccess){
+					mAppExecutors.diskIO().execute(() -> {
+						mGroupDao.removeMember(groupId, selfId);
+						mConversationDao.leaveGroup(groupId);
+					});
+				}
+			});
+		});
+
+	}
+
+	public LiveData<Boolean> isSelfInGroup(String groupId) {
+		return mGroupDao.isSelfInGroup(groupId);
+	}
+
+
+
+
+
 }

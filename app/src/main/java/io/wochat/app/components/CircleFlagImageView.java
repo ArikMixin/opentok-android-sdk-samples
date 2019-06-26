@@ -6,6 +6,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -14,6 +15,7 @@ import com.squareup.picasso.Picasso;
 
 import io.wochat.app.R;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.model.ContactOrGroup;
 import io.wochat.app.utils.Utils;
 
 public class CircleFlagImageView extends LinearLayout {
@@ -74,6 +76,12 @@ public class CircleFlagImageView extends LinearLayout {
 			mContactInitialsTV.bringToFront();
 		}
 
+		if (flagDrawable == 0)
+			mContactFlagCIV.setVisibility(View.INVISIBLE);
+		else
+			mContactFlagCIV.setVisibility(View.VISIBLE);
+
+
 		if ((flagDrawable != 0) && (!mIsChecked) && (!mIsCanceled)){
 			Picasso.get().
 				load(flagDrawable).
@@ -122,6 +130,11 @@ public class CircleFlagImageView extends LinearLayout {
 			mContactInitialsTV.bringToFront();
 		}
 
+		if (flagDrawable == 0)
+			mContactFlagCIV.setVisibility(View.INVISIBLE);
+		else
+			mContactFlagCIV.setVisibility(View.VISIBLE);
+
 		if ((flagDrawable != 0) && (!mIsChecked) && (!mIsCanceled)){
 			Picasso.get().
 				load(flagDrawable).
@@ -166,6 +179,22 @@ public class CircleFlagImageView extends LinearLayout {
 		setInfo(picUrl, language, contact.getInitials());
 	}
 
+	public void setContactOrGroup(ContactOrGroup contactOrGroup, boolean isChecked, boolean isCanceled){
+		mIsChecked = isChecked;
+		mIsCanceled = isCanceled;
+		String picUrl = contactOrGroup.getAvatar();
+		String language;
+		if (contactOrGroup.isContact())
+			language = contactOrGroup.getContact().getLanguage();
+		else
+			language = "";
+		setInfo(picUrl, language, contactOrGroup.getInitials());
+		if ((!isCanceled) && (!isChecked) && (contactOrGroup.isGroup()))
+			mContactFlagCIV.setVisibility(INVISIBLE);
+		else
+			mContactFlagCIV.setVisibility(VISIBLE);
+	}
+
 
 	public void displayFlag(boolean withFlag){
 		mWithFlag = withFlag;
@@ -206,5 +235,11 @@ public class CircleFlagImageView extends LinearLayout {
 		}
 	}
 
+	public void setChecked(boolean checked) {
+		mIsChecked = checked;
+	}
 
+	public void setCanceled(boolean canceled) {
+		mIsCanceled = canceled;
+	}
 }

@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -26,6 +27,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +50,8 @@ import xyz.danoz.recyclerviewfastscroller.vertical.VerticalRecyclerViewFastScrol
 public class ContactMultiSelectorActivity extends AppCompatActivity implements ContactMultiListAdapter.ContactSelectListener {
 
 	public static final String SELECTED_CONTACTS_RESULT = "SELECTED_CONTACTS_RESULT";
+	public static final String SELECTED_CONTACTS_OBJ_RESULT = "SELECTED_CONTACTS_OBJ_RESULT";
+	public static final String EXCLUDE_CONTACTS = "EXCLUDE_CONTACTS";
 
 	private static final int PICK_CONTACT_REQUEST = 1001;
 	private static final int DISPLAY_CONTACTS_REQUEST = 1002;
@@ -65,6 +72,8 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 	private View mHeaderLL;
 	private FloatingActionButton mSendFab;
 	private String mSelectedMessageIntent;
+	private List<Contact> mInitContactList;
+	private String[] mExcludeContacts;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +85,18 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 
 
 		mSelectedMessageIntent = getIntent().getStringExtra(Consts.INTENT_MESSAGE_OBJ);
+		String title = getIntent().getStringExtra(Consts.INTENT_TITLE);
+		int actionIcon = getIntent().getIntExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_right_arrow);
+
+		String contactsObj = null;
+		if (getIntent().hasExtra(SELECTED_CONTACTS_OBJ_RESULT))
+			contactsObj = getIntent().getStringExtra(SELECTED_CONTACTS_OBJ_RESULT);
+
+
+		mExcludeContacts = null;
+		if (getIntent().hasExtra(EXCLUDE_CONTACTS)) {
+			mExcludeContacts = getIntent().getStringArrayExtra(EXCLUDE_CONTACTS);
+		}
 
 		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
@@ -84,7 +105,7 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 		mProgressBar.setVisibility(View.GONE);
 
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-		getSupportActionBar().setTitle(R.string.search_frwrd_to);
+		getSupportActionBar().setTitle(title);
 
 		mHeaderLL = findViewById(R.id.header_ll);
 		mHeaderLL.setVisibility(View.INVISIBLE);
@@ -115,7 +136,30 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 		mCntactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
 
 		mCntactViewModel.getServerContactsWithoutSelf().observe(this, contacts -> {
-			mAdapter.setContacts(contacts);
+			if (mExcludeContacts == null){
+				mAdapter.setContacts(contacts);
+			}
+			else {
+				ArrayList<Object> newContacts = new ArrayList<>();
+				List<Contact> list = contacts;
+				for (Contact contact : list){
+					if (!isInExcludeContactList(contact.getContactId())){ // add it if not in exclude list
+						newContacts.add(contact);
+					}
+				}
+				mAdapter.setContacts(newContacts);
+			}
+
+
+
+
+			if ((mInitContactList != null)&& (mInitContactList.size() > 0)) { // when pressing back from group name screen
+				for (Contact contact : mInitContactList) {
+					mAdapter.selectContact(contact);
+					onContactSelected(contact);
+				}
+			}
+
 		});
 
 		mCntactViewModel.getIsDuringRefreshContacts().observe(this, isDuringRefresh -> {
@@ -124,9 +168,17 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 
 
 		mSendFab = findViewById(R.id.send_fab);
+		mSendFab.setImageResource(actionIcon);
 		mSendFab.setOnClickListener(v -> {
 			returnSelectedContacts();
 		});
+
+
+		if (contactsObj != null) {
+			Gson gson = new Gson();
+			mInitContactList = gson.fromJson(contactsObj, new TypeToken<List<Contact>>() {}.getType());
+		}
+
 	}
 
 
@@ -174,11 +226,14 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 			resultIntent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, contact.toJson());
 			resultIntent.putExtra(Consts.INTENT_MESSAGE_OBJ, mSelectedMessageIntent);
 			setResult(RESULT_OK, resultIntent);
+			finish();
+			overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 		}
-		else
+		else {
 			setResult(RESULT_CANCELED);
-		finish();
-		overridePendingTransition(R.anim.trans_right_in, R.anim.trans_right_out);
+			finish();
+			overridePendingTransition(R.anim.trans_right_in, R.anim.trans_right_out);
+		}
 	}
 
 	@Override
@@ -359,7 +414,8 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 	private void returnSelectedContacts() {
 		List<Contact> selectedContacts = mHeaderAdapter.getSelectedContact();
 		if (selectedContacts.isEmpty()) {
-			setResult(RESULT_CANCELED);
+			Toast.makeText(this, "At least one participant must be selected", Toast.LENGTH_SHORT).show();
+			return;
 		}
 		else {
 			List<String> stringList = new ArrayList<>();
@@ -369,11 +425,27 @@ public class ContactMultiSelectorActivity extends AppCompatActivity implements C
 			String[] stringArray = stringList.toArray(new String[stringList.size()]);
 			Intent intent = new Intent();
 			intent.putExtra(SELECTED_CONTACTS_RESULT, stringArray);
+			Gson gson = new Gson();
+			String contactsObj = gson.toJson(selectedContacts);
+			intent.putExtra(SELECTED_CONTACTS_OBJ_RESULT,contactsObj);
 			intent.putExtra(Consts.INTENT_MESSAGE_OBJ, mSelectedMessageIntent);
 			setResult(RESULT_OK, intent);
 		}
 		finish();
 		overridePendingTransition(R.anim.trans_right_in, R.anim.trans_right_out);
+	}
+
+
+	private boolean isInExcludeContactList(String contact){
+
+		if ((mExcludeContacts == null)||(mExcludeContacts.length ==0))
+			return false;
+
+		for(int i=0; i<mExcludeContacts.length; i++){
+			if (contact.equals(mExcludeContacts[i]))
+				return true;
+		}
+		return false;
 	}
 
 }

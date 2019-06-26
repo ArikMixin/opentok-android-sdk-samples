@@ -4,6 +4,7 @@ import android.os.Build;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewCompat;
+import android.text.Html;
 import android.text.Spannable;
 import android.text.method.LinkMovementMethod;
 import android.util.SparseArray;
@@ -41,6 +42,7 @@ public class MessageHolders {
 	public static final short VIEW_TYPE_VIDEO_MESSAGE = 133;
 	public static final short VIEW_TYPE_AUDIO_MESSAGE = 134;
 	public static final short VIEW_TYPE_SPEECH_MESSAGE = 135;
+	public static final short VIEW_TYPE_INFO_MESSAGE = 136;
 
     private Class<? extends ViewHolder<Date>> dateHeaderHolder;
     private int dateHeaderLayout;
@@ -896,7 +898,7 @@ public class MessageHolders {
             }
 
             if (text != null) {
-                text.setText(message.getText());
+                text.setText(Html.fromHtml(message.getTextWithNameHeader()));
             }
         }
 

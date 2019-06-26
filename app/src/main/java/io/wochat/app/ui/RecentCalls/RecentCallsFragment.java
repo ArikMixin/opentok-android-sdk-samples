@@ -28,7 +28,7 @@ import io.wochat.app.db.entity.Call;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.ui.Consts;
-import io.wochat.app.ui.RecentChats.CustomDialogViewHolder;
+import io.wochat.app.ui.RecentChats.RecentChatsViewHolder;
 import io.wochat.app.ui.settings.SettingsActivity;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.RecentCallsViewModel;
@@ -155,9 +155,9 @@ public class RecentCallsFragment extends Fragment  implements
 			return; // Prevent multi open
 
 		boolean isVideoCall = false;
-		if(buttonID == CustomDialogViewHolder.BTN_CAMERA)
+		if(buttonID == RecentChatsViewHolder.BTN_CAMERA)
 			isVideoCall = true;
-		else if(buttonID == CustomDialogViewHolder.BTN_PHONE)
+		else if(buttonID == RecentChatsViewHolder.BTN_PHONE)
 			isVideoCall = false;
 
 		Intent intent = new Intent(getContext(), CallActivity.class);
@@ -177,7 +177,7 @@ public class RecentCallsFragment extends Fragment  implements
 
 	@Override
 	public String format(Date date) {
-		return Utils.dateFormatter(getContext(), date);
+		return Utils.dateFormatter(date);
 	}
 
 	private void initAdapter() {

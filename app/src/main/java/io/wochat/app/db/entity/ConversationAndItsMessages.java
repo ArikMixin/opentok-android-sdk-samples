@@ -13,6 +13,9 @@ public class ConversationAndItsMessages {
 	@Relation(parentColumn = "conversation_id", entityColumn = "conversation_id", entity = Message.class)
 	private List<Message> mMessages;
 
+	private List<GroupMember> mGroupMembers;
+
+
 	public Conversation getConversation() {
 		return mConversation;
 	}
@@ -27,5 +30,13 @@ public class ConversationAndItsMessages {
 
 	public void setMessages(List<Message> messages) {
 		mMessages = messages;
+	}
+
+	public List<GroupMember> getGroupMembers() {
+		return mGroupMembers;
+	}
+
+	public void setGroupMembers(List<GroupMember> groupMembers) {
+		mGroupMembers = groupMembers;
 	}
 }

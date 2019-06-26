@@ -17,10 +17,12 @@ import java.util.List;
 import io.wochat.app.AppExecutors;
 import io.wochat.app.WCApplication;
 import io.wochat.app.WCRepository;
+import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
 import io.wochat.app.db.entity.ImageInfo;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.model.ContactOrGroup;
 import io.wochat.app.model.StateData;
 
 public class ConversationViewModel extends AndroidViewModel {
@@ -161,6 +163,9 @@ public class ConversationViewModel extends AndroidViewModel {
 		mRepository.forwardMessagesToContacts(contacts, messages);
 	}
 
+	public void forwardMessagesToContactsGroups(List<ContactOrGroup> contactOrGroupList, ArrayList<Message> messages) {
+		mRepository.forwardMessagesToContactsGroups(contactOrGroupList, messages);
+	}
 
 	public LiveData<List<Message>> getOutgoingPendingMessagesLD(){
 		return mRepository.getOutgoingPendingMessagesLD();
@@ -181,7 +186,6 @@ public class ConversationViewModel extends AndroidViewModel {
 		return mRepository.getMediaMessagesConversation(conversationId);
 	}
 
-
 	public void updateMagicButtonLangCode(String conversationId, String langCode){
 		mRepository.updateMagicButtonLangCode(conversationId, langCode);
 	}
@@ -189,5 +193,9 @@ public class ConversationViewModel extends AndroidViewModel {
 
 	public LiveData<String> getMagicButtonLangCode(String conversationId){
 		return mRepository.getMagicButtonLangCode(conversationId);
+	}
+
+	public LiveData<Contact> getContactByID(String participantId){
+		return mRepository.getContact(participantId);
 	}
 }

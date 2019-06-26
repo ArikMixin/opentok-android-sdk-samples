@@ -18,6 +18,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import io.wochat.app.db.entity.ContactLocal;
 import io.wochat.app.db.entity.ContactServer;
+import io.wochat.app.utils.Utils;
 
 @Entity(tableName = "contact_table")
 public class Contact implements IContact {
@@ -158,6 +159,14 @@ public class Contact implements IContact {
 			return null;
 	}
 
+	@Override
+	public String getStatus() {
+		if ((contactServer != null)&& (contactServer.getStatus() != null) && (!contactServer.getStatus().equals("")))
+			return contactServer.getStatus();
+		else
+			return null;
+	}
+
 	public String getLocalOSId(){
 		if (contactLocal != null)
 			return contactLocal.getOSId();
@@ -165,11 +174,12 @@ public class Contact implements IContact {
 			return "0";
 	}
 	public String getDisplayName(){
-		if ((contactLocal != null)&&(contactLocal.getDisplayName()!= null)&&(!contactLocal.getDisplayName().equals("")))
+		if ((contactLocal != null)&&(Utils.isNotNullAndNotEmpty(contactLocal.getDisplayName())))
 			return contactLocal.getDisplayName();
-		else if (contactServer != null)
+		else if ((contactServer != null)&&(Utils.isNotNullAndNotEmpty(contactServer.getUserName())))
 			return contactServer.getUserName();
-		else return null;
+		else
+			return contactId;
 	}
 
 	public static String getInitialsFromName(String name){

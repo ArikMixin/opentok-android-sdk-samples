@@ -77,10 +77,10 @@
                 android:layout_marginEnd="10dp"
                 android:layout_marginStart="5dp"
                 android:ellipsize="end"
-                android:gravity="top"
+                android:gravity="top|left"
                 android:maxLines="1"
                 android:maxWidth="200dp"
-                android:text="Hi how are you my friend Hi how are you my friend Hi how are you my friend"
+                android:text="משה: how are you"
                 android:textColor="@color/font_gray_1"
                 android:textSize="13sp"/>
 

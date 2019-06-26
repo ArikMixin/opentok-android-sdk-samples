@@ -6,10 +6,13 @@ import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
+import android.support.v4.text.BidiFormatter;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -21,9 +24,14 @@ import com.stfalcon.chatkit.commons.models.MessageContentType;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
+
+import io.wochat.app.WCApplication;
+import io.wochat.app.utils.Utils;
+
+import static android.support.v4.text.TextDirectionHeuristicsCompat.LTR;
 
 
 @Entity(tableName = "message_table",
@@ -56,6 +64,20 @@ public class Message implements IMessage,
     public static final String ACK_STATUS_RECEIVED = "RECEIVED";
     public static final String ACK_STATUS_READ = "READ";
 
+    public static Comparator<String> getAckStatusComperator(){
+    	return (status1, status2) -> getAckStatusValue(status1).compareTo(getAckStatusValue(status2));
+	}
+
+	public static Integer getAckStatusValue(@ACK_STATUS String ackStatus){
+    	switch (ackStatus){
+			case ACK_STATUS_PENDING: return 1;
+			case ACK_STATUS_SENT: return 2;
+			case ACK_STATUS_RECEIVED: return 3;
+			case ACK_STATUS_READ: return 4;
+			default: return 1;
+		}
+	}
+
 
 
 	@StringDef({
@@ -83,6 +105,8 @@ public class Message implements IMessage,
 	public static final String MSG_TYPE_WEBRTC_CALL = "WEBRTC_CALL";
 	public static final String MSG_TYPE_CALL_EVENT = "CALL_EVENT";
 	public static final String MSG_TYPE_CONTACT = "CONTACT";
+	public static final String MSG_TYPE_CALL_MISSED = "CALL_MISSED";
+
 
 
 	@StringDef({
@@ -99,7 +123,8 @@ public class Message implements IMessage,
 		MSG_TYPE_MEETING_INVITE,
 		MSG_TYPE_WEBRTC_CALL,
 		MSG_TYPE_CALL_EVENT,
-		MSG_TYPE_CONTACT})
+		MSG_TYPE_CONTACT,
+		MSG_TYPE_CALL_MISSED})
 
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface MSG_TYPE {}
@@ -107,22 +132,28 @@ public class Message implements IMessage,
 
 
 
-	public static final String EVENT_CODE_USER_ADDED = "USER_ADDED";
-	public static final String EVENT_CODE_USER_REMOVED = "USER_REMOVED";
-	public static final String EVENT_CODE_USER_LEFT = "USER_LEFT";
-	public static final String EVENT_CODE_MADE_ADMIN = "MADE_ADMIN";
-	public static final String EVENT_CODE_REMOVED_ADMIN = "REMOVED_ADMIN";
-	public static final String EVENT_CODE_ICON_CHANGED = "ICON_CHANGED";
-	public static final String EVENT_CODE_NAME_CHANGED = "NAME_CHANGED";
-
+	public static final String EVENT_CODE_GROUP_CREATED		= "GROUP_CREATED";
+	public static final String EVENT_CODE_USER_ADDED		= "USER_ADDED";
+	public static final String EVENT_CODE_USER_REMOVED		= "USER_REMOVED";
+	public static final String EVENT_CODE_USER_LEFT			= "USER_LEFT";
+	public static final String EVENT_CODE_MADE_ADMIN		= "MADE_ADMIN";
+	public static final String EVENT_CODE_REMOVED_ADMIN		= "REMOVED_ADMIN";
+	public static final String EVENT_CODE_ICON_CHANGED		= "ICON_CHANGED";
+	public static final String EVENT_CODE_NAME_CHANGED		= "NAME_CHANGED";
+	public static final String EVENT_CODE_MISSED_VOICE_CALL = "MISSED_VOICE_CALL";
+	public static final String EVENT_CODE_MISSED_VIDEO_CALL = "MISSED_VIDEO_CALL";
 	@StringDef({
+		EVENT_CODE_GROUP_CREATED,
 		EVENT_CODE_USER_ADDED,
 		EVENT_CODE_USER_REMOVED,
 		EVENT_CODE_USER_LEFT,
 		EVENT_CODE_MADE_ADMIN,
 		EVENT_CODE_REMOVED_ADMIN,
 		EVENT_CODE_ICON_CHANGED,
-		EVENT_CODE_NAME_CHANGED})
+		EVENT_CODE_NAME_CHANGED,
+		EVENT_CODE_MISSED_VOICE_CALL,
+		EVENT_CODE_MISSED_VIDEO_CALL
+	})
 
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface EVENT_CODE {}
@@ -161,19 +192,6 @@ public class Message implements IMessage,
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface RTC_CODE {}
 
-
-	// CallEvent (video audio call)
-	public static final String MISSED_VOICE_CALL = "MISSED_VOICE_CALL";
-	public static final String MISSED_VIDEO_CALL = "MISSED_VIDEO_CALL";
-
-	@StringDef({
-			MISSED_VOICE_CALL,
-			MISSED_VIDEO_CALL,
-	})
-
-	@Retention(RetentionPolicy.SOURCE)
-	public @interface CALL_EVENT_CODE {}
-
 	/**********************************************/
 	@PrimaryKey
 	@NonNull
@@ -198,6 +216,14 @@ public class Message implements IMessage,
 	@Expose
     private String senderId;
 	/**********************************************/
+	@ColumnInfo(name = "sender_name")
+	@Expose
+	private String senderName;
+	/**********************************************/
+	@ColumnInfo(name = "sender_color")
+	@Expose
+	private int senderColor;
+	/**********************************************/
 	@SerializedName("conversation_id")
 	@ColumnInfo(name = "conversation_id")
 	@Expose
@@ -208,15 +234,10 @@ public class Message implements IMessage,
 	@Expose
     private String[] recipients;
 	/**********************************************/
-//	@SerializedName("groups")
-//	@ColumnInfo(name = "groups")
-//	@Expose
-//    private String[] groups;
-	/**********************************************/
-//	@SerializedName("timestamp")
-//	@ColumnInfo(name = "timestamp")
-//	@Expose
-//	private long timestamp;
+	@SerializedName("groups")
+	@ColumnInfo(name = "groups")
+	@Expose
+    private String[] groups;
 	/**********************************************/
 	@SerializedName("timestamp_milliseconds")
 	@ColumnInfo(name = "timestamp_milli")
@@ -390,12 +411,11 @@ public class Message implements IMessage,
 	private boolean isRecording;
 	/**********************************************/
 
-	//CallEvent
+	/****************** for GroupEvent **********************/
 	@SerializedName("event_code")
 	@ColumnInfo(name = "event_code")
 	@Expose
-	private @CALL_EVENT_CODE
-	String eventCode;
+	private @EVENT_CODE String eventCode;
 	/**********************************************/
 	@SerializedName("acting_user")
 	@ColumnInfo(name = "acting_user")
@@ -407,11 +427,24 @@ public class Message implements IMessage,
 	@Expose
 	private String otherUser;
 	/**********************************************/
-
-//	private Image image;
-//  private int status;
-//  private String text;
-//  private Date createdAt;
+	@SerializedName("group_id")
+	@ColumnInfo(name = "group_id")
+	@Expose
+	private String groupId;
+	/**********************************************/
+	@SerializedName("group_name")
+	@ColumnInfo(name = "group_name")
+	@Expose
+	private String groupName;
+	/**********************************************/
+	@ColumnInfo(name = "acting_user_name")
+	@Expose
+	private String actingUserName;
+	/**********************************************/
+	@ColumnInfo(name = "other_user_name")
+	@Expose
+	private String otherUserName;
+	/**********************************************/
 
 
 	// for outgoing message
@@ -420,8 +453,16 @@ public class Message implements IMessage,
 		this.showTranslationFlag = null;
 		this.messageId = UUID.randomUUID().toString();
 		this.conversationId = conversationId;
-		this.participantId = participantId;
-		this.recipients = new String[]{participantId};
+		if (participantId != null) {
+			this.participantId = participantId;
+			this.recipients = new String[]{participantId};
+			this.groups = new String[]{};
+		}
+		else {
+			this.participantId = null;
+			this.recipients = new String[]{};
+			this.groups = new String[]{conversationId};
+		}
 		this.senderId = selfId;
 		this.messageType = MSG_TYPE_TEXT;
 		this.messageText = messageText;
@@ -568,16 +609,17 @@ public class Message implements IMessage,
 		return message;
 	}
 
-
 	public Message() {
 		showNonTranslated = null;
 		showTranslationFlag = null;
 	}
 
+	// for stub messages fixtures
 	public Message(String id, Contact contact, String text, String messageLang) {
         this(id, contact, text, messageLang, System.currentTimeMillis());
     }
 
+	// for stub messages fixtures
     public Message(String id, Contact contact, String messageText, String messageLang, long timestamp) {
 		this.showNonTranslated = null;
 		this.showTranslationFlag = null;
@@ -627,6 +669,10 @@ public class Message implements IMessage,
 		return messageType.equals(MSG_TYPE_SPEECHABLE);
 	}
 
+	public boolean isGroupEvent() {
+		return messageType.equals(MSG_TYPE_GROUP_EVENT);
+	}
+
 
 	public String getDisplayedLang(){
 		switch (showTranslationFlag){
@@ -642,7 +688,38 @@ public class Message implements IMessage,
 	}
 
 	@Override
+	public String getTextWithNameHeader(){
+		if (messageType.equals(MSG_TYPE_GROUP_EVENT) || messageType.equals(MSG_TYPE_CALL_MISSED) ){
+			Log.d("zubi", "2: ");
+			return getText();
+		}
+		else if (isGroupMessage() && !isOutgoing()){
+			String сolorString = Integer.toString(senderColor, 16);
+			//String сolorString = String.format("%X", Color.GREEN).substring(2);
+			//String title = "<font color=\"#%s\">" + Utils.getUserFirstName(getSenderName()) + "</font><BR>";
+			String title = "<font color=\"#%s\">" + getSenderName() + "</font><BR>";
+			//String title = "<font color='#EE0000'>" + Utils.getUserFirstName(getSenderName()) + "</font><BR>";
+			return String.format(title + getText(), сolorString);
+
+			//return Utils.getUserFirstName(getSenderName()) + "\n" + getText();
+		}
+		else {
+			return getText();
+		}
+
+	}
+
+	@Override
     public String getText() {
+		Log.d("zubi", "3: ");
+		if (messageType.equals(MSG_TYPE_GROUP_EVENT)){
+			return getGroupEventMessage();
+		}
+
+		if (messageType.equals(MSG_TYPE_CALL_MISSED)){
+			return getMissedCallMessage();
+		}
+
 		if (showTranslationFlag == null){
 			if (isMagic())
 				showTranslationFlag = SHOW_TRANSLATION_MAGIC;
@@ -664,6 +741,7 @@ public class Message implements IMessage,
 
 
 
+
 //		if (showNonTranslated == null){
 //			if (isOutgoing())
 //				showNonTranslated = true;
@@ -680,6 +758,7 @@ public class Message implements IMessage,
 //				return messageText;
 //		}
     }
+
 
 	public void userClickAction(){
 		if (showTranslationFlag == null){
@@ -868,7 +947,7 @@ public class Message implements IMessage,
 		return messageType;
 	}
 
-	public void setMessageType(@NonNull String messageType) {
+	public void setMessageType(@NonNull @MSG_TYPE String messageType) {
 		this.messageType = messageType;
 	}
 
@@ -904,25 +983,21 @@ public class Message implements IMessage,
 		this.recipients = recipients;
 	}
 
-//	public String[] getGroups() {
-//		return groups;
-//	}
-//
-//	public void setGroups(String[] groups) {
-//		this.groups = groups;
-//	}
+	public String[] getGroups() {
+		return groups;
+	}
 
-//	public long getTimestamp() {
-//		return timestamp;
-//	}
+	public String getGroup() {
+		if ((groups != null) && (groups.length > 0))
+			return groups[0];
+		else
+			return null;
+	}
 
-//	public long getTimestampInSec() {
-//		return timestamp*1000;
-//	}
 
-//	public void setTimestamp(long timestamp) {
-//		this.timestamp = timestamp;
-//	}
+	public void setGroups(String[] groups) {
+		this.groups = groups;
+	}
 
 	public String getMessageText() {
 		return messageText;
@@ -1110,38 +1185,6 @@ public class Message implements IMessage,
 		this.isRecording = isRecording;
 	}
 
-
-
-
-
-	public String getEventCode() {
-		return eventCode;
-	}
-	public void setEventCode(String eventCode) {
-		this.eventCode = eventCode;
-	}
-
-	public String getActingUser() {
-		return actingUser;
-	}
-	public void setActingUser(String actingUser) {
-		this.actingUser = actingUser;
-	}
-
-	public String getOtherUser() {
-		return otherUser;
-	}
-	public void setOtherUser(String otherUser) {
-		this.otherUser = otherUser;
-	}
-
-
-
-
-
-
-
-
 	public void hideMessageForTranslation(){
 		shouldBeDisplayed = false;
 	}
@@ -1235,7 +1278,7 @@ public class Message implements IMessage,
 
 
 	public boolean isOutgoing(){
-		return (!participantId.equals(senderId));
+		return (participantId == null)||(!participantId.equals(senderId));
 	}
 
 
@@ -1244,6 +1287,9 @@ public class Message implements IMessage,
 		newMessage.messageId = UUID.randomUUID().toString();
 		newMessage.participantId = participantId;
 		newMessage.senderId = selfId;
+		newMessage.groupId = null;
+		newMessage.groups = new String[]{};
+		newMessage.groupName = null;
 		newMessage.conversationId = Conversation.getConversationId(participantId, selfId);
 		newMessage.recipients = new String[]{participantId};
 		//newMessage.timestamp = System.currentTimeMillis()/1000;
@@ -1264,6 +1310,173 @@ public class Message implements IMessage,
 		return newMessage;
 	}
 
+	public Message generateForwardMessageForGroup(String selfId, String groupId, String groupName, String selfLang){
+		Message newMessage = fromJson(toJson());
+		newMessage.messageId = UUID.randomUUID().toString();
+		newMessage.groupId = groupId;
+		newMessage.groupName = groupName;
+		newMessage.participantId = null;
+		newMessage.senderId = selfId;
+		newMessage.conversationId = groupId;
+		newMessage.recipients = new String[]{};
+		newMessage.groups = new String[]{groupId};
+		//newMessage.timestamp = System.currentTimeMillis()/1000;
+		newMessage.timestampMilli = System.currentTimeMillis();
+		newMessage.ackStatus = ACK_STATUS_PENDING;
+		newMessage.translatedLanguage = null; // in order to invoke translation to the new participant language
+		newMessage.messageLanguage = selfLang;
+		if (selfId.equals(senderId)){ // outgoing - remove translation
+			newMessage.translatedText = null;
+		}
+		else { // incoming - check if translated
+			if ((translatedText != null) && (!translatedText.equals(""))){
+				newMessage.messageText = translatedText;  // take the text that was translated to me and put it as the message text
+				newMessage.messageLanguage = translatedLanguage; // my language
+			}
+		}
+
+		return newMessage;
+	}
+
+
+	private String getGroupEventMessage() {
+		if (!messageType.equals(MSG_TYPE_GROUP_EVENT))
+			return "";
+
+		String res = "";
+		switch (eventCode){
+			case EVENT_CODE_GROUP_CREATED:
+				res = actingUserName + " created group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_ADDED:
+				res = actingUserName + " added " + otherUserName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_REMOVED:
+				res = actingUserName + " removed " + otherUserName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_LEFT:
+				res = actingUserName + " left the group";
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_MADE_ADMIN:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = "You are now an admin";
+				else {
+					res = otherUserName + " is now an admin";
+					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				}
+				break;
+			case Message.EVENT_CODE_REMOVED_ADMIN:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = "You are no longer an admin";
+				else {
+					res = otherUserName + " is no longer an admin";
+					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				}
+				break;
+			case Message.EVENT_CODE_ICON_CHANGED:
+				res = actingUserName + " changed group icon";
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_NAME_CHANGED:
+				res = actingUserName + " changed group name to " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+		}
+		return res;
+	}
+
+	private String getMissedCallMessage() {
+		String res = "";
+		switch (eventCode){
+			case EVENT_CODE_MISSED_VIDEO_CALL:
+				res = actingUserName + " video call on " + Utils.dateFormatter(new Date(timestampMilli));
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case EVENT_CODE_MISSED_VOICE_CALL:
+				res = actingUserName + " voice call on " + Utils.dateFormatter(new Date(timestampMilli));
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+		}
+		return res;
+	}
+
+	public String getGroupEventNotificationMessage() {
+		if (!messageType.equals(MSG_TYPE_GROUP_EVENT))
+			return "";
+
+		String res = "";
+		switch (eventCode){
+			case EVENT_CODE_GROUP_CREATED:
+				res = actingUserName + " added you to group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_ADDED:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = actingUserName + " added you to group " + groupName;
+				else
+					res = actingUserName + " added " + otherUserName + " to group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_REMOVED:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = actingUserName + " removed you from group " + groupName;
+				else
+					res = actingUserName + " removed " + otherUserName + " from group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_USER_LEFT:
+				res = actingUserName + " has left the group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_MADE_ADMIN:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = actingUserName + " made you administrator in group " + groupName;
+				else {
+					res = actingUserName + " made " + otherUserName + " administrator in group " + groupName;
+					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				}
+				break;
+			case Message.EVENT_CODE_REMOVED_ADMIN:
+				if ("You".equalsIgnoreCase(otherUserName))
+					res = actingUserName + " dismissed you as administrator in group " + groupName;
+				else {
+					res = actingUserName + " dismissed " + otherUserName + " as administrator in group " + groupName;
+					res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				}
+				break;
+			case Message.EVENT_CODE_ICON_CHANGED:
+				res = actingUserName + " changed group icon of group " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+			case Message.EVENT_CODE_NAME_CHANGED:
+				res = actingUserName + " changed group name to " + groupName;
+				res = BidiFormatter.getInstance().unicodeWrap(res, LTR, true);
+				break;
+		}
+		return res;
+	}
+
+
+
+	public Boolean getShowNonTranslated() {
+		return showNonTranslated;
+	}
+
+	public void setShowNonTranslated(Boolean showNonTranslated) {
+		this.showNonTranslated = showNonTranslated;
+	}
+
+	public String getEventCode() {
+		return eventCode;
+	}
+
+	public void setEventCode(String eventCode) {
+		this.eventCode = eventCode;
+	}
 
 
 	public boolean isMagic(){
@@ -1273,5 +1486,122 @@ public class Message implements IMessage,
 	public boolean isTranslated(){
 		return (translatedText != null) && (!translatedText.isEmpty());
 	}
+
+	public String getActingUser() {
+		return actingUser;
+	}
+
+	public void setActingUser(String actingUser) {
+		this.actingUser = actingUser;
+	}
+
+	public String getOtherUser() {
+		return otherUser;
+	}
+
+	public void setOtherUser(String otherUser) {
+		this.otherUser = otherUser;
+	}
+
+	public String getGroupId() {
+		return groupId;
+	}
+
+	public void setGroupId(String groupId) {
+		this.groupId = groupId;
+	}
+
+	public String getGroupName() {
+		return groupName;
+	}
+
+	public void setGroupName(String groupName) {
+		this.groupName = groupName;
+	}
+
+
+	public boolean isGroupMessage(){
+		return (this.groups != null) && (this.groups.length > 0);
+	}
+
+	public String getFirstGroupId(){
+		return isGroupMessage()? this.groups[0]:null;
+	}
+
+	public String getSenderName() {
+		return senderName;
+	}
+
+	public void setSenderName(String senderName) {
+		this.senderName = senderName;
+	}
+
+	public int getSenderColor() {
+		return senderColor;
+	}
+
+	public void setSenderColor(int senderColor) {
+		this.senderColor = senderColor;
+	}
+
+	public String getActingUserName() {
+		return actingUserName;
+	}
+
+	public void setActingUserName(String actingUserName) {
+		this.actingUserName = actingUserName;
+	}
+
+	public String getOtherUserName() {
+		return otherUserName;
+	}
+
+	public void setOtherUserName(String otherUserName) {
+		this.otherUserName = otherUserName;
+	}
+
+
+	public static Message getGroupCreatedMessage(Message userAddedMessage){
+		Message newMessage = fromJson(userAddedMessage.toJson());
+		newMessage.setMessageId(UUID.randomUUID().toString());
+		newMessage.setEventCode(EVENT_CODE_GROUP_CREATED);
+		newMessage.setTimestampMilli(userAddedMessage.getTimestampMilli()-10);
+		return newMessage;
+	}
+
+
+	public static Message getGroupCreatedMessageSelf(String conversationId, String groupName, String selfId) {
+		Message newMessage = new Message();
+		newMessage.setConversationId(conversationId);
+		newMessage.groups = new String[]{conversationId};
+		newMessage.setSenderId(selfId);
+		newMessage.setActingUser(selfId);
+		newMessage.setActingUserName("You");
+		newMessage.setShouldBeDisplayed(true);
+		newMessage.setGroupName(groupName);
+		newMessage.setMessageType(MSG_TYPE_GROUP_EVENT);
+		newMessage.setMessageId(UUID.randomUUID().toString());
+		newMessage.setEventCode(EVENT_CODE_GROUP_CREATED);
+		newMessage.setTimestampMilli(System.currentTimeMillis());
+		return newMessage;
+	}
+
+	public static Message CreateMissedCall(String selfId, String participantId ,String conversationId, boolean isVideo){
+		Message newMessage = new Message();
+		newMessage.setConversationId(conversationId);
+		newMessage.setParticipantId(participantId);
+		newMessage.recipients = new String[]{conversationId};
+		newMessage.setSenderId(selfId);
+		newMessage.setActingUser(selfId);
+		newMessage.setActingUserName("Missed");
+		newMessage.setShouldBeDisplayed(true);
+		newMessage.setMessageType(MSG_TYPE_CALL_MISSED);
+		newMessage.setMessageId(UUID.randomUUID().toString());
+		if(isVideo) newMessage.setEventCode(EVENT_CODE_MISSED_VIDEO_CALL);
+		else newMessage.setEventCode(EVENT_CODE_MISSED_VOICE_CALL);
+		newMessage.setTimestampMilli(System.currentTimeMillis());
+		return newMessage;
+	}
+
 
 }

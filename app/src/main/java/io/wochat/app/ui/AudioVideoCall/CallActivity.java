@@ -91,7 +91,7 @@ public class CallActivity extends AppCompatActivity
 
     private static final String TAG = "CallActivity";
     private static final String TOKBOX = "TokBox";
-
+    private boolean onStopCalled;
     private CircleImageView mAcceptIncomingCIV;
     private CircleImageView mMicFlagCIV, mMicFlagP2T_CIV, mParticipantPicAudioCIV, mParticipantPicAudioFlagCIV,
             mParticipantPicVideoCIV, mParticipantPicVideoFlagCIV;
@@ -107,8 +107,8 @@ public class CallActivity extends AppCompatActivity
     private int mFlagDrawable;
     private String mFullLangName;
     private boolean mIsVideoCall, mIsOutGoingCall;
-    private String mParticipantId, mParticipantName, mParticipantLang, mParticipantPic, mConversationId;
-    private String mSelfId, mSelfLang;
+    private String mParticipantId, mParticipantName, mParticipantLang,mParticipantLang_temp , mParticipantPic, mConversationId;
+    private String mSelfId, mSelfLang, mSelfLang_temp;
     private VideoAudioCallViewModel videoAudioCallViewModel;
     private VideoAudioCall mVideoAudioCall;
     private String errorMsg;
@@ -137,6 +137,8 @@ public class CallActivity extends AppCompatActivity
     private int screenHeight, screenWidth;
     private boolean callStartedFlag;
     private boolean mCallEndedFlag;
+    private boolean callMissedFlag;
+    private boolean callRejectedFlag;
     private boolean mCallerCamOpen = true;
     private boolean mSelfCamOpen = true;
     private PictureInPictureParams pip_params;
@@ -171,8 +173,8 @@ public class CallActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate: ");
         setContentView(R.layout.activity_call);
-
         initViews();
         requestPermissions();
     }
@@ -269,10 +271,6 @@ public class CallActivity extends AppCompatActivity
         TextToSpeechUtil.getInstance().setLanguage(mSelfLang); //Play in users language
         SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
         customAudioDevice = new CustomAudioDevice(CallActivity.this);
-//      if(AudioDeviceManager.getAudioDevice() == null )
-//                    AudioDeviceManager.setAudioDevice(customAudioDevice);
-//        AudioDeviceManager.getAudioDevice().initCapturer();
-//        AudioDeviceManager.getAudioDevice().initRenderer();
 
         /**Language(Flag), display name, and pic initialization**/
         setLangAndDisplayName();
@@ -297,7 +295,6 @@ public class CallActivity extends AppCompatActivity
         mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
         mIncomingCallSound = MediaPlayer.create(this, R.raw.incoming_call);
         mBusySound = MediaPlayer.create(this, R.raw.phone_busy_signal);
-
 
         /**Animation initialization**/
         mCallTXTanima = new AlphaAnimation(0.0f, 1.0f);
@@ -350,11 +347,11 @@ public class CallActivity extends AppCompatActivity
         mMuteTB.setOnCheckedChangeListener(this);
         mSpeakerIB.setOnCheckedChangeListener(this);
 
-        //Outgoing or incoming call
-        if(mIsOutGoingCall)
-            outGoingCall();
-        else
-            incomingCall();
+//        //Outgoing or incoming call
+//        if(mIsOutGoingCall)
+//            outGoingCall();
+//        else
+//            incomingCall();
 
         // Video Or Audio
         if (mIsVideoCall)
@@ -364,6 +361,7 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void outGoingCall() {
+        mIsOutGoingCall = true;
         mInsideCallBtnsCL.setVisibility(View.VISIBLE);
         mActionBtnsCL.setVisibility(View.VISIBLE);
         mStatusRL.setVisibility(View.VISIBLE);
@@ -468,12 +466,17 @@ public class CallActivity extends AppCompatActivity
             AudioDeviceManager.getAudioDevice().initCapturer();
             AudioDeviceManager.getAudioDevice().initRenderer();
 
+            //Play Outgoing or incoming call
+            if(mIsOutGoingCall)
+                outGoingCall();
+            else
+                incomingCall();
+
             //Show self camera Preview at first
             startCameraPreview();
             createSessionAndToken();
         } else {
-            EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out),
-                                                                              RC_VIDEO_APP_PERM, perms);
+            EasyPermissions.requestPermissions(this, getString(R.string.permissions_expl_out), RC_VIDEO_APP_PERM, perms);
         }
     }
 
@@ -492,7 +495,7 @@ public class CallActivity extends AppCompatActivity
                     mPublisher.setPublishVideo(false);
                     // switch from loud speaker to phone speaker (voice session)
                     mSpeakerIB.setChecked(false);
-                    AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
+                  //ONLY AFTER CALL STARTED  AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
         }
     }
 
@@ -622,7 +625,7 @@ public class CallActivity extends AppCompatActivity
                 ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(1);
 
                 AudioDeviceManager.getAudioDevice().stopCapturer();
-              AudioDeviceManager.getAudioDevice().stopRenderer();
+                AudioDeviceManager.getAudioDevice().stopRenderer();
                 SpeechToTextUtil.getInstance().startSpeechToText();
 
 
@@ -671,7 +674,6 @@ public class CallActivity extends AppCompatActivity
             case MotionEvent.ACTION_UP: //--Release--
                         if(!mPush2talk_locked)
                                      sendPush2TalkMsg();
-
                 break;
         }
     }
@@ -679,8 +681,6 @@ public class CallActivity extends AppCompatActivity
     public void sendPush2TalkMsg(){
         Log.d(TAG, "sendPush2TalkMsg: ");
         SpeechToTextUtil.getInstance().stopSpeechToText();
-//        AudioDeviceManager.getAudioDevice().startRenderer();
-//        AudioDeviceManager.getAudioDevice().startCapturer();
         sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,"",false);
 
             ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
@@ -697,22 +697,10 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-//        super.onBackPressed();
         if(callStartedFlag) {
-            minimizeActivity();
+                minimizeActivity();
         }else
-            sendXMPPmsg(Message.RTC_CODE_REJECTED,"",false);
-    }
-
-    /**
-     * switches the activity into PIP mode instead of going into the background (Only inside a call)
-     */
-    @Override
-    public void onUserLeaveHint () {
-        // Minimize fetchers work only from android 7 - (24)
-        if (callStartedFlag) {
-            minimizeActivity();
-        }
+                sendXMPPmsg(Message.RTC_CODE_REJECTED,"",false);
     }
 
     private void initPIP(){
@@ -731,6 +719,18 @@ public class CallActivity extends AppCompatActivity
             setPictureInPictureParams(pip_params);
         }
     }
+
+    /**
+     * switches the activity into PIP mode instead of going into the background (Only inside a call)
+     */
+    @Override
+    public void onUserLeaveHint () {
+        // Minimize fetchers work only from android 7 - (24)
+        if (callStartedFlag) {
+            minimizeActivity();
+        }
+    }
+
     /**
      * Minimize feature (Picture-in-picture) work only from android 7 - (24)
      * Work only if call started
@@ -747,6 +747,7 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onPictureInPictureModeChanged (boolean isInPictureInPictureMode, Configuration newConfig) {
+
         if (isInPictureInPictureMode) {
             // Hide the full-screen UI - (picture-in-picture mode)
             mInsideCallBtnsCL.setVisibility(View.GONE);
@@ -856,13 +857,16 @@ public class CallActivity extends AppCompatActivity
         }
 
         if(rtcCode.equals(Message.RTC_CODE_REJECTED)){ //Incoming call rejected - treat it as an incoming call
+            callRejectedFlag = true;
             call = new Call(mParticipantId, mParticipantName, mParticipantPic,
                     mParticipantLang, mIsVideoCall, CALL_INCOMING, System.currentTimeMillis(), 0);
             videoAudioCallViewModel.addNewCall(call);
         }
 
-        if(rtcCode.equals(Message.RTC_CODE_REJECTED) || rtcCode.equals(Message.RTC_CODE_CLOSE))
+        if(rtcCode.equals(Message.RTC_CODE_REJECTED) || rtcCode.equals(Message.RTC_CODE_CLOSE)) {
             finish();
+        }
+
     }
 
 
@@ -943,6 +947,7 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
+        Log.d(TAG, "onStop: ");
         super.onStop();
         unbindService(mServiceConnection);
         unregisterReceiver(mRTCcodeBR);
@@ -951,6 +956,7 @@ public class CallActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy: ");
         activityActiveFlag = false;
 
         //Stop Sounds
@@ -972,6 +978,10 @@ public class CallActivity extends AppCompatActivity
         }
 
            videoAudioCallViewModel.resetTranslatedText();
+
+        countDownTimer.cancel();
+        if(mIsOutGoingCall)
+             callMissed();
 
         if(mAudioDriveStrted) {
             AudioDeviceManager.getAudioDevice().stopCapturer();
@@ -1078,7 +1088,7 @@ public class CallActivity extends AppCompatActivity
 
     private void callEnded(String rtcCode){
         mCallEndedFlag = true;
-        countDownTimer.cancel();
+//        countDownTimer.cancel();
         mCallTXTanima.cancel();
         mCallingSound.stop();
 
@@ -1112,8 +1122,8 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void callStarted() {
-            callStartedFlag = true;
-            countDownTimer.cancel();
+        callStartedFlag = true;
+        //countDownTimer.cancel();
             mArrowsIV.startAnimation(mTranslateAnima); // start PushToTalk arrow animation
             mAcceptIV.setEnabled(false);
             mStatusRL.setVisibility(View.GONE);
@@ -1148,36 +1158,44 @@ public class CallActivity extends AppCompatActivity
                 videoAudioCallViewModel.addNewCall(call);
             }
 
+        //Convert hebrew from "IW" to "HE"
+        mSelfLang_temp = mSelfLang;
+        mParticipantLang_temp = mParticipantLang;
+        if(mSelfLang_temp.equals("IW")) mSelfLang_temp = "HE";
+        if(mParticipantLang_temp.equals("IW")) mParticipantLang_temp = "HE";
+
+        Log.d("arik", "mParticipantLang_temp: " + mParticipantLang_temp  + " , mSelfLang_temp:  " +mSelfLang_temp);
         //Enable translate btn lang if self and participant have different languages
-        if (!mSelfLang.equals(mParticipantLang)) {
-            mMicFlagCIV.setEnabled(true);
-            mMicFlagCIV.setAlpha(1f);
-            mTranslatorMicIV.setEnabled(true);
-            mTranslatorMicIV.setImageResource(R.drawable.translator_mic_enabled);
-            mTranslatorMicP2T_IV.setEnabled(true);
+        if (!mSelfLang_temp.equals(mParticipantLang_temp)) {
+                mMicFlagCIV.setEnabled(true);
+                mMicFlagCIV.setAlpha(1f);
+                mTranslatorMicIV.setEnabled(true);
+                mTranslatorMicIV.setImageResource(R.drawable.translator_mic_enabled);
+                mTranslatorMicP2T_IV.setEnabled(true);
         }else{
-            mTranslatorMicIV.setEnabled(false);
+                mTranslatorMicIV.setEnabled(false);
         }
     }
 
     private void callMissed() {
-        Log.d("arik_test", "callMissed: ");
-//        call = new Call(mParticipantId, mParticipantName, mParticipantPic,
-//                mParticipantLang, mIsVideoCall, CALL_MISSED, System.currentTimeMillis(),0);
-//        videoAudioCallViewModel.addNewCall(call);
+        if(callMissedFlag || callRejectedFlag || callStartedFlag)
+                                                          return;
+
     String eventCode;
     if(mIsVideoCall)
-        eventCode = Message.MISSED_VIDEO_CALL;
+        eventCode = Message.EVENT_CODE_MISSED_VIDEO_CALL;
     else
-        eventCode = Message.MISSED_VOICE_CALL;
+        eventCode = Message.EVENT_CODE_MISSED_VOICE_CALL;
 
         //Send Missed MSG;
         message = new Message(mParticipantId, mSelfId, mConversationId,
-                eventCode, mSelfId,mParticipantId,"");
+                                              eventCode, mSelfId, mParticipantId,"");
 
-        if ((mService != null) && (mService.isXmppConnected())){
-            mService.sendMessage(message);
+        if((mService != null) && (mService.isXmppConnected())){
+                                    mService.sendMessage(message);
         }
+
+        callMissedFlag = true;
         finish();
     }
 
@@ -1226,6 +1244,8 @@ public class CallActivity extends AppCompatActivity
                         mCameraBtnVideo.setVisibility(View.VISIBLE);
 
                         sendXMPPmsg(Message.RTC_CODE_ANSWER, "",false);
+                        if(!mIsVideoCall)
+                              AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
                     }, 2000);
 
                     //Show inside a call btns
@@ -1427,14 +1447,15 @@ public class CallActivity extends AppCompatActivity
             timeInMilis = 60000;
 
             countDownTimer =  new CountDownTimer(timeInMilis, 1000) {
-                public void onTick(long millisUntilFinished) { }
-                public void onFinish() {
-                    if(!callStartedFlag && mIsOutGoingCall) // In outgoing call - send MissedEvent msg
-                            callMissed();
-                    else if(!callStartedFlag && !mIsOutGoingCall)
-                            finish(); // In Incoming call - finish after 1 minute (if not closed yed by sender)
+                public void onTick(long millisUntilFinished) {
                 }
-         }.start();
-
+                public void onFinish() {
+                    if(mIsOutGoingCall) // In outgoing call - send MissedEvent msg
+                            callMissed();
+                    else if(!mIsOutGoingCall && !callStartedFlag) {
+                        finish(); // In Incoming call - finish after 1 minute (if not closed yed by sender)
+                    }
+                }
+            }.start();
     }
 }

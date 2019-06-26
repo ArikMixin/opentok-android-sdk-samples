@@ -3,7 +3,6 @@ package io.wochat.app.ui.RecentCalls;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -16,7 +15,6 @@ import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.db.entity.Call;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.ui.AudioVideoCall.CallActivity;
-import io.wochat.app.utils.DateFormatter;
 import io.wochat.app.utils.Utils;
 
 
@@ -34,14 +32,12 @@ public class RecentCallsViewHolder
 	private Call mCall;
 	private String mCallType;
 	private View itemView;
-	private Date dateD;
 
 	public static final int BTN_CAMERA = 1;
 	public static final int BTN_PHONE = 2;
 
     public RecentCallsViewHolder(View itemView) {
         super(itemView);
-        //onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
 		mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
 		mMsgTypeIV = (ImageView)itemView.findViewById(R.id.dialogMsgTypeIV);
 		mAvatarcfiv = (CircleFlagImageView) itemView.findViewById(R.id.dialogAvatar);
@@ -70,9 +66,10 @@ public class RecentCallsViewHolder
 
 		if(!call.isVideoCall()) {
                 mMsgTypeIV.setImageResource(R.drawable.phone_grey);
-                mCallType = itemView.getContext().getString(R.string.audio);
+                mCallType = itemView.getContext().getString(R.string.voice);
 		}else{
-		    	mCallType = itemView.getContext().getString(R.string.video);
+				mMsgTypeIV.setImageResource(R.drawable.msg_in_video_dark);
+				mCallType = itemView.getContext().getString(R.string.video);
 		}
 
 		//Call Status (Missed OutGoing Incoming)
@@ -90,7 +87,7 @@ public class RecentCallsViewHolder
 					+ mCallType  + " " +  itemView.getContext().getString(R.string.call));
 		}
 
-		mCallDateTV.setText(Utils.dateFormatter(itemView.getContext(), new Date(call.getCallStartTimeStamp())));
+		mCallDateTV.setText(Utils.dateFormatter(new Date(call.getCallStartTimeStamp())));
     }
 
 	@Override

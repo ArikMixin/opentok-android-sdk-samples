@@ -318,7 +318,8 @@ public class CustomAudioDevice extends BaseAudioDevice {
             noiseSuppressor.release();
             noiseSuppressor = null;
         }
-        audioRecord.release();
+        if(audioRecord != null)
+             audioRecord.release();
         audioRecord = null;
         shutdownCaptureThread = true;
         captureEvent.signal();

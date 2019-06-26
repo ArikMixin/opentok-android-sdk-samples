@@ -52,6 +52,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.chrisbanes.photoview.PhotoView;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
@@ -63,23 +65,32 @@ import com.stfalcon.chatkit.utils.DateFormatter;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import io.wochat.app.R;
+import io.wochat.app.WCRepository;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.components.MessageReplyLayout;
+import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
+import io.wochat.app.db.entity.GroupMember;
 import io.wochat.app.db.entity.Message;
+import io.wochat.app.model.ContactOrGroup;
 import io.wochat.app.model.SupportedLanguage;
+import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.Contact.ContactGroupsMultiSelectorActivity;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.ContactInfo.ContactInfoActivity;
+import io.wochat.app.ui.Group.GroupInfoActivity;
 import io.wochat.app.ui.Languages.LanguageSelectorDialog;
+import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.PermissionActivity;
 import io.wochat.app.utils.ImagePickerUtil;
 import io.wochat.app.utils.SpeechToTextUtil;
@@ -88,6 +99,7 @@ import io.wochat.app.utils.Utils;
 import io.wochat.app.utils.videocompression.MediaController;
 import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
+import io.wochat.app.viewmodel.GroupViewModel;
 import io.wochat.app.viewmodel.SupportedLanguagesViewModel;
 
 //import com.stfalcon.chatkit.utils.DateFormatter;
@@ -106,7 +118,10 @@ public class ConversationActivity extends PermissionActivity implements
 	DateFormatter.Formatter,
 	MessageInput.ButtonClickListener,
 	MessageHolders.ContentChecker<Message>,
-	MessagesListAdapter.SelectionListener, SpeechToTextUtil.SpeechUtilsSTTListener, MessagesListAdapter.OnMessageForwardListener<Message> {
+	MessagesListAdapter.SelectionListener,
+	SpeechToTextUtil.SpeechUtilsSTTListener,
+	MessagesListAdapter.OnMessageForwardListener<Message>,
+	View.OnClickListener {
 
 	private static final String TAG = "ConversationActivity";
 	private static final int REQUEST_SELECT_IMAGE_VIDEO 	= 1;
@@ -168,7 +183,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private Contact mParticipantContact;
 	private boolean mIsInMsgSelectionMode;
 	private int mSelectedMessageCount;
-	private String mForwardContactId;
+	private ContactOrGroup mForwardContactOrGroupSingle;
 	private MessageReplyLayout mInputMessageReplyLayout;
 	private boolean mClickedFromNotifivation;
 	private SupportedLanguagesViewModel mSupportedLanguagesViewModel;
@@ -176,6 +191,11 @@ public class ConversationActivity extends PermissionActivity implements
 	private String mMagicButtonForceLanguage;
 	private String mMagicButtonForceCountry;
 	private ContactViewModel mContactViewModel;
+	private boolean mIsGroup;
+	private List<GroupMember> mGroupMembers;
+	private GroupViewModel mGroupViewModel;
+	private TextView mNotInGroupMsgTV;
+	private boolean mIsFromPushNotifivation;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -212,6 +232,9 @@ public class ConversationActivity extends PermissionActivity implements
 		setContentView(R.layout.activity_conversation);
 
 
+		mNotInGroupMsgTV = (TextView)findViewById(R.id.not_in_group_msg_tv);
+		mNotInGroupMsgTV.setVisibility(View.GONE);
+
 		mScrollToEndIB = (ImageButton)findViewById(R.id.scroll_end_ib);
 		mScrollToEndIB.setVisibility(View.INVISIBLE);
 		mScrollToEndIB.setOnClickListener(new View.OnClickListener() {
@@ -234,6 +257,17 @@ public class ConversationActivity extends PermissionActivity implements
 		mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
 		mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
 		mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+		String conversationString = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_OBJ);
+		if (Utils.isNotNullAndNotEmpty(conversationString)){
+			mConversation = Conversation.fromJson(conversationString);
+			mIsGroup = mConversation.isGroup();
+			if (mIsGroup){
+				mParticipantPic = mConversation.getGroupImageUrl();
+				mParticipantName = mConversation.getGroupName();
+				mParticipantLang = null;
+				mParticipantId = null;
+			}
+		}
 
 		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
 		mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
@@ -245,29 +279,27 @@ public class ConversationActivity extends PermissionActivity implements
 			mClickedFromNotifivation = getIntent().getBooleanExtra(Consts.INTENT_CLICK_FROM_NOTIFICATION, false);
 		}
 
+		if(getIntent().hasExtra(Consts.INTENT_IS_FROM_PUSH_NOTIFICATION)){
+			mIsFromPushNotifivation = getIntent().getBooleanExtra(Consts.INTENT_IS_FROM_PUSH_NOTIFICATION, false);
+		}
+
+
 		mSelfContact = new Contact(mSelfId, mSelfLang, mSelfName, mSelfPicUrl);
 		mParticipantContact = new Contact(mParticipantId, mParticipantLang, mParticipantName, mParticipantPic);
 
 		mContactNameTV = (TextView) findViewById(R.id.contact_name_tv);
 		mContactDetailsTV = (TextView) findViewById(R.id.contact_details_tv);
 		mContactDetailsTV.setText("");
+		mContactDetailsTV.setOnClickListener(this);
 		mContactNameTV.setText(mParticipantName);
-		mContactNameTV.setOnClickListener(v -> {
-			Intent intent = new Intent(this, ContactInfoActivity.class);
-			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
-			intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
-			intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
-			intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
-
-			startActivity(intent);
-		});
+		mContactNameTV.setOnClickListener(this);
 
 
 
 		if ((Utils.isHebrew(mParticipantLang)) && (Utils.isHebrew(mSelfLang)))
 			mSameLanguageWithParticipant = true;
 		else
-			mSameLanguageWithParticipant = mParticipantLang.equals(mSelfLang);
+			mSameLanguageWithParticipant = (mParticipantLang == null) || (mParticipantLang.equals(mSelfLang));
 
 		mContactAvatarCIV = (CircleFlagImageView) findViewById(R.id.contact_avatar_civ);
 		mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
@@ -312,19 +344,26 @@ public class ConversationActivity extends PermissionActivity implements
 		mMessageInput.setTypingListener(this);
 		mMessageInput.setInputListener(this);
 		mMessageInput.setButtonClickListener(this);
-		setMagicButtonLanguage(mParticipantLang, false);
+
+		if (mIsGroup)
+			setMagicButtonLanguage("UN", false);
+		else
+			setMagicButtonLanguage(mParticipantLang, false);
+
 //		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(mParticipantLang);
 //		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
-
+		mGroupViewModel = ViewModelProviders.of(this).get(GroupViewModel.class);
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
-		mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
-		mContactViewModel.refreshContact(mParticipantId).observe(this, contact -> {
-			mParticipantPic = contact.getAvatar();
-			mParticipantLang = contact.getLanguage();
-			mParticipantName = contact.getName();
-			mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
-		});
+		if ((mParticipantId != null)&& (!mIsGroup)) {
+			mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
+			mContactViewModel.refreshContact(mParticipantId).observe(this, contact -> {
+				mParticipantPic = contact.getAvatar();
+				mParticipantLang = contact.getLanguage();
+				mParticipantName = contact.getName();
+				mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
+			});
+		}
 
 
 		mSupportedLanguagesViewModel.getSupportedLanguages().observe(this, supportedLanguages -> {
@@ -341,7 +380,11 @@ public class ConversationActivity extends PermissionActivity implements
 					}
 				}
 				else {
-					setMagicButtonLanguage(mParticipantLang, false);
+					if (mIsGroup)
+						setMagicButtonLanguage("UN", false);
+					else
+						setMagicButtonLanguage(mParticipantLang, false);
+
 					mMagicButtonForceLanguage = null;
 					mMagicButtonForceCountry = null;
 				}
@@ -361,8 +404,41 @@ public class ConversationActivity extends PermissionActivity implements
 			conversationAndItsMessages -> {
 				mConversation = conversationAndItsMessages.getConversation();
 				mMessages = conversationAndItsMessages.getMessages();
+				mGroupMembers = conversationAndItsMessages.getGroupMembers();
+				displayUITypingSignal(false, null);
 				startListenToMessagesChanges();
+			});
+
+
+
+		mConversationViewModel.getConversationLD(mConversationId).observe(this, conversation -> {
+			mConversation = conversation;
+			Log.d("arik", "mIsGroup: " + mConversation.isGroup());
+			mIsGroup = mConversation.isGroup();
+			if (mIsGroup){
+				mParticipantPic = mConversation.getGroupImageUrl();
+				mParticipantName = mConversation.getGroupName();
+				mContactNameTV.setText(mParticipantName);
+				mContactAvatarCIV.setInfo(mParticipantPic, mParticipantLang, Contact.getInitialsFromName(mParticipantName));
+
+				if (mConversation.isSelfInGroup()) {
+					mNotInGroupMsgTV.setVisibility(View.GONE);
+					mMessageInput.setVisibility(View.VISIBLE);
+				}
+				else {
+					mNotInGroupMsgTV.setVisibility(View.VISIBLE);
+					mMessageInput.setVisibility(View.GONE);
+				}
+			}
 		});
+
+		if(mIsGroup) {
+			mGroupViewModel = ViewModelProviders.of(this).get(GroupViewModel.class);
+			mGroupViewModel.getMembersLD(mConversationId).observe(this, groupMembers -> {
+				mGroupMembers = groupMembers;
+				displayUITypingSignal(false, null);
+			});
+		}
 
 
 
@@ -383,6 +459,10 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 
+
+		if (mIsGroup){
+			mGroupViewModel.getGroupDetailsAndInsertToDB(mConversationId, getResources());
+		}
 	}
 
 
@@ -486,7 +566,19 @@ public class ConversationActivity extends PermissionActivity implements
 				CustomOutcomingSpeechableMessageViewHolder.class,
 				mSelfContact,
 				R.layout.item_custom_outcoming_audio_message_new,
+				this)
+
+			.registerContentType(
+				MessageHolders.VIEW_TYPE_INFO_MESSAGE,
+				CustomInfoTextMessageViewHolder.class,
+				mParticipantContact,
+				R.layout.item_custom_info_text_message,
+				CustomInfoTextMessageViewHolder.class,
+				mSelfContact,
+				R.layout.item_custom_info_text_message,
 				this);
+
+
 
 		mMessagesAdapter = new MessagesListAdapter<>(mSelfId, holdersConfig, mImageLoader);
 		mMessagesAdapter.setOnMessageLongClickListener(this);
@@ -529,10 +621,14 @@ public class ConversationActivity extends PermissionActivity implements
 	public boolean hasContentFor(Message message, short type) {
 		switch (type) {
 			case MessageHolders.VIEW_TYPE_AUDIO_MESSAGE:
-				return ((message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty()));
+				return (message.isAudio() && (message.getMediaUrl() != null) && (!message.getMediaUrl().isEmpty()));
 			case MessageHolders.VIEW_TYPE_SPEECH_MESSAGE:
 				//return ((message.getTranslatedText() != null) && (!message.getTranslatedText().isEmpty()));
-				return true;
+				return message.isSpeechable();
+			case MessageHolders.VIEW_TYPE_INFO_MESSAGE: 
+				return message.getMessageType().equals(Message.MSG_TYPE_GROUP_EVENT) ||
+						message.getMessageType().equals(Message.MSG_TYPE_CALL_MISSED);
+			// TODO: 6/24/2019  VIEW_TYPE_INFO_WITH ICON MESSAGE 
 		}
 		return false;
 	}
@@ -549,11 +645,18 @@ public class ConversationActivity extends PermissionActivity implements
 					mInputMessageReplyLayout.setVisibility(View.GONE);
 				}
 				else {
+					Log.e(TAG, "isTaskRoot: " + isTaskRoot());
+					if (isTaskRoot()){
+						Intent intent = new Intent(this, MainActivity.class);
+						startActivity(intent);
+					}
 					finish();
 					return true;
 				}
 			case R.id.action_phone:
+					openCallActivity(false);
 			case R.id.action_video:
+					openCallActivity(true);
 			case R.id.action_reply:
 				mInputMessageReplyLayout.showReplyMessage(mMessagesAdapter.getSelectedMessage(), mParticipantName);
 				mMessagesAdapter.unselectAllItems();
@@ -568,7 +671,9 @@ public class ConversationActivity extends PermissionActivity implements
 				actionCopy();
 				break;
 			case R.id.action_frwrd:
-				Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+				Intent intent = new Intent(this, ContactGroupsMultiSelectorActivity.class);
+				intent.putExtra(Consts.INTENT_TITLE, getString(R.string.search_frwrd_to));
+				intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_send);
 				startActivityForResult(intent, REQUEST_SELECT_CONTACTS);
 				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 				break;
@@ -586,6 +691,12 @@ public class ConversationActivity extends PermissionActivity implements
 			mContactAvatarCIV.setVisibility(View.GONE);
 			mContactNameTV.setText(mSelectedMessageCount + "");
 			mContactDetailsTV.setVisibility(View.GONE);
+		}
+		else if (mIsGroup){
+			inflater.inflate(R.menu.menu_conversation_group, menu);
+			mContactAvatarCIV.setVisibility(View.VISIBLE);
+			mContactDetailsTV.setVisibility(View.VISIBLE);
+			//mContactNameTV.setText(mParticipantName);
 		}
 		else {
 			inflater.inflate(R.menu.menu_conversation, menu);
@@ -635,7 +746,14 @@ public class ConversationActivity extends PermissionActivity implements
 	@Override
 	public boolean onSubmit(CharSequence input) {
 		String msgText = input.toString();
-		Message message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
+		Message message;
+		if (mIsGroup) {
+			message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
+			message.setRecipients(getGroupMembersArray());
+		}
+		else
+			message = new Message(mParticipantId, mSelfId, mConversationId, msgText, mSelfLang);
+
 		message.setTranslatedLanguage(mParticipantLang);
 		if (isMagicButtonOn()) {
 			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
@@ -651,13 +769,28 @@ public class ConversationActivity extends PermissionActivity implements
 		mConversationViewModel.addNewOutcomingMessage(message);
 		mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 		mIsInputInTextMode = false;
-		if (!message.isMagic())
-			mService.sendMessage(message);
+		if (mIsGroup){
+			if (!message.isMagic())
+				mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+		}
+		else {
+			if (!message.isMagic())
+				mService.sendMessage(message);
+		}
 		returnRecordingButtonToPlace(false);
 		return true;
 
 	}
 
+
+	private String[] getGroupMembersArray(){
+		String[] res = new String[mGroupMembers.size()];
+		int i=0;
+		for (GroupMember groupMember : mGroupMembers){
+			res[i++] = groupMember.getUserId();
+		}
+		return res;
+	}
 
 	@Override
 	public void onClick(int buttonId) {
@@ -752,8 +885,10 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onMessageForward(Message message) {
-		Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+		Intent intent = new Intent(this, ContactGroupsMultiSelectorActivity.class);
+		intent.putExtra(Consts.INTENT_TITLE, getString(R.string.search_frwrd_to));
 		intent.putExtra(Consts.INTENT_MESSAGE_OBJ, message.toJson());
+		intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_send);
 		startActivityForResult(intent, REQUEST_SELECT_CONTACTS_W_MSG);
 		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 
@@ -762,6 +897,16 @@ public class ConversationActivity extends PermissionActivity implements
 
 	@Override
 	public void onMessageClick(Message message) {
+
+		if(message.getEventCode().equals(Message.EVENT_CODE_MISSED_VIDEO_CALL)){
+					openCallActivity(true);
+			return;
+		}
+		if(message.getEventCode().equals(Message.EVENT_CODE_MISSED_VOICE_CALL)){
+					 openCallActivity(false);
+			return;
+		}
+
 		if (Utils.isNotNullAndNotEmpty(message.getRepliedMessageId())){
 			int pos = mMessagesAdapter.getMessagePositionById(message.getRepliedMessageId());
 			if (pos > -1) {
@@ -839,7 +984,6 @@ public class ConversationActivity extends PermissionActivity implements
 
 	}
 
-
 	@Override
 	public void onMessageLongClick(Message message) {
 
@@ -861,7 +1005,10 @@ public class ConversationActivity extends PermissionActivity implements
 			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_send_light));
 			mIsInputInTextMode = true;
 		}
-		mService.sendTypingSignal(mParticipantId, mConversationId, true);
+		if (mIsGroup)
+			mService.sendTypingSignalForGroup(mConversationId, true, mGroupMembers, mSelfId);
+		else
+			mService.sendTypingSignal(mParticipantId, mConversationId, true);
 	}
 
 	@Override
@@ -871,13 +1018,16 @@ public class ConversationActivity extends PermissionActivity implements
 			mMessageInput.getButton().setImageDrawable(getDrawable(R.drawable.msg_in_mic_light));
 			mIsInputInTextMode = false;
 		}
-		mService.sendTypingSignal(mParticipantId, mConversationId, false);
+		if (mIsGroup)
+			mService.sendTypingSignalForGroup(mConversationId, false, mGroupMembers, mSelfId);
+		else
+			mService.sendTypingSignal(mParticipantId, mConversationId, false);
 	}
 
 
 	@Override
 	public String format(Date date) {
-		return Utils.dateFormatter(this, date);
+		return Utils.dateFormatter(date);
 	}
 
 
@@ -1065,7 +1215,8 @@ public class ConversationActivity extends PermissionActivity implements
 			mBound = true;
 			mService.setCurrentConversationId(mConversationId);
 			initMarkAsReadMessagesHandling();
-			mService.getLastOnline(mParticipantId);
+			if (mParticipantId != null)
+				mService.getLastOnline(mParticipantId);
 			if (mSelectedImageForDelayHandlingUri != null) {
 				submitTempImageMessage(mSelectedImageForDelayHandlingUri);
 				mSelectedImageForDelayHandlingUri = null;
@@ -1137,7 +1288,8 @@ public class ConversationActivity extends PermissionActivity implements
 				String conversationId = intent.getStringExtra(WCService.CONVERSATION_ID_EXTRA);
 				if ((conversationId != null)&&(conversationId.equals(mConversationId))){
 					boolean isTyping = intent.getBooleanExtra(WCService.IS_TYPING_EXTRA, false);
-					displayUITypingSignal(isTyping);
+					String participantId = intent.getStringExtra(WCService.PARTICIPANT_ID_EXTRA);
+					displayUITypingSignal(isTyping, participantId);
 				}
 			}
 			else if(intent.getAction().equals(WCService.PRESSENCE_ACTION)) {
@@ -1158,13 +1310,15 @@ public class ConversationActivity extends PermissionActivity implements
 				long time = intent.getLongExtra(WCService.LAST_ONLINE_TIME_EXTRA, 0);
 				boolean isOnline = intent.getBooleanExtra(WCService.LAST_ONLINE_IS_AVAILABLE_EXTRA, false);
 
-				if (mParticipantId.equals(contactId)){
-					mIsOnline = isOnline;
-					mLastOnlineTime = time;
-					if (mIsOnline)
-						mContactDetailsTV.setText(R.string.online);
-					else
-						mContactDetailsTV.setText(getDisplayOnlineDateTime());
+				if (mParticipantId != null) {
+					if (mParticipantId.equals(contactId)) {
+						mIsOnline = isOnline;
+						mLastOnlineTime = time;
+						if (mIsOnline)
+							mContactDetailsTV.setText(R.string.online);
+						else
+							mContactDetailsTV.setText(getDisplayOnlineDateTime());
+					}
 				}
 			}
 		}
@@ -1204,18 +1358,31 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 
-	private void displayUITypingSignal(boolean isTyping) {
+	private void displayUITypingSignal(boolean isTyping, String participantId) {
+		if (mIsGroup){
+			if (isTyping){
+				String firstName = getGroupMemberFirstName(participantId);
+				mContactDetailsTV.setText(firstName + " is typing...");
+				mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
+			}
+			else {
+				mContactDetailsTV.setText(getGroupNameList());
+				mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
+			}
 
-		if (isTyping){
-			mContactDetailsTV.setText("Typing...");
-			mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
 		}
 		else {
-			if (mIsOnline)
-				mContactDetailsTV.setText("Online");
-			else
-				mContactDetailsTV.setText(getDisplayOnlineDateTime());
-			mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
+			if (isTyping) {
+				mContactDetailsTV.setText("Typing...");
+				mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
+			}
+			else {
+				if (mIsOnline)
+					mContactDetailsTV.setText("Online");
+				else
+					mContactDetailsTV.setText(getDisplayOnlineDateTime());
+				mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
+			}
 		}
 	}
 
@@ -1306,8 +1473,12 @@ public class ConversationActivity extends PermissionActivity implements
 		else if (requestCode == REQUEST_SELECT_CONTACTS){
 			if (resultCode == Activity.RESULT_OK) {
 				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
+				String contactsGroupObj = intent.getStringExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT);
+				Type listType = new TypeToken<List<ContactOrGroup>>() {}.getType();
+				Gson gson = new Gson();
+				List<ContactOrGroup> contactsGroupList = gson.fromJson(contactsGroupObj, listType);
 				ArrayList<Message> selectedMessages = mMessagesAdapter.getSelectedMessages();
-				forwardMessagesToContacts(contacts, selectedMessages);
+				forwardMessagesToContactsGroups(contactsGroupList, selectedMessages);
 			}
 		}
 		else if (requestCode == REQUEST_SELECT_CONTACTS_W_MSG){
@@ -1315,9 +1486,13 @@ public class ConversationActivity extends PermissionActivity implements
 				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
 				String messageString = intent.getStringExtra(Consts.INTENT_MESSAGE_OBJ);
 				Message message = Message.fromJson(messageString);
+				String contactsGroupObj = intent.getStringExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT);
+				Type listType = new TypeToken<List<ContactOrGroup>>() {}.getType();
+				Gson gson = new Gson();
+				List<ContactOrGroup> contactsGroupList = gson.fromJson(contactsGroupObj, listType);
 				ArrayList<Message> selectedMessages = new ArrayList<>();
 				selectedMessages.add(message);
-				forwardMessagesToContacts(contacts, selectedMessages);
+				forwardMessagesToContactsGroups(contactsGroupList, selectedMessages);
 			}
 		}
 	}
@@ -1389,12 +1564,18 @@ public class ConversationActivity extends PermissionActivity implements
 					if ((Utils.isNotNullAndNotEmpty(message.getMediaUrl())) && (message.getAckStatus().equals(Message.ACK_STATUS_PENDING))) { // need to upload - one time
 						//mConversationViewModel.getMessage(message.getMessageId()).removeObserver(mMessageObserver);
 						if ((mService != null) && (mService.isXmppConnected())) {
-							mService.sendMessage(message);
+							if (mIsGroup)
+								mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+							else
+								mService.sendMessage(message);
 						}
 						else {
 							new Handler(getMainLooper()).postDelayed(() -> {
 								if ((mService != null) && (mService.isXmppConnected())) {
-									mService.sendMessage(message);
+									if (mIsGroup)
+										mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+									else
+										mService.sendMessage(message);
 								}
 							}, 1500);
 						}
@@ -1407,7 +1588,11 @@ public class ConversationActivity extends PermissionActivity implements
 							new Handler(getMainLooper()).postDelayed(() -> {
 								if ((mService != null) && (mService.isXmppConnected())) {
 									Log.e("GIL", "call sendMessage: " + message.toJson());
-									mService.sendMessage(message);
+									if (mIsGroup)
+										mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+									else
+										mService.sendMessage(message);
+
 								}
 							}, 1500);
 						}
@@ -1418,7 +1603,11 @@ public class ConversationActivity extends PermissionActivity implements
 						new Handler(getMainLooper()).postDelayed(() -> {
 							if ((mService != null) && (mService.isXmppConnected())) {
 								Log.e("GIL", "call sendMessage: " + message.toJson());
-								mService.sendMessage(message);
+								if (mIsGroup)
+									mService.sendGroupMessage(message, mGroupMembers, mSelfId);
+								else
+									mService.sendMessage(message);
+
 							}
 						}, 1500);
 					}
@@ -1426,6 +1615,14 @@ public class ConversationActivity extends PermissionActivity implements
 			}
 		}
 	};
+
+	private void addGroupInfo(Message message) {
+		message.setRecipients(getGroupMembersArray());
+		message.setGroupName(mParticipantName);
+		message.setGroupId(mConversationId);
+		message.setGroups(new String[]{mConversationId});
+	}
+
 
 	private void submitTempImageMessage(Uri imageUri) {
 		//Log.e(TAG, "submitTempImageMessage: " + imageUri);
@@ -1435,9 +1632,12 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 		Message message = Message.CreateImageMessage(mParticipantId, mSelfId, mConversationId, imageUri, mSelfLang);
+		if (mIsGroup)
+			addGroupInfo(message);
 		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
+
 
 	private void submitTempVideoMessage(File compressedVideoFile, File thumbFile, int duration) {
 
@@ -1451,6 +1651,8 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 		Message message = Message.CreateVideoMessage(mParticipantId, mSelfId, mConversationId, compressedVideoUri, thumbUri, mSelfLang, duration);
+		if (mIsGroup)
+			addGroupInfo(message);
 		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
@@ -1466,6 +1668,9 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 
 		Message message = Message.CreateAudioMessage(mParticipantId, mSelfId, mConversationId, audioUri, duration);
+		if (mIsGroup)
+			addGroupInfo(message);
+
 		mConversationViewModel.getMessage(message.getMessageId()).observe(this, mMessageObserver);
 		mConversationViewModel.addNewOutcomingMessage(message);
 	}
@@ -1474,6 +1679,10 @@ public class ConversationActivity extends PermissionActivity implements
 		Log.d("test", "text: " + text);
 		Message message = new Message(mParticipantId, mSelfId, mConversationId, text, mSelfLang);
 		message.setTranslatedLanguage(mParticipantLang);
+		if (mIsGroup) {
+			addGroupInfo(message);
+		}
+
 
 		if (isMagicButtonOn()) {
 			message.setForceTranslatedLanguage(mMagicButtonForceLanguage);
@@ -1591,9 +1800,13 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 	};
 
+	private boolean isRecordConditionOfRecordOrSpeach(){
+		return mSameLanguageWithParticipant && (!isMagicButtonOn()) && (!mIsGroup);
+	}
+
 
 	private void startRecordOrSpeech(){
-		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
+		if (isRecordConditionOfRecordOrSpeach()){
 			startRecord();
 		}
 		else  {
@@ -1605,7 +1818,7 @@ public class ConversationActivity extends PermissionActivity implements
 
 
 	private void cancelRecordOrSpeech(){
-		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
+		if (isRecordConditionOfRecordOrSpeach()){
 			cancelRecord();
 		}
 		else  {
@@ -1614,13 +1827,12 @@ public class ConversationActivity extends PermissionActivity implements
 			mRecordingTimer.cancel();
 			mRecordingStarted = false;
 			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
-
 		}
 
 	}
 
 	private void finishRecordOrSpeech(){
-		if (mSameLanguageWithParticipant && (!isMagicButtonOn())){
+		if (isRecordConditionOfRecordOrSpeach()){
 			finishRecord();
 		}
 		else  {
@@ -1839,29 +2051,38 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 
-	private void forwardMessagesToContacts(String[] contacts, ArrayList<Message> messages) {
-		Log.e(TAG, "forwardMessagesToContacts, num contacts: " + contacts.length + " , num msgs: " + messages.size());
+	private void forwardMessagesToContactsGroups(List<ContactOrGroup> contactOrGroupList, ArrayList<Message> messages) {
+		Log.e(TAG, "forwardMessagesToContactsGroups, num contacts: " + contactOrGroupList.size() + " , num msgs: " + messages.size());
 
-		int totalMessagesToSend = contacts.length * messages.size();
+		int totalMessagesToSend = contactOrGroupList.size() * messages.size();
 
-		if (contacts.length == 1)
-			mForwardContactId = contacts[0];
+		if (contactOrGroupList.size() == 1)
+			mForwardContactOrGroupSingle = contactOrGroupList.get(0);
 		else
-			mForwardContactId = null;
+			mForwardContactOrGroupSingle = null;
 
-		mConversationViewModel.forwardMessagesToContacts(contacts, messages);
+		mConversationViewModel.forwardMessagesToContactsGroups(contactOrGroupList, messages);
 		mMessagesAdapter.unselectAllItems();
 
-		Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() observe");
+		Log.e(TAG, "forwardMessagesToContactsGroups, getOutgoingPendingMessages() observe");
 		mConversationViewModel.getOutgoingPendingMessagesLD().observe(this, pendingMessages -> {
-			Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() result: " + pendingMessages.size());
+			Log.e(TAG, "forwardMessagesToContactsGroups, getOutgoingPendingMessages() result: " + pendingMessages.size());
 
 			if ((pendingMessages != null)&&(pendingMessages.size()>= totalMessagesToSend)) {
-				mService.sendMessages(pendingMessages);
-				Log.e(TAG, "forwardMessagesToContacts, mForwardContactId: " + mForwardContactId);
-				if (mForwardContactId != null) {
-					String conversationId = Conversation.getConversationId(mSelfId, mForwardContactId);
-					Log.e(TAG, "forwardMessagesToContacts, new conversationId: " + conversationId);
+
+				if (mIsGroup)
+					mService.sendGroupMessages(pendingMessages, mSelfId);
+				else
+					mService.sendMessages(pendingMessages);
+
+				Log.e(TAG, "forwardMessagesToContactsGroups, mForwardContactOrGroupSingle: " + mForwardContactOrGroupSingle);
+				if (mForwardContactOrGroupSingle != null) {
+					String conversationId;
+					if (mForwardContactOrGroupSingle.isContact())
+						conversationId = Conversation.getConversationId(mSelfId, mForwardContactOrGroupSingle.getContact().getId());
+					else
+						conversationId = mForwardContactOrGroupSingle.getConversation().getId();
+					Log.e(TAG, "forwardMessagesToContactsGroups, new conversationId: " + conversationId);
 					mConversationViewModel.getConversationLD(conversationId).observe(this, conversation -> {
 						OpenConversationActivity(conversation);
 					});
@@ -1901,6 +2122,10 @@ public class ConversationActivity extends PermissionActivity implements
 	}
 
 	private void setMagicButtonLanguage(String participantLang, boolean highlightBorder) {
+
+		if (participantLang == null)
+			return;
+
 		@DrawableRes int flagDrawable = Utils.getCountryFlagDrawableFromLang(participantLang);
 		mMessageInput.setMagicButtonDrawable(getDrawable(flagDrawable));
 		if (highlightBorder)
@@ -1927,7 +2152,10 @@ public class ConversationActivity extends PermissionActivity implements
 			});
 		}
 		else {
-			setMagicButtonLanguage(mParticipantLang, false);
+			if (mIsGroup)
+				setMagicButtonLanguage("UN", false);
+			else
+				setMagicButtonLanguage(mParticipantLang, false);
 			mMagicButtonForceLanguage = null;
 			mMagicButtonForceCountry = null;
 			mConversationViewModel.updateMagicButtonLangCode(mConversationId, null);
@@ -1940,4 +2168,74 @@ public class ConversationActivity extends PermissionActivity implements
 		return (mMagicButtonForceLanguage != null);
 	}
 
+
+	private String getGroupNameList(){
+		String res = "";
+		if ((mGroupMembers != null) && (!mGroupMembers.isEmpty())){
+			for (GroupMember groupMember : mGroupMembers){
+
+				String firstName = groupMember.getUserFirstName();
+				if (groupMember.getUserId().equals(mSelfId))
+					firstName = "You";
+
+				if (res.equals(""))
+					res = firstName;
+				else
+					res = res + ", " + firstName;
+			}
+		}
+		return res;
+	}
+
+
+	private String getGroupMemberFirstName(String id){
+		for(GroupMember groupMember : mGroupMembers){
+			if(groupMember.getUserId().equals(id)){
+				return groupMember.getUserFirstName();
+			}
+		}
+		return "";
+
+	}
+
+	@Override
+	public void onClick(View v) {
+		switch (v.getId()){
+			case R.id.contact_name_tv:
+			case R.id.contact_details_tv:
+				if (mIsGroup) {
+					Intent intent = new Intent(this, GroupInfoActivity.class);
+					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+					intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
+					intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
+					startActivity(intent);
+				}
+				else {
+					Intent intent = new Intent(this, ContactInfoActivity.class);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
+					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
+					intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
+					startActivity(intent);
+				}
+		}
+
+	}
+
+		private void openCallActivity(boolean isVideo) {
+					if(CallActivity.activityActiveFlag)
+									return; // Prevent multi open
+					Intent intent = new Intent(this, CallActivity.class);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, mParticipantName);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, mParticipantLang);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, mParticipantPic);
+					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					intent.putExtra(Consts.INTENT_SELF_ID, WCSharedPreferences.getInstance(this).getUserId());
+					intent.putExtra(Consts.INTENT_SELF_LANG, WCSharedPreferences.getInstance(this).getUserLang());
+					intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideo);
+					intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
+					startActivity(intent);
+	}
 }

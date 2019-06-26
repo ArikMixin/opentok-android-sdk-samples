@@ -1,0 +1,53 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/parentRL"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp">
+
+    <!--this view is needed for custom holder-->
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:minWidth="100dp"
+        android:orientation="vertical"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:background="@drawable/shape_info_message">
+
+
+        <ImageView
+            android:id="@+id/type_missed_iv"
+            android:layout_centerVertical="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="7dp"
+            android:visibility="gone"
+            android:src="@drawable/msg_in_video_dark"
+            />
+
+        <TextView
+            android:layout_toRightOf="@+id/type_missed_iv"
+            android:id="@id/messageText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:lineSpacingExtra="5sp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:textDirection="firstStrongLtr"
+            android:supportsRtl="false"
+            android:text="גיל how are you"
+            android:textColor="@color/black"/>
+
+    </RelativeLayout>
+
+
+</RelativeLayout>

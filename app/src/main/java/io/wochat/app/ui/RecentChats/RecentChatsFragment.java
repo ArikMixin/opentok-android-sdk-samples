@@ -9,7 +9,6 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,18 +16,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-
-
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.dialogs.DialogsList;
-
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 import com.stfalcon.chatkit.utils.DateFormatter;
-
 import java.util.Date;
 import java.util.List;
-
 import io.wochat.app.R;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.UnreadMessagesConversation;
@@ -41,19 +35,22 @@ import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.settings.SettingsActivity;
 import io.wochat.app.utils.Utils;
 import io.wochat.app.viewmodel.ConversationViewModel;
+import io.wochat.app.viewmodel.GroupViewModel;
 import io.wochat.app.viewmodel.UserViewModel;
 
 
 public class RecentChatsFragment extends Fragment  implements
 	DialogsListAdapter.OnDialogClickListener<Conversation>,
 	DialogsListAdapter.OnDialogLongClickListener<Conversation>,
-	DialogsListAdapter.OnButtonClickListener<Conversation>,
-	DateFormatter.Formatter {
+	DateFormatter.Formatter, DialogsListAdapter.OnButtonClickListener<Conversation> {
 
-	private static final int CONTACT_SELECTOR_REQUEST_CODE = 1;
+	private static final int REQUEST_SELECT_CONTACT = 1;
+	private static final int REQUEST_SELECT_CONTACTS_MULTY = 2;
+	private static final String TAG = "RecentChatsFragment";
 	//private RecentChatsViewModel mViewModel;
 	private UserViewModel mUserViewModel;
 	private String mSelfUserId;
+	private View view;
 	protected ImageLoader imageLoader;
 	protected DialogsListAdapter<Conversation> dialogsAdapter;
 	private DialogsList dialogsList;
@@ -64,6 +61,7 @@ public class RecentChatsFragment extends Fragment  implements
 	private User mSelfUser;
 	private String mSelfUserLang;
 	private String mSelfUserName;
+	private GroupViewModel mGroupViewModel;
 
 	public static RecentChatsFragment newInstance() {
 		return new RecentChatsFragment();
@@ -72,7 +70,14 @@ public class RecentChatsFragment extends Fragment  implements
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
 							 @Nullable Bundle savedInstanceState) {
-		View view = inflater.inflate(R.layout.recent_chats_fragment, container, false);
+		view = inflater.inflate(R.layout.recent_chats_fragment, container, false);
+		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
+		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
+		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
+		mGroupViewModel = ViewModelProviders.of(this).get(GroupViewModel.class);
+        initImgLoader();
+		initAdapter();
+
 //		TextView tv = (TextView) view.findViewById(R.id.tv);
 //		tv.setText("Recent Chats.....");
 
@@ -84,7 +89,6 @@ public class RecentChatsFragment extends Fragment  implements
 
 
 //		mSelfUserId = share
-		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
 		mUserViewModel.getSelfUser().observe(this, user -> {
 			if (user != null) {
 				mSelfUser = user;
@@ -102,25 +106,22 @@ public class RecentChatsFragment extends Fragment  implements
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mConversationViewModel.getConversationListLD().observe(this, conversations -> {
 			mConversation = conversations;
-			if (conversations != null) {
-				Log.e("AAA", "conversations count: " + conversations.size());
+			if (conversations != null && conversations.size() > 0) {
 				mEmptyFrameCL.setVisibility(Utils.booleanToVisibilityInvisible(conversations.isEmpty()));
-				for(Conversation cc : conversations) {
-					Log.e("AAA", "conversations: " + cc.toString());
-				}
-				initAdapter();
-
+				dialogsAdapter.setItems(mConversation);
 				String conversationId = ((MainActivity) getActivity()).getIntentConversationId();
 				if (conversationId != null){
 					Conversation conversation = getConversation(conversationId);
 					onDialogClick(conversation);
 				}
-
 			}
 			else {
-				Log.e("AAA", "conversations: null");
+				mEmptyFrameCL.setVisibility((View.VISIBLE));
 			}
 		});
+
+
+		mGroupViewModel.getAllUserGroupsDetails(getResources());
 //			conversationCompletes -> {
 //				mConversationCompletes = conversationCompletes;
 //				if (conversationCompletes != null) {
@@ -156,41 +157,36 @@ public class RecentChatsFragment extends Fragment  implements
 //			}
 //		});
 
-
-
-		imageLoader = new ImageLoader() {
-			@Override
-			public void loadImageWPlaceholder(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
-				if ((url != null)&& (url.equals("")))
-					url = null;
-				Picasso.get().load(url).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
-
-			}
-
-			@Override
-			public void loadImageCenterCrop(ImageView imageView, @Nullable String url, @Nullable Object payload) {
-				Picasso.get().load(url).resize(300,300).centerCrop().into(imageView);
-			}
-
-			@Override
-			public void loadImageCenter(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
-				Picasso.get().load(url).into(imageView);
-			}
-
-			@Override
-			public void loadImageNoPlaceholder(ImageView imageView, int resourceId) {
-				Picasso.get().load(resourceId).into(imageView);
-			}
-
-		};
-		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
-		mEmptyFrameCL.setVisibility(View.INVISIBLE);
-
-		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
-		//initAdapter();
-
 		return view;
 	}
+
+	private void  initImgLoader(){
+        imageLoader = new ImageLoader() {
+            @Override
+            public void loadImageWPlaceholder(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
+                if ((url != null)&& (url.equals("")))
+                    url = null;
+                Picasso.get().load(url).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
+
+            }
+
+            @Override
+            public void loadImageCenterCrop(ImageView imageView, @Nullable String url, @Nullable Object payload) {
+                Picasso.get().load(url).resize(300,300).centerCrop().into(imageView);
+            }
+
+            @Override
+            public void loadImageCenter(ImageView imageView, @Nullable String url, int placeholderResourceId, @Nullable Object payload) {
+                Picasso.get().load(url).into(imageView);
+            }
+
+            @Override
+            public void loadImageNoPlaceholder(ImageView imageView, int resourceId) {
+                Picasso.get().load(resourceId).into(imageView);
+            }
+
+        };
+    }
 
 	@Override
 	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -217,6 +213,10 @@ public class RecentChatsFragment extends Fragment  implements
 			startActivity(intent);
 			return true;
 		}
+		if (id == R.id.action_create_group) {
+			((MainActivity)getActivity()).createGroup();
+			return true;
+		}
 
 		return super.onOptionsItemSelected(item);
 	}
@@ -224,13 +224,13 @@ public class RecentChatsFragment extends Fragment  implements
 
 	private void selectContact(){
 		Intent intent = new Intent(getContext(), ContactSelectorActivity.class);
-		startActivityForResult(intent, CONTACT_SELECTOR_REQUEST_CODE);
+		startActivityForResult(intent, REQUEST_SELECT_CONTACT);
 	}
 
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == CONTACT_SELECTOR_REQUEST_CODE){
+		if (requestCode == REQUEST_SELECT_CONTACT){
 			if (resultCode == AppCompatActivity.RESULT_OK){
 				String id = data.getStringExtra(Consts.INTENT_PARTICIPANT_ID);
 				String name = data.getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
@@ -254,6 +254,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 			}
 		}
+
 	}
 
 	@Override
@@ -264,6 +265,7 @@ public class RecentChatsFragment extends Fragment  implements
 		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
 		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+		intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
 		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
 		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
 		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
@@ -281,9 +283,9 @@ public class RecentChatsFragment extends Fragment  implements
 		if(CallActivity.activityActiveFlag)
 			return; // Prevent multi open
 		boolean isVideoCall = false;
-		if(buttonID == CustomDialogViewHolder.BTN_CAMERA)
+		if(buttonID == RecentChatsViewHolder.BTN_CAMERA)
 				isVideoCall = true;
-		else if(buttonID == CustomDialogViewHolder.BTN_PHONE)
+		else if(buttonID == RecentChatsViewHolder.BTN_PHONE)
 				isVideoCall = false;
 
 		Intent intent = new Intent(getContext(), CallActivity.class);
@@ -303,7 +305,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public String format(Date date) {
-		return Utils.dateFormatter(getContext(), date);
+		return Utils.dateFormatter(date);
 	}
 
 
@@ -311,11 +313,9 @@ public class RecentChatsFragment extends Fragment  implements
 
 		dialogsAdapter = new DialogsListAdapter<>(
 			R.layout.item_custom_dialog_view_holder_new,
-			CustomDialogViewHolder.class,
+			RecentChatsViewHolder.class,
 			imageLoader);
 
-		//dialogsAdapter.setItems(DialogsFixtures.getDialogs());
-		dialogsAdapter.setItems(mConversation);
 
 		dialogsAdapter.setOnDialogClickListener(this);
 

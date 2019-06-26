@@ -43,7 +43,8 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.ImageViewHol
 		int deviceWidth = mDisplayMetrics.widthPixels / 3;//"3" is number of spans in grid row
 		holder.mediaIV.getLayoutParams().width = deviceWidth;
 		holder.mediaIV.getLayoutParams().height = deviceWidth;
-		Picasso.get().load(mMessages.get(position).getMediaThumbnailUrl()).into(holder.mediaIV);
+		if (Utils.isNotNullAndNotEmpty(mMessages.get(position).getMediaThumbnailUrl()))
+			Picasso.get().load(mMessages.get(position).getMediaThumbnailUrl()).into(holder.mediaIV);
 
 		if (mMessages.get(position).getMessageType().equals(Message.MSG_TYPE_VIDEO)) {
 			holder.playIV.setVisibility(View.VISIBLE);

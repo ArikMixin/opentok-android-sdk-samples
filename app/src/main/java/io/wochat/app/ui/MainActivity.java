@@ -39,6 +39,7 @@ import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
 import io.wochat.app.ui.Contact.ContactSelectorActivity;
+import io.wochat.app.ui.Group.NewGroupActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.ui.RecentCalls.RecentCallsFragment;
 import io.wochat.app.ui.RecentChats.RecentChatsFragment;
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
 	private static final int TAB_POSITION_CHAT = 1;
 	private static final int TAB_POSITION_CALL = 2;
 
+
 	private int mFragmentsTitles[] = new int[] {
 		R.string.camera_title,
 		R.string.chat_title,
@@ -64,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
 	private static final int REQUEST_CONTACT_SELECTOR = 1;
 	private static final int REQUEST_SELECT_CAMERA_PHOTO = 2;
 	private static final int REQUEST_SELECT_CONTACTS_MULTI = 3;
+	private static final int REQUEST_NEW_GROUP_CONTACTS_SELECT = 4;
+	private static final int REQUEST_NEW_GROUP_PIC_NAME = 5;
 
 	private SectionsPagerAdapter mSectionsPagerAdapter;
 
@@ -83,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
 	private User mSelfUser;
 	private String mIntentConversationId;
 	private Uri mCameraPhotoFileUri;
+	private String mLastSelectedContactsObj;
 	private boolean doubleBackPressedFlag = false;
 
 	@Override
@@ -473,6 +478,11 @@ public class MainActivity extends AppCompatActivity {
 				String contactString = intent.getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
 				String conversationId = Conversation.getConversationId(id, mSelfUserId);
 
+				if (id.equals("")){
+					createGroup();
+					return;
+				}
+
 				Intent intent1 = new Intent(this, ConversationActivity.class);
 				intent1.putExtra(Consts.INTENT_PARTICIPANT_ID, id);
 				intent1.putExtra(Consts.INTENT_PARTICIPANT_NAME, name);
@@ -487,7 +497,29 @@ public class MainActivity extends AppCompatActivity {
 
 			}
 		}
+		else if (requestCode == REQUEST_NEW_GROUP_CONTACTS_SELECT){
+			if (resultCode == RESULT_OK) {
+				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
+				mLastSelectedContactsObj = intent.getStringExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT);
+				Intent intent1 = new Intent(this, NewGroupActivity.class);
+				intent1.putExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT, contacts);
+				intent1.putExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT, mLastSelectedContactsObj);
+				startActivityForResult(intent1, REQUEST_NEW_GROUP_PIC_NAME);
+				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
+				Log.e(TAG, "contacts: " + contacts);
+			}
+		}
+		else if (requestCode == REQUEST_NEW_GROUP_PIC_NAME){
+			if (resultCode == RESULT_OK) {
+				Conversation conversation = Conversation.fromJson(intent.getStringExtra(Consts.INTENT_CONVERSATION_OBJ));
+				openConversationActivity(conversation);
+			}
+			else {
+				createGroup(mLastSelectedContactsObj);
+			}
+		}
 	}
+
 
 
 	public WCService getService(){
@@ -534,4 +566,39 @@ public class MainActivity extends AppCompatActivity {
 			}
 		}, 2000);
 	}
+
+	public void createGroup(){
+		Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+		intent.putExtra(Consts.INTENT_TITLE, getString(R.string.new_group));
+		intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_right_arrow);
+		startActivityForResult(intent, REQUEST_NEW_GROUP_CONTACTS_SELECT);
+		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
+	}
+
+	public void createGroup(String contactsObj){
+		Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
+		intent.putExtra(Consts.INTENT_TITLE, getString(R.string.new_group));
+		intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_right_arrow);
+		intent.putExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT, contactsObj);
+		startActivityForResult(intent, REQUEST_NEW_GROUP_CONTACTS_SELECT);
+		overridePendingTransition(R.anim.trans_right_in, R.anim.trans_right_out);
+	}
+
+
+	private void openConversationActivity(Conversation conversation) {
+		Intent intent = new Intent(this, ConversationActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+		intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
+		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+		startActivity(intent);
+
+	}
+
 }

@@ -18,20 +18,21 @@ import io.wochat.app.utils.Utils;
 /*
  * Created by Anton Bevza on 1/18/17.
  */
-public class CustomDialogViewHolder
+public class RecentChatsViewHolder
         extends DialogsListAdapter.DialogViewHolder<Conversation> implements View.OnClickListener {
 
     private final ImageView mCocheIV;
 	private final CircleFlagImageView mAvatarcfiv;
 	private final ImageView mMsgTypeIV;
-	private final ImageButton mCameraIB, mPhoneIB;
-	private Conversation mConversation;
+	private final ImageButton mCameraIB;
+	private final ImageButton mPhoneIB;
+    private Conversation mConversation;
 
 	public static final int BTN_CAMERA = 1;
 	public static final int BTN_PHONE = 2;
     //private View onlineIndicator;
 
-    public CustomDialogViewHolder(View itemView) {
+    public RecentChatsViewHolder(View itemView) {
         super(itemView);
         //onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
         mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
@@ -48,17 +49,34 @@ public class CustomDialogViewHolder
     public void onBind(Conversation conversation) {
         super.onBind(conversation);
 
-		mCameraIB.setTag(conversation);
+        String initials;
+
+        mCameraIB.setTag(conversation);
 		mPhoneIB.setTag(conversation);
+
+		if (conversation.isGroup()){
+            mCameraIB.setVisibility(View.INVISIBLE);
+            mPhoneIB.setVisibility(View.INVISIBLE);
+            initials = Contact.getInitialsFromName(conversation.getGroupName());
+        }
+        else {
+            mCameraIB.setVisibility(View.VISIBLE);
+            mPhoneIB.setVisibility(View.VISIBLE);
+            initials = Contact.getInitialsFromName(conversation.getParticipantName());
+        }
 
 		mAvatarcfiv.setInfo(conversation.getParticipantProfilePicUrl(),
 			conversation.getParticipantLanguage(),
-			Contact.getInitialsFromName(conversation.getParticipantName()));
+			initials);
 
 		if (conversation.getLastMessageId() == null){
 			mCocheIV.setVisibility(View.GONE);
 			mMsgTypeIV.setVisibility(View.GONE);
 			return;
+		}
+
+		if (conversation.getLastMessageType().equals(Message.MSG_TYPE_GROUP_EVENT)){
+			mMsgTypeIV.setVisibility(View.GONE);
 		}
 
         if (conversation.getLastMessageAckStatus()!= null) {

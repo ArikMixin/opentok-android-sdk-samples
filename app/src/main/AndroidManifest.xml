@@ -26,14 +26,27 @@
         android:theme="@style/AppTheme"
         tools:replace="android:supportsRtl">
         <activity android:name=".ui.AudioVideoCall.CallActivity"
+            android:excludeFromRecents="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
             android:launchMode="singleTask"
-            ></activity>
-            <!--android:launchMode="singleTask"-->
+        ></activity>
+
+
+
+        <activity
+            android:name=".ui.Group.NewGroupActivity"
+            android:label="@string/title_activity_new_group"
+            android:screenOrientation="portrait"
+            android:parentActivityName=".ui.Contact.ContactMultiSelectorActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="io.wochat.app.ui.Contact.ContactMultiSelectorActivity"/>
+        </activity>
         <activity
             android:name=".ui.settings.SupportedLanguagesActivity"
             android:screenOrientation="portrait">
@@ -74,6 +87,7 @@
         </activity>
         <activity
             android:name=".ui.Contact.ContactSelectorActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/NoActionBarAppTheme">
             <meta-data
                 android:name="android.app.searchable"
@@ -85,6 +99,19 @@
         </activity>
         <activity
             android:name=".ui.Contact.ContactMultiSelectorActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/NoActionBarAppTheme">
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/contact_searchable"/>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.Contact.ContactGroupsMultiSelectorActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/NoActionBarAppTheme">
             <meta-data
                 android:name="android.app.searchable"
@@ -134,9 +161,21 @@
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity
+            android:name=".ui.Group.GroupInfoActivity"
+            android:label="@string/title_activity_info"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
             android:name=".ui.ContactInfo.ContactInfoMediaActivity"
             android:screenOrientation="portrait">
         </activity>
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="fb27fc86a5303c50787093362afd771e39d87589"
+            />
+
     </application>
 
 </manifest>

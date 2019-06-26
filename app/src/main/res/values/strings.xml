@@ -78,6 +78,7 @@
     <string name="settings_user_default_phone">No phone</string>
     <string name="dialog_save_button_text">Save</string>
     <string name="dialog_default_negative_button_text">Cancel</string>
+    <string name="enter_group_name_title">Enter Group Name</string>
     <string name="settings_profile_edit_dialog_name_title">Enter Your Name</string>
     <string name="settings_profile_edit_dialog_status_title">Add About</string>
     <string name="settings_profile_edit_dialog_empty_string_warning">Name can\'t be empty</string>
@@ -87,6 +88,7 @@
     <string name="settings_invite_friends_download_link">‏http://wochat.io/download</string>
     <string name="settings_help_link">http://wochat.io/</string>
     <string name="title_activity_info">InfoActivity</string>
+
     <string name="please_click_back">Please click BACK again to exit</string>
     <string name="in_video_call">Incoming WoChat Video Call from</string>
     <string name="in_audio_call">Incoming WoChat Audio Call from</string>
@@ -103,11 +105,31 @@
     <string name="permissions_expl_in">In order to answer this call you must confirm the permissions</string>
     <string name="connecting">Connecting....</string>
     <string name="listening">Listening...</string>
-    <string name="audio">Audio</string>
+    <string name="voice">Voice</string>
     <string name="video">Video</string>
     <string name="missed">Missed</string>
     <string name="incoming">Incoming</string>
     <string name="outgoing">Outgoing</string>
     <string name="call">Call</string>
+    <string name="large_text">Material is the metaphor</string>
+    <string name="new_group">New Group</string>
+    <string name="title_activity_new_group">New Group</string>
+    <string name="persons_in_this_group_title">%d persons in this group</string>
+    <string name="person_in_this_group_title">1 person in this group</string>
+    <string name="msg_enter_group_name">Please enter group name.</string>
+    <string name="msg_group_name_2_chars">Group name must be at least 2 characters.</string>
+    <string name="group_info_member_message">Message %s</string>
+    <string name="group_info_member_view">View %s</string>
+    <string name="group_info_member_make_admin">Make Group Admin</string>
+    <string name="group_info_member_dismiss_admin">Dismiss Group Admin</string>
+    <string name="group_info_member_remove">Remove %s</string>
+    <string name="group_info_member_verify_sec_code">Verify Security Code</string>
+    <string name="add_people_to_this_group">Add people to this group</string>
+    <string name="select_contacts">Select Contacts</string>
+    <string name="quit_group_confirmation_title">Confirmation</string>
+    <string name="quit_group_confirmation_body">Are you sure you want to quit %s group?</string>
+    <string name="quit">Quit</string>
+    <string name="cancel">Cancel</string>
+    <string name="created_by">Created By %s</string>
 
 </resources>
