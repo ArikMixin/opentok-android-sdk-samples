@@ -627,7 +627,6 @@ public class ConversationActivity extends PermissionActivity implements
 			case MessageHolders.VIEW_TYPE_INFO_MESSAGE: 
 				return message.getMessageType().equals(Message.MSG_TYPE_GROUP_EVENT) ||
 						message.getMessageType().equals(Message.MSG_TYPE_CALL_MISSED);
-			// TODO: 6/24/2019  VIEW_TYPE_INFO_WITH ICON MESSAGE 
 		}
 		return false;
 	}
@@ -897,11 +896,11 @@ public class ConversationActivity extends PermissionActivity implements
 	@Override
 	public void onMessageClick(Message message) {
 
-		if(message.getEventCode().equals(Message.EVENT_CODE_MISSED_VIDEO_CALL)){
+		if(message.getEventCode() != null && message.getEventCode().equals(Message.EVENT_CODE_MISSED_VIDEO_CALL)){
 					openCallActivity(true);
 			return;
 		}
-		if(message.getEventCode().equals(Message.EVENT_CODE_MISSED_VOICE_CALL)){
+		if(message.getEventCode() != null && message.getEventCode().equals(Message.EVENT_CODE_MISSED_VOICE_CALL)){
 					 openCallActivity(false);
 			return;
 		}

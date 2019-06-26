@@ -9,6 +9,6 @@
         android:topLeftRadius="20dp"
         android:topRightRadius="20dp" />
 
-    <solid android:color="@color/cornflower_blue_two_24" />
+    <solid android:color="@color/cornflower_blue_two_24_no_alpha" />
 
 </shape>

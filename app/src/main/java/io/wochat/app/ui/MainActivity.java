@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
 		mLastSelectioPage = currentItem;
 		mViewPager.setCurrentItem(currentItem);
-		getSupportActionBar().setTitle(mFragmentsTitles[currentItem]);
+		//getSupportActionBar().setTitle(mFragmentsTitles[currentItem]); (Title in the right side)
 
 
 
@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onPageSelected(int position) {
 
-				getSupportActionBar().setTitle(mFragmentsTitles[position]);
+				// 	getSupportActionBar().setTitle(mFragmentsTitles[position]); (Title in the right side)
 				if (position == TAB_POSITION_CHAT) {
 					mLastSelectioPage = position;
 					mFab.setVisibility(View.VISIBLE);

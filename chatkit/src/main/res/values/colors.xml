@@ -17,6 +17,8 @@
     <color name="dark_mint">#51c05c</color>
     <color name="cornflower_blue_two">#4f62d7</color>
     <color name="cornflower_blue_two_24">#3d4f62d7</color>
+    <color name="cornflower_blue_two_24_no_alpha">#B9BFFF</color>
+
     <color name="cornflower_blue_two_dark">#475bd4</color>
     <color name="cornflower_blue_light_40">#64bec5f7</color>
 

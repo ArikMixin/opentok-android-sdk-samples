@@ -117,15 +117,23 @@
                 />
 
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:layout_above="@id/input">
 
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/chat_background"
+                    />
+
                 <com.stfalcon.chatkit.messages.MessagesList
                     android:id="@+id/messagesList"
                     android:layout_width="match_parent"
+                    android:background="@null"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
 
@@ -157,8 +165,8 @@
                     app:outcomingBubblePaddingRight="10dp"
                      />
 
-
                 <io.wochat.app.components.MessageReplyLayout
+                    android:layout_alignParentBottom="true"
                     android:id="@+id/input_reply_message_layout"
                     android:layout_marginTop="2dp"
                     android:layout_width="match_parent"
@@ -166,7 +174,7 @@
 
                 </io.wochat.app.components.MessageReplyLayout>
 
-            </LinearLayout>
+            </RelativeLayout>
 
 
             <com.stfalcon.chatkit.messages.MessageInput
