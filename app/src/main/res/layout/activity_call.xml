@@ -29,12 +29,26 @@
             android:src="@drawable/ic_camera_pause" />
     </FrameLayout>
 
+
+
+
+
+<RelativeLayout
+    android:id="@+id/top_section_rl"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintBottom_toTopOf="@+id/status_rl"
+    >
+
+    <!--Title-->
     <RelativeLayout
+
         android:id="@+id/title_rl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_alignParentTop="true">
 
         <FrameLayout
             android:id="@+id/back_navigation_fl"
@@ -77,10 +91,9 @@
     <RelativeLayout
         android:id="@+id/main_video_rl"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/inside_call_btns_cl"
-        app:layout_constraintTop_toBottomOf="@+id/title_rl">
+        android:layout_below="@+id/title_rl">
 
 
         <RelativeLayout
@@ -191,10 +204,10 @@
     <RelativeLayout
         android:id="@+id/main_audio_rl"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/status_rl"
-        app:layout_constraintTop_toBottomOf="@+id/title_rl">
+        android:layout_below="@+id/title_rl"
+        >
 
         <RelativeLayout
             android:id="@+id/participant_name_rl"
@@ -305,6 +318,14 @@
 
         </RelativeLayout>
     </RelativeLayout>
+
+</RelativeLayout>
+
+
+
+
+
+
 
 
 

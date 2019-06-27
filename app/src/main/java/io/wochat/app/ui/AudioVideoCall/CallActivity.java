@@ -56,8 +56,10 @@ import com.opentok.android.Stream;
 import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 import com.squareup.picasso.Picasso;
+
 import java.util.List;
 import java.util.Locale;
+
 import io.wochat.app.R;
 import io.wochat.app.WCRepository;
 import io.wochat.app.WCService;
@@ -100,7 +102,7 @@ public class CallActivity extends AppCompatActivity
     private Chronometer mTimerChr;
     private ImageView mCameraSwitchIV, mTranslatorMicIV, mTranslatorMicP2T_IV;
     private FrameLayout mBackNavigationFL, mCameraPauseFullFL;
-    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL, mTranslateRL, mLockRL;
+    private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL, mTranslateRL, mLockRL, topSectionRL;
     private ImageView mDeclineInsideIV, mDeclineIncomingIV, mAcceptIV;
     private String mFixedParticipantId;
     private Locale loc;
@@ -154,6 +156,7 @@ public class CallActivity extends AppCompatActivity
     private boolean mAudioDriveStrted;
     private Call call;
     private CountDownTimer countDownTimer;
+    private boolean mBtnAnimationFired;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
 
@@ -164,6 +167,7 @@ public class CallActivity extends AppCompatActivity
     public static final int RC_VIDEO_APP_PERM = 124;
     public static final int MIN_DISTANCE = 500;
     public static final int ANIMATION_DURATION = 500;
+    public static final int BTN_HIDE_ANIMATION_DURATION = 500;
     public static boolean activityActiveFlag;
 
     public static final String CALL_MISSED  = "CALL_MISSED";
@@ -232,6 +236,7 @@ public class CallActivity extends AppCompatActivity
         mConnectingRL = (RelativeLayout) findViewById(R.id.connecting_rl);
         mActionBtnsCL = (ConstraintLayout) findViewById(R.id.action_btns_cl);
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
+        topSectionRL = (RelativeLayout) findViewById(R.id.top_section_rl);
 /*        mRecordingStateAudioIV = (ImageView) findViewById(R.id.recording_state_audio_iv);
         mRecordingStateVideoIV = (ImageView) findViewById(R.id.recording_state_video_iv);*/
 
@@ -250,6 +255,8 @@ public class CallActivity extends AppCompatActivity
 //      mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
+
+        mSubscriberFL.setEnabled(false);
 
         startMissedCallTimer();
         /**View Model **/
@@ -337,7 +344,6 @@ public class CallActivity extends AppCompatActivity
         mAcceptIV.setOnClickListener(this);
         mDeclineIncomingIV.setOnClickListener(this);
         mDeclineInsideIV.setOnClickListener(this);
-
         mBackNavigationFL.setOnClickListener(this);
         mCameraBtnVideo.setOnClickListener(this);
         mCameraBtnAudio.setOnClickListener(this);
@@ -346,12 +352,7 @@ public class CallActivity extends AppCompatActivity
         mMicFlagCIV.setOnTouchListener(this);
         mMuteTB.setOnCheckedChangeListener(this);
         mSpeakerIB.setOnCheckedChangeListener(this);
-
-//        //Outgoing or incoming call
-//        if(mIsOutGoingCall)
-//            outGoingCall();
-//        else
-//            incomingCall();
+        mSubscriberFL.setOnClickListener(this);
 
         // Video Or Audio
         if (mIsVideoCall)
@@ -412,7 +413,6 @@ public class CallActivity extends AppCompatActivity
 
     private void audioCall() {
         mVideoFlag = false;
-
         //OpenTok enable the speaker by default - we close it manually;
         if(mMainVideoRL.getVisibility() == View.VISIBLE)
             mMainVideoRL.setVisibility(View.GONE);
@@ -536,6 +536,17 @@ public class CallActivity extends AppCompatActivity
                         .withEndAction(() -> mCameraSwitchIV.setEnabled(true))
                         .start();
             break;
+
+            case R.id.subscriber_fl:
+                    if(!mBtnAnimationFired) {
+                          hideButtonsAnimation(mMainVideoRL.getHeight(),0);
+                          mBtnAnimationFired = true;
+                    }else{
+                          hideButtonsAnimation(0,1);
+                          mBtnAnimationFired = false;
+                    }
+                break;
+
         }
     }
 
@@ -851,7 +862,6 @@ public class CallActivity extends AppCompatActivity
     public void sendXMPPmsg(String rtcCode, String msgFromPTT ,boolean isRecording){
         message = new Message(mParticipantId, mSelfId, mConversationId, mSessionID, msgFromPTT,mSelfLang,
                                                                               rtcCode, mVideoFlag, isRecording);
-
         if ((mService != null) && (mService.isXmppConnected())){
             mService.sendMessage(message);
         }
@@ -1130,7 +1140,7 @@ public class CallActivity extends AppCompatActivity
             incomingCallBtnsRL.setVisibility(View.GONE);
 
             if(mIsOutGoingCall){
-                    //Stop sound
+                            //Stop sound
                             mCallingSound.stop();
                             mCallTXTanima.cancel();
 
@@ -1138,6 +1148,11 @@ public class CallActivity extends AppCompatActivity
                             mTimerChr.setVisibility(View.VISIBLE);
                             mTimerChr.setBase(SystemClock.elapsedRealtime());
                             mTimerChr.start();
+
+                            //enable hide animation only if call started;
+                            if(mVideoFlag)
+                            mSubscriberFL.setEnabled(true);
+
                              // Close & Open Camera button visible only after call started ( Timer Starts )
                             mCameraBtnAudio.setVisibility(View.VISIBLE);
                             mCameraBtnVideo.setVisibility(View.VISIBLE);
@@ -1201,6 +1216,18 @@ public class CallActivity extends AppCompatActivity
         finish();
     }
 
+    private void hideButtonsAnimation(int hideFlag, int alpha){
+        topSectionRL.animate()
+                .setDuration(BTN_HIDE_ANIMATION_DURATION)
+                .translationY(-hideFlag)
+                .alpha(alpha);
+
+        mInsideCallBtnsCL.animate()
+                .setDuration(BTN_HIDE_ANIMATION_DURATION)
+                .translationY(hideFlag)
+                .alpha(alpha);
+    }
+
     private void startIncomingCallThread() {
 
         new Thread (() -> {
@@ -1241,6 +1268,11 @@ public class CallActivity extends AppCompatActivity
                         mTimerChr.setVisibility(View.VISIBLE);
                         mTimerChr.setBase(SystemClock.elapsedRealtime());
                         mTimerChr.start();
+
+                        //enable hide animation only if call started;
+                        if(mVideoFlag)
+                            mSubscriberFL.setEnabled(true);
+
                         // Close & Open Camera button visible only after call started ( Timer Starts )
                         mCameraBtnAudio.setVisibility(View.VISIBLE);
                         mCameraBtnVideo.setVisibility(View.VISIBLE);
