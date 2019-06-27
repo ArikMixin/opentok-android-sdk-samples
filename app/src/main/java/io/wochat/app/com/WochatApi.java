@@ -142,6 +142,10 @@ public class WochatApi {
 		sendRequestAndHandleResult(Request.Method.POST, url, jsonObject, lsnr);
 	}
 
+	public void getLatestVersion(OnServerResponseListener lsnr){
+			String url = BASE_URL + "version/android/";
+			sendRequestAndHandleResult(Request.Method.GET, url, null, lsnr);
+	}
 
 	public void userVerification(String userId, String code, final OnServerResponseListener lsnr) {
 

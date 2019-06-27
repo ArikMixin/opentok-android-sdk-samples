@@ -3,8 +3,11 @@ package io.wochat.app.ui;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +22,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -89,7 +93,8 @@ public class MainActivity extends AppCompatActivity {
 	private Uri mCameraPhotoFileUri;
 	private String mLastSelectedContactsObj;
 	private boolean doubleBackPressedFlag = false;
-
+	private String mCurrentVersion;
+	private AlertDialog mUpdateDialog;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -246,6 +251,12 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		getCurrentAppVersion(); // Force update if there is a new version of the app in google play
 	}
 
 	public String getIntentConversationId(){ // one timer
@@ -598,7 +609,49 @@ public class MainActivity extends AppCompatActivity {
 		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
 		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
 		startActivity(intent);
+	}
 
+	private void getCurrentAppVersion(){
+		PackageManager pm = this.getPackageManager();
+		PackageInfo pInfo = null;
+
+		try {
+			pInfo =  pm.getPackageInfo(this.getPackageName(),0);
+		} catch (PackageManager.NameNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		mCurrentVersion = pInfo.versionName;
+		Log.d("arik", "mCurrentVersion: " + mCurrentVersion);
+
+		mConversationViewModel.checkLatestVersion();
+		mConversationViewModel.getLatestVersion().observe(this, latestVersion -> {
+			if(latestVersion != null) {
+				Log.d("arik", "latestVersion: " + latestVersion);
+
+						if(Integer.parseInt(mCurrentVersion.replace(".", "")) <
+								Integer.parseInt(latestVersion.replace(".", ""))){
+							showUpdateDialog();
+						}
+			}
+		});
+	}
+
+	private void showUpdateDialog(){
+		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle("Update Required");
+		builder.setMessage("WoChat is out of date. Please visit the Google Play Store to update to the latest version");
+		builder.setPositiveButton("Update", (dialog, which) -> {
+			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse
+					("market://details?id=io.wochat.app")));
+			dialog.dismiss();
+		});
+
+		builder.setNegativeButton("Cancel", (dialog, which) -> {
+			finishAndRemoveTask();
+		});
+
+		builder.setCancelable(false);
+		mUpdateDialog = builder.show();
 	}
 
 }

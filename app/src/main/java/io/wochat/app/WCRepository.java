@@ -125,6 +125,7 @@ public class WCRepository {
 	private MutableLiveData<StateData<Void>> mUserProfileEditResult;
 	private MutableLiveData<VideoAudioCall> mSessionsAndToken;
 	private MutableLiveData<String> mTranslationFromPush2Talk;
+	private MutableLiveData<String> mLatestVersion;
 
 
 	private SpeechToTextUtil mSpeechToTextUtil;
@@ -180,6 +181,7 @@ public class WCRepository {
 		mUploadProfilePicResult = new MutableLiveData<>();
 		mSessionsAndToken = new MutableLiveData<>();
 		mTranslationFromPush2Talk = new MutableLiveData<>();
+		mLatestVersion = new MutableLiveData<>();
 
 		mUploadImageResult = new MutableLiveData<>();
 		mCreateGroupResult = new MutableLiveData<>();
@@ -432,6 +434,10 @@ public class WCRepository {
 
 	public MutableLiveData<String> getTranslationFromPush2Talk(){
 		return mTranslationFromPush2Talk;}
+
+	public MutableLiveData<String> getLatestVersion() {
+		return mLatestVersion;
+	}
 
 	public void resetTranslatedText() {
 		mTranslationFromPush2Talk.setValue(null);
@@ -2942,6 +2948,25 @@ public class WCRepository {
 					onSessionResultListener.onFailedCreateSession(new StateData<String>().errorComm(errorComm));
 			}
 		});
+	}
+
+	public void checkLatestVersion() {
+		mWochatApi.getLatestVersion((isSuccess, errorLogic, errorComm, response) -> {
+            if (isSuccess) {
+                try {
+						String version = response.getString("version");
+						mLatestVersion.setValue(version);
+						Log.d(TAG, "checkLatestVersion: " + version);
+                } catch (JSONException e) {
+						Log.d(TAG, "checkLatestVersion: " + e.getMessage());
+						e.printStackTrace();
+				}
+			} else if (errorLogic != null){
+						Log.d(TAG, "checkLatestVersion: " + errorLogic);
+			} else if (errorComm != null){
+						Log.d(TAG, "checkLatestVersion: " + errorComm);
+			}
+        });
 	}
 
 	public Contact getParticipantContact(String participantId){

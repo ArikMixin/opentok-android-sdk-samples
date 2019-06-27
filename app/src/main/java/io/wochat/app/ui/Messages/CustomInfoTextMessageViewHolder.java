@@ -39,7 +39,6 @@ public class CustomInfoTextMessageViewHolder
     @Override
     public void applyStyle(MessagesListStyle style) {
         super.applyStyle(style);
-
         text.setTextSize(13);
     }
 }

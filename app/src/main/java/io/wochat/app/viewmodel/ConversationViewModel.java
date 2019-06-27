@@ -3,7 +3,6 @@ package io.wochat.app.viewmodel;
 import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -20,18 +19,14 @@ import io.wochat.app.WCRepository;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.ConversationAndItsMessages;
-import io.wochat.app.db.entity.ImageInfo;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.model.ContactOrGroup;
-import io.wochat.app.model.StateData;
 
 public class ConversationViewModel extends AndroidViewModel {
 
 	private static final String TAG = "ConversationViewModel";
 	private final WCRepository mRepository;
 	private final AppExecutors mAppExecutors;
-
-
 
 	public interface ConversationListener{
 		void onConversationResult(Conversation conversation);
@@ -181,6 +176,10 @@ public class ConversationViewModel extends AndroidViewModel {
 		mRepository.clearConversation(conversationId);
 	}
 
+	public void checkLatestVersion() {
+		mRepository.checkLatestVersion();
+	}
+
 
 	public LiveData<List<Message>> getMediaMessagesConversation(String conversationId) {
 		return mRepository.getMediaMessagesConversation(conversationId);
@@ -198,4 +197,11 @@ public class ConversationViewModel extends AndroidViewModel {
 	public LiveData<Contact> getContactByID(String participantId){
 		return mRepository.getContact(participantId);
 	}
+
+	public LiveData<String> getLatestVersion() {
+		return mRepository.getLatestVersion();
+	}
+
+
+
 }
