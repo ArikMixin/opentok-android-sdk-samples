@@ -148,7 +148,7 @@ public class CallActivity extends AppCompatActivity
     private RelativeLayout mParticipantNameRL, mDeclineRL, incomingCallBtnsRL, mConnectingRL;
     private TextView mListeningTV, mConnectingTV;
     private ImageView mArrowsIV;
-    private boolean mPush2talk_locked;
+    private boolean mPush2talk_locked, switchViewsFlag;
     private ImageView mLockIV, mRecordingStateAudioIV, mRecordingStateVideoIV;
     volatile boolean sessitonRecivedFlag;
     private Vibrator vibrator;
@@ -157,9 +157,9 @@ public class CallActivity extends AppCompatActivity
     private Call call;
     private CountDownTimer countDownTimer;
     private boolean mBtnAnimationFired;
+    private long mPrevTouch = 0, mCrrentTouch = 0, mDifTouch = 0;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
-
     public static final int CLOSING_TIME = 3000;
     public static final int SCREEN_MINIMUM_VER = 25;
     public static final String TOK_BOX_APIKEY = "46296242";
@@ -545,7 +545,7 @@ public class CallActivity extends AppCompatActivity
                           hideButtonsAnimation(0,1);
                           mBtnAnimationFired = false;
                     }
-                break;
+            break;
 
         }
     }
@@ -576,10 +576,10 @@ public class CallActivity extends AppCompatActivity
     public boolean onTouch(View view, MotionEvent event) {
         switch(view.getId()){
             case R.id.publisher_fl:
-                publisherWindowTouch(view,event);
+                publisherWindowTouch(view, event);
                 break;
             case R.id.mic_flag_civ:
-                micTranslateTouch(view,event); // Push to talk btn
+                micTranslateTouch(view, event); // Push to talk btn
                 break;
         }
         return true;
@@ -587,13 +587,15 @@ public class CallActivity extends AppCompatActivity
 
     private void  publisherWindowTouch(View view, MotionEvent event){
         switch (event.getAction()) {
-
             case MotionEvent.ACTION_DOWN: //--Hold--
+                mPrevTouch = System.currentTimeMillis() / 1000;
+
                 dX = view.getX() - event.getRawX();
                 dY = view.getY() - event.getRawY();
                 break;
 
             case MotionEvent.ACTION_MOVE:
+
                 view.animate()
                         .x(event.getRawX() + dX)
                         .y(event.getRawY() + dY)
@@ -618,9 +620,47 @@ public class CallActivity extends AppCompatActivity
                         .y(mCornerY)
                         .setDuration(400)
                         .start();
+
+                //Switch different
+                mCrrentTouch = System.currentTimeMillis() / 1000;
+                mDifTouch = mCrrentTouch - mPrevTouch;
+                if (mDifTouch == 0) {
+                    switchPublisherAndSubscriberView();
+                }
                 break;
             default:
         }
+    }
+
+    private void switchPublisherAndSubscriberView() {
+        if(!switchViewsFlag) {
+                    if (mIsVideoCall && Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
+                            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                            mPublisherFL.addView(mSubscriber.getView());
+                            ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                            mSubscriberFL.addView(mPublisher.getView());
+                    } else {
+                            ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                            mSubscriberFL.addView(mPublisher.getView());
+                            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                            mPublisherFL.addView(mSubscriber.getView());
+                    }
+             switchViewsFlag = true;
+        }else{
+                    if (mIsVideoCall && Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
+                            ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                             mPublisherFL.addView(mPublisher.getView());
+                            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                             mSubscriberFL.addView(mSubscriber.getView());
+                    } else {
+                            ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
+                             mSubscriberFL.addView(mSubscriber.getView());
+                            ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                             mPublisherFL.addView(mPublisher.getView());
+                    }
+            switchViewsFlag = false;
+        }
+
     }
 
     private void micTranslateTouch(View view, MotionEvent event) {
@@ -766,14 +806,14 @@ public class CallActivity extends AppCompatActivity
             mTitleTV.setVisibility(View.GONE);
 
             if (mVideoFlag){
-                mPublisherFL.removeView(mPublisher.getView());
-                mPublisherFL.setVisibility(View.GONE);
-                cPipModePublisherFL.setVisibility(View.VISIBLE);
-                cPipModePublisherFL.addView(mPublisher.getView());
-                mMainVideoRL.setVisibility(View.GONE);
+                    mPublisherFL.removeView(mPublisher.getView());
+                    mPublisherFL.setVisibility(View.GONE);
+                    cPipModePublisherFL.setVisibility(View.VISIBLE);
+                    cPipModePublisherFL.addView(mPublisher.getView());
+                    mMainVideoRL.setVisibility(View.GONE);
             }else {
-                mParticipantNameRL.setVisibility(View.GONE);
-                mParticipantLangAudioTV.setVisibility(View.GONE);
+                    mParticipantNameRL.setVisibility(View.GONE);
+                    mParticipantLangAudioTV.setVisibility(View.GONE);
             }
 
         } else {
@@ -795,8 +835,6 @@ public class CallActivity extends AppCompatActivity
         }
     }
 
-
-
     private void cameraBtnAudio() {
         turnCallType(true);
         mCameraBtnVideo.setChecked(false);
@@ -816,7 +854,6 @@ public class CallActivity extends AppCompatActivity
             mSubscriberFL.addView(mSubscriber.getView());
         }
     }
-
 
     private void cameraBtnVideo() {
 
@@ -865,20 +902,16 @@ public class CallActivity extends AppCompatActivity
         if ((mService != null) && (mService.isXmppConnected())){
             mService.sendMessage(message);
         }
-
         if(rtcCode.equals(Message.RTC_CODE_REJECTED)){ //Incoming call rejected - treat it as an incoming call
             callRejectedFlag = true;
             call = new Call(mParticipantId, mParticipantName, mParticipantPic,
                     mParticipantLang, mIsVideoCall, CALL_INCOMING, System.currentTimeMillis(), 0);
             videoAudioCallViewModel.addNewCall(call);
         }
-
         if(rtcCode.equals(Message.RTC_CODE_REJECTED) || rtcCode.equals(Message.RTC_CODE_CLOSE)) {
             finish();
         }
-
     }
-
 
     public void setPhotoByUrl(boolean videoCallFlag){
         if ((mParticipantPic != null) && (!mParticipantPic.trim().equals(""))) {
@@ -894,7 +927,6 @@ public class CallActivity extends AppCompatActivity
         }
     }
 
-
     public void createSessionAndToken(){
 
         if(mIsOutGoingCall)
@@ -902,7 +934,6 @@ public class CallActivity extends AppCompatActivity
         else
              videoAudioCallViewModel.createTokenInExistingSession(this, mSessionID,
                                                   "" + WCRepository.TokenRoleType.PUBLISHER);
-
     }
 
     @Override
