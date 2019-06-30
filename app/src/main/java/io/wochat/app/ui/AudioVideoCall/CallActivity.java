@@ -65,6 +65,7 @@ import io.wochat.app.WCRepository;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleImageView;
 import io.wochat.app.db.entity.Call;
+import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Message;
 import io.wochat.app.model.StateData;
 import io.wochat.app.model.VideoAudioCall;
@@ -100,6 +101,7 @@ public class CallActivity extends AppCompatActivity
     private TextView mTitleTV, mParticipantNameAudioTV, mParticipantLangAudioTV,
             mParticipantNameVideoTV, mParticipantLangVideoTV , mParticipantNumberTV, mStatusTV;
     private Chronometer mTimerChr;
+    private TextView mInitialsAudioTV, mInitialsVideoTV;
     private ImageView mCameraSwitchIV, mTranslatorMicIV, mTranslatorMicP2T_IV;
     private FrameLayout mBackNavigationFL, mCameraPauseFullFL;
     private RelativeLayout mMainAudioRL, mMainVideoRL, mStatusRL, mUserPicAudioRL, mTranslateRL, mLockRL, topSectionRL;
@@ -237,9 +239,8 @@ public class CallActivity extends AppCompatActivity
         mActionBtnsCL = (ConstraintLayout) findViewById(R.id.action_btns_cl);
         mConnectingTV = (TextView) findViewById(R.id.connecting_tv);
         topSectionRL = (RelativeLayout) findViewById(R.id.top_section_rl);
-/*        mRecordingStateAudioIV = (ImageView) findViewById(R.id.recording_state_audio_iv);
-        mRecordingStateVideoIV = (ImageView) findViewById(R.id.recording_state_video_iv);*/
-
+        mInitialsAudioTV = (TextView) findViewById(R.id.initials_audio_tv);
+        mInitialsVideoTV = (TextView) findViewById(R.id.initials_video_tv);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         mIsVideoCall = getIntent().getBooleanExtra(Consts.INTENT_IS_VIDEO_CALL, false);
@@ -915,15 +916,18 @@ public class CallActivity extends AppCompatActivity
 
     public void setPhotoByUrl(boolean videoCallFlag){
         if ((mParticipantPic != null) && (!mParticipantPic.trim().equals(""))) {
-            if(videoCallFlag)
-                Picasso.get().load(mParticipantPic).into(mParticipantPicVideoCIV);
-            else
-                Picasso.get().load(mParticipantPic).into(mParticipantPicAudioCIV);
+                if(videoCallFlag)
+                    Picasso.get().load(mParticipantPic).into(mParticipantPicVideoCIV);
+                else
+                    Picasso.get().load(mParticipantPic).into(mParticipantPicAudioCIV);
         }else{
-            if(videoCallFlag)
-                Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicVideoCIV);
-            else
-                Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicAudioCIV);
+                if(videoCallFlag) {
+                    Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicVideoCIV);
+                    mInitialsVideoTV.setText(Contact.getInitialsFromName(mParticipantName));
+                }else {
+                    Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicAudioCIV);
+                    mInitialsAudioTV.setText(Contact.getInitialsFromName(mParticipantName));
+                }
         }
     }
 

@@ -136,6 +136,21 @@
                     app:civ_border_width="0.1dp"
 
                     />
+
+
+                <TextView
+                    android:id="@+id/initials_video_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:paddingBottom="10dp"
+                    android:textColor="@color/white"
+                    android:layout_centerInParent="true"
+                    android:elevation="8dp"
+                    />
+
             </RelativeLayout>
 
         <!--    <ImageView
@@ -282,8 +297,21 @@
                     android:src="@color/blue"
                     app:civ_border_color="@color/warm_grey"
                     app:civ_border_overlay="true"
-                    app:civ_border_width="0.1dp" />
+                    app:civ_border_width="0.1dp"
+                    />
 
+                <TextView
+                    android:id="@+id/initials_audio_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="30dp"
+                    android:textStyle="bold"
+                    android:paddingBottom="10dp"
+                    android:textColor="@color/white"
+                    android:layout_centerInParent="true"
+                    android:elevation="8dp"
+                    />
 
 
                 <io.wochat.app.components.CircleImageView
