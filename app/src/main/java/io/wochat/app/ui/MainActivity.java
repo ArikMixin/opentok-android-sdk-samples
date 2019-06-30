@@ -646,7 +646,7 @@ public class MainActivity extends AppCompatActivity {
 		mUpdatebuilder.setNegativeButton("Cancel", (dialog, which) -> finishAndRemoveTask());
 		mUpdatebuilder.setCancelable(false);
 		if ((mUpdateDialog == null) || !mUpdateDialog.isShowing())
-		mUpdateDialog = mUpdatebuilder.show();
+			mUpdateDialog = mUpdatebuilder.show();
 	}
 
 }
