@@ -21,7 +21,7 @@ public class WCSharedPreferences {
 	private static final String USER_PROFILE_PIC_URL = "USER_PROFILE_PIC_URL";
 	private static final String USER_PROFILE_THUMB_URL = "USER_PROFILE_THUMB_URL";
 	private static final String USER_PROFILE_PIC = "USER_PROFILE_PIC";
-
+	private static final String GET_FIRST_TIME_ENTER = "GET_FIRST_TIME_ENTER";
 
 	private static WCSharedPreferences mInstance;
 	private String mUserId;
@@ -151,4 +151,14 @@ public class WCSharedPreferences {
 		return Utils.stringToByteArrayImage(encodedString);
 	}
 
+	public void saveFirstEnterMillis(long currentTime) {
+		mSharedPreferences.edit().
+				putLong(GET_FIRST_TIME_ENTER, currentTime).
+				commit();
+	}
+
+	public long geFirstEnterMillis() {
+
+			return  mSharedPreferences.getLong(GET_FIRST_TIME_ENTER, -1);
+	}
 }

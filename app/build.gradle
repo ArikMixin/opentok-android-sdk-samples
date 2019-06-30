@@ -95,7 +95,11 @@ dependencies {
         transitive = true;
     }
 
-//    TokBox
+    //TokBox
     implementation 'com.opentok.android:opentok-android-sdk:2.15.3'
     implementation 'pub.devrel:easypermissions:0.4.0'
+
+    //Rating Dialog
+    implementation 'com.codemybrainsout.rating:ratingdialog:1.0.8'
+
 }

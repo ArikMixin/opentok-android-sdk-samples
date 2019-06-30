@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -33,11 +34,16 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.codemybrainsout.ratingdialog.RatingDialog;
 import com.google.firebase.iid.FirebaseInstanceId;
+
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import io.wochat.app.R;
 import io.wochat.app.WCService;
 import io.wochat.app.components.BadgedTabLayout;
+import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.User;
 import io.wochat.app.ui.Contact.ContactMultiSelectorActivity;
@@ -66,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 	private static final String TAG = "MainActivity";
+	public static final String PLAY_STORE_URL = "market://details?id=io.wochat.app";
 	private static final int REQUEST_CONTACT_SELECTOR = 1;
 	private static final int REQUEST_SELECT_CAMERA_PHOTO = 2;
 	private static final int REQUEST_SELECT_CONTACTS_MULTI = 3;
@@ -95,11 +102,15 @@ public class MainActivity extends AppCompatActivity {
 	private String mCurrentVersion;
 	private AlertDialog mUpdateDialog = null;
 	private AlertDialog.Builder mUpdatebuilder;
+	private WCSharedPreferences mSharedPreferences;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		mSharedPreferences = WCSharedPreferences.getInstance(this);
+		ratingDialog();
 
 		String token = FirebaseInstanceId.getInstance().getToken();
 		Log.e(TAG, "Firebase token: " + token);
@@ -639,7 +650,7 @@ public class MainActivity extends AppCompatActivity {
 		mUpdatebuilder.setTitle("Update Required");
 		mUpdatebuilder.setMessage("WoChat is out of date. Please visit the Google Play Store to update to the latest version");
 		mUpdatebuilder.setPositiveButton("Update", (dialog, which) -> {
-			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=io.wochat.app")));
+			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_URL)));
 			dialog.dismiss();
 		});
 
@@ -649,4 +660,26 @@ public class MainActivity extends AppCompatActivity {
 							mUpdateDialog = mUpdatebuilder.show();
 	}
 
+	private void ratingDialog() {
+		///Reset session (For Tests)
+//		SharedPreferences aa =  getSharedPreferences("RatingDialog", Context.MODE_PRIVATE);
+//		aa.edit().clear().apply();
+
+		//Wait 1 day in the first apps enter start session counting (In order not to nag at the user)
+		if(mSharedPreferences.geFirstEnterMillis() == -1) {
+			mSharedPreferences.saveFirstEnterMillis(System.currentTimeMillis()); // Save first enter time
+		}else {
+			if (System.currentTimeMillis() < mSharedPreferences.geFirstEnterMillis() + TimeUnit.DAYS.toMillis(1))
+												return;
+		}
+		//Start rating dialog process
+		RatingDialog ratingDialog = new RatingDialog.Builder(this)
+				.threshold(3) // Only if user rate the app 4-5 , we open the activity - if user rate 1-3 - we open feedback form
+				.session(5) // After 5 entry to app - show the dialog - if user click later - the session will start counting 5 times
+				.title("How was your experience with WoChat?")
+				.playstoreUrl(PLAY_STORE_URL)
+				.build();
+		ratingDialog.show();
+
+	}
 }
