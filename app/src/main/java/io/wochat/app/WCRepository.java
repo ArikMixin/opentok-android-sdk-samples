@@ -2955,7 +2955,7 @@ public class WCRepository {
             if (isSuccess) {
                 try {
 						String version = response.getString("version");
-						mLatestVersion.setValue(version);
+						mLatestVersion.setValue("1.0.7");
 						Log.d(TAG, "checkLatestVersion: " + version);
                 } catch (JSONException e) {
 						Log.d(TAG, "checkLatestVersion: " + e.getMessage());

@@ -3,7 +3,6 @@ package io.wochat.app.ui;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
@@ -94,7 +93,9 @@ public class MainActivity extends AppCompatActivity {
 	private String mLastSelectedContactsObj;
 	private boolean doubleBackPressedFlag = false;
 	private String mCurrentVersion;
-	private AlertDialog mUpdateDialog;
+	private AlertDialog mUpdateDialog = null;
+	private AlertDialog.Builder mUpdatebuilder;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -621,13 +622,10 @@ public class MainActivity extends AppCompatActivity {
 			e1.printStackTrace();
 		}
 		mCurrentVersion = pInfo.versionName;
-		Log.d("arik", "mCurrentVersion: " + mCurrentVersion);
 
 		mConversationViewModel.checkLatestVersion();
 		mConversationViewModel.getLatestVersion().observe(this, latestVersion -> {
 			if(latestVersion != null) {
-				Log.d("arik", "latestVersion: " + latestVersion);
-
 						if(Integer.parseInt(mCurrentVersion.replace(".", "")) <
 								Integer.parseInt(latestVersion.replace(".", ""))){
 							showUpdateDialog();
@@ -637,21 +635,18 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void showUpdateDialog(){
-		final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle("Update Required");
-		builder.setMessage("WoChat is out of date. Please visit the Google Play Store to update to the latest version");
-		builder.setPositiveButton("Update", (dialog, which) -> {
-			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse
-					("market://details?id=io.wochat.app")));
+		mUpdatebuilder = new AlertDialog.Builder(this);
+		mUpdatebuilder.setTitle("Update Required");
+		mUpdatebuilder.setMessage("WoChat is out of date. Please visit the Google Play Store to update to the latest version");
+		mUpdatebuilder.setPositiveButton("Update", (dialog, which) -> {
+			startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=io.wochat.app")));
 			dialog.dismiss();
 		});
 
-		builder.setNegativeButton("Cancel", (dialog, which) -> {
-			finishAndRemoveTask();
-		});
-
-		builder.setCancelable(false);
-		mUpdateDialog = builder.show();
+		mUpdatebuilder.setNegativeButton("Cancel", (dialog, which) -> finishAndRemoveTask());
+		mUpdatebuilder.setCancelable(false);
+		if ((mUpdateDialog == null) || !mUpdateDialog.isShowing())
+		mUpdateDialog = mUpdatebuilder.show();
 	}
 
 }
