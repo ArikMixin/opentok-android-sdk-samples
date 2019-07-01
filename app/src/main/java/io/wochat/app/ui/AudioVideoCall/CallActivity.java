@@ -28,12 +28,15 @@ import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.util.Rational;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.ScaleAnimation;
 import android.view.animation.TranslateAnimation;
@@ -41,6 +44,7 @@ import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -160,6 +164,8 @@ public class CallActivity extends AppCompatActivity
     private CountDownTimer countDownTimer;
     private boolean mBtnAnimationFired;
     private long mPrevTouch = 0, mCrrentTouch = 0, mDifTouch = 0;
+
+    public static boolean activityActiveFlag;
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
     public static final int CLOSING_TIME = 3000;
@@ -169,8 +175,8 @@ public class CallActivity extends AppCompatActivity
     public static final int RC_VIDEO_APP_PERM = 124;
     public static final int MIN_DISTANCE = 500;
     public static final int ANIMATION_DURATION = 500;
-    public static final int BTN_HIDE_ANIMATION_DURATION = 500;
-    public static boolean activityActiveFlag;
+    public static final int BTN_HIDE_ANIMATION_DURATION = 400;
+    public static final int WAIT_UNTIL_ADD_VIEW  = 2300;
 
     public static final String CALL_MISSED  = "CALL_MISSED";
     public static final String CALL_INCOMING  = "CALL_INCOMING";
@@ -198,7 +204,7 @@ public class CallActivity extends AppCompatActivity
         mTitleTV = (TextView) findViewById(R.id.title_tv);
         mCameraSwitchIV = (ImageView) findViewById(R.id.camera_switch_iv);
         mBackNavigationFL = (FrameLayout) findViewById(R.id.back_navigation_fl);
-        mEffectFL = (FrameLayout) findViewById(R.id.effect_fl);
+//        mEffectFL = (FrameLayout) findViewById(R.id.effect_fl);
         mParticipantNameAudioTV = (TextView) findViewById(R.id.participant_name_audio_tv);
         mParticipantLangAudioTV = (TextView) findViewById(R.id.participant_lang_audio_tv);
         mParticipantNumberTV = (TextView) findViewById(R.id.participant_number_audio_tv);
@@ -257,6 +263,10 @@ public class CallActivity extends AppCompatActivity
 //      mSelfPicUrl = getIntent().getStringExtra(Consts.INTENT_SELF_PIC_URL);
         mIsOutGoingCall = getIntent().getBooleanExtra(Consts.OUTGOING_CALL_FLAG,true);
 
+        //Get The Screen Sizes
+         screenHeight = getResources().getDisplayMetrics().heightPixels;
+         screenWidth = getResources().getDisplayMetrics().widthPixels;
+
         mSubscriberFL.setEnabled(false);
 
         startMissedCallTimer();
@@ -294,9 +304,15 @@ public class CallActivity extends AppCompatActivity
                     mParticipantLangAudioTV.toString());
         mParticipantNumberTV.setText(mFixedParticipantId);
 
-        //Get The Screen Sizes
-        screenHeight = getResources().getDisplayMetrics().heightPixels;
-        screenWidth = getResources().getDisplayMetrics().widthPixels;
+//        mPublisherFL.setY((screenHeight - mPublisherFL.getHeight() -125));
+
+//        mPublisherFL.animate()
+//                .x(25)
+//                .y(screenHeight - mPublisherFL.getHeight() -125)
+//                .setDuration(0)
+//                .start();
+
+
 
         /**Sounds (ringing etc.) initialization**/
         mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
@@ -587,6 +603,7 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void  publisherWindowTouch(View view, MotionEvent event){
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: //--Hold--
                 mPrevTouch = System.currentTimeMillis() / 1000;
@@ -605,24 +622,24 @@ public class CallActivity extends AppCompatActivity
                 break;
 
             case MotionEvent.ACTION_UP: //--Release--
-
                 if(event.getRawX() < screenWidth / 2)
-                    mCornerX = 25;
+                    mCornerX = -screenWidth * 0.3f;
                 else
-                    mCornerX = screenWidth - view.getWidth() -25; //  - 450
+                    mCornerX = screenWidth * 0.3f;
 
                 if(event.getRawY() < screenHeight / 2)
-                    mCornerY = 25;
+                    mCornerY = -screenHeight * 0.35f;
                 else
-                    mCornerY = screenHeight - view.getHeight() -125; // 900
+                    mCornerY = screenHeight * 0.35f;
 
-                view.animate()
+                 view.animate()
                         .x(mCornerX)
                         .y(mCornerY)
+                        .scaleX(0.3f).scaleY(0.25f)
                         .setDuration(400)
                         .start();
 
-                //Switch different
+                //Switch time different calculation short click - switch views
                 mCrrentTouch = System.currentTimeMillis() / 1000;
                 mDifTouch = mCrrentTouch - mPrevTouch;
                 if (mDifTouch == 0) {
@@ -635,7 +652,7 @@ public class CallActivity extends AppCompatActivity
 
     private void switchPublisherAndSubscriberView() {
         if(!switchViewsFlag) {
-                    if (mIsVideoCall && Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
+                    if (Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
                             ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
                             mPublisherFL.addView(mSubscriber.getView());
                             ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
@@ -648,7 +665,7 @@ public class CallActivity extends AppCompatActivity
                     }
              switchViewsFlag = true;
         }else{
-                    if (mIsVideoCall && Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
+                    if (Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
                             ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
                              mPublisherFL.addView(mPublisher.getView());
                             ((ViewGroup) mSubscriber.getView().getParent()).removeView(mSubscriber.getView());
@@ -1274,9 +1291,6 @@ public class CallActivity extends AppCompatActivity
                 mSession.publish(mPublisher);
 
 
-                if (mIsVideoCall && Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER){
-                         animateAndAddView();
-                }
 
                 if (mSubscriber == null) {
                     mSubscriber = new Subscriber.Builder(CallActivity.this, mStream).build();
@@ -1285,41 +1299,47 @@ public class CallActivity extends AppCompatActivity
                     mSession.subscribe(mSubscriber);
 
                     //Hide the connection layout and start mTimerChr
-                    mActionBtnsCL.setVisibility(View.VISIBLE);
-                    mConnectingRL.setVisibility(View.GONE);
-                    mCallTXTanima.cancel();
-
-                    if(mIsVideoCall)
-                        mSubscriberFL.addView(mSubscriber.getView());
-
-                    //Set Publisher
-                    //*** Show the receiver video (Small Windows) Only for video calls
-                    if(mIsVideoCall && Build.VERSION.SDK_INT >= CallActivity.SCREEN_MINIMUM_VER) {
-                        animateAndAddView();
-                    }
+//                    mActionBtnsCL.setVisibility(View.VISIBLE);
+//                    mConnectingRL.setVisibility(View.GONE);
 
                     //Wait 2 seconds because of the api black screen - and then start timer and sent massage to caller
                     new Handler().postDelayed(() -> {
-                        mTimerChr.setVisibility(View.VISIBLE);
-                        mTimerChr.setBase(SystemClock.elapsedRealtime());
-                        mTimerChr.start();
 
-                        //enable hide animation only if call started;
-                        if(mVideoFlag)
-                            mSubscriberFL.setEnabled(true);
+
+                        mCallTXTanima.cancel();
+                        mActionBtnsCL.setVisibility(View.VISIBLE);
+                        mConnectingRL.setVisibility(View.GONE);
 
                         // Close & Open Camera button visible only after call started ( Timer Starts )
                         mCameraBtnAudio.setVisibility(View.VISIBLE);
                         mCameraBtnVideo.setVisibility(View.VISIBLE);
 
+                        // Timer
+                        mTimerChr.setVisibility(View.VISIBLE);
+                        mTimerChr.setBase(SystemClock.elapsedRealtime());
+                        mTimerChr.start();
+
+                        //If video show add views add make the animation
+                        if(mIsVideoCall) {
+//                                 mSubscriberFL.addView(mSubscriber.getView());
+                            //*** Show the receiver video (Small Windows) Only for video calls
+                                animateAndAddView();
+                        }
+
+                        //enable hide animation only if call started;
+                        if(mVideoFlag)
+                            mSubscriberFL.setEnabled(true);
+
+
+
                         sendXMPPmsg(Message.RTC_CODE_ANSWER, "",false);
                         if(!mIsVideoCall)
                               AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
-                    }, 2000);
+                    }, WAIT_UNTIL_ADD_VIEW);
 
-                    //Show inside a call btns
-                    mCameraBtnVideo.setVisibility(View.VISIBLE);
-                    mInsideCallBtnsCL.setVisibility(View.VISIBLE);
+//                    //Show inside a call btns
+//                    mCameraBtnVideo.setVisibility(View.VISIBLE);
+//                    mInsideCallBtnsCL.setVisibility(View.VISIBLE);
                     if(mIsVideoCall)
                         mCameraSwitchIV.setVisibility(View.VISIBLE);
                 }
@@ -1348,25 +1368,31 @@ public class CallActivity extends AppCompatActivity
 
         if(mIsOutGoingCall) {
                         //*** Show the receiver video (Small Windows) Only for video calls
-                        if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER)
-                                 animateAndAddView();
+//                        if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER)
+//                                 animateAndAddView();
 
                         if (mSubscriber == null) {
-                                mSubscriber = new Subscriber.Builder(CallActivity.this, stream).build();
-                                mSubscriber.setVideoListener(CallActivity.this);
-                                mSession.subscribe(mSubscriber);
+                            mSubscriber = new Subscriber.Builder(CallActivity.this, stream).build();
+                            mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+                            mSubscriber.setVideoListener(CallActivity.this);
+                            mSession.subscribe(mSubscriber);
 
-                                //Show the caller video (full screen) Only for video calls
+                            //Show the caller video (full screen) Only for video calls
+//                                if (mIsVideoCall) {
+//                                    mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
+//                                                                                        BaseVideoRenderer.STYLE_VIDEO_FILL);
+//                                    mSubscriberFL.addView(mSubscriber.getView());
+//                                }
+//
+//                                //*** Show the receiver video (Small Windows) Only for video calls
+////                                if (mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER)
+
                                 if (mIsVideoCall) {
-                                    mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                                                                                        BaseVideoRenderer.STYLE_VIDEO_FILL);
-                                    mSubscriberFL.addView(mSubscriber.getView());
+                                    new Handler().postDelayed(() -> {
+                                        animateAndAddView();
+                                    }, WAIT_UNTIL_ADD_VIEW);
                                 }
-
-                                //*** Show the receiver video (Small Windows) Only for video calls
-                                if (mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER)
-                                animateAndAddView();
-                         }
+                        }
         }else{
                             this.mStream = stream;
                             sessitonRecivedFlag = true;
@@ -1375,28 +1401,36 @@ public class CallActivity extends AppCompatActivity
 
     private void animateAndAddView(){
 
-        mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-        ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
-        mPublisherFL.addView(mPublisher.getView());
-        mPublisherFL.setVisibility(View.VISIBLE);
+        float y_temp = screenHeight * 0.35f;
 
-     /*          mEffectFL.animate()
-                       //.setStartDelay(2000)
-                       .scaleX(0.3f).scaleY(0.3f)//scale to quarter(half x,half y)
-                       .translationY((mEffectFL.getHeight()/4 + 225)).translationX((-mEffectFL.getWidth()/4 -120))// move to bottom / right
-                       .alpha(1) // make it less visible
-                       .setDuration(800)
-                       .withEndAction(() -> {
-                              mEffectFL.setVisibility(View.VISIBLE);
-                               mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-                               ((ViewGroup)mPublisher.getView().getParent()).removeView(mPublisher.getView());
-                               mPublisherFL.addView(mPublisher.getView());
-                               mPublisherFL.setVisibility(View.VISIBLE);
+        if (Build.VERSION.SDK_INT < CallActivity.SCREEN_MINIMUM_VER) {
+                    ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                    mPublisherFL.addView(mPublisher.getView());
 
-                           Log.d("tigtog", "after: " + mEffectFL.getWidth());
-                       });*/
+                    mSubscriberFL.addView(mSubscriber.getView());
+
+                    // TODO: 7/1/2019 - old versions of android problems (Animation and window not work perfectly
+                    //************************************************************************************
+                    mPublisherFL.setLayoutParams(new ConstraintLayout.LayoutParams(320, 420));
+                     y_temp += 220;
+                   //************************************************************************************
+        }else {
+                    mSubscriberFL.addView(mSubscriber.getView());
+
+                    ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
+                    mPublisherFL.addView(mPublisher.getView());
+        }
+
+      mPublisherFL.setVisibility(View.VISIBLE);
+      mPublisherFL.animate()
+                       .x((-screenWidth * 0.3f))
+                        .y((y_temp))
+                       .scaleX(0.3f).scaleY(0.25f)//scale to quarter(half x,half y)
+                       .alpha(1F) // make it less visible
+                       .setDuration(400)
+                     //  .withEndAction(() -> { })
+                       .start();
     }
-
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Dropped");
