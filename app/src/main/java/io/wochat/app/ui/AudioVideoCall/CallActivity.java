@@ -374,18 +374,6 @@ public class CallActivity extends AppCompatActivity
             audioCall();
     }
 
-    @Override
-    protected void onResume() {
-        Log.d("arik", "onResume: ");
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d("arik", "onResume: ");
-        super.onPause();
-    }
-
     private void outGoingCall() {
         mIsOutGoingCall = true;
         mInsideCallBtnsCL.setVisibility(View.VISIBLE);

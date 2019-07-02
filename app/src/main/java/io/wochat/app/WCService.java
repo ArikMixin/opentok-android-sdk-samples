@@ -54,6 +54,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	private AppObserverBR mAppObserverBR;
 	private AppExecutors mAppExecutors;
 	private String mCurrentConversationId;
+	private String pass;
 //	private WCDatabase mDatabase;
 //	private ConversationDao mConversationDao;
 //	private MessageDao mMessageDao;
@@ -70,7 +71,18 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	@Override
 	public boolean onUnbind(Intent intent) {
 		Log.e(TAG, "WC Service onUnbind");
+
+		if(pass == null)
+				 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
+			mXMPPProvider.initAsync(mSelfUserId, pass);
+			init();
+
 		return super.onUnbind(intent);
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		return START_STICKY;
 	}
 
 	private boolean isMessageOfUserNotificationType(Message message){
@@ -91,6 +103,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	@Override
 	public void onNewIncomingMessage(String msg, String conversationId) {
+
+		Log.d("arik", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
 		try {
 			Message message = Message.fromJson(msg);
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
@@ -212,6 +227,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	public class WCBinder extends Binder {
 		public WCService getService() {
+			Log.d("arik", "WCBinder: ");
 			Log.e(TAG, "WC Service Binder getService");
 			init(); // in case was not init
 			return WCService.this;
@@ -236,7 +252,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		}
 	}
 
-
 	private void init() {
 		Log.e(TAG, "init");
 		if ((mSelfUserId != null)&& (mXMPPProvider != null)) {
@@ -253,7 +268,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			return;
 		}
 
-		String pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
+		 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
 		mXMPPProvider = ((WCApplication)getApplication()).getXMPPProvider();
 		mRepository = ((WCApplication)getApplication()).getRepository();
 
