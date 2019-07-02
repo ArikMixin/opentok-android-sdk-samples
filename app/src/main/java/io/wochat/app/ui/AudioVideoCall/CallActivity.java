@@ -374,6 +374,18 @@ public class CallActivity extends AppCompatActivity
             audioCall();
     }
 
+    @Override
+    protected void onResume() {
+        Log.d("arik", "onResume: ");
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d("arik", "onResume: ");
+        super.onPause();
+    }
+
     private void outGoingCall() {
         mIsOutGoingCall = true;
         mInsideCallBtnsCL.setVisibility(View.VISIBLE);
@@ -777,7 +789,7 @@ public class CallActivity extends AppCompatActivity
         aspectRatio = new Rational(1, 2);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                 getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)){
-            pip_params = new PictureInPictureParams.Builder()
+                pip_params = new PictureInPictureParams.Builder()
                     .setAspectRatio(aspectRatio)
                     .build();
             setPictureInPictureParams(pip_params);
@@ -791,7 +803,7 @@ public class CallActivity extends AppCompatActivity
     public void onUserLeaveHint () {
         // Minimize fetchers work only from android 7 - (24)
         if (callStartedFlag) {
-            minimizeActivity();
+                minimizeActivity();
         }
     }
 
@@ -806,45 +818,51 @@ public class CallActivity extends AppCompatActivity
             CallActivity.this.enterPictureInPictureMode();
 
         //else -
-        // TODO: 5/30/2019 Create minimize feature for versions older than android 7
+        // TODO: 5/30/2019 Create minimize feature for versions older than android 7 (24)
     }
 
     @Override
     public void onPictureInPictureModeChanged (boolean isInPictureInPictureMode, Configuration newConfig) {
 
-        if (isInPictureInPictureMode) {
-            // Hide the full-screen UI - (picture-in-picture mode)
-            mInsideCallBtnsCL.setVisibility(View.GONE);
-            mBackNavigationFL.setVisibility(View.GONE);
-            mTitleTV.setVisibility(View.GONE);
+        //Close the call (finish) if user drag the pip window ("drag down to dismiss")
+        if(newConfig.screenWidthDp == 220) {
+            finish();
+                return;
+        }
 
-            if (mVideoFlag){
-                    mPublisherFL.removeView(mPublisher.getView());
-                    mPublisherFL.setVisibility(View.GONE);
-                    cPipModePublisherFL.setVisibility(View.VISIBLE);
-                    cPipModePublisherFL.addView(mPublisher.getView());
-                    mMainVideoRL.setVisibility(View.GONE);
-            }else {
-                    mParticipantNameRL.setVisibility(View.GONE);
-                    mParticipantLangAudioTV.setVisibility(View.GONE);
-            }
+        if (isInPictureInPictureMode) {
+                    // Hide the full-screen UI - (picture-in-picture mode)
+                    mInsideCallBtnsCL.setVisibility(View.GONE);
+                    mBackNavigationFL.setVisibility(View.GONE);
+                    mTitleTV.setVisibility(View.GONE);
+
+                    if (mVideoFlag){
+                            mPublisherFL.removeView(mPublisher.getView());
+                            mPublisherFL.setVisibility(View.GONE);
+                            cPipModePublisherFL.setVisibility(View.VISIBLE);
+                            cPipModePublisherFL.addView(mPublisher.getView());
+                            mMainVideoRL.setVisibility(View.GONE);
+                    }else{
+                            mParticipantNameRL.setVisibility(View.GONE);
+                            mParticipantLangAudioTV.setVisibility(View.GONE);
+                    }
 
         } else {
-            // Restore the full-screen UI.
-            mInsideCallBtnsCL.setVisibility(View.VISIBLE);
-            mBackNavigationFL.setVisibility(View.VISIBLE);
-            mTitleTV.setVisibility(View.VISIBLE);
+                    // Restore the full-screen UI.
+                    mInsideCallBtnsCL.setVisibility(View.VISIBLE);
+                    mBackNavigationFL.setVisibility(View.VISIBLE);
+                    mTitleTV.setVisibility(View.VISIBLE);
 
-            if(mVideoFlag) {
-                mMainVideoRL.setVisibility(View.VISIBLE);
-                cPipModePublisherFL.removeView(mPublisher.getView());
-                cPipModePublisherFL.setVisibility(View.GONE);
-                mPublisherFL.setVisibility(View.VISIBLE);
-                mPublisherFL.addView(mPublisher.getView());
-            }else{
-                mParticipantNameRL.setVisibility(View.VISIBLE);
-                mParticipantLangAudioTV.setVisibility(View.VISIBLE);
-            }
+                    if(mVideoFlag) {
+                        mMainVideoRL.setVisibility(View.VISIBLE);
+                        cPipModePublisherFL.removeView(mPublisher.getView());
+                        cPipModePublisherFL.setVisibility(View.GONE);
+                        mPublisherFL.setVisibility(View.VISIBLE);
+                        mPublisherFL.addView(mPublisher.getView());
+                    }else{
+                        mParticipantNameRL.setVisibility(View.VISIBLE);
+                        mParticipantLangAudioTV.setVisibility(View.VISIBLE);
+                    }
         }
     }
 
