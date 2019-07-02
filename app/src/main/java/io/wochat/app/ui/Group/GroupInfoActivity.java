@@ -335,13 +335,16 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 					break;
 				case R.id.view_member_ll:
 					Intent intent = new Intent(GroupInfoActivity.this, ContactInfoActivity.class);
-					intent.putExtra(Consts.INTENT_PARTICIPANT_ID, gmc.getGroupMember().getUserId());
-					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_ID,gmc.getContact().getContactId());
+					intent.putExtra(Consts.INTENT_CONVERSATION_ID, Conversation.getConversationId(mSelfId, gmc.getContact().getContactId()));
 					intent.putExtra(Consts.INTENT_PARTICIPANT_NAME,  gmc.getContact().getDisplayName());
 					intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, gmc.getContact().getLanguage());
 					intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, gmc.getContact().getAvatar());
-//					intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
-//					intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, gmc.getContact().toJson());
+					intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+					intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
+					intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
+					intent.putExtra(Consts.INTENT_OPENED_FROM_CONVERSATION, false);
 					startActivity(intent);
 
 					break;

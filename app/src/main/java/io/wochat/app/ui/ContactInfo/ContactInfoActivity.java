@@ -1,15 +1,13 @@
 package io.wochat.app.ui.ContactInfo;
 
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -19,9 +17,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber;
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.utils.DateFormatter;
 
@@ -29,11 +24,12 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import io.wochat.app.R;
-import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.ui.Consts;
-import io.wochat.app.ui.RecentChats.RecentChatsViewHolder;
+import io.wochat.app.ui.Group.GroupInfoActivity;
+import io.wochat.app.ui.Messages.ConversationActivity;
 import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
 
@@ -59,6 +55,11 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 	private String mParticipantName;
 	private String mParticipantLang;
 	private String mParticipantPic;
+	private String mSelfId;
+	private String mSelfLang;
+	private String mSelfName;
+	private String mContactString;
+	private boolean mOpendFromConv;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +94,12 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 		mParticipantName = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
 		mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
 		mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
+		mSelfId = getIntent().getStringExtra(Consts.INTENT_SELF_ID);
+		mSelfLang = getIntent().getStringExtra(Consts.INTENT_SELF_LANG);
+		mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
+		mSelfName = getIntent().getStringExtra(Consts.INTENT_SELF_NAME);
+		mContactString = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
+		mOpendFromConv = getIntent().getBooleanExtra(Consts.INTENT_OPENED_FROM_CONVERSATION, false);
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 
@@ -189,7 +196,10 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 		switch (v.getId()){
 
 			case R.id.message_iv:
-				finish();
+					if(mOpendFromConv)
+							finish();
+					else
+							openConversationActivity();
 				break;
 
 			case R.id.call_iv:
@@ -233,17 +243,30 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 	private void openCallActivity(boolean isVideoCall){
 		if(CallActivity.activityActiveFlag)
 			return; // Prevent multi open
-
 		Intent intent = new Intent(this, CallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, mParticipantName);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, mParticipantLang);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, mParticipantPic);
 		intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
-		intent.putExtra(Consts.INTENT_SELF_ID, WCSharedPreferences.getInstance(this).getUserId());
-		intent.putExtra(Consts.INTENT_SELF_LANG, WCSharedPreferences.getInstance(this).getUserLang());
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
 		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideoCall);
 		intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
+		startActivity(intent);
+	}
+
+	private void openConversationActivity() {
+		Intent intent = new Intent(this, ConversationActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, mParticipantName);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, mParticipantLang);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, mParticipantPic);
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ, mContactString);
+		intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
+		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
 		startActivity(intent);
 	}
 }

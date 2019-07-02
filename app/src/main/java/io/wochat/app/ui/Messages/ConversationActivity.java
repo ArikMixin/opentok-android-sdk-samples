@@ -72,11 +72,9 @@ import java.util.List;
 import java.util.Locale;
 
 import io.wochat.app.R;
-import io.wochat.app.WCRepository;
 import io.wochat.app.WCService;
 import io.wochat.app.components.CircleFlagImageView;
 import io.wochat.app.components.MessageReplyLayout;
-import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Contact;
 import io.wochat.app.db.entity.Conversation;
 import io.wochat.app.db.entity.GroupMember;
@@ -2206,8 +2204,8 @@ public class ConversationActivity extends PermissionActivity implements
 					Intent intent = new Intent(this, GroupInfoActivity.class);
 					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
 					intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
-					intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
 					intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
+					intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
 					startActivity(intent);
 				}
 				else {
@@ -2219,6 +2217,11 @@ public class ConversationActivity extends PermissionActivity implements
 					intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, mParticipantPic);
 					intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
 					intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
+					intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+					intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
+					intent.putExtra(Consts.INTENT_SELF_NAME, mSelfName);
+
+					intent.putExtra(Consts.INTENT_OPENED_FROM_CONVERSATION, true);
 					startActivity(intent);
 				}
 		}
@@ -2234,8 +2237,8 @@ public class ConversationActivity extends PermissionActivity implements
 					intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, mParticipantLang);
 					intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, mParticipantPic);
 					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
-					intent.putExtra(Consts.INTENT_SELF_ID, WCSharedPreferences.getInstance(this).getUserId());
-					intent.putExtra(Consts.INTENT_SELF_LANG, WCSharedPreferences.getInstance(this).getUserLang());
+					intent.putExtra(Consts.INTENT_SELF_ID, mSelfId);
+					intent.putExtra(Consts.INTENT_SELF_LANG, mSelfLang);
 					intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideo);
 					intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
 					startActivity(intent);
