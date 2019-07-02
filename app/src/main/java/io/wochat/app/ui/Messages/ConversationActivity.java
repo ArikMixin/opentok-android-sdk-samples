@@ -257,6 +257,7 @@ public class ConversationActivity extends PermissionActivity implements
 		mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
 		mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
 		mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+
 		String conversationString = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_OBJ);
 		if (Utils.isNotNullAndNotEmpty(conversationString)){
 			mConversation = Conversation.fromJson(conversationString);
@@ -2213,6 +2214,9 @@ public class ConversationActivity extends PermissionActivity implements
 					Intent intent = new Intent(this, ContactInfoActivity.class);
 					intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
 					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, mParticipantName);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, mParticipantLang);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, mParticipantPic);
 					intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
 					intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
 					startActivity(intent);

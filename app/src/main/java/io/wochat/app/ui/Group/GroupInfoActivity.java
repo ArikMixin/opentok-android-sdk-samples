@@ -337,6 +337,11 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 					Intent intent = new Intent(GroupInfoActivity.this, ContactInfoActivity.class);
 					intent.putExtra(Consts.INTENT_PARTICIPANT_ID, gmc.getGroupMember().getUserId());
 					intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+					intent.putExtra(Consts.INTENT_PARTICIPANT_NAME,  gmc.getContact().getDisplayName());
+					intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, gmc.getContact().getLanguage());
+					intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, gmc.getContact().getAvatar());
+//					intent.putExtra(Consts.INTENT_LAST_ONLINE, mLastOnlineTime);
+//					intent.putExtra(Consts.INTENT_IS_ONLINE, mIsOnline);
 					startActivity(intent);
 
 					break;

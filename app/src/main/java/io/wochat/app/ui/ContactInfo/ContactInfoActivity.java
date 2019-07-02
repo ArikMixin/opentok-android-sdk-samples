@@ -29,8 +29,11 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import io.wochat.app.R;
+import io.wochat.app.db.WCSharedPreferences;
 import io.wochat.app.db.entity.Contact;
+import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.ui.Consts;
+import io.wochat.app.ui.RecentChats.RecentChatsViewHolder;
 import io.wochat.app.viewmodel.ContactViewModel;
 import io.wochat.app.viewmodel.ConversationViewModel;
 
@@ -53,6 +56,9 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 	private boolean mParticipantIsOnline;
 	private ConversationViewModel mConversationViewModel;
 	private String mConversationId;
+	private String mParticipantName;
+	private String mParticipantLang;
+	private String mParticipantPic;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,14 +69,11 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 		mToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
-
 		mDeleteConversationLL = (LinearLayout)findViewById(R.id.delete_conversation_ll);
 		mMediaLL = (LinearLayout)findViewById(R.id.media_ll);
-
 		mStatusTV = (TextView)findViewById(R.id.status_tv);
 		mLastOnlineTV = (TextView)findViewById(R.id.last_online_tv);
 		mPhoneNumTV = (TextView)findViewById(R.id.phone_num_tv);
-
 		mMessageIV = (ImageView)findViewById(R.id.message_iv);
 		mCallIV = (ImageView)findViewById(R.id.call_iv);
 		mVideoIV = (ImageView)findViewById(R.id.video_iv);
@@ -81,15 +84,15 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 		mMediaLL.setOnClickListener(this);
 		mDeleteConversationLL.setOnClickListener(this);
 
-
-
-
 		mContactIV = (ImageView)findViewById(R.id.contact_iv);
 		mContactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
-		mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
 		mParticipantLastOnline = getIntent().getLongExtra(Consts.INTENT_LAST_ONLINE, 0);
 		mParticipantIsOnline = getIntent().getBooleanExtra(Consts.INTENT_IS_ONLINE, false);
+		mParticipantId = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_ID);
 		mConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
+		mParticipantName = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
+		mParticipantLang = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
+		mParticipantPic = getIntent().getStringExtra(Consts.INTENT_PARTICIPANT_PIC);
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 
@@ -190,11 +193,11 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 				break;
 
 			case R.id.call_iv:
-				Toast.makeText(this, "call", Toast.LENGTH_SHORT).show();
+				openCallActivity(false);
 				break;
 
 			case R.id.video_iv:
-				Toast.makeText(this, "video", Toast.LENGTH_SHORT).show();
+				openCallActivity(true);
 				break;
 
 			case R.id.media_ll:
@@ -211,7 +214,6 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 		}
 	}
 
-
 	private void showConfirmationDelete(){
 		new AlertDialog.Builder(this)
 			.setTitle("Confirmation")
@@ -225,5 +227,23 @@ public class ContactInfoActivity extends AppCompatActivity implements View.OnCli
 	private void clearConversation() {
 		mConversationViewModel.clearConversation(mConversationId);
 		Toast.makeText(this, "Messages Deleted", Toast.LENGTH_SHORT).show();
+	}
+
+
+	private void openCallActivity(boolean isVideoCall){
+		if(CallActivity.activityActiveFlag)
+			return; // Prevent multi open
+
+		Intent intent = new Intent(this, CallActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, mParticipantId);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, mParticipantName);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, mParticipantLang);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, mParticipantPic);
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, mConversationId);
+		intent.putExtra(Consts.INTENT_SELF_ID, WCSharedPreferences.getInstance(this).getUserId());
+		intent.putExtra(Consts.INTENT_SELF_LANG, WCSharedPreferences.getInstance(this).getUserLang());
+		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideoCall);
+		intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
+		startActivity(intent);
 	}
 }
