@@ -828,7 +828,7 @@ public class CallActivity extends AppCompatActivity
         if(newConfig.screenWidthDp == 220) {
             finish();
                 return;
-        }
+       }
 
         if (isInPictureInPictureMode) {
                     // Hide the full-screen UI - (picture-in-picture mode)
