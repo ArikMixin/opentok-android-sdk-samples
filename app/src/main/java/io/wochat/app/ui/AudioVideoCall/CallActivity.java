@@ -504,8 +504,7 @@ public class CallActivity extends AppCompatActivity
         mPublisher.setPublisherListener(this);
 
         if(mIsVideoCall) { //Only if it is video call - show preview
-                    mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-                                                                    BaseVideoRenderer.STYLE_VIDEO_FILL);
+                    mPublisher.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,BaseVideoRenderer.STYLE_VIDEO_FILL);
                     mPublisher.startPreview();
                     mSubscriberFL.addView(mPublisher.getView());
         }else{ // Audio call
@@ -635,7 +634,7 @@ public class CallActivity extends AppCompatActivity
                  view.animate()
                         .x(mCornerX)
                         .y(mCornerY)
-                        .scaleX(0.3f).scaleY(0.25f)
+                        .scaleX(0.27f).scaleY(0.27f)
                         .setDuration(400)
                         .start();
 
@@ -1425,7 +1424,7 @@ public class CallActivity extends AppCompatActivity
       mPublisherFL.animate()
                        .x((-screenWidth * 0.3f))
                         .y((y_temp))
-                       .scaleX(0.3f).scaleY(0.25f)//scale to quarter(half x,half y)
+                       .scaleX(0.27f).scaleY(0.27f)
                        .alpha(1F) // make it less visible
                        .setDuration(400)
                      //  .withEndAction(() -> { })
