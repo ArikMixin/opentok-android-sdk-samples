@@ -228,8 +228,6 @@ public class ConversationActivity extends PermissionActivity implements
 		};
 
 		setContentView(R.layout.activity_conversation);
-
-
 		mNotInGroupMsgTV = (TextView)findViewById(R.id.not_in_group_msg_tv);
 		mNotInGroupMsgTV.setVisibility(View.GONE);
 
