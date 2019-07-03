@@ -133,7 +133,7 @@
     <color name="settings_divider">#E7E7E7</color>
     <color name="linear_layout_unselected">#FAFAFA</color>
     <color name="pause_grey">#a3a3a3</color>
-
+    <color name="splash_blue_text">#0aadff</color>
 
     <color name="group_member_0">#ff9ff3</color>
     <color name="group_member_1">#feca57</color>

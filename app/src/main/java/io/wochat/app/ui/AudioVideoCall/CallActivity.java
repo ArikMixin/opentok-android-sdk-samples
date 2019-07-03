@@ -940,11 +940,13 @@ public class CallActivity extends AppCompatActivity
                     Picasso.get().load(mParticipantPic).into(mParticipantPicAudioCIV);
         }else{
                 if(videoCallFlag) {
-                    Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicVideoCIV);
-                    mInitialsVideoTV.setText(Contact.getInitialsFromName(mParticipantName));
+                        Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicVideoCIV);
+                             mInitialsVideoTV.setVisibility(View.VISIBLE);
+                             mInitialsVideoTV.setText(Contact.getInitialsFromName(mParticipantName));
                 }else {
-                    Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicAudioCIV);
-                    mInitialsAudioTV.setText(Contact.getInitialsFromName(mParticipantName));
+                        Picasso.get().load(R.drawable.ic_empty_contact).into(mParticipantPicAudioCIV);
+                             mInitialsAudioTV.setVisibility(View.VISIBLE);
+                             mInitialsAudioTV.setText(Contact.getInitialsFromName(mParticipantName));
                 }
         }
     }
@@ -1469,14 +1471,16 @@ public class CallActivity extends AppCompatActivity
     private void recordingState(boolean isRecording) {
 
         if (mIsVideoCall) {
-                if (isRecording)
-                       Picasso.get().load(R.drawable.recording_state).into(mParticipantPicVideoCIV);
-                else
+                if (isRecording) {
+                        mInitialsVideoTV.setVisibility(View.GONE);
+                        Picasso.get().load(R.drawable.recording_state).into(mParticipantPicVideoCIV);
+                }else
                        setPhotoByUrl(true);
         } else {
-                 if (isRecording)
-                       Picasso.get().load(R.drawable.recording_state).into(mParticipantPicVideoCIV);
-                 else
+                 if (isRecording) {
+                       mInitialsAudioTV.setVisibility(View.GONE);
+                       Picasso.get().load(R.drawable.recording_state).into(mParticipantPicAudioCIV);
+                 }else
                        setPhotoByUrl(false);
         }
 

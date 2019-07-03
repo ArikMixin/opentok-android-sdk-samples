@@ -676,7 +676,7 @@ public class MainActivity extends AppCompatActivity {
 		RatingDialog ratingDialog = new RatingDialog.Builder(this)
 				.threshold(3) // Only if user rate the app 4-5 , we open the activity - if user rate 1-3 - we open feedback form
 				.session(5) // After 5 entry to app - show the dialog - if user click later - the session will start counting 5 times
-				.title("How was your experience with WoChat?")
+				.title(getString(R.string.rate_us))
 				.playstoreUrl(PLAY_STORE_URL)
 				.build();
 		ratingDialog.show();

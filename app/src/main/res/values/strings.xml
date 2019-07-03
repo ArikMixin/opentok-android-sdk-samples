@@ -1,13 +1,12 @@
 <resources>
-    <string name="app_name">Wochat</string>
-    <string name="splash_title_1">Welcome to Wochat</string>
+    <string name="app_name">Slatch</string>
     <string name="splash_agree_and_continue">Agree and Continue</string>
     <string name="splash_read_our_terms">Read our Privacy Policy. Tap Agree and continue to accept the Terms of Service</string>
     <string name="splash_read_terms">Read our %1$s. Tap \"Agree and Continue\" to accept the %2$s.</string>
     <string name="splash_terms">&lt;a href="http://wochat.io/privacy">Terms of Service&lt;/a></string>
     <string name="splash_privacy">&lt;a href="http://wochat.io/privacy">Privacy Policy&lt;/a></string>
     <string name="msg_permissions_explan_title">Permission Request</string>
-    <string name="msg_permissions_explan_body">To easily connect with friends and family, and send and receive photos and videos, allow Wochat access to your contacts and your device\'s photos, media and files.</string>
+    <string name="msg_permissions_explan_body">To easily connect with friends and family, and send and receive photos and videos, allow Slatch access to your contacts and your device\'s photos, media and files.</string>
     <string name="msg_permissions_explan_ok_btn">Continue</string>
     <string name="msg_permissions_explan_cancel_btn">Not now</string>
     <string name="reg_page_phone_title">YOUR PHONE</string>
@@ -19,7 +18,7 @@
     <string name="reg_phone_num_title">Your Phone</string>
     <string name="reg_phone_num_text">Please confirm your country code and enter your phone number</string>
     <string name="reg_code_title">Enter Code</string>
-    <string name="reg_code_text">Wochat sent you an SMS with a confirmation code to the phone number below.  %s</string>
+    <string name="reg_code_text">Slatch sent you an SMS with a confirmation code to the phone number below.  %s</string>
     <string name="reg_code_wrong_num">&lt;a href="">Wrong number?&lt;/a></string>
     <string name="error_sms_code_verification_num_digits">code must be 6 decimal digits</string>
     <string name="error_sms_code_verification_invalid_code">wrong code</string>
@@ -34,8 +33,8 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="tab_text_1">Chats</string>
     <string name="tab_text_2">Calls</string>
-    <string name="msg_invite_friend_body">Download WoChat! The first universal language chat! https://app.appsflyer.com/io.wochat.app?pid=invitefriends.</string>
-    <string name="msg_invite_friend_title">Download WoChat!</string>
+    <string name="msg_invite_friend_body">Download Slatch! The first universal language chat! https://app.appsflyer.com/io.wochat.app?pid=invitefriends.</string>
+    <string name="msg_invite_friend_title">Download Slatch!</string>
     <string name="refresh_contacts_progress_body">Refreshing…</string>
     <string name="chat_title">Chats</string>
     <string name="calls_title">Calls</string>
@@ -83,18 +82,18 @@
     <string name="settings_profile_edit_dialog_status_title">Add About</string>
     <string name="settings_profile_edit_dialog_empty_string_warning">Name can\'t be empty</string>
     <string name="settings_translation_languages_actionbar_title">Translation Language</string>
-    <string name="settings_invite_friends_invitation_text">Download Wochat! The first universal language chat!</string>
+    <string name="settings_invite_friends_invitation_text">Download Slatch! The first universal language chat!</string>
     <string name="reply_location_msg_text">Location</string>
     <string name="settings_invite_friends_download_link">‏http://wochat.io/download</string>
     <string name="settings_help_link">http://wochat.io/</string>
     <string name="title_activity_info">InfoActivity</string>
 
     <string name="please_click_back">Please click BACK again to exit</string>
-    <string name="in_video_call">Incoming WoChat Video Call from</string>
-    <string name="in_audio_call">Incoming WoChat Audio Call from</string>
-    <string name="out_video_call">In a WoChat Video Call with</string>
-    <string name="out_audio_call">In a WoChat Audio Call with</string>
-    <string name="call_ended">WoChat Video/Audio Call Ended</string>
+    <string name="in_video_call">Incoming Slatch Video Call from</string>
+    <string name="in_audio_call">Incoming Slatch Audio Call from</string>
+    <string name="out_video_call">In a Slatch Video Call with</string>
+    <string name="out_audio_call">In a Slatch Audio Call with</string>
+    <string name="call_ended">Slatch Video/Audio Call Ended</string>
 
     <string name="calling">Calling....</string>
     <string name="rejected">Rejected</string>
@@ -131,5 +130,5 @@
     <string name="quit">Quit</string>
     <string name="cancel">Cancel</string>
     <string name="created_by">Created By %s</string>
-
+    <string name="rate_us">"How was your experience with Slatch?"</string>
 </resources>

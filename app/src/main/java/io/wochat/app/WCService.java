@@ -103,8 +103,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	@Override
 	public void onNewIncomingMessage(String msg, String conversationId) {
 
-		Log.d("arik", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
 		try {
 			Message message = Message.fromJson(msg);
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
@@ -226,7 +224,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	public class WCBinder extends Binder {
 		public WCService getService() {
-			Log.d("arik", "WCBinder: ");
 			Log.e(TAG, "WC Service Binder getService");
 			init(); // in case was not init
 			return WCService.this;
