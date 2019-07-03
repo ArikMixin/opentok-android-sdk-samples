@@ -76,7 +76,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 				 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
 			mXMPPProvider.initAsync(mSelfUserId, pass);
 			init();
-
 		return super.onUnbind(intent);
 	}
 
