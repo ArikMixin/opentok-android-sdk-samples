@@ -141,8 +141,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			/*****************************************************************************************/
 
-			Log.d("arik", "111: " + message.getText());
-
 			boolean res = mRepository.handleIncomingMessage(message, getResources(), new WCRepository.OnSaveMessageToDBListener() {
 				@Override
 				public void OnSaved(boolean success, Message savedMessage, Contact contact) {
@@ -150,7 +148,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 						sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
 						if (isMessageOfUserNotificationType(savedMessage)) {
 							if (!message.getConversationId().equals(mCurrentConversationId)) { // If the user not in a conversation	 chat - fire notification
-									Log.d("arik", "222: " + savedMessage.getText());
 								NotificationHelper.handleNotificationIncomingMessage(getApplication(), savedMessage, contact);
 							}
 						}
@@ -352,6 +349,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	public void sendMessage(Message message){
 		//message.setDuration(message.getDuration()/1000);
+		Log.e("arik", "sendMessage: " + message.toJson());
+
 		Log.e(TAG, "sendMessage: " + message.toJson());
 		if (message.isGroupMessage() && (message.getParticipantId() == null)){
 			String[] ids = message.getRecipients();

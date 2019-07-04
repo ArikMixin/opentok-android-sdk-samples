@@ -5,23 +5,18 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.app.RemoteInput;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.text.BidiFormatter;
 import android.util.Log;
 
 import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
 
 import io.wochat.app.R;
 import io.wochat.app.WCApplication;
@@ -35,9 +30,7 @@ import io.wochat.app.ui.AudioVideoCall.CallActivity;
 import io.wochat.app.ui.Consts;
 import io.wochat.app.ui.MainActivity;
 import io.wochat.app.ui.Messages.ConversationActivity;
-import io.wochat.app.ui.SplashActivity;
 import io.wochat.app.utils.Utils;
-import io.wochat.app.viewmodel.VideoAudioCallViewModel;
 
 import static android.support.v4.text.TextDirectionHeuristicsCompat.LTR;
 
@@ -59,6 +52,43 @@ public class NotificationHelper {
 		Message message = Message.fromJson(notifString);
 		ContactServer contact = ContactServer.fromJson(senderString);
 		WCRepository repo = ((WCApplication) application).getRepository();
+
+
+
+		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
+				repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
+						message.setMessageText(listener);
+						getContactFromPush(repo, application, message, contact);
+				});
+		}else{
+						getContactFromPush(repo, application, message, contact);
+		}
+
+	}
+
+	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
+		WCRepository repo = ((WCApplication) application).getRepository();
+
+		//If this is a text massage - translate first, and only then -> show notification
+		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
+			repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
+				message.setMessageText(listener);
+					getContactIncomingMessage(repo, application , message , contact);
+			});
+		}else{
+					getContactIncomingMessage(repo, application , message , contact);
+		}
+	}
+
+	private static void getContactIncomingMessage(WCRepository repo, Application application, Message message, Contact contact){
+		ContactServer contactServer = contact != null ? contact.getContactServer() : null;
+		repo.getNotificationData(message, contactServer, data -> {
+			if (data != null)
+				showNotification(application.getApplicationContext(), data, false);
+		});
+	}
+
+	private static void getContactFromPush(WCRepository repo, Application application, Message message, ContactServer contact){
 		if (message.isGroupEvent()){
 
 			if(repo.getSelfUserId().equals(message.getActingUser())) // do not pop notification for self operations
@@ -75,28 +105,6 @@ public class NotificationHelper {
 					showNotification(application.getApplicationContext(), data, true);
 			});
 		}
-	}
-
-	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
-		WCRepository repo = ((WCApplication) application).getRepository();
-
-		//If this is a text massage - translate first, and only then -> show notification
-		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
-			repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
-				message.setMessageText(listener);
-					getContactServer(repo, application , message , contact);
-			});
-		}else{
-				getContactServer(repo, application , message , contact);
-		}
-	}
-
-	private static void getContactServer(WCRepository repo, Application application, Message message, Contact contact){
-		ContactServer contactServer = contact != null ? contact.getContactServer() : null;
-		repo.getNotificationData(message, contactServer, data -> {
-			if (data != null)
-				showNotification(application.getApplicationContext(), data, false);
-		});
 	}
 
 	private static void showNotification(Context context, NotificationData data, boolean isPush){
@@ -224,10 +232,45 @@ public class NotificationHelper {
 		//generateMessagingStyleNotification(context);
 		/****************************************************************************************************/
 
+	}
 
+	public static void showMissedCallNotification(Application application, Message message, Contact contact, boolean isVideo) {
+		String callType;
+		if (isVideo)
+			callType = "Video";
+		else
+			callType = "Audio";
 
+		NotificationManagerCompat notificationManager = NotificationManagerCompat.from(application.getApplicationContext());
+		Intent intent = new Intent(application.getApplicationContext(), CallActivity.class);
+		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getSenderId());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
+		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
+		intent.putExtra(Consts.INTENT_CONVERSATION_ID, contact.getId());
+		intent.putExtra(Consts.INTENT_SELF_ID, WCSharedPreferences.getInstance(application.getApplicationContext()).getUserId());
+		intent.putExtra(Consts.INTENT_SELF_LANG, WCSharedPreferences.getInstance(application.getApplicationContext()).getUserLang());
+		intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideo);
+		intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // FLAG_ACTIVITY_NEW_TASK
+		intent.addCategory(Intent.CATEGORY_HOME);
 
-
+		/****************************************************************************************************/
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(application.getApplicationContext(), getChanggelId());
+		GlobalNotificationBuilder.setNotificationCompatBuilderInstance(builder);
+		builder
+				.setContentTitle("Missed " + callType + " Call" )
+				.setContentText("from " + contact.getName())
+				.setSmallIcon(R.drawable.ic_notif)
+				.setPriority(NotificationCompat.PRIORITY_HIGH)
+				.setAutoCancel(true)
+				.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS | Notification.FLAG_AUTO_CANCEL)
+				.setColor(ContextCompat.getColor(application.getApplicationContext().getApplicationContext(), R.color.colorPrimary))
+				.setCategory(Notification.CATEGORY_MESSAGE)
+				.setVisibility(Notification.VISIBILITY_PUBLIC)
+				.setContentIntent(PendingIntent.getActivity(application.getApplicationContext(), 0, intent, 0));
+		Notification notification = builder.build();
+		notificationManager.notify( message.getId(),NOTIFICATION_ID, notification);
 	}
 /*
 	private static String createNotificationChannel(Context context) {
@@ -362,42 +405,4 @@ public class NotificationHelper {
 		}
 	}
 
-	public static void showMissedCallNotification(Application application, Message message, Contact contact, boolean isVideo) {
-			String callType;
-			if (isVideo)
-				callType = "Video";
-			else
-				callType = "Audio";
-
-		NotificationManagerCompat notificationManager = NotificationManagerCompat.from(application.getApplicationContext());
-			Intent intent = new Intent(application.getApplicationContext(), CallActivity.class);
-                intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getSenderId());
-                intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
-                intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
-                intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
-                intent.putExtra(Consts.INTENT_CONVERSATION_ID, contact.getId());
-                intent.putExtra(Consts.INTENT_SELF_ID, WCSharedPreferences.getInstance(application.getApplicationContext()).getUserId());
-                intent.putExtra(Consts.INTENT_SELF_LANG, WCSharedPreferences.getInstance(application.getApplicationContext()).getUserLang());
-                intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, isVideo);
-                intent.putExtra(Consts.OUTGOING_CALL_FLAG, true);
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // FLAG_ACTIVITY_NEW_TASK
-        intent.addCategory(Intent.CATEGORY_HOME);
-
-        /****************************************************************************************************/
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(application.getApplicationContext(), getChanggelId());
-		GlobalNotificationBuilder.setNotificationCompatBuilderInstance(builder);
-		builder
-				.setContentTitle("Missed " + callType + " Call" )
-				.setContentText("from " + contact.getName())
-				.setSmallIcon(R.drawable.ic_notif)
-				.setPriority(NotificationCompat.PRIORITY_HIGH)
-				.setAutoCancel(true)
-				.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS | Notification.FLAG_AUTO_CANCEL)
-				.setColor(ContextCompat.getColor(application.getApplicationContext().getApplicationContext(), R.color.colorPrimary))
-				.setCategory(Notification.CATEGORY_MESSAGE)
-				.setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setContentIntent(PendingIntent.getActivity(application.getApplicationContext(), 0, intent, 0));
-		Notification notification = builder.build();
-		notificationManager.notify( message.getId(),NOTIFICATION_ID, notification);
-	}
 }

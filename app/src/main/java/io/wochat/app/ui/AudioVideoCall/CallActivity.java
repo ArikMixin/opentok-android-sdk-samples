@@ -300,16 +300,6 @@ public class CallActivity extends AppCompatActivity
                     mParticipantLangAudioTV.toString());
         mParticipantNumberTV.setText(mFixedParticipantId);
 
-//        mPublisherFL.setY((screenHeight - mPublisherFL.getHeight() -125));
-
-//        mPublisherFL.animate()
-//                .x(25)
-//                .y(screenHeight - mPublisherFL.getHeight() -125)
-//                .setDuration(0)
-//                .start();
-
-
-
         /**Sounds (ringing etc.) initialization**/
         mDeclineSound = MediaPlayer.create(this, R.raw.declined_call);
         mCallingSound = MediaPlayer.create(this, R.raw.phone_calling_tone);
@@ -970,6 +960,7 @@ public class CallActivity extends AppCompatActivity
             sendXMPPmsg(Message.RTC_CODE_OFFER,"", false);
         }
         //Create session connection via TokBox
+        Log.d("arik", "mSessionID: " + mSessionID + " mVideoAudioCall.getToken(): "+mVideoAudioCall.getToken());
         connectToSession(mSessionID, mVideoAudioCall.getToken());
     }
 
@@ -1223,7 +1214,10 @@ public class CallActivity extends AppCompatActivity
                              mConnectingTV.startAnimation(mCallTXTanima);
                              mConnectingRL.setVisibility(View.VISIBLE);
 
-                            startIncomingCallThread();
+
+                Log.d("arik", "0000");
+
+                startIncomingCallThread();
 
                 //incoming call
                 call = new Call(mParticipantId, mParticipantName, mParticipantPic,
@@ -1286,8 +1280,9 @@ public class CallActivity extends AppCompatActivity
     private void startIncomingCallThread() {
 
         new Thread (() -> {
-
+            Log.d("arik", "111: ");
             while (!sessitonRecivedFlag);
+            Log.d("arik", "222: ");
 
             runOnUiThread(() -> {
 
@@ -1334,7 +1329,7 @@ public class CallActivity extends AppCompatActivity
                             mSubscriberFL.setEnabled(true);
 
 
-
+                        Log.d("arik", "***answer:***** ");
                         sendXMPPmsg(Message.RTC_CODE_ANSWER, "",false);
                         if(!mIsVideoCall)
                               AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);

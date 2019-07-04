@@ -59,7 +59,7 @@
             android:layout_height="wrap_content"
             android:layout_above="@+id/version_tv"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="120dp"
+            android:layout_marginBottom="100dp"
             android:indeterminateDrawable="@drawable/progress_custom"></ProgressBar>
 
        <TextView

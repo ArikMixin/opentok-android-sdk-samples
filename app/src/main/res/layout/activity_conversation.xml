@@ -108,13 +108,13 @@
 
 
 
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_above="@+id/input"
-                android:scaleType="centerCrop"
-                android:background="@color/white"
-                />
+            <!--<ImageView-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:layout_above="@+id/input"-->
+                <!--android:scaleType="centerCrop"-->
+                <!--android:background="@color/white"-->
+                <!--/>-->
 
 
             <RelativeLayout
