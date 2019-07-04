@@ -1416,10 +1416,7 @@ public class CallActivity extends AppCompatActivity
 //                    mPublisherFL.setLayoutParams(new ConstraintLayout.LayoutParams(320, 420));
 //                     y_temp += 220;
                    //************************************************************************************
-            Log.d("testttttt", "new: ");
-
         }else {
-            Log.d("testttttt", "animateAndAddView: ");
                     mSubscriberFL.addView(mSubscriber.getView());
 
                     ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
