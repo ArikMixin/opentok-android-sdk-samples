@@ -1045,6 +1045,10 @@ public class CallActivity extends AppCompatActivity
         }
         AudioDeviceManager.getAudioDevice().destroyCapturer();
         AudioDeviceManager.getAudioDevice().destroyRenderer();
+
+        //Return the sound from speaker
+        AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.SpeakerPhone);
+
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -1409,10 +1413,13 @@ public class CallActivity extends AppCompatActivity
 
                     // TODO: 7/1/2019 - old versions of android problems (Animation and window not work perfectly
                     //************************************************************************************
-                    mPublisherFL.setLayoutParams(new ConstraintLayout.LayoutParams(320, 420));
-                     y_temp += 220;
+//                    mPublisherFL.setLayoutParams(new ConstraintLayout.LayoutParams(320, 420));
+//                     y_temp += 220;
                    //************************************************************************************
+            Log.d("testttttt", "new: ");
+
         }else {
+            Log.d("testttttt", "animateAndAddView: ");
                     mSubscriberFL.addView(mSubscriber.getView());
 
                     ((ViewGroup) mPublisher.getView().getParent()).removeView(mPublisher.getView());
