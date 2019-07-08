@@ -1,5 +1,6 @@
 package io.wochat.app.ui.RecentChats;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -54,6 +55,19 @@ public class RecentChatsViewHolder
         mCameraIB.setTag(conversation);
 		mPhoneIB.setTag(conversation);
 
+		//Missed Call
+		if (conversation.getLastMessageType() != null &&
+				conversation.getLastMessageType().equals(Message.MSG_TYPE_CALL_MISSED_VIDEO)){
+			mMsgTypeIV.setVisibility(View.VISIBLE);
+			imageLoader.loadImageNoPlaceholder(mMsgTypeIV, R.drawable.msg_in_video_dark);
+		}
+		else if (conversation.getLastMessageType() != null &&
+					conversation.getLastMessageType().equals(Message.MSG_TYPE_CALL_MISSED_AUDIO)){
+			mMsgTypeIV.setVisibility(View.VISIBLE);
+			mMsgTypeIV.setImageResource(R.drawable.phone_grey);
+		}
+
+		//Group
 		if (conversation.isGroup()){
             mCameraIB.setVisibility(View.INVISIBLE);
             mPhoneIB.setVisibility(View.INVISIBLE);

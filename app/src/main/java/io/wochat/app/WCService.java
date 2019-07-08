@@ -102,9 +102,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	@Override
 	public void onNewIncomingMessage(String msg, String conversationId) {
-
 		try {
 			Message message = Message.fromJson(msg);
+			Log.d(TAG, "JSON: " +message.toJson());
+
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
 				broadcastTypingSignal(conversationId, message.getSenderId(), message.isTyping());
 				return;
@@ -350,8 +351,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void sendMessage(Message message){
 		//message.setDuration(message.getDuration()/1000);
 		Log.e("arik", "sendMessage: " + message.toJson());
-
-		Log.e(TAG, "sendMessage: " + message.toJson());
 		if (message.isGroupMessage() && (message.getParticipantId() == null)){
 			String[] ids = message.getRecipients();
 			List<String> participantIds = new ArrayList<>();

@@ -623,7 +623,8 @@ public class ConversationActivity extends PermissionActivity implements
 				return message.isSpeechable();
 			case MessageHolders.VIEW_TYPE_INFO_MESSAGE: 
 				return message.getMessageType().equals(Message.MSG_TYPE_GROUP_EVENT) ||
-						message.getMessageType().equals(Message.MSG_TYPE_CALL_MISSED);
+						message.getMessageType().equals(Message.MSG_TYPE_CALL_MISSED_VIDEO) ||
+						message.getMessageType().equals(Message.MSG_TYPE_CALL_MISSED_AUDIO);
 		}
 		return false;
 	}

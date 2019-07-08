@@ -89,8 +89,10 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 	private LinearLayout mQuitGroupLL;
 	private CardView mAddMembersCV;
 	private CardView mQuitGroupCV;
+    private MenuItem mActionPicture;
+    private MenuItem mActionEdit;
 
-	@Override
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_group_info);
@@ -190,7 +192,18 @@ public class GroupInfoActivity extends AppCompatActivity implements View.OnClick
 		if ((mConversation != null) && (mConversation.isSelfInGroup()))
 			inflater.inflate(R.menu.menu_group_info, menu);
 
-		return true;
+         mActionPicture = menu.findItem(R.id.action_picture);
+         mActionEdit = menu.findItem(R.id.action_edit);
+
+         //Only admin can change group cover and name
+        if (!mSelfIsAdmin) {
+            mActionPicture.setVisible(false);
+            mActionEdit.setVisible(false);
+        }else {
+            mActionPicture.setVisible(true);
+            mActionEdit.setVisible(true);
+        }
+        return true;
 	}
 
 

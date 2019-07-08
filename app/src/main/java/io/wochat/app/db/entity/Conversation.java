@@ -375,6 +375,13 @@ public class Conversation implements IDialog{
 			return "Audio (" + Utils.convertSecondsToHMmSs(mLastMessageDuration) + ") ";
 		}
 
+		else if (lastMessageType.equals(Message.MSG_TYPE_CALL_MISSED_AUDIO)) {
+			return "Missed Voice Call";
+		}
+		else if (lastMessageType.equals(Message.MSG_TYPE_CALL_MISSED_VIDEO)) {
+			return "Missed Video Call";
+		}
+
 		else
 			return lastMessageText;
 	}

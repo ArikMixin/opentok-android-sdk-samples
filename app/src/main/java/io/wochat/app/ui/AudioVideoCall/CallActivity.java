@@ -1132,7 +1132,7 @@ public class CallActivity extends AppCompatActivity
                     intent.getAction().equals(Message.RTC_CODE_CLOSE))
                 callEnded(intent.getAction());
             else if(intent.getAction().equals(Message.RTC_CODE_ANSWER))
-                callStarted();
+                    callStarted();
             else if(intent.getAction().equals(Message.RTC_CODE_UPDATE_SESSION))
                          recordingState(intent.getBooleanExtra(WCService.IS_RECORDING,false));
             else if(intent.getAction().equals(Message.RTC_CODE_TEXT)){
@@ -1185,41 +1185,19 @@ public class CallActivity extends AppCompatActivity
         callStartedFlag = true;
         //countDownTimer.cancel();
             mArrowsIV.startAnimation(mTranslateAnima); // start PushToTalk arrow animation
-            mAcceptIV.setEnabled(false);
-            mStatusRL.setVisibility(View.GONE);
-            incomingCallBtnsRL.setVisibility(View.GONE);
 
-            if(mIsOutGoingCall){
-                            //Stop sound
-                            mCallingSound.stop();
-                            mCallTXTanima.cancel();
+            if(!mIsOutGoingCall){
+                            sendXMPPmsg(Message.RTC_CODE_ANSWER, "",false);
+                            //Stop sound and accept call (jumping) animation
+                            incomingCallBtnsRL.setVisibility(View.GONE);
+                            mAcceptIV.setEnabled(false);
 
-                            //Start Timer For Outgoing call
-                            mTimerChr.setVisibility(View.VISIBLE);
-                            mTimerChr.setBase(SystemClock.elapsedRealtime());
-                            mTimerChr.start();
-
-                            //enable hide animation only if call started;
-                            if(mVideoFlag)
-                            mSubscriberFL.setEnabled(true);
-
-                             // Close & Open Camera button visible only after call started ( Timer Starts )
-                            mCameraBtnAudio.setVisibility(View.VISIBLE);
-                            mCameraBtnVideo.setVisibility(View.VISIBLE);
-
-                            if(!mIsVideoCall)
-                                AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
-           }else{ // IncomingCall
-                    //Stop sound and accept call (jumping) animation
                             mIncomingCallSound.stop();
                             mAcceptBtnAnim.cancel();
 
                             mInsideCallBtnsCL.setVisibility(View.VISIBLE);
                              mConnectingTV.startAnimation(mCallTXTanima);
                              mConnectingRL.setVisibility(View.VISIBLE);
-
-
-                Log.d("arik", "0000");
 
                 startIncomingCallThread();
 
@@ -1228,24 +1206,8 @@ public class CallActivity extends AppCompatActivity
                                         mParticipantLang, mIsVideoCall, CALL_INCOMING, System.currentTimeMillis(),0);
                 videoAudioCallViewModel.addNewCall(call);
             }
-
-        //Convert hebrew from "IW" to "HE"
-        mSelfLang_temp = mSelfLang;
-        mParticipantLang_temp = mParticipantLang;
-        if(mSelfLang_temp.equals("IW")) mSelfLang_temp = "HE";
-        if(mParticipantLang_temp.equals("IW")) mParticipantLang_temp = "HE";
-
-        //Enable translate btn lang if self and participant have different languages
-        if (!mSelfLang_temp.equals(mParticipantLang_temp)) {
-                mMicFlagCIV.setEnabled(true);
-                mMicFlagCIV.setAlpha(1f);
-                mTranslatorMicIV.setEnabled(true);
-                mTranslatorMicIV.setImageResource(R.drawable.translator_mic_enabled);
-                mTranslatorMicP2T_IV.setEnabled(true);
-        }else{
-                mTranslatorMicIV.setEnabled(false);
-        }
     }
+
 
     private void callMissed() {
         if(callMissedFlag || callRejectedFlag || callStartedFlag)
@@ -1284,9 +1246,8 @@ public class CallActivity extends AppCompatActivity
     private void startIncomingCallThread() {
 
         new Thread (() -> {
-            Log.d("arik", "111: ");
+
             while (!sessitonRecivedFlag);
-            Log.d("arik", "222: ");
 
             runOnUiThread(() -> {
 
@@ -1299,10 +1260,6 @@ public class CallActivity extends AppCompatActivity
                     mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
                     mSubscriber.setVideoListener(CallActivity.this);
                     mSession.subscribe(mSubscriber);
-
-                    //Hide the connection layout and start mTimerChr
-//                    mActionBtnsCL.setVisibility(View.VISIBLE);
-//                    mConnectingRL.setVisibility(View.GONE);
 
                     //Wait 2 seconds because of the api black screen - and then start timer and sent massage to caller
                     new Handler().postDelayed(() -> {
@@ -1323,7 +1280,6 @@ public class CallActivity extends AppCompatActivity
 
                         //If video show add views add make the animation
                         if(mIsVideoCall) {
-//                                 mSubscriberFL.addView(mSubscriber.getView());
                             //*** Show the receiver video (Small Windows) Only for video calls
                                 animateAndAddView();
                         }
@@ -1332,18 +1288,11 @@ public class CallActivity extends AppCompatActivity
                         if(mVideoFlag)
                             mSubscriberFL.setEnabled(true);
 
-
-                        Log.d("arik", "***answer:***** ");
-                        sendXMPPmsg(Message.RTC_CODE_ANSWER, "",false);
+//                        sendXMPPmsg(Message.RTC_CODE_ANSWER, "",false);
                         if(!mIsVideoCall)
                               AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
                     }, WAIT_UNTIL_ADD_VIEW);
 
-//                    //Show inside a call btns
-//                    mCameraBtnVideo.setVisibility(View.VISIBLE);
-//                    mInsideCallBtnsCL.setVisibility(View.VISIBLE);
-                    if(mIsVideoCall)
-                        mCameraSwitchIV.setVisibility(View.VISIBLE);
                 }
             });
         }).start();
@@ -1369,9 +1318,6 @@ public class CallActivity extends AppCompatActivity
         Log.i(TOKBOX, "Stream Received");
 
         if(mIsOutGoingCall) {
-                        //*** Show the receiver video (Small Windows) Only for video calls
-//                        if (mIsVideoCall && Build.VERSION.SDK_INT < SCREEN_MINIMUM_VER)
-//                                 animateAndAddView();
 
                         if (mSubscriber == null) {
                             mSubscriber = new Subscriber.Builder(CallActivity.this, stream).build();
@@ -1379,21 +1325,35 @@ public class CallActivity extends AppCompatActivity
                             mSubscriber.setVideoListener(CallActivity.this);
                             mSession.subscribe(mSubscriber);
 
-                            //Show the caller video (full screen) Only for video calls
-//                                if (mIsVideoCall) {
-//                                    mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE,
-//                                                                                        BaseVideoRenderer.STYLE_VIDEO_FILL);
-//                                    mSubscriberFL.addView(mSubscriber.getView());
-//                                }
-//
-//                                //*** Show the receiver video (Small Windows) Only for video calls
-////                                if (mIsVideoCall && Build.VERSION.SDK_INT >= SCREEN_MINIMUM_VER)
+                            //Wait 2 seconds because of the api black screen - and then start timer and sent massage to caller
+                            new Handler().postDelayed(() -> {
+                                        mStatusRL.setVisibility(View.GONE);
 
-                                if (mIsVideoCall) {
-                                    new Handler().postDelayed(() -> {
-                                        animateAndAddView();
-                                    }, WAIT_UNTIL_ADD_VIEW);
-                                }
+                                        mCallingSound.stop();
+                                        mCallTXTanima.cancel();
+
+                                        // Timer
+                                        mTimerChr.setVisibility(View.VISIBLE);
+                                        mTimerChr.setBase(SystemClock.elapsedRealtime());
+                                        mTimerChr.start();
+
+                                        //If video show add views add make the animation
+                                        if(mIsVideoCall) {
+                                            //*** Show the receiver video (Small Windows) Only for video calls
+                                            animateAndAddView();
+                                        }
+
+                                        //enable hide button animation - only if call started;
+                                        if(mVideoFlag)
+                                            mSubscriberFL.setEnabled(true);
+
+                                        // Close & Open Camera button visible only after call started ( Timer Starts )
+                                        mCameraBtnAudio.setVisibility(View.VISIBLE);
+                                        mCameraBtnVideo.setVisibility(View.VISIBLE);
+
+                                if(!mIsVideoCall)
+                                    AudioDeviceManager.getAudioDevice().setOutputMode(BaseAudioDevice.OutputMode.Handset);
+                            }, WAIT_UNTIL_ADD_VIEW);
                         }
         }else{
                             this.mStream = stream;
@@ -1423,6 +1383,8 @@ public class CallActivity extends AppCompatActivity
                     mPublisherFL.addView(mPublisher.getView());
         }
 
+        enablePush2Talk();
+
       mPublisherFL.setVisibility(View.VISIBLE);
       mPublisherFL.animate()
                        .x((-screenWidth * 0.3f))
@@ -1433,6 +1395,26 @@ public class CallActivity extends AppCompatActivity
                      //  .withEndAction(() -> { })
                        .start();
     }
+
+    private void enablePush2Talk() {
+        //Convert hebrew from "IW" to "HE"
+        mSelfLang_temp = mSelfLang;
+        mParticipantLang_temp = mParticipantLang;
+        if(mSelfLang_temp.equals("IW")) mSelfLang_temp = "HE";
+        if(mParticipantLang_temp.equals("IW")) mParticipantLang_temp = "HE";
+
+        //Enable translate btn lang if self and participant have different languages
+        if (!mSelfLang_temp.equals(mParticipantLang_temp)) {
+            mMicFlagCIV.setEnabled(true);
+            mMicFlagCIV.setAlpha(1f);
+            mTranslatorMicIV.setEnabled(true);
+            mTranslatorMicIV.setImageResource(R.drawable.translator_mic_enabled);
+            mTranslatorMicP2T_IV.setEnabled(true);
+        }else{
+            mTranslatorMicIV.setEnabled(false);
+        }
+    }
+
     @Override
     public void onStreamDropped(Session session, Stream stream) {
         Log.i(TOKBOX, "Stream Dropped");

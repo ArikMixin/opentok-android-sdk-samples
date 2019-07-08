@@ -105,7 +105,8 @@ public class Message implements IMessage,
 	public static final String MSG_TYPE_WEBRTC_CALL = "WEBRTC_CALL";
 	public static final String MSG_TYPE_CALL_EVENT = "CALL_EVENT";
 	public static final String MSG_TYPE_CONTACT = "CONTACT";
-	public static final String MSG_TYPE_CALL_MISSED = "CALL_MISSED";
+	public static final String MSG_TYPE_CALL_MISSED_VIDEO = "CALL_MISSED_VIDEO";
+	public static final String MSG_TYPE_CALL_MISSED_AUDIO = "CALL_MISSED_AUDIO";
 
 
 
@@ -124,7 +125,8 @@ public class Message implements IMessage,
 		MSG_TYPE_WEBRTC_CALL,
 		MSG_TYPE_CALL_EVENT,
 		MSG_TYPE_CONTACT,
-		MSG_TYPE_CALL_MISSED})
+		MSG_TYPE_CALL_MISSED_VIDEO,
+		MSG_TYPE_CALL_MISSED_AUDIO})
 
 	@Retention(RetentionPolicy.SOURCE)
 	public @interface MSG_TYPE {}
@@ -689,8 +691,9 @@ public class Message implements IMessage,
 
 	@Override
 	public String getTextWithNameHeader(){
-		if (messageType.equals(MSG_TYPE_GROUP_EVENT) || messageType.equals(MSG_TYPE_CALL_MISSED) ){
-			Log.d("zubi", "2: ");
+		if (messageType.equals(MSG_TYPE_GROUP_EVENT) ||
+				messageType.equals(MSG_TYPE_CALL_MISSED_AUDIO) ||
+				messageType.equals(MSG_TYPE_CALL_MISSED_VIDEO)){
 			return getText();
 		}
 		else if (isGroupMessage() && !isOutgoing()){
@@ -716,7 +719,8 @@ public class Message implements IMessage,
 			return getGroupEventMessage();
 		}
 
-		if (messageType.equals(MSG_TYPE_CALL_MISSED)){
+		if (messageType.equals(MSG_TYPE_CALL_MISSED_VIDEO) ||
+				messageType.equals(MSG_TYPE_CALL_MISSED_AUDIO )){
 			return getMissedCallMessage();
 		}
 
@@ -1595,7 +1599,8 @@ public class Message implements IMessage,
 		newMessage.setActingUser(selfId);
 		newMessage.setActingUserName("Missed");
 		newMessage.setShouldBeDisplayed(true);
-		newMessage.setMessageType(MSG_TYPE_CALL_MISSED);
+		if(isVideo) newMessage.setMessageType(MSG_TYPE_CALL_MISSED_VIDEO);
+		else  newMessage.setMessageType(MSG_TYPE_CALL_MISSED_AUDIO);
 		newMessage.setMessageId(UUID.randomUUID().toString());
 		if(isVideo) newMessage.setEventCode(EVENT_CODE_MISSED_VIDEO_CALL);
 		else newMessage.setEventCode(EVENT_CODE_MISSED_VOICE_CALL);
