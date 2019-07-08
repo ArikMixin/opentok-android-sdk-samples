@@ -79,7 +79,8 @@ public class RegistrationActivity extends PermissionActivity {
 	private static final int REQUEST_IMAGE_PICKER = 102;
 
 	private String[] PERMISSIONS = {
-		Manifest.permission.RECEIVE_SMS
+		Manifest.permission.RECEIVE_SMS,
+		Manifest.permission.CAMERA
 	};
 	private String mUserTrimmedPhone;
 	private String mUserCountryCode;
