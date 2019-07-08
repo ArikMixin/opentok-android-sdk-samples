@@ -1333,52 +1333,52 @@ public class ConversationActivity extends PermissionActivity implements
 
 	private String getDisplayOnlineDateTime(){
 		if (mLastOnlineTime > 0) {
-			Date lastOnlineDate = new Date(mLastOnlineTime);
-			if (DateFormatter.isToday(lastOnlineDate)){
-				return getString(R.string.last_seen_today) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
-			}
-			else if (DateFormatter.isYesterday(lastOnlineDate)){
-				return getString(R.string.last_seen_yesterday) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
-			}
-			else if (DateFormatter.isPastWeek(lastOnlineDate)){
-				return getString(R.string.last_seen_past_week) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_OF_WEEK_TIME);
-			}
-			else {
-				return getString(R.string.last_seen_past) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_MONTH);
-			}
+				Date lastOnlineDate = new Date(mLastOnlineTime);
+				if (DateFormatter.isToday(lastOnlineDate)){
+					return getString(R.string.last_seen_today) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
+				}
+				else if (DateFormatter.isYesterday(lastOnlineDate)){
+					return getString(R.string.last_seen_yesterday) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.TIME);
+				}
+				else if (DateFormatter.isPastWeek(lastOnlineDate)){
+					return getString(R.string.last_seen_past_week) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_OF_WEEK_TIME);
+				}
+				else {
+					return getString(R.string.last_seen_past) + " " + DateFormatter.format(lastOnlineDate, DateFormatter.Template.STRING_DAY_MONTH);
+				}
 		}
 		else
+		if(mIsGroup)
+			return getGroupNameList();
+		else
 			return "";
+
 	}
-
-
-
 
 	private void displayUITypingSignal(boolean isTyping, String participantId) {
 		if (mIsGroup){
-			if (isTyping){
-				String firstName = getGroupMemberFirstName(participantId);
-				mContactDetailsTV.setText(firstName + " is typing...");
-				mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
-			}
-			else {
-				mContactDetailsTV.setText(getGroupNameList());
-				mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
-			}
-
+				if (isTyping){
+					String firstName = getGroupMemberFirstName(participantId);
+					mContactDetailsTV.setText(firstName + " is typing...");
+					mClearTypingHandler.postDelayed(mClearTypingRunnable, 5000);
+				}
+				else {
+					mContactDetailsTV.setText(getGroupNameList());
+					mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
+				}
 		}
 		else {
-			if (isTyping) {
-				mContactDetailsTV.setText("Typing...");
-				mClearTypingHandler.postDelayed(mClearTypingRunnable, 10000);
-			}
-			else {
-				if (mIsOnline)
-					mContactDetailsTV.setText("Online");
-				else
-					mContactDetailsTV.setText(getDisplayOnlineDateTime());
-				mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
-			}
+				if (isTyping) {
+					mContactDetailsTV.setText("Typing...");
+					mClearTypingHandler.postDelayed(mClearTypingRunnable, 5000);
+				}
+				else {
+					if (mIsOnline)
+						mContactDetailsTV.setText("Online");
+					else
+						mContactDetailsTV.setText(getDisplayOnlineDateTime());
+					mClearTypingHandler.removeCallbacks(mClearTypingRunnable);
+				}
 		}
 	}
 

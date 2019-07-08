@@ -350,7 +350,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	public void sendMessage(Message message){
 		//message.setDuration(message.getDuration()/1000);
-		Log.e("arik", "sendMessage: " + message.toJson());
 		if (message.isGroupMessage() && (message.getParticipantId() == null)){
 			String[] ids = message.getRecipients();
 			List<String> participantIds = new ArrayList<>();
