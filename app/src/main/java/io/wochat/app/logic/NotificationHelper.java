@@ -41,8 +41,8 @@ public class NotificationHelper {
 	private static final int NOTIFICATION_BUNDLED_BASE_ID = 1000;
 	private static final int NOTIFICATION_ID = 2000;
 
-
 	public static void handleNotificationFromPush(Application application, Map<String, String> dataMap){
+		Log.d(TAG, "handleNotificationFromPush: ");
 		if (dataMap == null)
 			return;
 
@@ -52,8 +52,6 @@ public class NotificationHelper {
 		Message message = Message.fromJson(notifString);
 		ContactServer contact = ContactServer.fromJson(senderString);
 		WCRepository repo = ((WCApplication) application).getRepository();
-
-
 
 		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
 				repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
@@ -67,6 +65,7 @@ public class NotificationHelper {
 	}
 
 	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
+		Log.d(TAG, "handleNotificationIncomingMessage: ");
 		WCRepository repo = ((WCApplication) application).getRepository();
 
 		//If this is a text massage - translate first, and only then -> show notification

@@ -67,22 +67,20 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		return mBinder;
 	}
 
-
 	@Override
 	public boolean onUnbind(Intent intent) {
 		Log.e(TAG, "WC Service onUnbind");
-
-		if(pass == null)
-				 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
-			mXMPPProvider.initAsync(mSelfUserId, pass);
-			init();
+//		if(pass == null)
+//		  		 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
+//			mXMPPProvider.initAsync(mSelfUserId, pass);
+//			init();
 		return super.onUnbind(intent);
 	}
 
-	@Override
+/*	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		return START_STICKY;
-	}
+	}*/
 
 	private boolean isMessageOfUserNotificationType(Message message){
 		switch (message.getMessageType()){
