@@ -104,10 +104,6 @@
             android:background="@color/white">
 
 
-
-
-
-
             <!--<ImageView-->
                 <!--android:layout_width="match_parent"-->
                 <!--android:layout_height="match_parent"-->
@@ -123,12 +119,18 @@
                 android:orientation="vertical"
                 android:layout_above="@id/input">
 
-                <ImageView
+                <!--<ImageView-->
+                    <!--android:id="@+id/chat_background_iv"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="match_parent"-->
+                    <!--android:scaleType="matrix"-->
+                    <!--android:src="@drawable/chat_background"-->
+                    <!--/>-->
+
+                <io.wochat.app.utils.TopCropImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/chat_background"
-                    />
+                    android:src="@drawable/chat_background" />
 
                 <com.stfalcon.chatkit.messages.MessagesList
                     android:id="@+id/messagesList"
