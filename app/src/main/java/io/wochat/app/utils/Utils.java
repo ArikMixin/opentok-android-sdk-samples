@@ -378,7 +378,11 @@ public class Utils {
 		return ("iw".equals(lang.toLowerCase()))||("he".equals(lang.toLowerCase()));
 	}
 
-
+	public static String fixHebrew(String lang) {
+		if(lang.equals("IW"))
+			return "HE";
+		return lang;
+	}
 
 	public static Bitmap getCircleBitmap(Bitmap bitmap) {
 		Bitmap output;

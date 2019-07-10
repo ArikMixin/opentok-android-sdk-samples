@@ -1642,7 +1642,7 @@ public class WCRepository {
 	private boolean handleIncomingMessageText(Message message) {
 		boolean res;
 		String selfLang = mSharedPreferences.getUserLang();
-		boolean needTranslation1 = (!message.getMessageLanguage().equals(selfLang));
+		boolean needTranslation1 = (!Utils.fixHebrew(message.getMessageLanguage()).equals(Utils.fixHebrew(selfLang)));
 		boolean needTranslationMagic = message.isMagic();
 
 		try {
@@ -2084,6 +2084,7 @@ public class WCRepository {
 	}
 
 	private boolean insertMessageAndUpdateConversation(Message message, boolean needTranslation1, boolean needTranslationMagic) {
+		Log.d(TAG, "insertMessageAndUpdateConversation: " + needTranslation1 + ", " + needTranslationMagic);
 		try {
 			message.setShouldBeDisplayed(!needTranslation1);
 
@@ -2799,14 +2800,15 @@ public class WCRepository {
 			Log.e(TAG, "getNotificationData, text: " + data.body);
 
 			mAppExecutors.mainThread().execute(() -> {
-				String imageUrl;
+				String imageUrl = null;
 				if (conversation.isGroup())
-					imageUrl = conversation.getGroupImageUrl();
+                    if(conversation.getGroupImageUrl() != null)
+				        	imageUrl = conversation.getGroupImageUrl();
 				else
-					imageUrl = contactServer.getProfilePicUrl();
+				    if(contactServer.getProfilePicUrl() != null)
+					        imageUrl = contactServer.getProfilePicUrl();
 
-				Log.e(TAG, "getNotificationData, download: " + imageUrl);
-
+				     Log.e(TAG, "getNotificationData, download: " + imageUrl);
 
 
 				if (imageUrl == null){

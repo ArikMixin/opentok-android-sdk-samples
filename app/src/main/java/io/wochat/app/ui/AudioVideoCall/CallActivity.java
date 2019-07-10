@@ -111,7 +111,7 @@ public class CallActivity extends AppCompatActivity
     private int mFlagDrawable;
     private String mFullLangName;
     private boolean mIsVideoCall, mIsOutGoingCall;
-    private String mParticipantId, mParticipantName, mParticipantLang,mParticipantLang_temp , mParticipantPic, mConversationId;
+    private String mParticipantName, mParticipantLang,mParticipantLang_temp , mParticipantPic, mConversationId;
     private String mSelfId, mSelfLang, mSelfLang_temp;
     private VideoAudioCallViewModel videoAudioCallViewModel;
     private VideoAudioCall mVideoAudioCall;
@@ -162,6 +162,8 @@ public class CallActivity extends AppCompatActivity
     private long mPrevTouch = 0, mCrrentTouch = 0, mDifTouch = 0;
 
     public static boolean activityActiveFlag;
+    public static String mParticipantId;
+
     public static final String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO };
     public static final int CLOSING_TIME = 3000;
@@ -1153,6 +1155,7 @@ public class CallActivity extends AppCompatActivity
         mCallingSound.stop();
 
         if(rtcCode.equals(Message.RTC_CODE_REJECTED)) {
+            callRejectedFlag = true;
             mStatusTV.setText(getResources().getString(R.string.rejected));
             mDeclineSound.setLooping(true);
             mDeclineSound.start();
@@ -1173,7 +1176,6 @@ public class CallActivity extends AppCompatActivity
 
         // Update call info after call is finished
         // videoAudioCallViewModel.updateCall()
-
         Handler handler = new Handler();
         handler.postDelayed(() -> {
             mCallingSound.stop();
@@ -1212,7 +1214,6 @@ public class CallActivity extends AppCompatActivity
     private void callMissed() {
         if(callMissedFlag || callRejectedFlag || callStartedFlag)
                                                           return;
-
     String eventCode;
     if(mIsVideoCall)
         eventCode = Message.EVENT_CODE_MISSED_VIDEO_CALL;

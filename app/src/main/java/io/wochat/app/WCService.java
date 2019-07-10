@@ -69,11 +69,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	@Override
 	public boolean onUnbind(Intent intent) {
-		Log.e(TAG, "WC Service onUnbind");
-//		if(pass == null)
-//		  		 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
-//			mXMPPProvider.initAsync(mSelfUserId, pass);
-//			init();
+		Log.e("WCService", "WC Service onUnbind");
+		if(pass == null)
+		  		 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
+			mXMPPProvider.initAsync(mSelfUserId, pass);
+			init();
 		return super.onUnbind(intent);
 	}
 
@@ -102,7 +102,8 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	public void onNewIncomingMessage(String msg, String conversationId) {
 		try {
 			Message message = Message.fromJson(msg);
-			Log.d(TAG, "JSON: " +message.toJson());
+			Log.d(TAG, message.getMessageType());
+			//Log.d(TAG, "JSON: " +message.toJson());
 
 			if (message.getMessageType().equals(Message.MSG_TYPE_TYPING_SIGNAL)){
 				broadcastTypingSignal(conversationId, message.getSenderId(), message.isTyping());
@@ -147,6 +148,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 						sendAckStatusForIncomingMessage(savedMessage, Message.ACK_STATUS_RECEIVED);
 						if (isMessageOfUserNotificationType(savedMessage)) {
 							if (!message.getConversationId().equals(mCurrentConversationId)) { // If the user not in a conversation	 chat - fire notification
+								Log.d("NotificationHelper", "**************************************");
 								NotificationHelper.handleNotificationIncomingMessage(getApplication(), savedMessage, contact);
 							}
 						}
@@ -575,8 +577,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 
 	private void openIncomingCallActivity(Message message) {
-		//If incoming activity open send BUSY back to sender
-		if(CallActivity.activityActiveFlag) {
+		if(CallActivity.activityActiveFlag && message.getSenderId().equals(CallActivity.mParticipantId) )
+			return;
+			//If incoming activity open send BUSY back to sender
+		else if(CallActivity.activityActiveFlag) {
 				Message message_busy = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(),
 							message.getSessionID(), "", "",
 						    Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);

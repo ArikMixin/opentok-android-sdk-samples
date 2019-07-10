@@ -33,12 +33,14 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="tab_text_1">Chats</string>
     <string name="tab_text_2">Calls</string>
+    <string name="tab_text_3">Interpreter</string>
     <string name="msg_invite_friend_body">Download Slatch! The first universal language chat! https://app.appsflyer.com/io.wochat.app?pid=invitefriends.</string>
     <string name="msg_invite_friend_title">Download Slatch!</string>
     <string name="refresh_contacts_progress_body">Refreshing…</string>
     <string name="chat_title">Chats</string>
     <string name="calls_title">Calls</string>
     <string name="camera_title">Camera</string>
+    <string name="interpreter_title">Interpreter</string>
     <string name="hint_enter_a_message">Type a message...</string>
     <string name="hint_slide_to_cancel">Slide to cancel</string>
     <string name="date_header_today">Today</string>

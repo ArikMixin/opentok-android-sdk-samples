@@ -42,7 +42,7 @@ public class NotificationHelper {
 	private static final int NOTIFICATION_ID = 2000;
 
 	public static void handleNotificationFromPush(Application application, Map<String, String> dataMap){
-		Log.d(TAG, "handleNotificationFromPush: ");
+		Log.d("WCService", "handleNotificationFromPush: ");
 		if (dataMap == null)
 			return;
 
@@ -53,8 +53,17 @@ public class NotificationHelper {
 		ContactServer contact = ContactServer.fromJson(senderString);
 		WCRepository repo = ((WCApplication) application).getRepository();
 
-		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
-				repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
+		if(message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)) {
+			//Not need to fire notification in call - only open call activity
+			openIncomingCall(application, repo, message);
+			return;
+		}
+
+
+		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT) &&
+				!Utils.fixHebrew(message.getMessageLanguage()).equals
+				(Utils.fixHebrew(WCSharedPreferences.getInstance(application).getUserLang()))){
+						repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
 						message.setMessageText(listener);
 						getContactFromPush(repo, application, message, contact);
 				});
@@ -65,13 +74,16 @@ public class NotificationHelper {
 	}
 
 	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){
-		Log.d(TAG, "handleNotificationIncomingMessage: ");
-		WCRepository repo = ((WCApplication) application).getRepository();
 
-		//If this is a text massage - translate first, and only then -> show notification
-		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT)) {
-			repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
-				message.setMessageText(listener);
+		WCRepository repo = ((WCApplication) application).getRepository();
+		Log.d("WCService", "handleNotificationIncomingMessage: " + message.getText());
+
+		//If this is a text massage (and also different languages) - translate first, and only then -> show notification
+		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT) &&
+				!Utils.fixHebrew(message.getMessageLanguage()).equals
+				(Utils.fixHebrew(WCSharedPreferences.getInstance(application).getUserLang()))){
+					repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
+					message.setMessageText(listener);
 					getContactIncomingMessage(repo, application , message , contact);
 			});
 		}else{
@@ -402,6 +414,35 @@ public class NotificationHelper {
 			// Returns null for pre-O (26) devices.
 			return null;
 		}
+	}
+
+	public static void  openIncomingCall(Application application, WCRepository repo, Message message){
+		Log.d("NotificationHelper", "!!!!!!!!!!!!!!!!!!!!!!");
+		//If incoming activity open send BUSY back to sender
+		if(CallActivity.activityActiveFlag && message.getSenderId().equals(CallActivity.mParticipantId))
+			return;
+//		else if(CallActivity.activityActiveFlag) {
+////			Message message_busy = new Message(message.getSenderId(),
+////					WCSharedPreferences.getInstance(application.getApplicationContext()).getUserId(),
+////					message.getConversationId(),
+////					message.getSessionID(), "", "",
+////					Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);
+////			sendMessage(message_busy);
+//		}
+			Contact contact = repo.getParticipantContact(message.getSenderId());
+			Intent intent = new Intent(application, CallActivity.class);
+			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, message.getSenderId());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, contact.getName());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, contact.getLanguage());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, contact.getAvatar());
+			intent.putExtra(Consts.INTENT_SESSION_ID, message.getSessionID());
+			intent.putExtra(Consts.INTENT_CONVERSATION_ID, message.getId());
+			intent.putExtra(Consts.INTENT_SELF_ID,  WCSharedPreferences.getInstance(application.getApplicationContext()).getUserId());
+			intent.putExtra(Consts.INTENT_SELF_LANG, WCSharedPreferences.getInstance(application.getApplicationContext()).getUserLang());
+			intent.putExtra(Consts.INTENT_IS_VIDEO_CALL, message.getIsVideoRTC());
+			intent.putExtra(Consts.OUTGOING_CALL_FLAG, false);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			application.startActivity(intent);
 	}
 
 }

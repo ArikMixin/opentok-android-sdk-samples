@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -287,6 +288,8 @@ public class RecentChatsFragment extends Fragment  implements
 				isVideoCall = true;
 		else if(buttonID == RecentChatsViewHolder.BTN_PHONE)
 				isVideoCall = false;
+
+		Log.d("arik", "onButtonClick: " + mSelfUserLang);
 
 		Intent intent = new Intent(getContext(), CallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
