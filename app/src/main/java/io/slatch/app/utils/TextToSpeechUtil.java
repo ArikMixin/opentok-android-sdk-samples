@@ -161,6 +161,7 @@ public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlaye
 			}
 			else {
 				Language la = new Language(nuanceLangCode);
+                Log.d(TAG, "setLanguage: ");
 				//mNuanceSpeechOptionsOTF.setLanguage(la);
 				mNuanceSpeechOptionsDefault.setLanguage(la);
 				mNuanceAPISupported = true;
@@ -228,12 +229,16 @@ public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlaye
 
 		mTextToSpeechPlayingListener = playingListener;
 		if (mGoogleAPISupported && mGoogleAPInitOK){
+			Log.d("arik", "111");
+
 			String rand = UUID.randomUUID().toString();
 			int res = mTextToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, rand);
 			Log.e(TAG, "TextToSpeech speak: " + text + ", result: " + res);
 			return (TextToSpeech.SUCCESS == res);
 		}
 		else {
+			Log.d("arik", "22");
+
 			if (mNuanceAPISupported){
 				mNuanceSpeechSession.speakString(text, mNuanceSpeechOptionsDefault, mNuanceTransactionListener);
 				return true;

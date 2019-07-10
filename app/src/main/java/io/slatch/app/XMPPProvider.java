@@ -39,7 +39,8 @@ class XMPPProvider {
 
 	private static final String TAG = "XMPPProvider";
 
-	private static final String XMPP_DOMAIN = "ejabberd-dev.slatch.io";
+	public static String XMPP_DOMAIN;
+	//public static String XMPP_DOMAIN = "ejabberd-dev.slatch.io";
 	//private static final String XMPP_DOMAIN = "ejabberd.slatch.io";
 
 

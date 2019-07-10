@@ -1284,6 +1284,8 @@ public class CallActivity extends AppCompatActivity
                             //*** Show the receiver video (Small Windows) Only for video calls
                                 animateAndAddView();
                         }
+                        enablePush2Talk();
+
 
                         //enable hide animation only if call started;
                         if(mVideoFlag)
@@ -1343,6 +1345,7 @@ public class CallActivity extends AppCompatActivity
                                             //*** Show the receiver video (Small Windows) Only for video calls
                                             animateAndAddView();
                                         }
+                                        enablePush2Talk();
 
                                         //enable hide button animation - only if call started;
                                         if(mVideoFlag)
@@ -1384,7 +1387,7 @@ public class CallActivity extends AppCompatActivity
                     mPublisherFL.addView(mPublisher.getView());
         }
 
-        enablePush2Talk();
+       // enablePush2Talk();
 
       mPublisherFL.setVisibility(View.VISIBLE);
       mPublisherFL.animate()
@@ -1398,11 +1401,14 @@ public class CallActivity extends AppCompatActivity
     }
 
     private void enablePush2Talk() {
+
         //Convert hebrew from "IW" to "HE"
         mSelfLang_temp = mSelfLang;
         mParticipantLang_temp = mParticipantLang;
         if(mSelfLang_temp.equals("IW")) mSelfLang_temp = "HE";
         if(mParticipantLang_temp.equals("IW")) mParticipantLang_temp = "HE";
+
+        Log.d("arik", "mSelfLang_temp: "  + mSelfLang_temp  + " mParticipantLang_temp : " +mParticipantLang_temp  );
 
         //Enable translate btn lang if self and participant have different languages
         if (!mSelfLang_temp.equals(mParticipantLang_temp)) {
@@ -1512,6 +1518,7 @@ public class CallActivity extends AppCompatActivity
 
     //Text To Speech
     private void fireTextToSpeech(String textToPlay) {
+        Log.d("arik", "fireTextToSpeech: " + textToPlay);
         // call view model to translate
        //  AudioDeviceManager.getAudioDevice().stopCapturer();
         AudioDeviceManager.getAudioDevice().stopRenderer();

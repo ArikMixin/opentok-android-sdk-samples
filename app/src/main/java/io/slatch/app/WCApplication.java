@@ -4,12 +4,14 @@ import android.app.Application;
 import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Intent;
 
+import io.slatch.app.com.WochatApi;
 import io.slatch.app.db.WCDatabase;
 import io.slatch.app.logic.NotificationHelper;
 
 public class WCApplication extends Application {
 
 	private AppExecutors mAppExecutors;
+
 
 	@Override
 	public void onCreate() {
@@ -25,6 +27,14 @@ public class WCApplication extends Application {
 			startService(new Intent(this, WCService.class));
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+
+		if (BuildConfig.DEBUG) {
+			WochatApi.BASE_URL = "https://api-dev.slatch.io/";
+			XMPPProvider.XMPP_DOMAIN = "ejabberd-dev.slatch.io";
+		}else {
+			WochatApi.BASE_URL = "https://api.slatch.io";
+			XMPPProvider.XMPP_DOMAIN = "ejabberd.slatch.io";
 		}
 	}
 

@@ -30,7 +30,8 @@ import io.slatch.app.utils.Utils;
 
 public class WochatApi {
 
-	private static final String BASE_URL = "https://api-dev.slatch.io/";
+	public static String BASE_URL;
+	//public static String BASE_URL = "https://api-dev.slatch.io/";
 	//private static final String BASE_URL = "https://api.slatch.io/";
 
 	private static final String TAG = "WochatApi";
