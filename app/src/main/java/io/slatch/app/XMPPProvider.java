@@ -554,7 +554,7 @@ class XMPPProvider {
 		if (participantIds.size() == 0)
 			return;
 
-		Log.e(TAG, "sendGroupStringMessage msg: " +
+		Log.e(TAG, "sendGroupStringMessage msg : " +
 			theMessage + " , participants: " +
 			Utils.LogList(Log.ERROR, TAG, participantIds));
 
