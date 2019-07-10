@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground">
 
-        <io.wochat.app.components.CircleImageView
+        <io.slatch.app.components.CircleImageView
             android:id="@id/dialogAvatar"
             android:layout_width="@dimen/dialog_avatar_width"
             android:layout_height="@dimen/dialog_avatar_height"

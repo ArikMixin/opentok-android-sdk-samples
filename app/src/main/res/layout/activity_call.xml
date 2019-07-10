@@ -108,7 +108,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_marginLeft="40dp">
 
-                <io.wochat.app.components.CircleImageView
+                <io.slatch.app.components.CircleImageView
                     android:id="@+id/participant_pic_video_civ"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
@@ -120,7 +120,7 @@
                     app:civ_border_overlay="true"
                     app:civ_border_width="0.1dp" />
 
-                <io.wochat.app.components.CircleImageView
+                <io.slatch.app.components.CircleImageView
                     android:id="@+id/participant_pic_flag_video_civ"
                     android:layout_width="35dp"
                     android:layout_height="35dp"
@@ -287,7 +287,7 @@
                 android:layout_height="210dp"
                 android:layout_centerInParent="true">
 
-                <io.wochat.app.components.CircleImageView
+                <io.slatch.app.components.CircleImageView
                     android:id="@+id/participant_pic_audio_civ"
                     android:layout_width="210dp"
                     android:layout_height="210dp"
@@ -314,7 +314,7 @@
                     />
 
 
-                <io.wochat.app.components.CircleImageView
+                <io.slatch.app.components.CircleImageView
                     android:id="@+id/participant_pic_flag_audio_civ"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
@@ -521,7 +521,7 @@
                 app:layout_constraintStart_toStartOf="parent">
 
 
-                <io.wochat.app.components.CircleImageView
+                <io.slatch.app.components.CircleImageView
                     android:id="@+id/mic_flag_civ"
                     android:layout_width="69dp"
                     android:layout_height="69dp"
@@ -670,7 +670,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="210dp">
 
-            <io.wochat.app.components.CircleImageView
+            <io.slatch.app.components.CircleImageView
                 android:visibility="visible"
                 android:id="@+id/mic_flag_p2t_civ"
                 android:layout_width="79dp"

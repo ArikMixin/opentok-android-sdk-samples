@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     tools:context=".ui.settings.SettingsUserFragment">
 
-    <io.wochat.app.components.CircleFlagImageView
+    <io.slatch.app.components.CircleFlagImageView
         android:id="@+id/user_flag_civ"
         android:layout_width="100dp"
         android:layout_height="100dp"

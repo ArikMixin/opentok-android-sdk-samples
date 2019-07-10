@@ -8,7 +8,7 @@
     android:paddingRight="16dp"
     android:paddingTop="5dp">
 
-    <io.wochat.app.components.CircleImageView
+    <io.slatch.app.components.CircleImageView
         android:id="@id/messageUserAvatar"
         android:visibility="gone"
         android:layout_width="40dp"

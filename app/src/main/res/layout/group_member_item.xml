@@ -16,7 +16,7 @@
         android:paddingRight="20dp"
         android:paddingTop="12dp">
 
-        <io.wochat.app.components.CircleFlagImageView
+        <io.slatch.app.components.CircleFlagImageView
             android:id="@+id/member_cfiv"
             android:layout_width="45dp"
             android:layout_height="45dp"

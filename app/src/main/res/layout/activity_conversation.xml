@@ -39,20 +39,20 @@
                     android:gravity="center_vertical"
                     >
 
-                    <io.wochat.app.components.CircleImageView
+                    <io.slatch.app.components.CircleImageView
                         android:id="@+id/contact_avatar_old_civ"
                         android:layout_width="38dp"
                         android:layout_height="38dp"
                         android:visibility="gone"
                         android:src="@mipmap/ic_launcher"/>
 
-                    <io.wochat.app.components.CircleFlagImageView
+                    <io.slatch.app.components.CircleFlagImageView
                         android:id="@+id/contact_avatar_civ"
                         android:layout_width="50dp"
                         android:layout_height="50dp"
                         android:src="@mipmap/a_nd_logo_white">
 
-                    </io.wochat.app.components.CircleFlagImageView>
+                    </io.slatch.app.components.CircleFlagImageView>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -126,7 +126,7 @@
                     <!--android:src="@drawable/chat_background"-->
                     <!--/>-->
 
-                <io.wochat.app.utils.TopCropImageView
+                <io.slatch.app.utils.TopCropImageView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:src="@drawable/chat_background" />
@@ -166,14 +166,14 @@
                     app:outcomingBubblePaddingRight="10dp"
                      />
 
-                <io.wochat.app.components.MessageReplyLayout
+                <io.slatch.app.components.MessageReplyLayout
                     android:layout_alignParentBottom="true"
                     android:id="@+id/input_reply_message_layout"
                     android:layout_marginTop="2dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                </io.wochat.app.components.MessageReplyLayout>
+                </io.slatch.app.components.MessageReplyLayout>
 
             </RelativeLayout>
 

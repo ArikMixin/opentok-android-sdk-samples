@@ -22,16 +22,16 @@
         android:orientation="vertical">
 
 
-        <io.wochat.app.components.MessageReplyLayout
+        <io.slatch.app.components.MessageReplyLayout
             android:id="@+id/reply_layout"
             android:minWidth="250dp"
             android:layout_marginBottom="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-        </io.wochat.app.components.MessageReplyLayout>
+        </io.slatch.app.components.MessageReplyLayout>
 
-        <io.wochat.app.components.CircleImageView
+        <io.slatch.app.components.CircleImageView
             android:id="@id/magicIndicatorCIV"
             android:layout_width="12dp"
             android:layout_height="12dp"

@@ -8,6 +8,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:344493067818:android:399ddb3eebc4e76d",
+        "android_client_info": {
+          "package_name": "io.slatch.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "344493067818-kku20p3rocpfbjdc6gqtvl52627ma8ih.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1EGrSUM6UeS-T4bijkc-aKeNJX_WE2KQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "344493067818-kku20p3rocpfbjdc6gqtvl52627ma8ih.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "344493067818-39i70r6rkq185872con6k6fe1mds7pvn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wochatsas.wochat"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:344493067818:android:d752e75c45364a93",
         "android_client_info": {
           "package_name": "io.wochat.app"
@@ -33,11 +69,7 @@
         }
       ],
       "services": {
-        "analytics_service": {
-          "status": 1
-        },
         "appinvite_service": {
-          "status": 2,
           "other_platform_oauth_client": [
             {
               "client_id": "344493067818-kku20p3rocpfbjdc6gqtvl52627ma8ih.apps.googleusercontent.com",
@@ -51,9 +83,6 @@
               }
             }
           ]
-        },
-        "ads_service": {
-          "status": 2
         }
       }
     }

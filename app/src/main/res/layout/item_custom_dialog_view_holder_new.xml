@@ -14,7 +14,7 @@
         android:layout_marginTop="8dp">
 
 
-        <io.wochat.app.components.CircleFlagImageView
+        <io.slatch.app.components.CircleFlagImageView
             android:id="@id/dialogAvatar"
             android:layout_width="@dimen/dialog_avatar_width"
             android:layout_height="@dimen/dialog_avatar_height"

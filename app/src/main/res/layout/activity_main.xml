@@ -39,7 +39,7 @@
 
 
 
-            <io.wochat.app.components.BadgedTabLayout
+            <io.slatch.app.components.BadgedTabLayout
 
                 android:id="@+id/tabs"
                 style="@style/Widget.Design.TabLayout"
@@ -67,7 +67,7 @@
 
 
 
-            </io.wochat.app.components.BadgedTabLayout>
+            </io.slatch.app.components.BadgedTabLayout>
         </LinearLayout>
 
     </android.support.design.widget.AppBarLayout>

@@ -13,11 +13,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <io.wochat.app.components.CircleFlagImageView
+        <io.slatch.app.components.CircleFlagImageView
             android:id="@+id/profile_cfiv"
             android:layout_width="200dp"
             android:layout_height="200dp">
-        </io.wochat.app.components.CircleFlagImageView>
+        </io.slatch.app.components.CircleFlagImageView>
 
         <ImageView
             android:id="@+id/camera_iv"

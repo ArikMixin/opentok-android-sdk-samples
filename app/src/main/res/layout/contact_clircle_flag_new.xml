@@ -7,13 +7,13 @@
     android:layout_height="match_parent"
     >
 
-    <io.wochat.app.components.CircleImageView
+    <io.slatch.app.components.CircleImageView
         android:id="@+id/contact_pic_civ"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:src="@drawable/ic_empty_contact"/>
 
-    <io.wochat.app.components.CircleImageView
+    <io.slatch.app.components.CircleImageView
         android:id="@+id/contact_flag_civ"
         android:layout_width="0dp"
         android:layout_height="0dp"

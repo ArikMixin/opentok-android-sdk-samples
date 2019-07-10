@@ -52,7 +52,7 @@
                 android:src="@drawable/triangle_pointing_right"/>
 
 
-            <io.wochat.app.components.CircleImageView
+            <io.slatch.app.components.CircleImageView
                 android:id="@+id/pic_profile_iv"
                 android:layout_width="90dp"
                 android:layout_height="90dp"
