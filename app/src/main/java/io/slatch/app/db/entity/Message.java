@@ -177,7 +177,8 @@ public class Message implements IMessage,
 	public static final String RTC_CODE_CLOSE = "CLOSE";
 	public static final String RTC_CODE_REJECTED = "REJECTED";
 	public static final String RTC_CODE_BUSY = "BUSY";
-	public static final String RTC_CODE_UPDATE_SESSION = "UPDATE_SESSION";
+	public static final String RTC_CODE_RECORDING_START = "RECORDING_START";
+	public static final String RTC_CODE_RECORDING_END = "RECORDING_END";
 
 	@StringDef({
 			RTC_CODE_OFFER,
@@ -186,7 +187,8 @@ public class Message implements IMessage,
 			RTC_CODE_CLOSE,
 			RTC_CODE_REJECTED,
 			RTC_CODE_BUSY,
-			RTC_CODE_UPDATE_SESSION,
+			RTC_CODE_RECORDING_START,
+			RTC_CODE_RECORDING_END
 	})
 
 	@Retention(RetentionPolicy.SOURCE)
@@ -492,7 +494,7 @@ public class Message implements IMessage,
 
 	// for outgoing WebRtcCall
 	public Message(String participantId, String selfId, String conversationId, String sessionID, String message,
-				   String messageLanguage, String rtcCode, boolean isVideoRTC, boolean isRecording) {
+				   String messageLanguage, String rtcCode, boolean isVideoRTC) {
 		//Base:
 		this.messageId = UUID.randomUUID().toString();
 		this.messageType = MSG_TYPE_WEBRTC_CALL;
@@ -508,7 +510,6 @@ public class Message implements IMessage,
   		this.message = message;
 		this.messageLanguage = messageLanguage;
 		this.isVideoRTC = isVideoRTC;
-		this.isRecording = isRecording;
 	}
 
 	// Video Audio Calls - CallEvents - (MISSED CALLS)

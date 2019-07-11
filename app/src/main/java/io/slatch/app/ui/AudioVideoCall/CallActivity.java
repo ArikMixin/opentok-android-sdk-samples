@@ -510,15 +510,15 @@ public class CallActivity extends AppCompatActivity
                     if(callStartedFlag) {
                         minimizeActivity();
                     }else
-                        sendXMPPmsg(Message.RTC_CODE_CLOSE,"", false);
+                        sendXMPPmsg(Message.RTC_CODE_CLOSE,"");
             break;
 
             case R.id.decline_incoming_iv:
-                    sendXMPPmsg(Message.RTC_CODE_REJECTED,"",false);
+                    sendXMPPmsg(Message.RTC_CODE_REJECTED,"");
             break;
 
             case R.id.decline_inside_iv:
-                    sendXMPPmsg(Message.RTC_CODE_CLOSE,"",false);
+                    sendXMPPmsg(Message.RTC_CODE_CLOSE,"");
             break;
 
             case R.id.accept_iv:
@@ -672,7 +672,7 @@ public class CallActivity extends AppCompatActivity
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: //--Hold--
-                sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,"",true);
+                sendXMPPmsg(Message.RTC_CODE_RECORDING_START,"");
                 mAudioDriveStrted = false;
                 mPush2talk_locked = false;
                 mPushToTalkFL.setClickable(true);
@@ -737,7 +737,7 @@ public class CallActivity extends AppCompatActivity
     public void sendPush2TalkMsg(){
         Log.d(TAG, "sendPush2TalkMsg: ");
         SpeechToTextUtil.getInstance().stopSpeechToText();
-        sendXMPPmsg(Message.RTC_CODE_UPDATE_SESSION,"",false);
+        sendXMPPmsg(Message.RTC_CODE_RECORDING_END,"");
 
             ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
                     mPublisherFL.setVisibility(View.VISIBLE);
@@ -756,7 +756,7 @@ public class CallActivity extends AppCompatActivity
         if(callStartedFlag) {
                 minimizeActivity();
         }else
-                sendXMPPmsg(Message.RTC_CODE_REJECTED,"",false);
+                sendXMPPmsg(Message.RTC_CODE_REJECTED,"");
     }
 
     private void initPIP(){
@@ -907,9 +907,9 @@ public class CallActivity extends AppCompatActivity
     }
 
     //Send Massage to the receiver
-    public void sendXMPPmsg(String rtcCode, String msgFromPTT ,boolean isRecording){
+    public void sendXMPPmsg(String rtcCode, String msgFromPTT){
         message = new Message(mParticipantId, mSelfId, mConversationId, mSessionID, msgFromPTT,mSelfLang,
-                                                                              rtcCode, mVideoFlag, isRecording);
+                                                                              rtcCode, mVideoFlag);
         if ((mService != null) && (mService.isXmppConnected())){
             mService.sendMessage(message);
         }
@@ -959,7 +959,7 @@ public class CallActivity extends AppCompatActivity
         if(mIsOutGoingCall) {
              mSessionID = mVideoAudioCall.getSessionID(); // If outGoing call - create new SessionId
                     //Send Massage to the receiver (With the sessionID) - let the receiver know that video/audio call is coming
-            sendXMPPmsg(Message.RTC_CODE_OFFER,"", false);
+            sendXMPPmsg(Message.RTC_CODE_OFFER,"");
         }
         //Create session connection via TokBox
         Log.d("arik", "mSessionID: " + mSessionID + " mVideoAudioCall.getToken(): "+mVideoAudioCall.getToken());
@@ -997,7 +997,8 @@ public class CallActivity extends AppCompatActivity
             filter.addAction(Message.RTC_CODE_BUSY);
             filter.addAction(Message.RTC_CODE_CLOSE);
             filter.addAction(Message.RTC_CODE_ANSWER);
-            filter.addAction(Message.RTC_CODE_UPDATE_SESSION);
+            filter.addAction(Message.RTC_CODE_RECORDING_START);
+            filter.addAction(Message.RTC_CODE_RECORDING_END);
             filter.addAction(Message.RTC_CODE_TEXT);
             registerReceiver(mRTCcodeBR,filter);
         } catch (Exception e) {}
@@ -1079,11 +1080,11 @@ public class CallActivity extends AppCompatActivity
     @Override
     public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
         if(perms.size() != 3)  //if the client not accept all 3 permissions reject the call (close the activity)
-            sendXMPPmsg(Message.RTC_CODE_REJECTED,"", false);
+            sendXMPPmsg(Message.RTC_CODE_REJECTED,"");
     }
     @Override
     public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
-        sendXMPPmsg(Message.RTC_CODE_REJECTED,"", false);
+        sendXMPPmsg(Message.RTC_CODE_REJECTED,"");
     }
 
     @Override
@@ -1135,8 +1136,10 @@ public class CallActivity extends AppCompatActivity
                 callEnded(intent.getAction());
             else if(intent.getAction().equals(Message.RTC_CODE_ANSWER))
                     callStarted();
-            else if(intent.getAction().equals(Message.RTC_CODE_UPDATE_SESSION))
-                         recordingState(intent.getBooleanExtra(WCService.IS_RECORDING,false));
+            else if(intent.getAction().equals(Message.RTC_CODE_RECORDING_START))
+                         recordingState(true);
+            else if(intent.getAction().equals(Message.RTC_CODE_RECORDING_END))
+                         recordingState(false);
             else if(intent.getAction().equals(Message.RTC_CODE_TEXT)){
                     videoAudioCallViewModel.translateText(intent.getStringExtra(WCService.RTC_MESSAGE),
                                                     intent.getStringExtra(WCService.RTC_MESSAGE_LANGUAGE));
@@ -1189,7 +1192,7 @@ public class CallActivity extends AppCompatActivity
             mArrowsIV.startAnimation(mTranslateAnima); // start PushToTalk arrow animation
 
             if(!mIsOutGoingCall){
-                            sendXMPPmsg(Message.RTC_CODE_ANSWER, "",false);
+                            sendXMPPmsg(Message.RTC_CODE_ANSWER, "");
                             //Stop sound and accept call (jumping) animation
                             incomingCallBtnsRL.setVisibility(View.GONE);
                             mAcceptIV.setEnabled(false);
@@ -1490,7 +1493,7 @@ public class CallActivity extends AppCompatActivity
     public void onSpeechToTextResult(String text, int duration) {
         Log.d(TAG, "onSpeechToTextResult: ");
         if(!text.equals(""))
-            sendXMPPmsg(Message.RTC_CODE_TEXT,text, false);
+            sendXMPPmsg(Message.RTC_CODE_TEXT,text);
     }
 
     @Override
@@ -1518,7 +1521,7 @@ public class CallActivity extends AppCompatActivity
 
     //Text To Speech
     private void fireTextToSpeech(String textToPlay) {
-        Log.d("arik", "fireTextToSpeech: " + textToPlay);
+        Log.d(TAG, "fireTextToSpeech: " + textToPlay);
         // call view model to translate
        //  AudioDeviceManager.getAudioDevice().stopCapturer();
         AudioDeviceManager.getAudioDevice().stopRenderer();

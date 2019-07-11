@@ -229,7 +229,6 @@ public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlaye
 
 		mTextToSpeechPlayingListener = playingListener;
 		if (mGoogleAPISupported && mGoogleAPInitOK){
-			Log.d("arik", "111");
 
 			String rand = UUID.randomUUID().toString();
 			int res = mTextToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, rand);
@@ -237,7 +236,6 @@ public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlaye
 			return (TextToSpeech.SUCCESS == res);
 		}
 		else {
-			Log.d("arik", "22");
 
 			if (mNuanceAPISupported){
 				mNuanceSpeechSession.speakString(text, mNuanceSpeechOptionsDefault, mNuanceTransactionListener);

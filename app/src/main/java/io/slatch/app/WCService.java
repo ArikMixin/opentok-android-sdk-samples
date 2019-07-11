@@ -118,8 +118,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			//WEB RTC Messages (ANSWER, TEXT, CLOSE, REJECTED, BUSY, UPDATE_SESSION)
 			if (message.getRtcCode() != null && !message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
-						broadcastWebRTC(message.getRtcCode(), message.isRecording(),
-															message.getMessage(),message.getMessageLanguage());
+						broadcastWebRTC(message.getRtcCode(), message.getMessage(),message.getMessageLanguage());
 				return;
 			}
 
@@ -535,11 +534,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 //		sendBroadcast(intent);
 //	}
 
-	private void broadcastWebRTC(String mRtcCode, boolean isRecording, String message, String messageLanguage) {
+	private void broadcastWebRTC(String mRtcCode, String message, String messageLanguage) {
 		Intent intent = new Intent();
 			intent.setAction(mRtcCode);
-		if(mRtcCode.equals(Message.RTC_CODE_UPDATE_SESSION))
-						intent.putExtra(IS_RECORDING, isRecording);
+//		if(mRtcCode.equals(Message.RTC_CODE_UPDATE_SESSION))
+//						intent.putExtra(IS_RECORDING, isRecording);
 		if(mRtcCode.equals(Message.RTC_CODE_TEXT)) {
 						intent.putExtra(RTC_MESSAGE, message);
 		}				intent.putExtra(RTC_MESSAGE_LANGUAGE, messageLanguage);
@@ -583,7 +582,7 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		else if(CallActivity.activityActiveFlag) {
 				Message message_busy = new Message(message.getSenderId(), mSelfUserId, message.getConversationId(),
 							message.getSessionID(), "", "",
-						    Message.RTC_CODE_BUSY, message.getIsVideoRTC(), false);
+						    Message.RTC_CODE_BUSY, message.getIsVideoRTC());
 				sendMessage(message_busy);
 		}else {
 			contact = mRepository.getParticipantContact(message.getSenderId());
