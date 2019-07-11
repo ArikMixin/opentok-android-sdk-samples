@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -24,7 +25,7 @@ import io.slatch.app.db.WCSharedPreferences;
 import io.slatch.app.ui.settings.SettingsActivity;
 
 
-public class InterpreterFragment extends Fragment implements View.OnClickListener {
+public class InterpreterFragment extends Fragment implements View.OnClickListener, View.OnTouchListener {
 
 	private View view;
 	private RelativeLayout mTopInsideRL;
@@ -36,6 +37,10 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private ImageView mBottomIV;
 	private TextView mTopTV;
 	private TextView mBottomTV;
+	private ImageView mMicTopIV;
+	private ImageView mMicBottomIV;
+
+
 
 	public static InterpreterFragment newInstance() { return new InterpreterFragment();
 	}
@@ -58,10 +63,14 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
         mRotationIV = (ImageView) view.findViewById(R.id.rotation_iv);
 		mTopTV = (TextView) view.findViewById(R.id.top_tv);
 		mBottomTV = (TextView) view.findViewById(R.id.bottom_tv);
+		mMicTopIV = (ImageView) view.findViewById(R.id.mic_top_iv);
+		mMicBottomIV = (ImageView) view.findViewById(R.id.mic_bottom_iv);
 
 		setUserLanguage();
 
 		mRotationIV.setOnClickListener(this);
+		mMicBottomIV.setOnTouchListener(this);
+		mMicTopIV.setOnTouchListener(this);
 	}
 
 	@Override
@@ -96,12 +105,43 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
         }
     }
 
+
+	@Override
+	public boolean onTouch(View view, MotionEvent motionEvent) {
+		switch(view.getId()){
+			case R.id.mic_top_iv:
+					onTouchActions(view, motionEvent);
+				break;
+			case R.id.mic_bottom_iv:
+					onTouchActions(view, motionEvent); // Push to talk btn
+				break;
+		}
+		return true;
+	}
+
+	private void  onTouchActions(View view, MotionEvent event){
+
+		switch (event.getAction()) {
+			case MotionEvent.ACTION_DOWN: //--Hold--
+				view.setBackgroundResource(R.drawable.interpreter_active);
+				break;
+
+			case MotionEvent.ACTION_MOVE:
+				break;
+
+			case MotionEvent.ACTION_UP: //--Release--
+				view.setBackgroundResource(R.drawable.interpreter_talk);
+				break;
+			default:
+		}
+	}
+
 	private void setUserLanguage() {
-		//Get users language
-		//**for default language to translate is French
+		//Get users (Self) language
 		 selfLang = WCSharedPreferences.getInstance(view.getContext()).getUserLang().toLowerCase();
 
 		//Top language should be "French"
+		//if users lang is French - change to top language to english
 		 if(selfLang.equals("fr")) {
 			 Picasso.get()
 					 .load("file:///android_asset/interpreter_en.png")
