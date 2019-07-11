@@ -11,14 +11,31 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
+
+import java.io.InputStream;
 
 import io.slatch.app.R;
+import io.slatch.app.db.WCSharedPreferences;
 import io.slatch.app.ui.settings.SettingsActivity;
 
 
-public class InterpreterFragment extends Fragment {
+public class InterpreterFragment extends Fragment implements View.OnClickListener {
 
 	private View view;
+	private RelativeLayout mTopInsideRL;
+	private RelativeLayout mBottomRL;
+    private ImageView mRotationIV;
+    private String selfLang;
+    private InputStream mInputStream;
+	private ImageView mTopIV;
+	private ImageView mBottomIV;
+	private TextView mTopTV;
+	private TextView mBottomTV;
 
 	public static InterpreterFragment newInstance() { return new InterpreterFragment();
 	}
@@ -34,6 +51,17 @@ public class InterpreterFragment extends Fragment {
 	}
 
 	private void initView() {
+		mTopInsideRL = (RelativeLayout) view.findViewById(R.id.top_inside_rl);
+		mBottomRL = (RelativeLayout) view.findViewById(R.id.bottom_rl);
+		mTopIV = (ImageView) view.findViewById(R.id.top_iv);
+		mBottomIV = (ImageView) view.findViewById(R.id.bottom_iv);
+        mRotationIV = (ImageView) view.findViewById(R.id.rotation_iv);
+		mTopTV = (TextView) view.findViewById(R.id.top_tv);
+		mBottomTV = (TextView) view.findViewById(R.id.bottom_tv);
+
+		setUserLanguage();
+
+		mRotationIV.setOnClickListener(this);
 	}
 
 	@Override
@@ -57,4 +85,45 @@ public class InterpreterFragment extends Fragment {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+
+            case R.id.rotation_iv:
+ 			         mTopInsideRL.setRotation(mTopInsideRL.getRotation()-180);
+                break;
+        }
+    }
+
+	private void setUserLanguage() {
+		//Get users language
+		//**for default language to translate is French
+		 selfLang = WCSharedPreferences.getInstance(view.getContext()).getUserLang().toLowerCase();
+
+		//Top language should be "French"
+		 if(selfLang.equals("fr")) {
+			 Picasso.get()
+					 .load("file:///android_asset/interpreter_en.png")
+					 .error(R.drawable.interpeter_general)
+					 .into(mTopIV);
+		 }else{
+			Picasso.get()
+					.load("file:///android_asset/interpreter_fr.png")
+					.error(R.drawable.interpeter_general)
+					.into(mTopIV);
+		}
+
+		//Bottom language should be Users languge
+		Picasso.get()
+					.load("file:///android_asset/interpreter_" + selfLang + ".png")
+					.error(R.drawable.interpeter_general)
+					.into(mBottomIV);
+
+
+			return;
+
+
+	}
+
 }

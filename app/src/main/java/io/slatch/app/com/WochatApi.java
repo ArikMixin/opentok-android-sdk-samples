@@ -706,6 +706,7 @@ public class WochatApi {
 											lsnrArray.OnServerResponse(result, error, null, dataArray);
 									}
 								} else { //If "data" column is null - make the response anyway
+//										if(lsnrObject != null)
 								    	lsnrObject.OnServerResponse(result, error, null, null);
 								}
 							} catch (JSONException e) {

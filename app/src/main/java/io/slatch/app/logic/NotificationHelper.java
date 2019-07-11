@@ -50,6 +50,8 @@ public class NotificationHelper {
 		String senderString = dataMap.get("sender_contact");
 
 		Message message = Message.fromJson(notifString);
+		if(message.getSenderName() == null)
+			return;
 		ContactServer contact = ContactServer.fromJson(senderString);
 		WCRepository repo = ((WCApplication) application).getRepository();
 

@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Interpolator;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,6 +48,7 @@ import io.slatch.app.db.entity.User;
 import io.slatch.app.ui.Contact.ContactMultiSelectorActivity;
 import io.slatch.app.ui.Contact.ContactSelectorActivity;
 import io.slatch.app.ui.Group.NewGroupActivity;
+import io.slatch.app.ui.Interpreter.InterpreterFragment;
 import io.slatch.app.ui.Messages.ConversationActivity;
 import io.slatch.app.ui.RecentCalls.RecentCallsFragment;
 import io.slatch.app.ui.RecentChats.RecentChatsFragment;
@@ -61,12 +63,15 @@ public class MainActivity extends AppCompatActivity {
 	private static final int TAB_POSITION_CAMERA = 0;
 	private static final int TAB_POSITION_CHAT = 1;
 	private static final int TAB_POSITION_CALL = 2;
+	private static final int TAB_POSITION_INTERPRETER = 3;
+	;
 
 
 	private int mFragmentsTitles[] = new int[] {
-		R.string.camera_title,
-		R.string.chat_title,
-		R.string.calls_title};
+			R.string.camera_title,
+			R.string.chat_title,
+			R.string.calls_title,
+			R.string.interpreter_title};
 
 
 	private static final String TAG = "MainActivity";
@@ -174,6 +179,11 @@ public class MainActivity extends AppCompatActivity {
 		layoutParams2.width = LinearLayout.LayoutParams.MATCH_PARENT;
 		layout2.setLayoutParams(layoutParams2);
 
+		LinearLayout layout3 = ((LinearLayout) ((LinearLayout) tabLayout.getChildAt(0)).getChildAt(TAB_POSITION_INTERPRETER));
+		LinearLayout.LayoutParams layoutParams3 = (LinearLayout.LayoutParams) layout3.getLayoutParams();
+		layoutParams3.weight = 1;
+		layoutParams3.width = LinearLayout.LayoutParams.MATCH_PARENT;
+		layout3.setLayoutParams(layoutParams3);
 
 		mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 		tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
@@ -196,6 +206,10 @@ public class MainActivity extends AppCompatActivity {
 					mLastSelectioPage = position;
 					mFab.setVisibility(View.VISIBLE);
 					mFab.setImageResource(R.drawable.new_call);
+				}
+				else if (position == TAB_POSITION_INTERPRETER) {
+					mLastSelectioPage = position;
+					mFab.setVisibility(View.GONE);
 				}
 				else {
 					openCamera();
@@ -348,6 +362,10 @@ public class MainActivity extends AppCompatActivity {
 				RecentCallsFragment recentCallsFragment = new RecentCallsFragment();
 				return recentCallsFragment;
 			}
+			else if (sectionNumber == TAB_POSITION_INTERPRETER){
+				InterpreterFragment interpreterFragment = new InterpreterFragment();
+				return interpreterFragment;
+			}
 			PlaceholderFragment fragment = new PlaceholderFragment();
 			Bundle args = new Bundle();
 			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
@@ -364,7 +382,7 @@ public class MainActivity extends AppCompatActivity {
 			return rootView;
 		}
 	}
-	
+
 //	public static class PlaceholderFragment extends Fragment {
 //
 //		public PlaceholderFragment() {
@@ -404,9 +422,10 @@ public class MainActivity extends AppCompatActivity {
 	public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
 		private String tabTitles[] = new String[] {
-			"",
-			getString(R.string.tab_text_1),
-			getString(R.string.tab_text_2)};
+				"",
+				getString(R.string.tab_text_1),
+				getString(R.string.tab_text_2),
+				getString(R.string.tab_text_3)};
 
 
 		public SectionsPagerAdapter(FragmentManager fm) {
@@ -635,10 +654,10 @@ public class MainActivity extends AppCompatActivity {
 		mConversationViewModel.checkLatestVersion();
 		mConversationViewModel.getLatestVersion().observe(this, latestVersion -> {
 			if(latestVersion != null) {
-						if(Integer.parseInt(mCurrentVersion.replace(".", "")) <
-								Integer.parseInt(latestVersion.replace(".", ""))){
-							showUpdateDialog();
-						}
+				if(Integer.parseInt(mCurrentVersion.replace(".", "")) <
+						Integer.parseInt(latestVersion.replace(".", ""))){
+					showUpdateDialog();
+				}
 			}
 		});
 	}
@@ -655,7 +674,7 @@ public class MainActivity extends AppCompatActivity {
 		mUpdatebuilder.setNegativeButton("Cancel", (dialog, which) -> finishAndRemoveTask());
 		mUpdatebuilder.setCancelable(false);
 		if ((mUpdateDialog == null) || !mUpdateDialog.isShowing())
-							mUpdateDialog = mUpdatebuilder.show();
+			mUpdateDialog = mUpdatebuilder.show();
 	}
 
 	private void ratingDialog() {
@@ -668,7 +687,7 @@ public class MainActivity extends AppCompatActivity {
 			mSharedPreferences.saveFirstEnterMillis(System.currentTimeMillis()); // Save first enter time
 		}else {
 			if (System.currentTimeMillis() < mSharedPreferences.geFirstEnterMillis() + TimeUnit.DAYS.toMillis(1))
-												return;
+				return;
 		}
 		//Start rating dialog process
 		RatingDialog ratingDialog = new RatingDialog.Builder(this)
