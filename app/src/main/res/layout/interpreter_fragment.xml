@@ -141,7 +141,8 @@
                 android:src="@drawable/flag_israel"
                 app:civ_border_color="@color/warm_grey"
                 app:civ_border_overlay="true"
-                app:civ_border_width="0.1dp" />
+                app:civ_border_width="0.1dp"
+                />
 </RelativeLayout>
 
  </LinearLayout>

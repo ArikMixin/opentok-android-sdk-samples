@@ -64,6 +64,7 @@ import io.slatch.app.R;
 import io.slatch.app.WCRepository;
 import io.slatch.app.WCService;
 import io.slatch.app.components.CircleImageView;
+import io.slatch.app.db.WCSharedPreferences;
 import io.slatch.app.db.entity.Call;
 import io.slatch.app.db.entity.Contact;
 import io.slatch.app.db.entity.Message;
@@ -1142,7 +1143,8 @@ public class CallActivity extends AppCompatActivity
                          recordingState(false);
             else if(intent.getAction().equals(Message.RTC_CODE_TEXT)){
                     videoAudioCallViewModel.translateText(intent.getStringExtra(WCService.RTC_MESSAGE),
-                                                    intent.getStringExtra(WCService.RTC_MESSAGE_LANGUAGE));
+                                                    intent.getStringExtra(WCService.RTC_MESSAGE_LANGUAGE),
+                                                     WCSharedPreferences.getInstance(CallActivity.this).getUserLang()); // translate to self);
             }
             else if(intent.getAction().equals(WCService.CALL_EVENT)) {
                     finish();

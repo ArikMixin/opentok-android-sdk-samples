@@ -1919,11 +1919,9 @@ public class WCRepository {
 	}
 
 	//Video Audio calls translation (Push 2 Talk)
-	public void translate(String textToTranslate, String toLang) {
+	public void translate(String textToTranslate, String fromLang, String toLang) {
 		mAppExecutors.networkIO().execute(() -> {
-			String selfLang = mSharedPreferences.getUserLang();
-
-			mWochatApi.translate("", toLang, selfLang, textToTranslate,
+			mWochatApi.translate("", fromLang, toLang, textToTranslate,
 					(isSuccess, errorLogic, errorComm, response) -> {
 						if ((isSuccess) && (response != null)) {
 							Log.e(TAG, "translate res: " + response.toString());

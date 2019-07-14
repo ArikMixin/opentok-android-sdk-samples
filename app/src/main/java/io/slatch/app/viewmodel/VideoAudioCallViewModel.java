@@ -28,8 +28,8 @@ public class VideoAudioCallViewModel extends AndroidViewModel {
 
 
 
-    public void translateText(String textToTranslate, String fromLang){
-        mRepository.translate(textToTranslate, fromLang);
+    public void translateText(String textToTranslate, String fromLang, String toLang){
+        mRepository.translate(textToTranslate, fromLang, toLang);
     }
     public void resetTranslatedText() {
          mRepository.resetTranslatedText();

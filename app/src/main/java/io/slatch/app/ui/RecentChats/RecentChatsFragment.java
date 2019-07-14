@@ -289,8 +289,6 @@ public class RecentChatsFragment extends Fragment  implements
 		else if(buttonID == RecentChatsViewHolder.BTN_PHONE)
 				isVideoCall = false;
 
-		Log.d("arik", "onButtonClick: " + mSelfUserLang);
-
 		Intent intent = new Intent(getContext(), CallActivity.class);
 		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
