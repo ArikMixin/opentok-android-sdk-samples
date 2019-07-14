@@ -1,10 +1,13 @@
 package io.slatch.app.ui.Interpreter;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,12 +20,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
-
-import java.io.InputStream;
-
 import io.slatch.app.R;
+import io.slatch.app.WCService;
+import io.slatch.app.components.CircleImageView;
 import io.slatch.app.db.WCSharedPreferences;
 import io.slatch.app.ui.settings.SettingsActivity;
+import io.slatch.app.utils.Utils;
+import io.slatch.app.viewmodel.VideoAudioCallViewModel;
 
 
 public class InterpreterFragment extends Fragment implements View.OnClickListener, View.OnTouchListener {
@@ -32,15 +36,15 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private RelativeLayout mBottomRL;
     private ImageView mRotationIV;
     private String selfLang;
-    private InputStream mInputStream;
 	private ImageView mTopIV;
 	private ImageView mBottomIV;
-	private TextView mTopTV;
-	private TextView mBottomTV;
 	private ImageView mMicTopIV;
 	private ImageView mMicBottomIV;
-
-
+	private TextView mTopTV;
+	private TextView mBottomTV;
+	private CircleImageView mTopFlagCIV;
+	private CircleImageView mBottomFlagCIV;
+	private VideoAudioCallViewModel videoAudioCallViewModel;
 
 	public static InterpreterFragment newInstance() { return new InterpreterFragment();
 	}
@@ -61,12 +65,21 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 		mTopIV = (ImageView) view.findViewById(R.id.top_iv);
 		mBottomIV = (ImageView) view.findViewById(R.id.bottom_iv);
         mRotationIV = (ImageView) view.findViewById(R.id.rotation_iv);
-		mTopTV = (TextView) view.findViewById(R.id.top_tv);
-		mBottomTV = (TextView) view.findViewById(R.id.bottom_tv);
 		mMicTopIV = (ImageView) view.findViewById(R.id.mic_top_iv);
 		mMicBottomIV = (ImageView) view.findViewById(R.id.mic_bottom_iv);
+		mTopTV = (TextView) view.findViewById(R.id.top_tv);
+		mBottomTV = (TextView) view.findViewById(R.id.bottom_tv);
+		mTopFlagCIV = (CircleImageView) view.findViewById(R.id.top_flag_civ);
+		mBottomFlagCIV = (CircleImageView) view.findViewById(R.id.bottom_flag_civ);
 
-		setUserLanguage();
+		//Get users (Self) language
+		selfLang = WCSharedPreferences.getInstance(view.getContext()).getUserLang().toLowerCase();
+
+		//View Model
+		videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+		videoAudioCallViewModel.translateText("Press and hold the microphone","EN");
+		videoAudioCallViewModel.getTranslatedText().observe(this, translatedText -> {if(translatedText != null)
+																					setUserLanguage(translatedText);});
 
 		mRotationIV.setOnClickListener(this);
 		mMicBottomIV.setOnTouchListener(this);
@@ -139,34 +152,43 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 		}
 	}
 
-	private void setUserLanguage() {
-		//Get users (Self) language
-		 selfLang = WCSharedPreferences.getInstance(view.getContext()).getUserLang().toLowerCase();
+	private void setUserLanguage(String bottomText) {
 
-		//Top language should be "French"
-		//if users lang is French - change to top language to english
+		/** TOP **/
+		//by default - Top language should be "French"
+		//if users self lang is French - change the top language to english
 		 if(selfLang.equals("fr")) {
 			 Picasso.get()
-					 .load("file:///android_asset/interpreter_en.png")
-					 .error(R.drawable.interpeter_general)
-					 .into(mTopIV);
+							 .load("file:///android_asset/interpreter_en.png")
+							 .error(R.drawable.interpeter_general)
+							 .into(mTopIV);
+
+				 //Flag
+			     mTopFlagCIV.setVisibility(View.VISIBLE);
+				 mTopFlagCIV.setImageResource(R.drawable.flag_united_states_of_america);
+
+					 //Set text in english
+			 	    mTopTV.setVisibility(View.VISIBLE);
+					mTopTV.setText("Press and hold the microphone");
 		 }else{
-			Picasso.get()
-					.load("file:///android_asset/interpreter_fr.png")
-					.error(R.drawable.interpeter_general)
-					.into(mTopIV);
+				Picasso.get()
+						.load("file:///android_asset/interpreter_fr.png")
+						.error(R.drawable.interpeter_general)
+						.into(mTopIV);
 		}
 
-		//Bottom language should be Users languge
-		Picasso.get()
-					.load("file:///android_asset/interpreter_" + selfLang + ".png")
-					.error(R.drawable.interpeter_general)
-					.into(mBottomIV);
+		/** Bottom (Self) **/
+			//Bottom language should be Users languge
+				Picasso.get()
+							.load("file:///android_asset/interpreter_" + selfLang + ".png")
+							.error(R.drawable.interpeter_general)
+							.into(mBottomIV);
+			//Flag
+				mBottomFlagCIV.setVisibility(View.VISIBLE);
+				mBottomFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(selfLang.toUpperCase()));
 
-
-			return;
-
-
+						mBottomTV.setVisibility(View.VISIBLE);
+						mBottomTV.setText(bottomText);
 	}
 
 }
