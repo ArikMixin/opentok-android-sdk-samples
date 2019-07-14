@@ -123,16 +123,19 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 
 		switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN: //--Hold--
-				view.setBackgroundResource(R.drawable.interpreter_active);
-				break;
+						view.setBackgroundResource(R.drawable.interpreter_active);
+			break;
 
 			case MotionEvent.ACTION_MOVE:
-				break;
+						//view.setBackgroundResource(R.drawable.interpreter_talk);
+			break;
 
 			case MotionEvent.ACTION_UP: //--Release--
-				view.setBackgroundResource(R.drawable.interpreter_talk);
-				break;
+						view.setBackgroundResource(R.drawable.interpreter_talk);
+			break;
 			default:
+				view.setBackgroundResource(R.drawable.interpreter_talk);
+			break;
 		}
 	}
 

@@ -95,16 +95,14 @@
                 android:text="לחץ והחזק את המיקרופון"/>
 
             <ImageView
-                android:id="@+id/mic_bottom_iv"
-                android:scaleType="fitXY"
-                android:layout_marginBottom="20dp"
-                android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true"
-                android:layout_width="90dp"
-                android:layout_height="90dp"
-                android:background="@drawable/interpreter_talk"
-                />
-
+                    android:id="@+id/mic_bottom_iv"
+                    android:scaleType="fitXY"
+                    android:layout_marginBottom="20dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_centerHorizontal="true"
+                    android:layout_width="90dp"
+                    android:layout_height="90dp"
+                    android:background="@drawable/interpreter_selector" />
         </RelativeLayout>
 
  </LinearLayout>
