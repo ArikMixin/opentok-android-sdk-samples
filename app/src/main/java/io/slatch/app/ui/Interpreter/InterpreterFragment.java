@@ -3,11 +3,9 @@ package io.slatch.app.ui.Interpreter;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,16 +16,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import com.squareup.picasso.Picasso;
 import io.slatch.app.R;
-import io.slatch.app.WCService;
 import io.slatch.app.components.CircleImageView;
 import io.slatch.app.db.WCSharedPreferences;
 import io.slatch.app.ui.settings.SettingsActivity;
 import io.slatch.app.utils.Utils;
 import io.slatch.app.viewmodel.VideoAudioCallViewModel;
-
 
 public class InterpreterFragment extends Fragment implements View.OnClickListener, View.OnTouchListener {
 
@@ -118,7 +113,6 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
         }
     }
 
-
 	@Override
 	public boolean onTouch(View view, MotionEvent motionEvent) {
 		switch(view.getId()){
@@ -140,7 +134,6 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 			break;
 
 			case MotionEvent.ACTION_MOVE:
-						//view.setBackgroundResource(R.drawable.interpreter_talk);
 			break;
 
 			case MotionEvent.ACTION_UP: //--Release--
@@ -175,6 +168,9 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 						.load("file:///android_asset/interpreter_fr.png")
 						.error(R.drawable.interpeter_general)
 						.into(mTopIV);
+
+			 mTopFlagCIV.setVisibility(View.VISIBLE);
+			 mTopTV.setVisibility(View.VISIBLE);
 		}
 
 		/** Bottom (Self) **/
