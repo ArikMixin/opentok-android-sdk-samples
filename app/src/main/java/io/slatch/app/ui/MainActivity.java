@@ -125,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
 
 		mViewPager = (ViewPager) findViewById(R.id.container_vp);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
+		mViewPager.setOffscreenPageLimit(mFragmentsTitles.length); // Prevent recreation the fragments (Only 1 instance)
 
 		int currentItem = TAB_POSITION_CHAT;
 

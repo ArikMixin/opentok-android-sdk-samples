@@ -2143,7 +2143,7 @@ public class ConversationActivity extends PermissionActivity implements
 	private void magicButtonClicked() {
 		if (!isMagicButtonOn()) {
 			LanguageSelectorDialog dialog = new LanguageSelectorDialog();
-			dialog.showDialog(this, mSupportedLanguages, supportedLanguage -> {
+			dialog.showDialog(this,false, mSupportedLanguages, supportedLanguage -> {
 				mMagicButtonForceLanguage = supportedLanguage.getLanguageCode();
 				mMagicButtonForceCountry = supportedLanguage.getCountryCode();
 				setMagicButtonLanguage(mMagicButtonForceLanguage, true);

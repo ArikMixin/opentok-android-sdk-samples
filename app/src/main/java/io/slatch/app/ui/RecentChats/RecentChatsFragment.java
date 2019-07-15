@@ -71,6 +71,7 @@ public class RecentChatsFragment extends Fragment  implements
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
 							 @Nullable Bundle savedInstanceState) {
+
 		view = inflater.inflate(R.layout.recent_chats_fragment, container, false);
 		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
 		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);

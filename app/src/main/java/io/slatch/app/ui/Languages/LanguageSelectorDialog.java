@@ -3,10 +3,12 @@ package io.slatch.app.ui.Languages;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -39,8 +41,7 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 
 	private LanguageSelectionListener mLanguageSelectionListener;
 
-	public void showDialog(Context context, List<SupportedLanguage> supportedLanguages, LanguageSelectionListener lsnr) {
-
+	public void showDialog(Context context, boolean mRotateFlag, List<SupportedLanguage> supportedLanguages, LanguageSelectionListener lsnr) {
 		mLanguageSelectionListener = lsnr;
 
 		mDialog = new Dialog(context);
@@ -57,6 +58,12 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 		RelativeLayout rlHolder = (RelativeLayout) mDialog.findViewById(R.id.holder_rl);
 		ImageView imgDismiss = (ImageView) mDialog.findViewById(R.id.dismiss_iv);
 
+		//Rotation
+		if(mRotateFlag) {
+			rlHolder.setRotation(180);
+	//		Activity activity = (Activity) context;
+	//		activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+		}
 
 		imgClearQuery.setVisibility(View.GONE);
 		imgClearQuery.setOnClickListener(v -> searchET.setText(""));
@@ -90,7 +97,6 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 			}
 		});
 
-
 		searchET.setOnEditorActionListener((v, actionId, event) -> {
 			if (actionId == EditorInfo.IME_ACTION_SEARCH) {
 				InputMethodManager in = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -100,7 +106,6 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 
 			return false;
 		});
-
 
 		RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) recyclerView_countryDialog.getLayoutParams();
 		params.height = RecyclerView.LayoutParams.WRAP_CONTENT;
@@ -119,11 +124,15 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 
 		imgDismiss.setOnClickListener(view -> mDialog.dismiss());
 
-		mDialog.setOnDismissListener(dialogInterface -> hideKeyboard(context));
+		mDialog.setOnDismissListener(dialogInterface -> {
+			hideKeyboard(context);
+				mDialog.dismiss();
+				mDialog = null;
+		});
 
-		mDialog.setOnCancelListener(dialogInterface -> hideKeyboard(context));
-
-
+		mDialog.setOnCancelListener(dialogInterface -> {
+			hideKeyboard(context);
+		});
 
 		mDialog.setOnShowListener(dialogInterface -> {
 			WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
@@ -136,11 +145,7 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 				mDialog.getWindow().setLayout(dialogWidth,maxH);
 //			}
 		});
-
-
-		mDialog.show();
-
-
+				mDialog.show();
 	}
 
 

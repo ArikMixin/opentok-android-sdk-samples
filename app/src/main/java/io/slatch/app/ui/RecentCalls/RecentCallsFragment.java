@@ -61,13 +61,14 @@ public class RecentCallsFragment extends Fragment  implements
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
 							 @Nullable Bundle savedInstanceState) {
 		 view = inflater.inflate(R.layout.recent_calls_fragment, container, false);
-		 setHasOptionsMenu(true);
 
+		setHasOptionsMenu(true);
 		initView();
 		return view;
 	}
 
 	private void initView() {
+        Log.d("arik", "initView: ");
 		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
 		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
 		mCallsViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);

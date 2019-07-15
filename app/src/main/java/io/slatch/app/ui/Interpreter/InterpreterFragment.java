@@ -51,9 +51,11 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private SupportedLanguagesViewModel mSupportedLanguagesViewModel;
 	private List<SupportedLanguage> mSupportedLanguages;
 	private LanguageSelectorDialog mLangugesDialog;
-	private boolean initFlag;
+	private boolean langChangeFlag;
 	private boolean bottomFlag;
+	private boolean rotationFlag = true;
 	private String mLastSelectedLang;
+	private String mBottomLang, mTopLang;
 
 	public static InterpreterFragment newInstance() { return new InterpreterFragment();
 	}
@@ -62,8 +64,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
 							 @Nullable Bundle savedInstanceState) {
 		view = inflater.inflate(R.layout.interpreter_fragment, container, false);
-		setHasOptionsMenu(true);
 
+		setHasOptionsMenu(true);
 		initView();
 		return view;
 	}
@@ -86,9 +88,10 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 
 		//View Model
 		videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
 		videoAudioCallViewModel.translateText("Press and hold the microphone","EN", selfLang.toUpperCase()); //init
 		videoAudioCallViewModel.getTranslatedText().observe(this, translatedText -> {if(translatedText != null)
-																								initLanguages(translatedText);});
+																								changeLanguages(translatedText);});
 
 		mRotationIV.setOnClickListener(this);
 		mMicTopIV.setOnTouchListener(this);
@@ -124,6 +127,11 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
         switch (view.getId()){
 
             case R.id.rotation_iv:
+                    if(rotationFlag)
+                        rotationFlag = false;
+                    else
+                        rotationFlag = true;
+
  			         mTopInsideRL.setRotation(mTopInsideRL.getRotation()-180);
                 break;
 			case R.id.top_flag_civ:
@@ -153,71 +161,83 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private void  onTouchActions(View view, MotionEvent event){
 
 		switch (event.getAction()) {
-			case MotionEvent.ACTION_DOWN: //--Hold--
+			case MotionEvent.ACTION_DOWN: // --Hold--
 						view.setBackgroundResource(R.drawable.interpreter_active);
+						Log.d("arik", "view: " + view.getId() + " , " + mMicTopIV.getId() );
 			break;
 
 			case MotionEvent.ACTION_MOVE:
 			break;
 
-			case MotionEvent.ACTION_UP: //--Release--
+			case MotionEvent.ACTION_UP: // --Release--
 						view.setBackgroundResource(R.drawable.interpreter_talk);
 			break;
-			default:
-				view.setBackgroundResource(R.drawable.interpreter_talk);
+			default: // --Release--
+						view.setBackgroundResource(R.drawable.interpreter_talk);
 			break;
 		}
 	}
 
-	private void initLanguages(String translatedTxt) {
+	private void changeLanguages(String translatedTxt) {
+		Log.d("arik", "!!!!!!!!!!!!!!!!!!: ");
+		if (!langChangeFlag) {
+				/** TOP **/
+				//by default - Top language should be "French"
+				//if users self lang is French - change the top language to english
+				if (selfLang.equals("fr")) {
+					Picasso.get()
+							.load("file:///android_asset/interpreter_en.png")
+							.error(R.drawable.interpeter_general)
+							.into(mTopIV);
 
-		Log.d("arik", "translatedTxt: " + translatedTxt);
+					//Flag
+					mTopFlagCIV.setVisibility(View.VISIBLE);
+					mTopFlagCIV.setImageResource(R.drawable.flag_united_states_of_america);
 
-		if (!initFlag) {
-			/** TOP **/
-			//by default - Top language should be "French"
-			//if users self lang is French - change the top language to english
-			if (selfLang.equals("fr")) {
+					//Set text in english
+					mTopTV.setVisibility(View.VISIBLE);
+					mTopTV.setText("Press and hold the microphone");
+					mTopLang = "EN";
+				} else {
+					Picasso.get()
+							.load("file:///android_asset/interpreter_fr.png")
+							.error(R.drawable.interpeter_general)
+							.into(mTopIV);
+
+					mTopFlagCIV.setVisibility(View.VISIBLE);
+					mTopTV.setVisibility(View.VISIBLE);
+					mTopLang = "FR";
+				}
+
+				/** Bottom (Self) **/
+				//Bottom language should be Users languge
 				Picasso.get()
-						.load("file:///android_asset/interpreter_en.png")
+						.load("file:///android_asset/interpreter_" + selfLang + ".png")
 						.error(R.drawable.interpeter_general)
-						.into(mTopIV);
-
+						.into(mBottomIV);
 				//Flag
-				mTopFlagCIV.setVisibility(View.VISIBLE);
-				mTopFlagCIV.setImageResource(R.drawable.flag_united_states_of_america);
+				mBottomFlagCIV.setVisibility(View.VISIBLE);
+				mBottomFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(selfLang.toUpperCase()));
 
-				//Set text in english
-				mTopTV.setVisibility(View.VISIBLE);
-				mTopTV.setText("Press and hold the microphone");
-			} else {
+				mBottomTV.setVisibility(View.VISIBLE);
+				mBottomTV.setText(translatedTxt);
+				mBottomLang = selfLang.toUpperCase();
+
+				/** AFTER INIT **/
+               	langChangeFlag = true;
+
+        } else if (!bottomFlag){
+				//Bottom language should be Users languge
 				Picasso.get()
-						.load("file:///android_asset/interpreter_fr.png")
+						.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
 						.error(R.drawable.interpeter_general)
 						.into(mTopIV);
-
-				mTopFlagCIV.setVisibility(View.VISIBLE);
-				mTopTV.setVisibility(View.VISIBLE);
-			}
-
-			/** Bottom (Self) **/
-			//Bottom language should be Users languge
-			Picasso.get()
-					.load("file:///android_asset/interpreter_" + selfLang + ".png")
-					.error(R.drawable.interpeter_general)
-					.into(mBottomIV);
-			//Flag
-			mBottomFlagCIV.setVisibility(View.VISIBLE);
-			mBottomFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(selfLang.toUpperCase()));
-
-			mBottomTV.setVisibility(View.VISIBLE);
-			mBottomTV.setText(translatedTxt);
-
-			initFlag = true;
-
-			/** AFTER INIT **/
-		} else if (bottomFlag){
-			//Bottom language should be Users languge
+				//Flag
+				mTopFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(mLastSelectedLang.toUpperCase()));
+				mTopTV.setText(translatedTxt);
+				mTopLang = mLastSelectedLang.toUpperCase();
+		}else if (bottomFlag){
+				//Bottom language should be Users languge
 				Picasso.get()
 						.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
 						.error(R.drawable.interpeter_general)
@@ -225,65 +245,39 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 				//Flag
 				mBottomFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(mLastSelectedLang.toUpperCase()));
 				mBottomTV.setText(translatedTxt);
-		}else if (!bottomFlag){
-			//Bottom language should be Users languge
-			Picasso.get()
-					.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
-					.error(R.drawable.interpeter_general)
-					.into(mTopIV);
-			//Flag
-			mTopFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(mLastSelectedLang.toUpperCase()));
-			mTopTV.setText(translatedTxt);
+				mBottomLang = mLastSelectedLang.toUpperCase();
 		}
 	}
 
 	private void getSportedLanguages() {
 
-		if(mSupportedLanguages == null) {
-				mSupportedLanguagesViewModel = ViewModelProviders.of(getActivity()).get(SupportedLanguagesViewModel.class);
-				mSupportedLanguagesViewModel.loadLanguages(Locale.getDefault().getLanguage());
-				mSupportedLanguagesViewModel.getSupportedLanguages().observe(this, supportedLanguages -> {
-						mSupportedLanguages = supportedLanguages;
 
+		if(mSupportedLanguages == null) {
+				mSupportedLanguagesViewModel.loadLanguages(Locale.getDefault().getLanguage());
+				mSupportedLanguagesViewModel.getSupportedLanguages().observe(getActivity(), supportedLanguages -> {
+					if(mSupportedLanguages == null) {
+						mSupportedLanguages = supportedLanguages;
 						openLanguagesDialog();
-					});
+					}
+				});
         } else {
                		openLanguagesDialog();
         }
     }
 
 	private void openLanguagesDialog() {
+        boolean rotationFlag_result = false;
+	    if(!bottomFlag && rotationFlag)
+            rotationFlag_result = true;
 
 		mLangugesDialog = new LanguageSelectorDialog();
-		mLangugesDialog.showDialog(getActivity(), mSupportedLanguages, supportedLanguage -> {
-			mLastSelectedLang = supportedLanguage.getLanguageCode().toUpperCase();
+		mLangugesDialog.showDialog(getActivity(),rotationFlag_result, mSupportedLanguages, supportedLanguage -> {
+				mLastSelectedLang = supportedLanguage.getLanguageCode().toUpperCase();
+				//langChangeFlag = true;
 
-			videoAudioCallViewModel.translateText("Press and hold the microphone","EN", mLastSelectedLang);
+				videoAudioCallViewModel.translateText("Press and hold the microphone","EN", mLastSelectedLang);
 
 		});
-
-
-				//	mMagicButtonForceLanguage = supportedLanguage.getLanguageCode();
-				//	mMagicButtonForceCountry = supportedLanguage.getCountryCode();
-				//	setMagicButtonLanguage(mMagicButtonForceLanguage, true);
-				//	mConversationViewModel.updateMagicButtonLangCode(mConversationId, mMagicButtonForceLanguage);
-
-
-
-//            if(bottomFlag){
-//                                //Bottom language should be Users languge
-//                                Picasso.get()
-//                                        .load("file:///android_asset/interpreter_" + selfLang + ".png")
-//                                        .error(R.drawable.interpeter_general)
-//                                        .into(mBottomIV);
-//                                //Flag
-//                                mBottomFlagCIV.setVisibility(View.VISIBLE);
-//                                mBottomFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(selfLang.toUpperCase()));
-//
-//                                mBottomTV.setVisibility(View.VISIBLE);
-//                                mBottomTV.setText(bottomText);
-//            }
-
 	}
 
 }

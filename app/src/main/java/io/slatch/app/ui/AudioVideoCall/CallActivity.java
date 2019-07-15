@@ -271,6 +271,7 @@ public class CallActivity extends AppCompatActivity
         startMissedCallTimer();
         /**View Model **/
         videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+        videoAudioCallViewModel.resetTranslatedText();
         videoAudioCallViewModel.getTranslatedText().observe(this, textToPlay -> {if(textToPlay != null)
                                                                                              fireTextToSpeech(textToPlay);});
         //*** Save call details to roomDB (For recent calls section)
