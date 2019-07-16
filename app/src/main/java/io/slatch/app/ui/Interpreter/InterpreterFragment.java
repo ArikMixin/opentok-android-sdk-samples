@@ -185,20 +185,24 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 
 	@Override
 	public boolean onTouch(View view, MotionEvent motionEvent) {
+
+		//Prevent multi fingers touch
+		if(motionEvent.getPointerCount() == 2)
+			return true;
+
 		switch(view.getId()){
 			case R.id.mic_top_iv:
 					onTouchActions(view, motionEvent);
-				break;
+			break;
+
 			case R.id.mic_bottom_iv:
 					onTouchActions(view, motionEvent); // Push to talk btn
-				break;
+			break;
 		}
 		return true;
 	}
 
 	private void  onTouchActions(View view, MotionEvent event){
-
-        Log.d("arik", "event.getAction(): " + event.getAction());
 
 		switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN: // --Hold--
