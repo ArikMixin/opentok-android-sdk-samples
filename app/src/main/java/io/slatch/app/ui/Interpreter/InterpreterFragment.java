@@ -313,25 +313,35 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 				Picasso.get()
 						.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
 						.error(R.drawable.interpeter_general)
+						.placeholder(R.color.white)
 						.into(mTopIV);
 				//Flag
 				mTopFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(mLastSelectedLang.toUpperCase()));
 				mTopTV.setText(translatedTxt);
 				mTopLang = mLastSelectedLang.toUpperCase();
+
+				mMicTopIV.setEnabled(true);
+				mMicBottomIV.setEnabled(true);
 		}else if (mBottomFlag){
 				//Bottom language should be Users language
 				Picasso.get()
 						.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
 						.error(R.drawable.interpeter_general)
+						.placeholder(R.color.white)
 						.into(mBottomIV);
 				//Flag
 				mBottomFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(mLastSelectedLang.toUpperCase()));
 				mBottomTV.setText(translatedTxt);
 				mBottomLang = mLastSelectedLang.toUpperCase();
+
+				mMicTopIV.setEnabled(true);
+				mMicBottomIV.setEnabled(true);
 		}
 	}
 
 	private void getSportedLanguages() {
+		mMicTopIV.setEnabled(false);
+		mMicBottomIV.setEnabled(false);
 
 	String updatedSelfLang = WCSharedPreferences.getInstance(getContext()).getUserLang().toLowerCase();
 
@@ -382,6 +392,15 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 		mMicBottomIV.setBackgroundResource(R.drawable.interpreter_talk);
 		mMicTopIV.setEnabled(true);
 		mMicBottomIV.setEnabled(true);
+
+		if(mConnectingBottomTV.getVisibility() == View.VISIBLE) {
+			mConnectingBottomTV.setVisibility(View.GONE);
+			mConnectingAnim.cancel();
+		}
+		if(mConnectingTopTV.getVisibility() == View.VISIBLE) {
+			mConnectingTopTV.setVisibility(View.GONE);
+			mConnectingAnim.cancel();
+		}
 	}
 
     @Override

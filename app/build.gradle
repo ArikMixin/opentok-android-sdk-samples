@@ -102,5 +102,4 @@ dependencies {
 
     //Rating Dialog
     implementation 'com.codemybrainsout.rating:ratingdialog:1.0.8'
-
 }
