@@ -21,6 +21,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import io.slatch.app.AppExecutors;
 import io.slatch.app.R;
 import io.slatch.app.components.CircleImageView;
 import io.slatch.app.db.WCSharedPreferences;
@@ -52,6 +53,7 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private SupportedLanguagesViewModel mSupportedLanguagesViewModel;
 	private List<SupportedLanguage> mSupportedLanguages;
 	private LanguageSelectorDialog mLangugesDialog;
+	private AppExecutors mAppExecutors;
 	private boolean initLang;
 	private boolean mBottomFlag;
 	private boolean mBottomMic;
@@ -87,7 +89,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 		mBottomFlagCIV = (CircleImageView) view.findViewById(R.id.bottom_flag_civ);
 
 		//Get users (Self) language
-		mLangugesDialog = new LanguageSelectorDialog();
+        mAppExecutors = new AppExecutors();
+        mLangugesDialog = new LanguageSelectorDialog();
 		selfLang = WCSharedPreferences.getInstance(view.getContext()).getUserLang().toLowerCase();
 
 		//View Model
@@ -179,42 +182,42 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 		switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN: // --Hold--
 				view.setBackgroundResource(R.drawable.interpreter_active);
-														speechToTextStarted(view);
+         				                          		 	 speechToTextStarted(view);
 			break;
 
 			case MotionEvent.ACTION_MOVE:
 			break;
 
 			case MotionEvent.ACTION_UP: // --Release--
+                 mMicBottomIV.setEnabled(false);
+                 mMicTopIV.setEnabled(false);
 						view.setBackgroundResource(R.drawable.interpreter_talk);
                         SpeechToTextUtil.getInstance().stopSpeechToText();
-                break;
+            break;
 			default: // --Release--
+                mMicBottomIV.setEnabled(false);
+                mMicTopIV.setEnabled(false);
 						view.setBackgroundResource(R.drawable.interpreter_talk);
                          SpeechToTextUtil.getInstance().stopSpeechToText();
-                break;
+            break;
 		}
 	}
 
 	public void  speechToTextStarted(View view){
-		mBottomTV.setText("");
-		mTopTV.setText("");
+                mBottomTV.setText("");
+                mTopTV.setText("");
 
-		if(mMicBottomIV.getId() == view.getId()){
-				mBottomMic = true;
-                mMicTopIV.setBackgroundResource(R.drawable.interpreter_disable);
-               SpeechToTextUtil.getInstance().changeLanguage(mBottomLang.toLowerCase());
-		}else if(mMicTopIV.getId() == view.getId()){
-				mBottomMic = false;
-                mMicBottomIV.setBackgroundResource(R.drawable.interpreter_disable);
-				SpeechToTextUtil.getInstance().changeLanguage(mTopLang.toLowerCase());
-		}
+                if(mMicBottomIV.getId() == view.getId()){
+                        mBottomMic = true;
+                        mMicTopIV.setBackgroundResource(R.drawable.interpreter_disable);
+                       SpeechToTextUtil.getInstance().changeLanguage(mBottomLang.toLowerCase());
+                }else if(mMicTopIV.getId() == view.getId()){
+                        mBottomMic = false;
+                        mMicBottomIV.setBackgroundResource(R.drawable.interpreter_disable);
+                        SpeechToTextUtil.getInstance().changeLanguage(mTopLang.toLowerCase());
+                }
 
-        mMicBottomIV.setEnabled(false);
-        mMicTopIV.setEnabled(false);
-
-        SpeechToTextUtil.getInstance().startSpeechToText();
-
+                SpeechToTextUtil.getInstance().startSpeechToText();
     }
 
 	private void changeLanguages(String translatedTxt) {
