@@ -95,6 +95,10 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
         mConnectingBottomTV = (TextView) view.findViewById(R.id.connecting_bottom_tv);
 		mConnectingTopTV = (TextView) view.findViewById(R.id.connecting_top_tv);
 
+		// enable mics btns only after load languages
+		mMicBottomIV.setEnabled(false);
+		mMicTopIV.setEnabled(false);
+
 		//Get users (Self) language
         mAppExecutors = new AppExecutors();
         mLangugesDialog = new LanguageSelectorDialog();
@@ -296,6 +300,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 				mBottomLang = selfLang.toUpperCase();
 
 				/** AFTER INIT **/
+				mMicBottomIV.setEnabled(true);
+				mMicTopIV.setEnabled(true);
                	initLang = true;
 
         } else if (!mBottomFlag){
