@@ -102,4 +102,8 @@ dependencies {
 
     //Rating Dialog
     implementation 'com.codemybrainsout.rating:ratingdialog:1.0.8'
+
+    //Auto Resize Text
+    implementation 'me.grantland:autofittextview:0.2.1'
+
 }

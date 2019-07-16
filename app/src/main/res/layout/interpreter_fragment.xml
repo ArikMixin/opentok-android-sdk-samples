@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:autofit="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_ll"
     xmlns:tools="http://schemas.android.com/tools"
     android:weightSum="2"
@@ -30,20 +31,39 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="fitXY"/>
-                <TextView
+                <!--<TextView-->
+                    <!--android:id="@+id/top_tv"-->
+                    <!--android:textSize="32dp"-->
+                    <!--android:visibility="gone"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:textColor="@color/black"-->
+                    <!--android:layout_centerHorizontal="true"-->
+                    <!--android:layout_marginLeft="20dp"-->
+                    <!--android:layout_marginRight="20dp"-->
+                    <!--android:layout_alignParentTop="true"-->
+                    <!--android:layout_marginTop="60dp"-->
+                    <!--android:gravity="center"-->
+                    <!--android:text="Appuyer et maintenir appuyer"/>-->
+
+                <me.grantland.widget.AutofitTextView
+                    android:layout_marginTop="30dp"
                     android:id="@+id/top_tv"
-                    android:textSize="32dp"
+                    android:gravity="center"
                     android:visibility="gone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
                     android:textColor="@color/black"
-                    android:layout_centerHorizontal="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_above="@+id/mic_top_iv"
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginTop="60dp"
-                    android:gravity="center"
-                    android:text="Appuyer et maintenir appuyer"/>
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="3"
+                    android:textSize="32dp"
+                    android:text="Appuyer et maintenir appuyer"
+                    autofit:minTextSize="20dp"
+                    />
+
 
                 <TextView
                     android:id="@+id/connecting_top_tv"
@@ -61,7 +81,7 @@
                 <ImageView
                     android:id="@+id/mic_top_iv"
                     android:scaleType="fitXY"
-                    android:layout_marginBottom="30dp"
+                    android:layout_marginBottom="20dp"
                     android:layout_alignParentBottom="true"
                     android:layout_centerHorizontal="true"
                     android:layout_width="90dp"
@@ -89,8 +109,8 @@
                 android:layout_width="45dp"
                 android:layout_height="45dp"
                 android:layout_alignParentBottom="true"
-                android:layout_marginBottom="10dp"
-                android:layout_marginLeft="20dp"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="15dp"
                 android:layout_toRightOf="@+id/participant_pic_audio_civ"
                 android:elevation="8dp"
                 android:paddingBottom="15dp"
@@ -116,19 +136,36 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <TextView
+            <!--<TextView-->
+                <!--android:id="@+id/bottom_tv"-->
+                <!--android:textSize="32dp"-->
+                <!--android:layout_marginLeft="20dp"-->
+                <!--android:layout_marginRight="20dp"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:textColor="@color/black"-->
+                <!--android:layout_centerHorizontal="true"-->
+                <!--android:layout_alignParentTop="true"-->
+                <!--android:gravity="center"-->
+                <!--android:layout_marginTop="60dp"-->
+                <!--android:text=""/>-->
+
+            <me.grantland.widget.AutofitTextView
+                android:layout_marginTop="30dp"
                 android:id="@+id/bottom_tv"
-                android:textSize="32dp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:textColor="@color/black"
+                android:layout_alignParentTop="true"
+                android:layout_above="@+id/mic_bottom_iv"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/black"
-                android:layout_centerHorizontal="true"
-                android:layout_alignParentTop="true"
-                android:gravity="center"
-                android:layout_marginTop="60dp"
-                android:text=""/>
+                android:maxLines="4"
+                android:textSize="32dp"
+                autofit:minTextSize="20dp"
+                />
 
             <TextView
                 android:id="@+id/connecting_bottom_tv"
@@ -146,7 +183,7 @@
             <ImageView
                     android:id="@+id/mic_bottom_iv"
                     android:scaleType="fitXY"
-                    android:layout_marginBottom="30dp"
+                    android:layout_marginBottom="20dp"
                     android:layout_alignParentBottom="true"
                     android:layout_centerHorizontal="true"
                     android:layout_width="90dp"
@@ -159,8 +196,8 @@
                 android:layout_width="45dp"
                 android:layout_height="45dp"
                 android:layout_alignParentBottom="true"
-                android:layout_marginBottom="10dp"
-                android:layout_marginLeft="20dp"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="15dp"
                 android:layout_toRightOf="@+id/participant_pic_audio_civ"
                 android:elevation="8dp"
                 android:paddingBottom="15dp"

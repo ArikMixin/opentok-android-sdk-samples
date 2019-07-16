@@ -164,8 +164,11 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 
 	@Override
 	public void onLanguageSelected(SupportedLanguage supportedLanguage) {
-		mDialog.dismiss();
-		mLanguageSelectionListener.onLanguageSelected(supportedLanguage);
+		if(mDialog != null && mDialog.isShowing()) {
+			mDialog.dismiss();
+		}
+			mLanguageSelectionListener.onLanguageSelected(supportedLanguage);
+
 	}
 
 

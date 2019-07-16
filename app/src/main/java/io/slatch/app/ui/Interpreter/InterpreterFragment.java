@@ -35,6 +35,7 @@ import io.slatch.app.utils.TextToSpeechUtil;
 import io.slatch.app.utils.Utils;
 import io.slatch.app.viewmodel.SupportedLanguagesViewModel;
 import io.slatch.app.viewmodel.VideoAudioCallViewModel;
+import me.grantland.widget.AutofitTextView;
 
 public class InterpreterFragment extends Fragment implements View.OnClickListener, View.OnTouchListener, SpeechToTextUtil.SpeechUtilsSTTListener, TextToSpeechUtil.TextToSpeechPlayingListener {
 
@@ -47,8 +48,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private ImageView mBottomIV;
 	private ImageView mMicTopIV;
 	private ImageView mMicBottomIV;
-	private TextView mTopTV;
-	private TextView mBottomTV;
+	private AutofitTextView mTopTV;
+	private AutofitTextView mBottomTV;
 	private TextView mConnectingBottomTV;
 	private TextView mConnectingTopTV;
 	private CircleImageView mTopFlagCIV;
@@ -88,8 +89,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
         mRotationIV = (ImageView) view.findViewById(R.id.rotation_iv);
 		mMicTopIV = (ImageView) view.findViewById(R.id.mic_top_iv);
 		mMicBottomIV = (ImageView) view.findViewById(R.id.mic_bottom_iv);
-		mTopTV = (TextView) view.findViewById(R.id.top_tv);
-		mBottomTV = (TextView) view.findViewById(R.id.bottom_tv);
+		mTopTV = (AutofitTextView) view.findViewById(R.id.top_tv);
+		mBottomTV = (AutofitTextView) view.findViewById(R.id.bottom_tv);
 		mTopFlagCIV = (CircleImageView) view.findViewById(R.id.top_flag_civ);
 		mBottomFlagCIV = (CircleImageView) view.findViewById(R.id.bottom_flag_civ);
         mConnectingBottomTV = (TextView) view.findViewById(R.id.connecting_bottom_tv);
@@ -404,7 +405,21 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	}
 
     @Override
-    public void onErrorOfSpeechToText(int resourceString) { }
+    public void onErrorOfSpeechToText(int resourceString) {
+		mMicTopIV.setBackgroundResource(R.drawable.interpreter_talk);
+		mMicBottomIV.setBackgroundResource(R.drawable.interpreter_talk);
+		mMicTopIV.setEnabled(true);
+		mMicBottomIV.setEnabled(true);
+
+		if(mConnectingBottomTV.getVisibility() == View.VISIBLE) {
+			mConnectingBottomTV.setVisibility(View.GONE);
+			mConnectingAnim.cancel();
+		}
+		if(mConnectingTopTV.getVisibility() == View.VISIBLE) {
+			mConnectingTopTV.setVisibility(View.GONE);
+			mConnectingAnim.cancel();
+		}
+	}
 
 	private void mShowTranslationAndPlay(String translatedText) {
 
