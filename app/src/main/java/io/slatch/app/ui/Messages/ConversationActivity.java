@@ -75,6 +75,7 @@ import io.slatch.app.R;
 import io.slatch.app.WCService;
 import io.slatch.app.components.CircleFlagImageView;
 import io.slatch.app.components.MessageReplyLayout;
+import io.slatch.app.db.WCSharedPreferences;
 import io.slatch.app.db.entity.Contact;
 import io.slatch.app.db.entity.Conversation;
 import io.slatch.app.db.entity.GroupMember;
@@ -388,7 +389,7 @@ public class ConversationActivity extends PermissionActivity implements
 			});
 
 		});
-		mSupportedLanguagesViewModel.loadLanguages(Locale.getDefault().getLanguage());
+		mSupportedLanguagesViewModel.loadLanguages(WCSharedPreferences.getInstance(this).getUserLang().toLowerCase());
 
 
 

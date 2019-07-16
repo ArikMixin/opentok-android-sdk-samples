@@ -20,7 +20,6 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
-import java.util.Locale;
 
 import io.slatch.app.R;
 import io.slatch.app.components.CircleImageView;
@@ -28,11 +27,13 @@ import io.slatch.app.db.WCSharedPreferences;
 import io.slatch.app.model.SupportedLanguage;
 import io.slatch.app.ui.Languages.LanguageSelectorDialog;
 import io.slatch.app.ui.settings.SettingsActivity;
+import io.slatch.app.utils.SpeechToTextUtil;
+import io.slatch.app.utils.TextToSpeechUtil;
 import io.slatch.app.utils.Utils;
 import io.slatch.app.viewmodel.SupportedLanguagesViewModel;
 import io.slatch.app.viewmodel.VideoAudioCallViewModel;
 
-public class InterpreterFragment extends Fragment implements View.OnClickListener, View.OnTouchListener {
+public class InterpreterFragment extends Fragment implements View.OnClickListener, View.OnTouchListener, SpeechToTextUtil.SpeechUtilsSTTListener, TextToSpeechUtil.TextToSpeechPlayingListener {
 
 	private View view;
 	private RelativeLayout mTopInsideRL;
@@ -51,11 +52,13 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private SupportedLanguagesViewModel mSupportedLanguagesViewModel;
 	private List<SupportedLanguage> mSupportedLanguages;
 	private LanguageSelectorDialog mLangugesDialog;
-	private boolean langChangeFlag;
-	private boolean bottomFlag;
+	private boolean initLang;
+	private boolean mBottomFlag;
+	private boolean mBottomMic;
 	private boolean rotationFlag = true;
 	private String mLastSelectedLang;
 	private String mBottomLang, mTopLang;
+	private boolean mShowTranslation;
 
 	public static InterpreterFragment newInstance() { return new InterpreterFragment();
 	}
@@ -84,21 +87,34 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 		mBottomFlagCIV = (CircleImageView) view.findViewById(R.id.bottom_flag_civ);
 
 		//Get users (Self) language
+		mLangugesDialog = new LanguageSelectorDialog();
 		selfLang = WCSharedPreferences.getInstance(view.getContext()).getUserLang().toLowerCase();
 
 		//View Model
-		videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+        SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
 		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
-		videoAudioCallViewModel.translateText("Press and hold the microphone","EN", selfLang.toUpperCase()); //init
-		videoAudioCallViewModel.getTranslatedText().observe(this, translatedText -> {if(translatedText != null)
-																								changeLanguages(translatedText);});
+		mSupportedLanguagesViewModel.loadLanguages(WCSharedPreferences.getInstance(getContext()).getUserLang().toLowerCase());
+        mSupportedLanguagesViewModel.getSupportedLanguages().observe(getActivity(), supportedLanguages ->{
+																									mSupportedLanguages = supportedLanguages;
+																									mLangugesDialog.changLangList(supportedLanguages); });
 
+		videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
+        videoAudioCallViewModel.translateText("Press and hold the microphone","EN", selfLang);
+		videoAudioCallViewModel.getTranslatedText().observe(this, translatedText -> {if(translatedText != null)
+																									if(mShowTranslation) {
+																										mShowTranslationAndPlay(translatedText);
+																										return;
+																									}
+																							   	changeLanguages(translatedText);
+		});
 		mRotationIV.setOnClickListener(this);
 		mMicTopIV.setOnTouchListener(this);
 		mMicBottomIV.setOnTouchListener(this);
 		mTopFlagCIV.setOnClickListener(this);
 		mBottomFlagCIV.setOnClickListener(this);
 	}
+
+
 
 	@Override
 	public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -135,11 +151,11 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
  			         mTopInsideRL.setRotation(mTopInsideRL.getRotation()-180);
                 break;
 			case R.id.top_flag_civ:
-					bottomFlag = false;
+					mBottomFlag = false;
 					getSportedLanguages();
 				break;
 			case R.id.bottom_flag_civ:
-					bottomFlag = true;
+					mBottomFlag = true;
 				    getSportedLanguages();
 				break;
         }
@@ -162,8 +178,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 
 		switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN: // --Hold--
-						view.setBackgroundResource(R.drawable.interpreter_active);
-						Log.d("arik", "view: " + view.getId() + " , " + mMicTopIV.getId() );
+				view.setBackgroundResource(R.drawable.interpreter_active);
+														speechToTextStarted(view);
 			break;
 
 			case MotionEvent.ACTION_MOVE:
@@ -171,16 +187,38 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 
 			case MotionEvent.ACTION_UP: // --Release--
 						view.setBackgroundResource(R.drawable.interpreter_talk);
-			break;
+                        SpeechToTextUtil.getInstance().stopSpeechToText();
+                break;
 			default: // --Release--
 						view.setBackgroundResource(R.drawable.interpreter_talk);
-			break;
+                         SpeechToTextUtil.getInstance().stopSpeechToText();
+                break;
 		}
 	}
 
+	public void  speechToTextStarted(View view){
+		mBottomTV.setText("");
+		mTopTV.setText("");
+
+		if(mMicBottomIV.getId() == view.getId()){
+				mBottomMic = true;
+                mMicTopIV.setBackgroundResource(R.drawable.interpreter_disable);
+               SpeechToTextUtil.getInstance().changeLanguage(mBottomLang.toLowerCase());
+		}else if(mMicTopIV.getId() == view.getId()){
+				mBottomMic = false;
+                mMicBottomIV.setBackgroundResource(R.drawable.interpreter_disable);
+				SpeechToTextUtil.getInstance().changeLanguage(mTopLang.toLowerCase());
+		}
+
+        mMicBottomIV.setEnabled(false);
+        mMicTopIV.setEnabled(false);
+
+        SpeechToTextUtil.getInstance().startSpeechToText();
+
+    }
+
 	private void changeLanguages(String translatedTxt) {
-		Log.d("arik", "!!!!!!!!!!!!!!!!!!: ");
-		if (!langChangeFlag) {
+		if (!initLang) {
 				/** TOP **/
 				//by default - Top language should be "French"
 				//if users self lang is French - change the top language to english
@@ -224,10 +262,10 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 				mBottomLang = selfLang.toUpperCase();
 
 				/** AFTER INIT **/
-               	langChangeFlag = true;
+               	initLang = true;
 
-        } else if (!bottomFlag){
-				//Bottom language should be Users languge
+        } else if (!mBottomFlag){
+				//Bottom language should be Users language
 				Picasso.get()
 						.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
 						.error(R.drawable.interpeter_general)
@@ -236,8 +274,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 				mTopFlagCIV.setImageResource(Utils.getCountryFlagDrawableFromLang(mLastSelectedLang.toUpperCase()));
 				mTopTV.setText(translatedTxt);
 				mTopLang = mLastSelectedLang.toUpperCase();
-		}else if (bottomFlag){
-				//Bottom language should be Users languge
+		}else if (mBottomFlag){
+				//Bottom language should be Users language
 				Picasso.get()
 						.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
 						.error(R.drawable.interpeter_general)
@@ -251,33 +289,87 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 
 	private void getSportedLanguages() {
 
+	String updatedSelfLang = WCSharedPreferences.getInstance(getContext()).getUserLang().toLowerCase();
 
-		if(mSupportedLanguages == null) {
-				mSupportedLanguagesViewModel.loadLanguages(Locale.getDefault().getLanguage());
-				mSupportedLanguagesViewModel.getSupportedLanguages().observe(getActivity(), supportedLanguages -> {
-					if(mSupportedLanguages == null) {
-						mSupportedLanguages = supportedLanguages;
-						openLanguagesDialog();
-					}
-				});
-        } else {
-               		openLanguagesDialog();
-        }
+		//If user change app's settings language - change s supported language
+		if(!selfLang.equals(updatedSelfLang)) {
+				selfLang =	updatedSelfLang;
+				mSupportedLanguagesViewModel.loadLanguages(updatedSelfLang);
+		}
+
+           openLanguagesDialog();
     }
 
 	private void openLanguagesDialog() {
         boolean rotationFlag_result = false;
-	    if(!bottomFlag && rotationFlag)
+	    if(!mBottomFlag && rotationFlag)
             rotationFlag_result = true;
 
-		mLangugesDialog = new LanguageSelectorDialog();
 		mLangugesDialog.showDialog(getActivity(),rotationFlag_result, mSupportedLanguages, supportedLanguage -> {
 				mLastSelectedLang = supportedLanguage.getLanguageCode().toUpperCase();
-				//langChangeFlag = true;
+				//initLang = true;
 
 				videoAudioCallViewModel.translateText("Press and hold the microphone","EN", mLastSelectedLang);
 
 		});
 	}
 
+	//Speech to text
+    @Override
+    public void onSpeechToTextResult(String text, int duration) {
+		if(mBottomMic) {
+			mBottomTV.setText(text);
+			videoAudioCallViewModel.translateText(mBottomTV.getText().toString(), mBottomLang, mTopLang);
+		}else {
+			mTopTV.setText(text);
+			videoAudioCallViewModel.translateText(mTopTV.getText().toString(),mTopLang, mBottomLang);
+		}
+		mShowTranslation = true;
+		SpeechToTextUtil.getInstance().changeLanguage(selfLang.toUpperCase());
+    }
+
+    @Override
+    public void onBeginningOfSpeechToText() {
+    }
+
+    @Override
+    public void onEndOfSpeechToText() {
+		mMicTopIV.setBackgroundResource(R.drawable.interpreter_talk);
+		mMicBottomIV.setBackgroundResource(R.drawable.interpreter_talk);
+		mMicTopIV.setEnabled(true);
+		mMicBottomIV.setEnabled(true);
+	}
+
+    @Override
+    public void onErrorOfSpeechToText(int resourceString) { }
+
+	private void mShowTranslationAndPlay(String translatedText) {
+
+		mMicTopIV.setBackgroundResource(R.drawable.interpreter_talk);
+        mMicBottomIV.setBackgroundResource(R.drawable.interpreter_talk);
+		mMicTopIV.setEnabled(true);
+        mMicBottomIV.setEnabled(true);
+
+        if(mBottomMic) {
+			mTopTV.setText(translatedText);
+			TextToSpeechUtil.getInstance().setLanguage(mTopLang); //Play in users language
+
+		}else {
+			mBottomTV.setText(translatedText);
+			TextToSpeechUtil.getInstance().setLanguage(mBottomLang); //Play in users language
+
+		}
+		mShowTranslation = false;
+
+		//playText
+		TextToSpeechUtil.getInstance().startTextToSpeech(translatedText, this);
+	}
+
+	@Override
+	public void onBeginPlaying() {
+	}
+	@Override
+	public void onFinishedPlaying() {
+		TextToSpeechUtil.getInstance().stopTextToSpeech();
+	}
 }

@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import io.slatch.app.com.WochatApi;
@@ -1921,7 +1922,7 @@ public class WCRepository {
 	//Video Audio calls translation (Push 2 Talk)
 	public void translate(String textToTranslate, String fromLang, String toLang) {
 		mAppExecutors.networkIO().execute(() -> {
-			mWochatApi.translate("", fromLang, toLang, textToTranslate,
+			mWochatApi.translate("", fromLang.toUpperCase(), toLang.toUpperCase(), textToTranslate,
 					(isSuccess, errorLogic, errorComm, response) -> {
 						if ((isSuccess) && (response != null)) {
 							Log.e(TAG, "translate res: " + response.toString());
@@ -2468,10 +2469,16 @@ public class WCRepository {
 	}
 
 	public void loadLanguages(String deviceLanguageCode) {
+
+		if(deviceLanguageCode == null)
+				deviceLanguageCode = Locale.getDefault().getLanguage();
+
+		String finalDeviceLanguageCode = deviceLanguageCode;
+
 		mAppExecutors.networkIO().execute(new Runnable() {
 			@Override
 			public void run() {
-				mWochatApi.getSupportedLanguages(deviceLanguageCode,
+				mWochatApi.getSupportedLanguages(finalDeviceLanguageCode,
 					(isSuccess, errorLogic, errorComm, response) -> {
 						if (isSuccess) {
 							try {

@@ -64,4 +64,9 @@
         <item name="android:duration">10000</item>
     </style>
 
+    <!--<style name="MyTabLayoutTextAppearance" parent="TextAppearance.Design.Tab">-->
+        <!--<item name="textAllCaps">true</item>-->
+        <!--<item name="android:textSize">40dp</item>-->
+    <!--</style>-->
+
 </resources>

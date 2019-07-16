@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 
 import io.slatch.app.R;
+import io.slatch.app.db.WCSharedPreferences;
 import io.slatch.app.model.SupportedLanguage;
 import io.slatch.app.viewmodel.SupportedLanguagesViewModel;
 
@@ -42,11 +43,9 @@ public class SupportedLanguagesActivity extends AppCompatActivity implements
 		recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
 		//device language
-		String deviceLanguageCode = Locale.getDefault().getLanguage();
-
 		SupportedLanguagesViewModel supportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
         //load languages
-		supportedLanguagesViewModel.loadLanguages(deviceLanguageCode);
+		supportedLanguagesViewModel.loadLanguages(WCSharedPreferences.getInstance(this).getUserLang().toLowerCase());
 		supportedLanguagesViewModel.getSupportedLanguages().observe(this,
 			supportedLanguages -> {
                    supportedLanguagesAdapter.setLanguages(supportedLanguages);

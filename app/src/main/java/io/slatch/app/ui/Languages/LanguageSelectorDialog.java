@@ -31,6 +31,7 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 
 
 	private LanguageSelectorAdapter mAdapter;
+	private RecyclerView recyclerView_countryDialog;
 
 	public interface LanguageSelectionListener {
 		void onLanguageSelected(SupportedLanguage supportedLanguage);
@@ -49,7 +50,7 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 		mDialog.getWindow().setContentView(R.layout.dialog_lang_picker);
 		mDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
 
-		RecyclerView recyclerView_countryDialog = (RecyclerView) mDialog.findViewById(R.id.languages_rv);
+		 recyclerView_countryDialog = (RecyclerView) mDialog.findViewById(R.id.languages_rv);
 		final TextView titleTV = (TextView) mDialog.findViewById(R.id.title_tv);
 		RelativeLayout rlQueryHolder = (RelativeLayout) mDialog.findViewById(R.id.query_holder_rl);
 		ImageView imgClearQuery = (ImageView) mDialog.findViewById(R.id.clear_query_iv);
@@ -148,7 +149,13 @@ public class LanguageSelectorDialog implements LanguageSelectorAdapter.LanguageS
 				mDialog.show();
 	}
 
+	public void changLangList(List<SupportedLanguage> supportedLanguages){
+	    if(mDialog != null && mDialog.isShowing()){
+				mAdapter.setLanguages(supportedLanguages);
+	       	    mAdapter.notifyDataSetChanged();
+        }
 
+    }
 	public void setLanguageSelectionListener(LanguageSelectionListener languageSelectionListener) {
 		mLanguageSelectionListener = languageSelectionListener;
 	}

@@ -68,7 +68,7 @@ public class RecentCallsFragment extends Fragment  implements
 	}
 
 	private void initView() {
-        Log.d("arik", "initView: ");
+        Log.d(TAG, "initView: ");
 		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
 		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
 		mCallsViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);

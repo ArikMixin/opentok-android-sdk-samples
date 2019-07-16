@@ -77,11 +77,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		return super.onUnbind(intent);
 	}
 
-/*	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		return START_STICKY;
-	}*/
-
 	private boolean isMessageOfUserNotificationType(Message message){
 		switch (message.getMessageType()){
 			case Message.MSG_TYPE_AUDIO:
