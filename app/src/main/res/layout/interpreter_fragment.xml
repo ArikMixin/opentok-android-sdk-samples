@@ -40,9 +40,22 @@
                     android:layout_marginLeft="20dp"
                     android:layout_marginRight="20dp"
                     android:layout_alignParentTop="true"
-                    android:layout_marginTop="80dp"
+                    android:layout_marginTop="60dp"
                     android:gravity="center"
                     android:text="Appuyer et maintenir appuyer"/>
+
+                <TextView
+                    android:id="@+id/connecting_top_tv"
+                    android:layout_centerHorizontal="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/mic_top_iv"
+                    android:text="@string/listening"
+                    android:visibility="gone"
+                    android:layout_marginBottom="10dp"
+                    android:textColor="#A8A6A6"
+                    android:textSize="20dp"
+                    />
 
                 <ImageView
                     android:id="@+id/mic_top_iv"
@@ -113,8 +126,21 @@
                 android:layout_centerHorizontal="true"
                 android:layout_alignParentTop="true"
                 android:gravity="center"
-                android:layout_marginTop="80dp"
+                android:layout_marginTop="60dp"
                 android:text=""/>
+
+            <TextView
+                android:id="@+id/connecting_bottom_tv"
+                android:layout_centerHorizontal="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/mic_bottom_iv"
+                android:text="@string/listening"
+                android:visibility="gone"
+                android:layout_marginBottom="10dp"
+                android:textColor="#A8A6A6"
+                android:textSize="20dp"
+                />
 
             <ImageView
                     android:id="@+id/mic_bottom_iv"

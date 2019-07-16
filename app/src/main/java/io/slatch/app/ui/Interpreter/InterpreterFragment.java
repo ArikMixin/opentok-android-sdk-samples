@@ -14,6 +14,8 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -47,6 +49,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private ImageView mMicBottomIV;
 	private TextView mTopTV;
 	private TextView mBottomTV;
+	private TextView mConnectingBottomTV;
+	private TextView mConnectingTopTV;
 	private CircleImageView mTopFlagCIV;
 	private CircleImageView mBottomFlagCIV;
 	private VideoAudioCallViewModel videoAudioCallViewModel;
@@ -54,6 +58,7 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private List<SupportedLanguage> mSupportedLanguages;
 	private LanguageSelectorDialog mLangugesDialog;
 	private AppExecutors mAppExecutors;
+	private AlphaAnimation mConnectingAnim;
 	private boolean initLang;
 	private boolean mBottomFlag;
 	private boolean mBottomMic;
@@ -87,6 +92,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 		mBottomTV = (TextView) view.findViewById(R.id.bottom_tv);
 		mTopFlagCIV = (CircleImageView) view.findViewById(R.id.top_flag_civ);
 		mBottomFlagCIV = (CircleImageView) view.findViewById(R.id.bottom_flag_civ);
+        mConnectingBottomTV = (TextView) view.findViewById(R.id.connecting_bottom_tv);
+		mConnectingTopTV = (TextView) view.findViewById(R.id.connecting_top_tv);
 
 		//Get users (Self) language
         mAppExecutors = new AppExecutors();
@@ -110,6 +117,14 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 																									}
 																							   	changeLanguages(translatedText);
 		});
+
+		//Animation
+		mConnectingAnim = new AlphaAnimation(0.0f, 1.0f);
+		mConnectingAnim.setDuration(1000);
+		mConnectingAnim.setRepeatCount(Animation.INFINITE);
+		mConnectingAnim.setRepeatMode(Animation.REVERSE);
+
+		//OnClicks
 		mRotationIV.setOnClickListener(this);
 		mMicTopIV.setOnTouchListener(this);
 		mMicBottomIV.setOnTouchListener(this);
@@ -179,6 +194,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 
 	private void  onTouchActions(View view, MotionEvent event){
 
+        Log.d("arik", "event.getAction(): " + event.getAction());
+
 		switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN: // --Hold--
 				view.setBackgroundResource(R.drawable.interpreter_active);
@@ -189,16 +206,10 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 			break;
 
 			case MotionEvent.ACTION_UP: // --Release--
-                 mMicBottomIV.setEnabled(false);
-                 mMicTopIV.setEnabled(false);
-						view.setBackgroundResource(R.drawable.interpreter_talk);
-                        SpeechToTextUtil.getInstance().stopSpeechToText();
-            break;
+				speechToTextStoped();
+				break;
 			default: // --Release--
-                mMicBottomIV.setEnabled(false);
-                mMicTopIV.setEnabled(false);
-						view.setBackgroundResource(R.drawable.interpreter_talk);
-                         SpeechToTextUtil.getInstance().stopSpeechToText();
+				speechToTextStoped();
             break;
 		}
 	}
@@ -210,16 +221,36 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
                 if(mMicBottomIV.getId() == view.getId()){
                         mBottomMic = true;
                         mMicTopIV.setBackgroundResource(R.drawable.interpreter_disable);
-                       SpeechToTextUtil.getInstance().changeLanguage(mBottomLang.toLowerCase());
-                }else if(mMicTopIV.getId() == view.getId()){
+                        SpeechToTextUtil.getInstance().changeLanguage(mBottomLang.toLowerCase());
+						mConnectingBottomTV.startAnimation(mConnectingAnim);
+						mConnectingBottomTV.setVisibility(View.VISIBLE);
+				}else if(mMicTopIV.getId() == view.getId()){
                         mBottomMic = false;
                         mMicBottomIV.setBackgroundResource(R.drawable.interpreter_disable);
                         SpeechToTextUtil.getInstance().changeLanguage(mTopLang.toLowerCase());
+						mConnectingTopTV.startAnimation(mConnectingAnim);
+						mConnectingTopTV.setVisibility(View.VISIBLE);
                 }
 
                 SpeechToTextUtil.getInstance().startSpeechToText();
     }
 
+	public void  speechToTextStoped(){
+		mMicBottomIV.setEnabled(false);
+		mMicTopIV.setEnabled(false);
+		view.setBackgroundResource(R.drawable.interpreter_talk);
+
+		if(mConnectingBottomTV.getVisibility() == View.VISIBLE) {
+			mConnectingBottomTV.setVisibility(View.GONE);
+			mConnectingAnim.cancel();
+		}
+		if(mConnectingTopTV.getVisibility() == View.VISIBLE) {
+			mConnectingTopTV.setVisibility(View.GONE);
+			mConnectingAnim.cancel();
+		}
+
+		SpeechToTextUtil.getInstance().stopSpeechToText();
+	}
 	private void changeLanguages(String translatedTxt) {
 		if (!initLang) {
 				/** TOP **/
