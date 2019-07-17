@@ -70,10 +70,10 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	@Override
 	public boolean onUnbind(Intent intent) {
 		Log.e("WCService", "WC Service onUnbind");
-		if(pass == null)
-		  		 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
-			mXMPPProvider.initAsync(mSelfUserId, pass);
-			init();
+//		if(pass == null)
+//		  		 pass = WCSharedPreferences.getInstance(this).getXMPPPassword();
+//			mXMPPProvider.initAsync(mSelfUserId, pass);
+//			init();
 		return super.onUnbind(intent);
 	}
 
@@ -95,8 +95,13 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 	@Override
 	public void onNewIncomingMessage(String msg, String conversationId) {
+
+
+		Log.d(TAG, "onNewIncomingMessage: ");
 		try {
 			Message message = Message.fromJson(msg);
+			Log.d("arik", "message.getMessageType(): " + message.getRtcCode());
+
 			Log.d(TAG, message.getMessageType());
 			//Log.d(TAG, "JSON: " +message.toJson());
 
@@ -109,8 +114,9 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 			if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
 
 				//Ignore "OFFER" msg if more than 30 seconds
-				if(System.currentTimeMillis() - message.getTimestampMilli() > 30)
-					return;
+				if(System.currentTimeMillis() - message.getTimestampMilli() > 30000) {
+                    return;
+                }
 
 				openIncomingCallActivity(message);
 				return;
@@ -537,8 +543,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 	private void broadcastWebRTC(String mRtcCode, String message, String messageLanguage) {
 		Intent intent = new Intent();
 			intent.setAction(mRtcCode);
-//		if(mRtcCode.equals(Message.RTC_CODE_UPDATE_SESSION))
-//						intent.putExtra(IS_RECORDING, isRecording);
 		if(mRtcCode.equals(Message.RTC_CODE_TEXT)) {
 						intent.putExtra(RTC_MESSAGE, message);
 		}				intent.putExtra(RTC_MESSAGE_LANGUAGE, messageLanguage);

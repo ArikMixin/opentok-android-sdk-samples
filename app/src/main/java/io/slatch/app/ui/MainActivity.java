@@ -313,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	protected void onStop() {
+		Log.d(TAG, "onStop: ");
 		super.onStop();
 		unbindService(mServiceConnection);
 		mBound = false;

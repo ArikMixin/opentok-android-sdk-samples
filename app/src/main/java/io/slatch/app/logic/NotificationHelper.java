@@ -42,6 +42,7 @@ public class NotificationHelper {
 	private static final int NOTIFICATION_ID = 2000;
 
 	public static void handleNotificationFromPush(Application application, Map<String, String> dataMap){
+		Log.d("arik3", "pushhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh: ");
 		Log.d(TAG, "handleNotificationFromPush: ");
 		if (dataMap == null)
 			return;
@@ -50,8 +51,7 @@ public class NotificationHelper {
 		String senderString = dataMap.get("sender_contact");
 
 		Message message = Message.fromJson(notifString);
-		if(message.getSenderName() == null)
-			return;
+		Log.d("arik3", "message:" + message.getText() + " ,type: " + message.getMessageType() + " ,sander: " + message.getSenderId() + " , " + message.getSenderName());
 		ContactServer contact = ContactServer.fromJson(senderString);
 		WCRepository repo = ((WCApplication) application).getRepository();
 
@@ -60,7 +60,6 @@ public class NotificationHelper {
 			openIncomingCall(application, repo, message);
 			return;
 		}
-
 
 		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT) &&
 				!Utils.fixHebrew(message.getMessageLanguage()).equals
@@ -102,6 +101,8 @@ public class NotificationHelper {
 	}
 
 	private static void getContactFromPush(WCRepository repo, Application application, Message message, ContactServer contact){
+		Log.d("arik3", "$$$$: ");
+
 		if (message.isGroupEvent()){
 
 			if(repo.getSelfUserId().equals(message.getActingUser())) // do not pop notification for self operations
@@ -121,6 +122,8 @@ public class NotificationHelper {
 	}
 
 	private static void showNotification(Context context, NotificationData data, boolean isPush){
+		Log.d("arik3", "fire push ");
+
 		Log.e(TAG, "showNotification: " + data.body + ", from push: " + isPush);
 
 		//createNotificationChannel(context);
