@@ -133,4 +133,6 @@
     <string name="cancel">Cancel</string>
     <string name="created_by">Created By %s</string>
     <string name="rate_us">"How was your experience with Slatch?"</string>
+    <string name="permissions_interpreter">In order to use interpreter, you must confirm using the microphone</string>
+
 </resources>

@@ -1,12 +1,12 @@
 package io.slatch.app.ui.Interpreter;
 
+import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,6 +19,7 @@ import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -36,8 +37,14 @@ import io.slatch.app.utils.Utils;
 import io.slatch.app.viewmodel.SupportedLanguagesViewModel;
 import io.slatch.app.viewmodel.VideoAudioCallViewModel;
 import me.grantland.widget.AutofitTextView;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
-public class InterpreterFragment extends Fragment implements View.OnClickListener, View.OnTouchListener, SpeechToTextUtil.SpeechUtilsSTTListener, TextToSpeechUtil.TextToSpeechPlayingListener {
+public class InterpreterFragment extends Fragment implements
+		View.OnClickListener,
+		View.OnTouchListener,
+		SpeechToTextUtil.SpeechUtilsSTTListener,
+		TextToSpeechUtil.TextToSpeechPlayingListener {
 
 	private View view;
 	private RelativeLayout mTopInsideRL;
@@ -67,6 +74,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	private String mLastSelectedLang;
 	private String mBottomLang, mTopLang;
 	private boolean mShowTranslation;
+	public static final int RC_VIDEO_APP_PERM = 124;
+	public static final String[] perms = {Manifest.permission.RECORD_AUDIO };
 
 	public static InterpreterFragment newInstance() { return new InterpreterFragment();
 	}
@@ -174,18 +183,22 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
  			         mTopInsideRL.setRotation(mTopInsideRL.getRotation()-180);
                 break;
 			case R.id.top_flag_civ:
-					mBottomFlag = false;
-					getSportedLanguages();
+                        mBottomFlag = false;
+                        getSportedLanguages();
 				break;
 			case R.id.bottom_flag_civ:
-					mBottomFlag = true;
-				    getSportedLanguages();
+                        mBottomFlag = true;
+                        getSportedLanguages();
 				break;
         }
     }
 
 	@Override
 	public boolean onTouch(View view, MotionEvent motionEvent) {
+
+		//Ask for permeation first
+		if(!requestPermissions())
+				return false;
 
 		//Prevent multi fingers touch
 		if(motionEvent.getPointerCount() == 2)
@@ -202,6 +215,8 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 		}
 		return true;
 	}
+
+
 
 	private void  onTouchActions(View view, MotionEvent event){
 
@@ -449,5 +464,22 @@ public class InterpreterFragment extends Fragment implements View.OnClickListene
 	@Override
 	public void onFinishedPlaying() {
 		TextToSpeechUtil.getInstance().stopTextToSpeech();
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+	}
+
+	@AfterPermissionGranted(RC_VIDEO_APP_PERM)
+	private boolean requestPermissions() {
+		if (EasyPermissions.hasPermissions(getContext(), perms)) {
+			return true;
+		} else {
+			EasyPermissions.requestPermissions(this, getString(R.string.permissions_interpreter),
+					RC_VIDEO_APP_PERM, perms);
+			return false;
+		}
 	}
 }
