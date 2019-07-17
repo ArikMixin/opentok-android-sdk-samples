@@ -107,6 +107,11 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 
 			//Open IncomingCallActivity Activity if video call received
 			if (message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)){
+
+				//Ignore "OFFER" msg if more than 30 seconds
+				if(System.currentTimeMillis() - message.getTimestampMilli() > 30)
+					return;
+
 				openIncomingCallActivity(message);
 				return;
 			}

@@ -71,6 +71,7 @@ public class InterpreterFragment extends Fragment implements
 	private boolean mBottomFlag;
 	private boolean mBottomMic;
 	private boolean rotationFlag = true;
+	boolean languageChanged;
 	private String mLastSelectedLang;
 	private String mBottomLang, mTopLang;
 	private boolean mShowTranslation;
@@ -124,12 +125,13 @@ public class InterpreterFragment extends Fragment implements
 
 		videoAudioCallViewModel = ViewModelProviders.of(this).get(VideoAudioCallViewModel.class);
         videoAudioCallViewModel.translateText("Press and hold the microphone","EN", selfLang);
-		videoAudioCallViewModel.getTranslatedText().observe(this, translatedText -> {if(translatedText != null)
+		videoAudioCallViewModel.getTranslatedText().observe(this, translatedText -> {
+			if(translatedText != null)
 																									if(mShowTranslation) {
 																										mShowTranslationAndPlay(translatedText);
 																										return;
 																									}
-																							   	changeLanguages(translatedText);
+																							  	 	changeLanguages(translatedText);
 		});
 
 		//Animation
@@ -324,7 +326,7 @@ public class InterpreterFragment extends Fragment implements
 				mMicTopIV.setEnabled(true);
                	initLang = true;
 
-        } else if (!mBottomFlag){
+        } else if (!mBottomFlag && mLastSelectedLang != null && languageChanged){
 				//Bottom language should be Users language
 				Picasso.get()
 						.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
@@ -338,7 +340,8 @@ public class InterpreterFragment extends Fragment implements
 
 				mMicTopIV.setEnabled(true);
 				mMicBottomIV.setEnabled(true);
-		}else if (mBottomFlag){
+				languageChanged = false;
+		}else if (mBottomFlag && mLastSelectedLang != null && languageChanged){
 				//Bottom language should be Users language
 				Picasso.get()
 						.load("file:///android_asset/interpreter_" + mLastSelectedLang.toLowerCase() + ".png")
@@ -352,6 +355,7 @@ public class InterpreterFragment extends Fragment implements
 
 				mMicTopIV.setEnabled(true);
 				mMicBottomIV.setEnabled(true);
+				languageChanged = false;
 		}
 	}
 
@@ -377,7 +381,7 @@ public class InterpreterFragment extends Fragment implements
 
 		mLangugesDialog.showDialog(getActivity(),rotationFlag_result, mSupportedLanguages, supportedLanguage -> {
 				mLastSelectedLang = supportedLanguage.getLanguageCode().toUpperCase();
-				//initLang = true;
+				languageChanged = true;
 
 				videoAudioCallViewModel.translateText("Press and hold the microphone","EN", mLastSelectedLang);
 
