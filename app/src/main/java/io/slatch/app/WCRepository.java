@@ -68,7 +68,6 @@ import io.slatch.app.model.VideoAudioCall;
 import io.slatch.app.utils.ContactsUtil;
 import io.slatch.app.utils.ImagePickerUtil;
 import io.slatch.app.utils.SpeechToTextUtil;
-import io.slatch.app.utils.TextToSpeechUtil;
 import io.slatch.app.utils.Utils;
 
 
@@ -79,7 +78,7 @@ public class WCRepository {
 
 	private final Application mApplication;
 
-	public interface OnSaveMessageToDBListener {
+    public interface OnSaveMessageToDBListener {
 		void OnSaved(boolean success, Message savedMessage, Contact participant);
 	}
 
@@ -1306,6 +1305,12 @@ public class WCRepository {
 	public void deleteCall(Integer callId) {
 		mAppExecutors.diskIO().execute(() -> mCallDao.deleteCall(callId));
 	}
+
+
+	public void deleteConveration(String selectedList) {
+		mAppExecutors.diskIO().execute(() -> mConversationDao.deleteConveration(selectedList));
+	}
+
 
 	public LiveData<List<Message>> getUnreadMessagesConversation(String conversationId) {
 		return mMessageDao.getUnreadMessagesConversationLD(conversationId);

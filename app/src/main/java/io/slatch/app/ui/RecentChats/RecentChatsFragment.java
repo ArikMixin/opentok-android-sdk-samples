@@ -215,6 +215,19 @@ public class RecentChatsFragment extends Fragment  implements
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.menu_main, menu);
 		mTrashIcon = menu.findItem(R.id.trash);
+		mTrashIcon.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+			@Override
+			public boolean onMenuItemClick(MenuItem menuItem) {
+				for (int i = 0; i < mSelectedList.size(); i++) {
+					mConversationViewModel.deleteChats(mSelectedList.get(i).getConversationId());
+				}
+				((MainActivity) getActivity()).hideTitle(false);
+				mSelectedList.clear();
+                mTrashIcon.setVisible(false);
+                mDeleteState = false;
+				return false;
+			}
+		});
 	}
 
 	@Override
@@ -273,6 +286,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public void onDialogClick(View mView, Conversation conversation) {
+		/************ COMMENT THIS ***********/
 		if(mDeleteState) {
 
 					//Show or Hide the selection grey layout
@@ -291,7 +305,11 @@ public class RecentChatsFragment extends Fragment  implements
 							mDeleteState = false;
 						}
 					}
-		}else {
+		}else
+
+			/****** TO THIS *******************/
+
+			{
 			Intent intent = new Intent(getContext(), ConversationActivity.class);
 			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
 			intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
@@ -309,7 +327,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public void onDialogLongClick(View mView, Conversation conversation) {
-
+/************ COMMENT THIS ***********/
                 if(!mDeleteState) {
                             mTrashIcon.setVisible(true);
                             mDeleteState = true;
@@ -336,6 +354,7 @@ public class RecentChatsFragment extends Fragment  implements
 								}
                             }
                 }
+		/************ TO THIS ***********/
 	}
 
 	@Override

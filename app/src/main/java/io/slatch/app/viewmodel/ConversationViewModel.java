@@ -28,7 +28,8 @@ public class ConversationViewModel extends AndroidViewModel {
 	private final WCRepository mRepository;
 	private final AppExecutors mAppExecutors;
 
-	public interface ConversationListener{
+
+    public interface ConversationListener{
 		void onConversationResult(Conversation conversation);
 	}
 	public interface ConversationAndItsMessagesListener{
@@ -202,6 +203,9 @@ public class ConversationViewModel extends AndroidViewModel {
 		return mRepository.getLatestVersion();
 	}
 
+	public void deleteChats(String converationID) {
+		mRepository.deleteConveration(converationID);
+	}
 
 
 }

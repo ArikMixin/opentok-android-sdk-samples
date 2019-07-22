@@ -216,4 +216,6 @@ public interface ConversationDao {
 	@Query("SELECT * from conversation_table WHERE is_group = 1 ORDER BY last_message_timestamp ASC")
 	public LiveData<List<Conversation>> getAllGroupConversationsLD();
 
+	@Query("DELETE FROM conversation_table WHERE conversation_id =:conversation_id ")
+	public void deleteConveration(String conversation_id);
 }
