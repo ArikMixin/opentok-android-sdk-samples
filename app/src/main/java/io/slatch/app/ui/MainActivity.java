@@ -26,10 +26,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -106,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
 	private WCSharedPreferences mSharedPreferences;
 	private RelativeLayout mActionRL;
 	private TextView mSelectedCounterTV;
+	private ImageView mCancelActionIV;
+	private static RecentChatsFragment recentChatsFragment;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -127,8 +129,13 @@ public class MainActivity extends AppCompatActivity {
 		mActionRL = (RelativeLayout) findViewById(R.id.action_rl);
 		mViewPager = (ViewPager) findViewById(R.id.container_vp);
 		mSelectedCounterTV = (TextView) findViewById(R.id.selected_counter_tv);
+		mCancelActionIV = (ImageView) findViewById(R.id.cancel_action_iv);
+		mCancelActionIV.setOnClickListener(view -> {
+			hideTitle(false);
+			recentChatsFragment.onCancelSelecion();
+		});
 
-		mViewPager.setAdapter(mSectionsPagerAdapter);
+				mViewPager.setAdapter(mSectionsPagerAdapter);
 		mViewPager.setOffscreenPageLimit(mFragmentsTitles.length); // Prevent recreation the fragments (Only 1 instance)
 
 		int currentItem = TAB_POSITION_CHAT;
@@ -366,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
 		 */
 		public static Fragment newInstance(int sectionNumber) {
 			if (sectionNumber == TAB_POSITION_CHAT) {
-				RecentChatsFragment recentChatsFragment = new RecentChatsFragment();
+				 recentChatsFragment = new RecentChatsFragment();
 				return recentChatsFragment;
 			} else if (sectionNumber == TAB_POSITION_CALL) {
 				RecentCallsFragment recentCallsFragment = new RecentCallsFragment();

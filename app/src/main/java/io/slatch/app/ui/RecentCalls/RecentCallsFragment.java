@@ -28,6 +28,7 @@ import io.slatch.app.db.entity.Call;
 import io.slatch.app.db.entity.User;
 import io.slatch.app.ui.AudioVideoCall.CallActivity;
 import io.slatch.app.ui.Consts;
+import io.slatch.app.ui.MainActivity;
 import io.slatch.app.ui.RecentChats.RecentChatsViewHolder;
 import io.slatch.app.ui.settings.SettingsActivity;
 import io.slatch.app.utils.Utils;
@@ -71,6 +72,7 @@ public class RecentCallsFragment extends Fragment  implements
         Log.d(TAG, "initView: ");
 		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
 		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
+
 		mCallsViewModel = ViewModelProviders.of(this).get(RecentCallsViewModel.class);
 		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
 		initAdapter();

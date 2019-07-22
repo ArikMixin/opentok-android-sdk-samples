@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
@@ -36,6 +38,7 @@ import io.slatch.app.ui.Consts;
 import io.slatch.app.ui.Contact.ContactSelectorActivity;
 import io.slatch.app.ui.MainActivity;
 import io.slatch.app.ui.Messages.ConversationActivity;
+import io.slatch.app.ui.RecentCalls.RecentCallsFragment;
 import io.slatch.app.ui.settings.SettingsActivity;
 import io.slatch.app.utils.Utils;
 import io.slatch.app.viewmodel.ConversationViewModel;
@@ -46,7 +49,7 @@ import io.slatch.app.viewmodel.UserViewModel;
 public class RecentChatsFragment extends Fragment  implements
 	DialogsListAdapter.OnDialogClickListener<Conversation>,
 	DialogsListAdapter.OnDialogLongClickListener<Conversation>,
-	DateFormatter.Formatter, DialogsListAdapter.OnButtonClickListener<Conversation> {
+	DateFormatter.Formatter, DialogsListAdapter.OnButtonClickListener<Conversation>{
 
 	private static final int REQUEST_SELECT_CONTACT = 1;
 	private static final int REQUEST_SELECT_CONTACTS_MULTY = 2;
@@ -89,11 +92,11 @@ public class RecentChatsFragment extends Fragment  implements
 		initAdapter();
 
         mSelectedList = new ArrayList<>();
+
 //		TextView tv = (TextView) view.findViewById(R.id.tv);
 //		tv.setText("Recent Chats.....");
 
 		setHasOptionsMenu(true);
-
 
 		//mSelfUserId = WCSharedPreferences.getInstance(getContext()).getUserId();
 		//mSelfUserLang = WCSharedPreferences.getInstance(getContext()).getUserLang();
@@ -214,7 +217,6 @@ public class RecentChatsFragment extends Fragment  implements
 		mTrashIcon = menu.findItem(R.id.trash);
 	}
 
-
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 
@@ -273,7 +275,7 @@ public class RecentChatsFragment extends Fragment  implements
 	public void onDialogClick(View mView, Conversation conversation) {
 		if(mDeleteState) {
 
-					//Show or Hide the selection grey layout
+			/*		//Show or Hide the selection grey layout
                     mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
                     if(mSelectionRL.getVisibility() != View.VISIBLE) {
 						mSelectionRL.setVisibility(View.VISIBLE);
@@ -288,7 +290,7 @@ public class RecentChatsFragment extends Fragment  implements
 							mTrashIcon.setVisible(false);
 							mDeleteState = false;
 						}
-					}
+					}*/
 		}else {
 			Intent intent = new Intent(getContext(), ConversationActivity.class);
 			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
@@ -308,7 +310,7 @@ public class RecentChatsFragment extends Fragment  implements
 	@Override
 	public void onDialogLongClick(View mView, Conversation conversation) {
 
-                if(!mDeleteState) {
+   /*             if(!mDeleteState) {
                             mTrashIcon.setVisible(true);
                             mDeleteState = true;
                             ((MainActivity) getActivity()).hideTitle(true);
@@ -333,7 +335,7 @@ public class RecentChatsFragment extends Fragment  implements
 									mDeleteState = false;
 								}
                             }
-                }
+                }*/
 	}
 
 	@Override
@@ -443,8 +445,28 @@ public class RecentChatsFragment extends Fragment  implements
                 mSelectedList.remove(mSelectedList.get(i));
                     break;
             }
-
         }
+    }
+
+
+    public void onCancelSelecion() {
+        mSelectedList.clear();
+		Toast.makeText(getContext(), "SelectionCleard", Toast.LENGTH_LONG).show();
+		mTrashIcon.setVisible(false);
+
+
+
+		mSelectionRL = (RelativeLayout) view.findViewById(R.id.selection_rl);
+		mSelectionRL.setVisibility(View.GONE);
+
+
+//		View nextChild = null;
+//		for (int i = 0; i < mConversation.size(); i++) {
+//			nextChild = ((ViewGroup)view).getChildAt(i);
+//			mSelectionRL = (RelativeLayout) nextChild.findViewById(R.id.selection_rl);
+//			mSelectionRL.setVisibility(View.GONE);
+//		}
+
     }
 }
 
