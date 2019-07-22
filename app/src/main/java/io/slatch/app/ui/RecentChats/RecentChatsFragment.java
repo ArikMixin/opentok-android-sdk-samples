@@ -275,7 +275,7 @@ public class RecentChatsFragment extends Fragment  implements
 	public void onDialogClick(View mView, Conversation conversation) {
 		if(mDeleteState) {
 
-			/*		//Show or Hide the selection grey layout
+					//Show or Hide the selection grey layout
                     mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
                     if(mSelectionRL.getVisibility() != View.VISIBLE) {
 						mSelectionRL.setVisibility(View.VISIBLE);
@@ -290,7 +290,7 @@ public class RecentChatsFragment extends Fragment  implements
 							mTrashIcon.setVisible(false);
 							mDeleteState = false;
 						}
-					}*/
+					}
 		}else {
 			Intent intent = new Intent(getContext(), ConversationActivity.class);
 			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
@@ -310,7 +310,7 @@ public class RecentChatsFragment extends Fragment  implements
 	@Override
 	public void onDialogLongClick(View mView, Conversation conversation) {
 
-   /*             if(!mDeleteState) {
+                if(!mDeleteState) {
                             mTrashIcon.setVisible(true);
                             mDeleteState = true;
                             ((MainActivity) getActivity()).hideTitle(true);
@@ -335,7 +335,7 @@ public class RecentChatsFragment extends Fragment  implements
 									mDeleteState = false;
 								}
                             }
-                }*/
+                }
 	}
 
 	@Override
