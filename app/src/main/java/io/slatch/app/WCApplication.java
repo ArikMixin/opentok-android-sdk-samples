@@ -36,7 +36,7 @@ public class WCApplication extends Application {
 		}else {
 			WochatApi.BASE_URL = "https://api.slatch.io/";
 			XMPPProvider.XMPP_DOMAIN = "ejabberd.slatch.io";
-			XMPPProvider.XMPP_PORT = 5223;
+			XMPPProvider.XMPP_PORT = 443;
 		}
 	}
 
