@@ -23,6 +23,8 @@ import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.dialogs.DialogsList;
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
 import com.stfalcon.chatkit.utils.DateFormatter;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import io.slatch.app.R;
@@ -67,6 +69,7 @@ public class RecentChatsFragment extends Fragment  implements
 	private MenuItem mTrashIcon;
 	private boolean mDeleteState;
 	private RelativeLayout mSelectionRL;
+    private List<Conversation> mSelectedList;
 
 	public static RecentChatsFragment newInstance() {
 		return new RecentChatsFragment();
@@ -85,6 +88,7 @@ public class RecentChatsFragment extends Fragment  implements
         initImgLoader();
 		initAdapter();
 
+        mSelectedList = new ArrayList<>();
 //		TextView tv = (TextView) view.findViewById(R.id.tv);
 //		tv.setText("Recent Chats.....");
 
@@ -274,9 +278,16 @@ public class RecentChatsFragment extends Fragment  implements
                     if(mSelectionRL.getVisibility() != View.VISIBLE) {
 						mSelectionRL.setVisibility(View.VISIBLE);
 						((MainActivity) getActivity()).incRowsCounter(true);
-					}else {
+                        mSelectedList.add(conversation);
+                    }else {
 						mSelectionRL.setVisibility(View.GONE);
 						((MainActivity) getActivity()).incRowsCounter(false);
+                        removeFromSelectionList(conversation);
+                        if(mSelectedList.size() == 0) {
+							((MainActivity) getActivity()).hideTitle(false);
+							mTrashIcon.setVisible(false);
+							mDeleteState = false;
+						}
 					}
 		}else {
 			Intent intent = new Intent(getContext(), ConversationActivity.class);
@@ -297,24 +308,32 @@ public class RecentChatsFragment extends Fragment  implements
 	@Override
 	public void onDialogLongClick(View mView, Conversation conversation) {
 
+                if(!mDeleteState) {
+                            mTrashIcon.setVisible(true);
+                            mDeleteState = true;
+                            ((MainActivity) getActivity()).hideTitle(true);
+							mSelectedList.add(conversation);
+							mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
+                            mSelectionRL.setVisibility(View.VISIBLE);
+                }else{
+                            mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
+                            if(mSelectionRL.getVisibility() != View.VISIBLE) {
+                                mSelectionRL.setVisibility(View.VISIBLE);
 
+                                ((MainActivity) getActivity()).incRowsCounter(true);
+                                  mSelectedList.add(conversation);
+                            }else {
+                                mSelectionRL.setVisibility(View.GONE);
 
-		if(!mDeleteState) {
-					mTrashIcon.setVisible(true);
-					mDeleteState = true;
-					((MainActivity) getActivity()).hideTitle();
-					mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
-					mSelectionRL.setVisibility(View.VISIBLE);
-		}else{
-					mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
-					if(mSelectionRL.getVisibility() != View.VISIBLE) {
-						mSelectionRL.setVisibility(View.VISIBLE);
-						((MainActivity) getActivity()).incRowsCounter(true);
-					}else {
-						mSelectionRL.setVisibility(View.GONE);
-						((MainActivity) getActivity()).incRowsCounter(false);
-					}
-        }
+                                ((MainActivity) getActivity()).incRowsCounter(false);
+                                removeFromSelectionList(conversation);
+                                if(mSelectedList.size() == 0) {
+									((MainActivity) getActivity()).hideTitle(false);
+									mTrashIcon.setVisible(false);
+									mDeleteState = false;
+								}
+                            }
+                }
 	}
 
 	@Override
@@ -415,4 +434,17 @@ public class RecentChatsFragment extends Fragment  implements
 //		Conversation conversation = getConversation(conversationId);
 //		onDialogClick(conversation);
 //	}
+
+    private void removeFromSelectionList(Conversation conversation){
+
+        for(int i = mSelectedList .size()-1 ; i >= 0; i--){
+
+            if(mSelectedList.get(i).getId().equals(conversation.getId())) {
+                mSelectedList.remove(mSelectedList.get(i));
+                    break;
+            }
+
+        }
+    }
 }
+

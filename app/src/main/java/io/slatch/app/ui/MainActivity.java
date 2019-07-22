@@ -697,10 +697,15 @@ public class MainActivity extends AppCompatActivity {
 
 	}
 
-	public void hideTitle() {
-		getSupportActionBar().setDisplayShowTitleEnabled(false);
-		mActionRL.setVisibility(View.VISIBLE);
-		mSelectedCounterTV.setText("1");
+	public void hideTitle(boolean hideFlag) {
+		if(hideFlag) {
+			getSupportActionBar().setDisplayShowTitleEnabled(false);
+			mActionRL.setVisibility(View.VISIBLE);
+			mSelectedCounterTV.setText("1");
+		}else{
+			mActionRL.setVisibility(View.GONE);
+			getSupportActionBar().setDisplayShowTitleEnabled(true);
+		}
 	}
 
 	public void incRowsCounter(boolean incFlag) {
@@ -708,5 +713,8 @@ public class MainActivity extends AppCompatActivity {
 			mSelectedCounterTV.setText("" + (Integer.parseInt(mSelectedCounterTV.getText().toString()) + 1));
 		else
 			mSelectedCounterTV.setText("" + (Integer.parseInt(mSelectedCounterTV.getText().toString()) - 1));
+
+		if(Integer.parseInt(mSelectedCounterTV.getText().toString()) == 0)
+			hideTitle(false);
 	}
 }
