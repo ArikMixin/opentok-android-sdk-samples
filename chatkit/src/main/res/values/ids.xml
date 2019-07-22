@@ -40,7 +40,7 @@
     <item name="dialogDivider" type="id" />
     <item name="camera_ib" type="id" />
     <item name="phone_ib" type="id" />
-
+    <item name="selection_rl" type="id" />
 
 
 </resources>

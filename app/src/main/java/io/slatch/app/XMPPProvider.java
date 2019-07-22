@@ -39,13 +39,14 @@ class XMPPProvider {
 
 	private static final String TAG = "XMPPProvider";
 
-	public static String XMPP_DOMAIN;
+	static String XMPP_DOMAIN;
+	static int XMPP_PORT;
+
 	//public static String XMPP_DOMAIN = "ejabberd-dev.slatch.io";
 	//private static final String XMPP_DOMAIN = "ejabberd.slatch.io";
 
 
 	private static final String XMPP_RESOURCE = "android";
-	private static final int XMPP_PORT = 5222;
 
 //	private static final String XMPP_DOMAIN = "ejabberd.wochat.io";
 //	private static final String XMPP_RESOURCE = "ejabberd.wochat.io";

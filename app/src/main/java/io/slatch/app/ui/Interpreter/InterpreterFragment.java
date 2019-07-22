@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -46,6 +47,7 @@ public class InterpreterFragment extends Fragment implements
 		SpeechToTextUtil.SpeechUtilsSTTListener,
 		TextToSpeechUtil.TextToSpeechPlayingListener {
 
+	private static final String TAG = "InterpreterFragment" ;
 	private View view;
 	private RelativeLayout mTopInsideRL;
 	private RelativeLayout mBottomRL;
@@ -57,8 +59,8 @@ public class InterpreterFragment extends Fragment implements
 	private ImageView mMicBottomIV;
 	private AutofitTextView mTopTV;
 	private AutofitTextView mBottomTV;
-	private TextView mConnectingBottomTV;
-	private TextView mConnectingTopTV;
+	private TextView mListeningBottomTV;
+	private TextView mListeningTopTV;
 	private CircleImageView mTopFlagCIV;
 	private CircleImageView mBottomFlagCIV;
 	private VideoAudioCallViewModel videoAudioCallViewModel;
@@ -77,6 +79,11 @@ public class InterpreterFragment extends Fragment implements
 	private boolean mShowTranslation;
 	public static final int RC_VIDEO_APP_PERM = 124;
 	public static final String[] perms = {Manifest.permission.RECORD_AUDIO };
+	private boolean mErrorFlag;
+	private long mHoldTime;
+	private long mRealeseTime = -1;
+	private double mDifTouch;
+	private boolean mDealayFlag;
 
 	public static InterpreterFragment newInstance() { return new InterpreterFragment();
 	}
@@ -103,8 +110,8 @@ public class InterpreterFragment extends Fragment implements
 		mBottomTV = (AutofitTextView) view.findViewById(R.id.bottom_tv);
 		mTopFlagCIV = (CircleImageView) view.findViewById(R.id.top_flag_civ);
 		mBottomFlagCIV = (CircleImageView) view.findViewById(R.id.bottom_flag_civ);
-        mConnectingBottomTV = (TextView) view.findViewById(R.id.connecting_bottom_tv);
-		mConnectingTopTV = (TextView) view.findViewById(R.id.connecting_top_tv);
+        mListeningBottomTV = (TextView) view.findViewById(R.id.listening_bottom_tv);
+		mListeningTopTV = (TextView) view.findViewById(R.id.listening_top_tv);
 
 		// enable mics btns only after load languages
 		mMicBottomIV.setEnabled(false);
@@ -116,7 +123,7 @@ public class InterpreterFragment extends Fragment implements
 		selfLang = WCSharedPreferences.getInstance(view.getContext()).getUserLang().toLowerCase();
 
 		//View Model
-        SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
+        SpeechToTextUtil.getInstance(getContext()).setSpeechUtilsSTTListener(this);
 		mSupportedLanguagesViewModel = ViewModelProviders.of(this).get(SupportedLanguagesViewModel.class);
 		mSupportedLanguagesViewModel.loadLanguages(WCSharedPreferences.getInstance(getContext()).getUserLang().toLowerCase());
         mSupportedLanguagesViewModel.getSupportedLanguages().observe(getActivity(), supportedLanguages ->{
@@ -221,61 +228,96 @@ public class InterpreterFragment extends Fragment implements
 
 
 	private void  onTouchActions(View view, MotionEvent event){
-
 		switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN: // --Hold--
-				view.setBackgroundResource(R.drawable.interpreter_active);
-         				                          		 	 speechToTextStarted(view);
+				mHoldTime = System.currentTimeMillis();
+
+				if(mRealeseTime != -1) {
+					mDifTouch = (mHoldTime - mRealeseTime) / 1000f;
+
+					//Prevent monkey clicking on the mic, the button will be release only after 0.3 seconds
+					if(mDifTouch < 0.3) {
+						mDealayFlag = true;
+						return;
+					}
+				}
+				mDealayFlag = false;
+
+         		speechToTextStarted(view);
 			break;
 
 			case MotionEvent.ACTION_MOVE:
 			break;
 
 			case MotionEvent.ACTION_UP: // --Release--
-				speechToTextStoped();
-				break;
+				if(!mDealayFlag)
+				mRealeseTime = System.currentTimeMillis();
+
+				if(!mErrorFlag)
+						speechToTextStoped(view);
+			break;
+
 			default: // --Release--
-				speechToTextStoped();
+				if(!mDealayFlag)
+				mRealeseTime = System.currentTimeMillis();
+
+				if(!mErrorFlag)
+						speechToTextStoped(view);
             break;
 		}
 	}
 
 	public void  speechToTextStarted(View view){
+		view.setBackgroundResource(R.drawable.interpreter_active);
+
+		Log.d(TAG, "speechToTextStarted: ");
+				mErrorFlag = false;
                 mBottomTV.setText("");
                 mTopTV.setText("");
 
                 if(mMicBottomIV.getId() == view.getId()){
                         mBottomMic = true;
                         mMicTopIV.setBackgroundResource(R.drawable.interpreter_disable);
-                        SpeechToTextUtil.getInstance().changeLanguage(mBottomLang.toLowerCase());
-						mConnectingBottomTV.startAnimation(mConnectingAnim);
-						mConnectingBottomTV.setVisibility(View.VISIBLE);
+                        SpeechToTextUtil.getInstance(getContext()).changeLanguage(mBottomLang.toLowerCase());
+						mListeningBottomTV.startAnimation(mConnectingAnim);
+						mListeningBottomTV.setVisibility(View.VISIBLE);
 				}else if(mMicTopIV.getId() == view.getId()){
                         mBottomMic = false;
                         mMicBottomIV.setBackgroundResource(R.drawable.interpreter_disable);
-                        SpeechToTextUtil.getInstance().changeLanguage(mTopLang.toLowerCase());
-						mConnectingTopTV.startAnimation(mConnectingAnim);
-						mConnectingTopTV.setVisibility(View.VISIBLE);
+                        SpeechToTextUtil.getInstance(getContext()).changeLanguage(mTopLang.toLowerCase());
+						mListeningTopTV.startAnimation(mConnectingAnim);
+						mListeningTopTV.setVisibility(View.VISIBLE);
                 }
 
-                SpeechToTextUtil.getInstance().startSpeechToText();
+                SpeechToTextUtil.getInstance(getContext()).startSpeechToText();
     }
 
-	public void  speechToTextStoped(){
+	public void  speechToTextStoped(View view){
+		Log.d(TAG, "speechToTextStoped: ");
+		SpeechToTextUtil.getInstance(getContext()).stopSpeechToText();
+
+//		if(mDifTouch / 1000 < 0.5) {
+//				onEndOfSpeechToText();
+//			return;
+//		}
+
 		mMicBottomIV.setEnabled(false);
 		mMicTopIV.setEnabled(false);
+
+		//Set talk button (blue)
 		view.setBackgroundResource(R.drawable.interpreter_talk);
 
-		if(mConnectingBottomTV.getVisibility() == View.VISIBLE) {
-			mConnectingBottomTV.setVisibility(View.GONE);
-			mConnectingAnim.cancel();
+		//Cancel "Listeining.." massage
+		if(mListeningBottomTV.getVisibility() == View.VISIBLE) {
+				mListeningBottomTV.setVisibility(View.GONE);
+				mConnectingAnim.cancel();
 		}
-		if(mConnectingTopTV.getVisibility() == View.VISIBLE) {
-			mConnectingTopTV.setVisibility(View.GONE);
-			mConnectingAnim.cancel();
+		if(mListeningTopTV.getVisibility() == View.VISIBLE) {
+				mListeningTopTV.setVisibility(View.GONE);
+				mConnectingAnim.cancel();
 		}
 
-		SpeechToTextUtil.getInstance().stopSpeechToText();
+//		SpeechToTextUtil.getInstance(getContext()).stopSpeechToText();
 	}
 	private void changeLanguages(String translatedTxt) {
 		if (!initLang) {
@@ -391,6 +433,7 @@ public class InterpreterFragment extends Fragment implements
 	//Speech to text
     @Override
     public void onSpeechToTextResult(String text, int duration) {
+		Log.d(TAG, "onSpeechToTextResult: ");
 		if(mBottomMic) {
 			mBottomTV.setText(text);
 			videoAudioCallViewModel.translateText(mBottomTV.getText().toString(), mBottomLang, mTopLang);
@@ -399,7 +442,7 @@ public class InterpreterFragment extends Fragment implements
 			videoAudioCallViewModel.translateText(mTopTV.getText().toString(),mTopLang, mBottomLang);
 		}
 		mShowTranslation = true;
-		SpeechToTextUtil.getInstance().changeLanguage(selfLang.toUpperCase());
+		SpeechToTextUtil.getInstance(getContext()).changeLanguage(selfLang.toUpperCase());
     }
 
     @Override
@@ -408,40 +451,43 @@ public class InterpreterFragment extends Fragment implements
 
     @Override
     public void onEndOfSpeechToText() {
+		Log.d(TAG, "onEndOfSpeechToText: ");
 		mMicTopIV.setBackgroundResource(R.drawable.interpreter_talk);
 		mMicBottomIV.setBackgroundResource(R.drawable.interpreter_talk);
 		mMicTopIV.setEnabled(true);
 		mMicBottomIV.setEnabled(true);
 
-		if(mConnectingBottomTV.getVisibility() == View.VISIBLE) {
-			mConnectingBottomTV.setVisibility(View.GONE);
+		if(mListeningBottomTV.getVisibility() == View.VISIBLE) {
+			mListeningBottomTV.setVisibility(View.GONE);
 			mConnectingAnim.cancel();
 		}
-		if(mConnectingTopTV.getVisibility() == View.VISIBLE) {
-			mConnectingTopTV.setVisibility(View.GONE);
+		if(mListeningTopTV.getVisibility() == View.VISIBLE) {
+			mListeningTopTV.setVisibility(View.GONE);
 			mConnectingAnim.cancel();
 		}
 	}
 
     @Override
     public void onErrorOfSpeechToText(int resourceString) {
+		Log.d(TAG, "onErrorOfSpeechToText: ");
+			mErrorFlag = true;
 		mMicTopIV.setBackgroundResource(R.drawable.interpreter_talk);
 		mMicBottomIV.setBackgroundResource(R.drawable.interpreter_talk);
 		mMicTopIV.setEnabled(true);
 		mMicBottomIV.setEnabled(true);
 
-		if(mConnectingBottomTV.getVisibility() == View.VISIBLE) {
-			mConnectingBottomTV.setVisibility(View.GONE);
+		if(mListeningBottomTV.getVisibility() == View.VISIBLE) {
+			mListeningBottomTV.setVisibility(View.GONE);
 			mConnectingAnim.cancel();
 		}
-		if(mConnectingTopTV.getVisibility() == View.VISIBLE) {
-			mConnectingTopTV.setVisibility(View.GONE);
+		if(mListeningTopTV.getVisibility() == View.VISIBLE) {
+			mListeningTopTV.setVisibility(View.GONE);
 			mConnectingAnim.cancel();
 		}
 	}
 
 	private void mShowTranslationAndPlay(String translatedText) {
-
+		Log.d(TAG, "mShowTranslationAndPlay: ");
 		mMicTopIV.setBackgroundResource(R.drawable.interpreter_talk);
         mMicBottomIV.setBackgroundResource(R.drawable.interpreter_talk);
 		mMicTopIV.setEnabled(true);
@@ -449,25 +495,26 @@ public class InterpreterFragment extends Fragment implements
 
         if(mBottomMic) {
 			mTopTV.setText(translatedText);
-			TextToSpeechUtil.getInstance().setLanguage(mTopLang); //Play in users language
+			TextToSpeechUtil.getInstance(getContext()).setLanguage(mTopLang); //Play in users language
 
 		}else {
 			mBottomTV.setText(translatedText);
-			TextToSpeechUtil.getInstance().setLanguage(mBottomLang); //Play in users language
+			TextToSpeechUtil.getInstance(getContext()).setLanguage(mBottomLang); //Play in users language
 
 		}
 		mShowTranslation = false;
 
 		//playText
-		TextToSpeechUtil.getInstance().startTextToSpeech(translatedText, this);
+		TextToSpeechUtil.getInstance(getContext()).startTextToSpeech(translatedText, this);
 	}
 
 	@Override
-	public void onBeginPlaying() {
-	}
+	public void onBeginPlaying() { }
+
 	@Override
 	public void onFinishedPlaying() {
-		TextToSpeechUtil.getInstance().stopTextToSpeech();
+		Log.d(TAG, "onFinishedPlaying: ");
+		TextToSpeechUtil.getInstance(getContext()).stopTextToSpeech();
 	}
 
 	@Override

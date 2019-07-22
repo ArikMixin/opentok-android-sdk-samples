@@ -77,6 +77,8 @@ import io.slatch.app.utils.Utils;
  */
 public class WCRepository {
 
+	private final Application mApplication;
+
 	public interface OnSaveMessageToDBListener {
 		void OnSaved(boolean success, Message savedMessage, Contact participant);
 	}
@@ -129,7 +131,6 @@ public class WCRepository {
 	private MutableLiveData<String> mLatestVersion;
 
 
-	private SpeechToTextUtil mSpeechToTextUtil;
 	private UserDao mUserDao;
 	private ContactDao mContactDao;
 	private GroupDao mGroupDao;
@@ -166,6 +167,7 @@ public class WCRepository {
 	// https://github.com/googlesamples
 	public WCRepository(Application application, final WCDatabase database, AppExecutors appExecutors) {
 		Log.e(TAG, "WCRepository constructor");
+		mApplication = application;
 		mDatabase = database;
 		mAppExecutors = appExecutors;
 		mSharedPreferences = WCSharedPreferences.getInstance(application);
@@ -189,7 +191,7 @@ public class WCRepository {
 		mUploadOnlyImageResult = new MutableLiveData<>();
 		mUserConfirmRegistrationResult = new MutableLiveData<>();
 		mIsDuringRefreshContacts = new MutableLiveData<>();
-		mIsDuringRefreshContacts.setValue(false);
+//		mIsDuringRefreshContacts.setValue(false); // Arik 7.18
 		mMarkAsReadAffectedMessages = new MutableLiveData<>();
 		mSupportLanguages = new MutableLiveData<>();
 		mUserProfileEditResult = new MutableLiveData<>();
@@ -205,25 +207,6 @@ public class WCRepository {
 		mMessageDao = mDatabase.messageDao();
 		mNotifDao = mDatabase.notifDao();
 		mSelfUser = mUserDao.getFirstUser();
-
-
-		TextToSpeechUtil ttsu = TextToSpeechUtil.getInstance();
-		ttsu.setTextToSpeechInitListener(new TextToSpeechUtil.TextToSpeechInitListener() {
-			@Override
-			public void onTextToSpeechInitOK() {
-				Log.e("TextToSpeechUtil", "onTextToSpeechInitOK");
-			}
-
-			@Override
-			public void onTextToSpeechInitFAIL() {
-				Log.e("TextToSpeechUtil", "onTextToSpeechInitFAIL");
-			}
-		});
-		ttsu.init(application, mSharedPreferences.getUserLang());
-
-
-		 mSpeechToTextUtil =  SpeechToTextUtil.getInstance();
-		 mSpeechToTextUtil.init(application, application.getPackageName(), mSharedPreferences.getUserLangLocale());
 	}
 
 
@@ -343,7 +326,7 @@ public class WCRepository {
 						User user = gson.fromJson(response.toString(), User.class);
 						mSharedPreferences.saveUserLanguage(user.getLanguage());
 						mSharedPreferences.saveUserLanguageLocale(user.getLanguageLocale());
-						mSpeechToTextUtil.changeLanguage(user.getLanguageLocale());
+						SpeechToTextUtil.getInstance(mApplication).changeLanguage(user.getLanguageLocale());
 
 						ContactServer contactServer = gson.fromJson(response.toString(), ContactServer.class);
 						Contact contact = new Contact();
@@ -2507,7 +2490,7 @@ public class WCRepository {
 						mSharedPreferences.saveUserLanguage(languageCode);
 						mSharedPreferences.saveUserLanguageLocale(languageLocale);
 						//Change SpeechToText Language
-						mSpeechToTextUtil.changeLanguage(languageLocale);
+						SpeechToTextUtil.getInstance(mApplication).changeLanguage(languageLocale);
 					});
 				}
 				else if (errorLogic != null) {

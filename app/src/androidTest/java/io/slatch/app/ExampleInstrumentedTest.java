@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
 		// Context of the app under test.
 		Context appContext = InstrumentationRegistry.getTargetContext();
 
-		assertEquals("io.wochat.app", appContext.getPackageName());
+		assertEquals("io.slatch.app", appContext.getPackageName());
 	}
 }

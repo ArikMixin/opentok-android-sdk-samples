@@ -66,7 +66,7 @@
 
 
                 <TextView
-                    android:id="@+id/connecting_top_tv"
+                    android:id="@+id/listening_top_tv"
                     android:layout_centerHorizontal="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -111,7 +111,6 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginBottom="5dp"
                 android:layout_marginLeft="15dp"
-                android:layout_toRightOf="@+id/participant_pic_audio_civ"
                 android:elevation="8dp"
                 android:paddingBottom="15dp"
                 android:visibility="gone"
@@ -168,7 +167,7 @@
                 />
 
             <TextView
-                android:id="@+id/connecting_bottom_tv"
+                android:id="@+id/listening_bottom_tv"
                 android:layout_centerHorizontal="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -198,7 +197,6 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginBottom="5dp"
                 android:layout_marginLeft="15dp"
-                android:layout_toRightOf="@+id/participant_pic_audio_civ"
                 android:elevation="8dp"
                 android:paddingBottom="15dp"
                 android:visibility="gone"

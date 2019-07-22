@@ -100,7 +100,6 @@ public class WCService extends Service implements XMPPProvider.OnChatMessageList
 		Log.d(TAG, "onNewIncomingMessage: ");
 		try {
 			Message message = Message.fromJson(msg);
-			Log.d("arik", "message.getMessageType(): " + message.getRtcCode());
 
 			Log.d(TAG, message.getMessageType());
 			//Log.d(TAG, "JSON: " +message.toJson());

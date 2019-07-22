@@ -3,8 +3,8 @@
     <string name="splash_agree_and_continue">Agree and Continue</string>
     <string name="splash_read_our_terms">Read our Privacy Policy. Tap Agree and continue to accept the Terms of Service</string>
     <string name="splash_read_terms">Read our %1$s. Tap \"Agree and Continue\" to accept the %2$s.</string>
-    <string name="splash_terms">&lt;a href="http://wochat.io/privacy">Terms of Service&lt;/a></string>
-    <string name="splash_privacy">&lt;a href="http://wochat.io/privacy">Privacy Policy&lt;/a></string>
+    <string name="splash_terms">&lt;a href="https://slatch.io/privacy">Terms of Service&lt;/a></string>
+    <string name="splash_privacy">&lt;a href="https://slatch.io/privacy">Privacy Policy&lt;/a></string>
     <string name="msg_permissions_explan_title">Permission Request</string>
     <string name="msg_permissions_explan_body">To easily connect with friends and family, and send and receive photos and videos, allow Slatch access to your contacts and your device\'s photos, media and files.</string>
     <string name="msg_permissions_explan_ok_btn">Continue</string>
@@ -34,7 +34,7 @@
     <string name="tab_text_1">Chats</string>
     <string name="tab_text_2">Calls</string>
     <string name="tab_text_3">Interpreter</string>
-    <string name="msg_invite_friend_body">Download Slatch! The first universal language chat! https://app.appsflyer.com/io.wochat.app?pid=invitefriends.</string>
+    <string name="msg_invite_friend_body">Download Slatch! The first universal language chat! https://app.appsflyer.com/io.slatch.app?pid=invitefriends.</string>
     <string name="msg_invite_friend_title">Download Slatch!</string>
     <string name="refresh_contacts_progress_body">Refreshing…</string>
     <string name="chat_title">Chats</string>
@@ -86,8 +86,8 @@
     <string name="settings_translation_languages_actionbar_title">Translation Language</string>
     <string name="settings_invite_friends_invitation_text">Download Slatch! The first universal language chat!</string>
     <string name="reply_location_msg_text">Location</string>
-    <string name="settings_invite_friends_download_link">‏http://wochat.io/download</string>
-    <string name="settings_help_link">http://wochat.io/</string>
+    <string name="settings_invite_friends_download_link">‏http://slatch.io/download</string>
+    <string name="settings_help_link">http://slatch.io/</string>
     <string name="title_activity_info">InfoActivity</string>
 
     <string name="please_click_back">Please click BACK again to exit</string>

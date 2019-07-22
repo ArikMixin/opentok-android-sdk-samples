@@ -161,16 +161,16 @@ public class CustomOutcomingSpeechableMessageViewHolder
 
 
     private void play(){
-		TextToSpeechUtil.getInstance().setLanguage(mDisplayedLang);
-		TextToSpeechUtil.getInstance().startTextToSpeech(mMessageText, this);
+		TextToSpeechUtil.getInstance(itemView.getContext()).setLanguage(mDisplayedLang);
+		TextToSpeechUtil.getInstance(itemView.getContext()).startTextToSpeech(mMessageText, this);
 		//mSpeechUtils.startTextToSpeech(mMessageText, mDisplayedLang);
 		mIsPlaying = true;
 		mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_pause_orange));
 	}
 
 	private void pause(){
-		if (TextToSpeechUtil.getInstance().isPlaying()){
-			TextToSpeechUtil.getInstance().pauseTextToSpeech();
+		if (TextToSpeechUtil.getInstance(itemView.getContext()).isPlaying()){
+			TextToSpeechUtil.getInstance(itemView.getContext()).pauseTextToSpeech();
 			//mCurrentPosition = mMediaPlayer.getCurrentPosition();
 			mPlayPauseIV.setImageDrawable(itemView.getResources().getDrawable(R.drawable.msg_audio_play_orange));
 		}
@@ -180,7 +180,7 @@ public class CustomOutcomingSpeechableMessageViewHolder
 	@Override
 	public void onClick(View v) {
 		try {
-			if (TextToSpeechUtil.getInstance().isPlaying()){
+			if (TextToSpeechUtil.getInstance(itemView.getContext()).isPlaying()){
 				pause();
 			}
 			else {

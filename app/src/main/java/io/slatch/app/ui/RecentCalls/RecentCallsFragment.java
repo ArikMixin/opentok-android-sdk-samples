@@ -125,7 +125,7 @@ public class RecentCallsFragment extends Fragment  implements
 	}
 
 	@Override
-	public void onDialogClick(Call call) {
+	public void onDialogClick(View view, Call call) {
 		if(CallActivity.activityActiveFlag)
 			return; // Prevent multi open
 		Intent intent = new Intent(getContext(), CallActivity.class);
@@ -144,7 +144,7 @@ public class RecentCallsFragment extends Fragment  implements
 	}
 
 	@Override
-	public void onDialogLongClick(Call call) {
+	public void onDialogLongClick(View view, Call call) {
 		Log.d("call", "call: " + call.getCallID());
 		// TODO: 6/19/2019 create delete mechanism
 		mCallsViewModel.deleteCall(call.getCallID());

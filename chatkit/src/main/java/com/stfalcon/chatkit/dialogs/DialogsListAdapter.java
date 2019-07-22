@@ -465,7 +465,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     * LISTENERS
     * */
     public interface OnDialogClickListener<DIALOG extends IDialog> {
-        void onDialogClick(DIALOG dialog);
+        void onDialogClick(View view, DIALOG dialog);
     }
 
     public interface OnDialogViewClickListener<DIALOG extends IDialog> {
@@ -473,7 +473,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
     }
 
     public interface OnDialogLongClickListener<DIALOG extends IDialog> {
-        void onDialogLongClick(DIALOG dialog);
+        void onDialogLongClick(View view, DIALOG dialog);
     }
 
     public interface OnDialogViewLongClickListener<DIALOG extends IDialog> {
@@ -715,7 +715,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                 @Override
                 public void onClick(View view) {
                     if (onDialogClickListener != null) {
-                        onDialogClickListener.onDialogClick(dialog);
+                        onDialogClickListener.onDialogClick(view, dialog);
                     }
                     if (onDialogViewClickListener != null) {
                         onDialogViewClickListener.onDialogViewClick(view, dialog);
@@ -728,7 +728,7 @@ public class DialogsListAdapter<DIALOG extends IDialog>
                 @Override
                 public boolean onLongClick(View view) {
                     if (onLongItemClickListener != null) {
-                        onLongItemClickListener.onDialogLongClick(dialog);
+                        onLongItemClickListener.onDialogLongClick(view,dialog);
                     }
                     if (onDialogViewLongClickListener != null) {
                         onDialogViewLongClickListener.onDialogViewLongClick(view, dialog);

@@ -1,5 +1,7 @@
 package io.slatch.app.utils;
 
+import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,15 +14,18 @@ import android.util.Log;
 import java.util.ArrayList;
 
 import io.slatch.app.R;
+import io.slatch.app.db.WCSharedPreferences;
+import io.slatch.app.ui.AudioVideoCall.CallActivity;
 
 public class SpeechToTextUtil implements
 	RecognitionListener {
 
 
 
-	public static SpeechToTextUtil getInstance(){
+	public static SpeechToTextUtil getInstance(Context context){
 		if (mSpeechToTextUtil == null){
 			mSpeechToTextUtil = new SpeechToTextUtil();
+			mSpeechToTextUtil.init(context, context.getPackageName(), WCSharedPreferences.getInstance(context).getUserLangLocale());
 		}
 		return mSpeechToTextUtil;
 	}
@@ -133,6 +138,7 @@ public class SpeechToTextUtil implements
 
 	@Override
 	public void onError(int error) {
+		Log.d(TAG, "onError: ");
 		@StringRes int resourceString = 0;
 		switch (error){
 			case SpeechRecognizer.ERROR_AUDIO:
@@ -166,7 +172,7 @@ public class SpeechToTextUtil implements
 			mSpeechUtilsSTTListener.onErrorOfSpeechToText(resourceString);
 
 		//End the speechRecognizer in any case - even if the error is 0 (no recording at all - for few seconds)
-		if(resourceString == 0)
+//		if(resourceString == 0)
 				onEndOfSpeech();
 	}
 
@@ -177,8 +183,9 @@ public class SpeechToTextUtil implements
 		if ((matches != null) && (matches.size() > 0)) {
 			int duration = (int)(System.currentTimeMillis() - mStartSpeechToTextTimeStamp);
 			String text = matches.get(0);
-			if (mSpeechUtilsSTTListener != null)
+			if (mSpeechUtilsSTTListener != null) 
 				mSpeechUtilsSTTListener.onSpeechToTextResult(text, duration);
+			
 		}
 	}
 

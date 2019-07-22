@@ -286,8 +286,8 @@ public class CallActivity extends AppCompatActivity
         initPIP(); // Picture-to-picture (Minimize feature) initialization
 
         /**SpeechToTextUtil and Audio Driver initialization**/
-        TextToSpeechUtil.getInstance().setLanguage(mSelfLang); //Play in users language
-        SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
+        TextToSpeechUtil.getInstance(this).setLanguage(mSelfLang); //Play in users language
+        SpeechToTextUtil.getInstance(this).setSpeechUtilsSTTListener(this);
         customAudioDevice = new CustomAudioDevice(CallActivity.this);
 
         /**Language(Flag), display name, and pic initialization**/
@@ -363,9 +363,9 @@ public class CallActivity extends AppCompatActivity
 
         // Video Or Audio
         if (mIsVideoCall)
-            videoCall();
+                videoCall();
         else
-            audioCall();
+                audioCall();
     }
 
     private void outGoingCall() {
@@ -684,7 +684,7 @@ public class CallActivity extends AppCompatActivity
 
                 AudioDeviceManager.getAudioDevice().stopCapturer();
                 AudioDeviceManager.getAudioDevice().stopRenderer();
-                SpeechToTextUtil.getInstance().startSpeechToText();
+                SpeechToTextUtil.getInstance(getApplication()).startSpeechToText();
 
 
                 //SlideUp
@@ -738,7 +738,7 @@ public class CallActivity extends AppCompatActivity
 
     public void sendPush2TalkMsg(){
         Log.d(TAG, "sendPush2TalkMsg: ");
-        SpeechToTextUtil.getInstance().stopSpeechToText();
+        SpeechToTextUtil.getInstance(this).stopSpeechToText();
         sendXMPPmsg(Message.RTC_CODE_RECORDING_END,"");
 
             ViewCompat.animate(mPushToTalkFL).setDuration(300).alpha(0.0f).withEndAction(()->{
@@ -1012,6 +1012,7 @@ public class CallActivity extends AppCompatActivity
         super.onStop();
         unbindService(mServiceConnection);
         unregisterReceiver(mRTCcodeBR);
+        stopService(new Intent(this, WCService.class));
     }
 
     @Override
@@ -1528,7 +1529,7 @@ public class CallActivity extends AppCompatActivity
         // call view model to translate
        //  AudioDeviceManager.getAudioDevice().stopCapturer();
         AudioDeviceManager.getAudioDevice().stopRenderer();
-        TextToSpeechUtil.getInstance().startTextToSpeech(textToPlay, this);
+        TextToSpeechUtil.getInstance(this).startTextToSpeech(textToPlay, this);
     }
 
     @Override
@@ -1536,7 +1537,7 @@ public class CallActivity extends AppCompatActivity
 
     @Override
     public void onFinishedPlaying() {
-        TextToSpeechUtil.getInstance().stopTextToSpeech();
+        TextToSpeechUtil.getInstance(this).stopTextToSpeech();
      //   AudioDeviceManager.getAudioDevice().startCapturer();
         AudioDeviceManager.getAudioDevice().startRenderer();
     }

@@ -17,6 +17,15 @@
 
 
     <item
+        android:id="@+id/trash"
+        android:title="trash"
+        android:visible="false"
+        android:icon="@drawable/trash"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        />
+
+    <item
         android:id="@+id/action_search"
         android:title="search"
         android:icon="@android:drawable/ic_menu_search"
@@ -24,6 +33,7 @@
         app:showAsAction="always"
         app:actionViewClass="android.support.v7.widget.SearchView"
         />
+
 
 
 

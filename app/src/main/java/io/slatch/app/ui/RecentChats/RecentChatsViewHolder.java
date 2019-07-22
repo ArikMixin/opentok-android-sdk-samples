@@ -3,6 +3,7 @@ package io.slatch.app.ui.RecentChats;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 
 import com.stfalcon.chatkit.dialogs.DialogsListAdapter;
@@ -27,6 +28,7 @@ public class RecentChatsViewHolder
 	private final ImageButton mCameraIB;
 	private final ImageButton mPhoneIB;
     private Conversation mConversation;
+    private RelativeLayout mSelectionRL;
 
 	public static final int BTN_CAMERA = 1;
 	public static final int BTN_PHONE = 2;
@@ -35,6 +37,7 @@ public class RecentChatsViewHolder
     public RecentChatsViewHolder(View itemView) {
         super(itemView);
         //onlineIndicator = itemView.findViewById(R.id.onlineIndicator);
+        mSelectionRL = (RelativeLayout) itemView.findViewById(R.id.selection_rl);
         mCocheIV = (ImageView)itemView.findViewById(R.id.dialogCocheIV);
 		mMsgTypeIV = (ImageView)itemView.findViewById(R.id.dialogMsgTypeIV);
 		mAvatarcfiv = (CircleFlagImageView) itemView.findViewById(R.id.dialogAvatar);

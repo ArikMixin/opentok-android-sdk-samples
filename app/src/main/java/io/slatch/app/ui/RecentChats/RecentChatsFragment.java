@@ -9,7 +9,6 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,6 +16,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+
 import com.squareup.picasso.Picasso;
 import com.stfalcon.chatkit.commons.ImageLoader;
 import com.stfalcon.chatkit.dialogs.DialogsList;
@@ -63,6 +64,9 @@ public class RecentChatsFragment extends Fragment  implements
 	private String mSelfUserLang;
 	private String mSelfUserName;
 	private GroupViewModel mGroupViewModel;
+	private MenuItem mTrashIcon;
+	private boolean mDeleteState;
+	private RelativeLayout mSelectionRL;
 
 	public static RecentChatsFragment newInstance() {
 		return new RecentChatsFragment();
@@ -75,6 +79,7 @@ public class RecentChatsFragment extends Fragment  implements
 		view = inflater.inflate(R.layout.recent_chats_fragment, container, false);
 		dialogsList = (DialogsList) view.findViewById(R.id.dialogsList);
 		mEmptyFrameCL = (ConstraintLayout) view.findViewById(R.id.empty_frame_fl);
+
 		mUserViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
 		mGroupViewModel = ViewModelProviders.of(this).get(GroupViewModel.class);
         initImgLoader();
@@ -90,6 +95,7 @@ public class RecentChatsFragment extends Fragment  implements
 		//mSelfUserLang = WCSharedPreferences.getInstance(getContext()).getUserLang();
 
 
+//		mSelfUserId = share
 //		mSelfUserId = share
 		mUserViewModel.getSelfUser().observe(this, user -> {
 			if (user != null) {
@@ -114,7 +120,7 @@ public class RecentChatsFragment extends Fragment  implements
 				String conversationId = ((MainActivity) getActivity()).getIntentConversationId();
 				if (conversationId != null){
 					Conversation conversation = getConversation(conversationId);
-					onDialogClick(conversation);
+					onDialogClick(view, conversation);
 				}
 			}
 			else {
@@ -201,7 +207,7 @@ public class RecentChatsFragment extends Fragment  implements
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.menu_main, menu);
-
+		mTrashIcon = menu.findItem(R.id.trash);
 	}
 
 
@@ -260,24 +266,42 @@ public class RecentChatsFragment extends Fragment  implements
 	}
 
 	@Override
-	public void onDialogClick(Conversation conversation) {
-		Intent intent = new Intent(getContext(), ConversationActivity.class);
-		intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
-		intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
-		intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
-		intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
-		intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
-		intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
-		intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
-		intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
-		intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
-		intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
-		startActivity(intent);
+	public void onDialogClick(View mView, Conversation conversation) {
+		if(mDeleteState) {
+            ((MainActivity) getActivity()).incRowsCounter();
+
+                    mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
+					mSelectionRL.setVisibility(View.VISIBLE);
+
+		}else {
+			Intent intent = new Intent(getContext(), ConversationActivity.class);
+			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
+			intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
+			intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+			intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
+			intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+			intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+			intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+			intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+			startActivity(intent);
+		}
 	}
 
 	@Override
-	public void onDialogLongClick(Conversation dialog) {
+	public void onDialogLongClick(View mView, Conversation conversation) {
 
+					mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
+					mSelectionRL.setVisibility(View.VISIBLE);
+
+		if(!mDeleteState) {
+					mTrashIcon.setVisible(true);
+					mDeleteState = true;
+					((MainActivity) getActivity()).hideTitle();
+		}else{
+          	 		((MainActivity)getActivity()).incRowsCounter();
+        }
 	}
 
 	@Override
@@ -321,7 +345,10 @@ public class RecentChatsFragment extends Fragment  implements
 
 		dialogsAdapter.setOnDialogClickListener(this);
 
+		//dialogsAdapter.setOnDialogLongClickListener(this);
+//
 		dialogsAdapter.setOnDialogLongClickListener(this);
+		//
 
 		dialogsAdapter.setOnButtonClickListener(this);
 
@@ -369,6 +396,7 @@ public class RecentChatsFragment extends Fragment  implements
 		}
 		return null;
 	}
+
 
 //	public void displayConversation(String conversationId) {
 //		Conversation conversation = getConversation(conversationId);

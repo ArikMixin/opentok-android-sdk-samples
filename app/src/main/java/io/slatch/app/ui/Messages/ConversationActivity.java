@@ -451,7 +451,7 @@ public class ConversationActivity extends PermissionActivity implements
 //		mSpeechUtils = new SpeechUtils();
 //		mSpeechUtils.setSpeechUtilsSTTListener(this);
 
-		SpeechToTextUtil.getInstance().setSpeechUtilsSTTListener(this);
+		SpeechToTextUtil.getInstance(this).setSpeechUtilsSTTListener(this);
 
 
 		if (mClickedFromNotifivation){
@@ -1202,6 +1202,8 @@ public class ConversationActivity extends PermissionActivity implements
 		super.onStop();
 		unbindService(mServiceConnection);
 		mBound = false;
+
+		stopService(new Intent(this, WCService.class));
 	}
 
 
@@ -1812,7 +1814,7 @@ public class ConversationActivity extends PermissionActivity implements
 		else  {
 //			mSpeechUtils.initSpeech(this, this.getPackageName(), mSelfLang);
 //			mSpeechUtils.startSpeechToText();
-			SpeechToTextUtil.getInstance().startSpeechToText();
+			SpeechToTextUtil.getInstance(this).startSpeechToText();
 		}
 	}
 
@@ -1823,7 +1825,7 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 		else  {
 			//mSpeechUtils.cancelSpeechToText();
-			SpeechToTextUtil.getInstance().cancelSpeechToText();
+			SpeechToTextUtil.getInstance(this).cancelSpeechToText();
 			mRecordingTimer.cancel();
 			mRecordingStarted = false;
 			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);
@@ -1837,7 +1839,7 @@ public class ConversationActivity extends PermissionActivity implements
 		}
 		else  {
 			//mSpeechUtils.stopSpeechToText();
-			SpeechToTextUtil.getInstance().stopSpeechToText();
+			SpeechToTextUtil.getInstance(this).stopSpeechToText();
 			mRecordingTimer.cancel();
 			mRecordingStarted = false;
 			mMessageInput.getInputEditText().setHint(R.string.hint_enter_a_message);

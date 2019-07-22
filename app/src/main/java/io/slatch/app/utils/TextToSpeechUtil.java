@@ -1,5 +1,6 @@
 package io.slatch.app.utils;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.net.Uri;
@@ -22,6 +23,9 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 import java.util.UUID;
+
+import io.slatch.app.db.WCSharedPreferences;
+import io.slatch.app.ui.AudioVideoCall.CallActivity;
 
 public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlayer.Listener {
 
@@ -47,9 +51,10 @@ public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlaye
 	private TextToSpeechPlayingListener mTextToSpeechPlayingListener;
 
 
-	public static TextToSpeechUtil getInstance(){
+	public static TextToSpeechUtil getInstance(Context context){
 		if (mTextToSpeechUtil == null){
 			mTextToSpeechUtil = new TextToSpeechUtil();
+			mTextToSpeechUtil.init(context, WCSharedPreferences.getInstance(context).getUserLang());
 		}
 		return mTextToSpeechUtil;
 	}
@@ -103,7 +108,7 @@ public class TextToSpeechUtil implements TextToSpeech.OnInitListener, AudioPlaye
 	private TextToSpeechUtil(){
 	}
 
-	public void init(Application application, String selfLang){
+	public void init(Context application, String selfLang){
 		mSelfLang = selfLang;
 		try {
 			mTextToSpeech = new TextToSpeech(application.getApplicationContext(), this);

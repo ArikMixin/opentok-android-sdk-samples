@@ -26,10 +26,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,18 +65,15 @@ public class MainActivity extends AppCompatActivity {
 	private static final int TAB_POSITION_CHAT = 1;
 	private static final int TAB_POSITION_CALL = 2;
 	private static final int TAB_POSITION_INTERPRETER = 3;
-	;
 
-
-	private int mFragmentsTitles[] = new int[] {
+	private int mFragmentsTitles[] = new int[]{
 			R.string.camera_title,
 			R.string.chat_title,
 			R.string.calls_title,
 			R.string.interpreter_title};
 
-
 	private static final String TAG = "MainActivity";
-	public static final String PLAY_STORE_URL = "market://details?id=io.wochat.app";
+	public static final String PLAY_STORE_URL = "market://details?id=io.slatch.app";
 	private static final int REQUEST_CONTACT_SELECTOR = 1;
 	private static final int REQUEST_SELECT_CAMERA_PHOTO = 2;
 	private static final int REQUEST_SELECT_CONTACTS_MULTI = 3;
@@ -105,6 +104,8 @@ public class MainActivity extends AppCompatActivity {
 	private AlertDialog mUpdateDialog = null;
 	private AlertDialog.Builder mUpdatebuilder;
 	private WCSharedPreferences mSharedPreferences;
+	private RelativeLayout mActionRL;
+	private TextView mSelectedCounterTV;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -123,7 +124,10 @@ public class MainActivity extends AppCompatActivity {
 
 		mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
+		mActionRL = (RelativeLayout) findViewById(R.id.action_rl);
 		mViewPager = (ViewPager) findViewById(R.id.container_vp);
+		mSelectedCounterTV = (TextView) findViewById(R.id.selected_counter_tv);
+
 		mViewPager.setAdapter(mSectionsPagerAdapter);
 		mViewPager.setOffscreenPageLimit(mFragmentsTitles.length); // Prevent recreation the fragments (Only 1 instance)
 
@@ -137,8 +141,7 @@ public class MainActivity extends AppCompatActivity {
 				mSelfUserId = user.getUserId();
 				mSelfUserLang = user.getLanguage();
 				mSelfUserName = user.getUserName();
-			}
-			else {
+			} else {
 				mSelfUserId = null;
 				mSelfUserLang = null;
 				mSelfUserName = null;
@@ -151,14 +154,13 @@ public class MainActivity extends AppCompatActivity {
 
 		mLastSelectioPage = currentItem;
 		mViewPager.setCurrentItem(currentItem);
-		//getSupportActionBar().setTitle(mFragmentsTitles[currentItem]); (Title in the right side)
-
+		//getSupportActionBar().setTitle(mFragmentsTitles[currentItem]); //(Title in the right side)
 
 
 		BadgedTabLayout tabLayout = (BadgedTabLayout) findViewById(R.id.tabs);
 		tabLayout.setupWithViewPager(mViewPager);
 		//tabLayout.setBadgeText(1,"10");
-		tabLayout.setBadgeText(1,null);
+		tabLayout.setBadgeText(1, null);
 		tabLayout.setIcon(0, R.drawable.ic_action_camera);
 
 
@@ -201,17 +203,14 @@ public class MainActivity extends AppCompatActivity {
 					mLastSelectioPage = position;
 					mFab.setVisibility(View.VISIBLE);
 					mFab.setImageResource(R.drawable.new_chat);
-				}
-				else if (position == TAB_POSITION_CALL) {
+				} else if (position == TAB_POSITION_CALL) {
 					mLastSelectioPage = position;
 					mFab.setVisibility(View.VISIBLE);
 					mFab.setImageResource(R.drawable.new_call);
-				}
-				else if (position == TAB_POSITION_INTERPRETER) {
+				} else if (position == TAB_POSITION_INTERPRETER) {
 					mLastSelectioPage = position;
 					mFab.setVisibility(View.GONE);
-				}
-				else {
+				} else {
 					openCamera();
 					mFab.setVisibility(View.GONE);
 					new Handler(getMainLooper()).postDelayed(new Runnable() {
@@ -236,11 +235,10 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View view) {
 				Intent intent = new Intent(MainActivity.this, ContactSelectorActivity.class);
-				if(mViewPager.getCurrentItem() == TAB_POSITION_CHAT) {
+				if (mViewPager.getCurrentItem() == TAB_POSITION_CHAT) {
 					intent.putExtra("CALL", false);
 					intent.putExtra("CHAT", true);
-				}
-				else if(mViewPager.getCurrentItem() == TAB_POSITION_CALL) {
+				} else if (mViewPager.getCurrentItem() == TAB_POSITION_CALL) {
 					intent.putExtra("CALL", true);
 					intent.putExtra("CHAT", false);
 				}
@@ -249,28 +247,23 @@ public class MainActivity extends AppCompatActivity {
 		});
 
 
-
-
-
-
 		ContactViewModel contactViewModel = ViewModelProviders.of(this).get(ContactViewModel.class);
 		contactViewModel.sycContacts();
 
 
 		mConversationViewModel = ViewModelProviders.of(this).get(ConversationViewModel.class);
 		mConversationViewModel.getUnreadConversationNum().observe(this, num -> {
-			if ((num != null)&& (num > 0))
-				tabLayout.setBadgeText(1,num + "");
+			if ((num != null) && (num > 0))
+				tabLayout.setBadgeText(1, num + "");
 			else
-				tabLayout.setBadgeText(1,null);
+				tabLayout.setBadgeText(1, null);
 		});
 
 
-		if (getIntent().hasExtra(Consts.INTENT_CONVERSATION_ID)){
+		if (getIntent().hasExtra(Consts.INTENT_CONVERSATION_ID)) {
 			mIntentConversationId = getIntent().getStringExtra(Consts.INTENT_CONVERSATION_ID);
 			getIntent().removeExtra(Consts.INTENT_CONVERSATION_ID);
-		}
-		else {
+		} else {
 			mIntentConversationId = null;
 		}
 
@@ -281,9 +274,25 @@ public class MainActivity extends AppCompatActivity {
 	protected void onResume() {
 		super.onResume();
 		getCurrentAppVersion(); // Force update if there is a new version of the app in google play
+//
+//		try {
+//			startService(new Intent(this, WCService.class));
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 	}
 
-	public String getIntentConversationId(){ // one timer
+	@Override
+	protected void onPause() {
+		super.onPause();
+//		try {
+//			stopService(new Intent(this, WCService.class));
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+	}
+
+	public String getIntentConversationId() { // one timer
 		String tmpIntentConversationId = mIntentConversationId;
 		mIntentConversationId = null;
 		return tmpIntentConversationId;
@@ -302,6 +311,7 @@ public class MainActivity extends AppCompatActivity {
 //		}
 //	}
 
+
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -317,6 +327,9 @@ public class MainActivity extends AppCompatActivity {
 		super.onStop();
 		unbindService(mServiceConnection);
 		mBound = false;
+
+		stopService(new Intent(this, WCService.class));
+
 	}
 
 	private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -327,18 +340,15 @@ public class MainActivity extends AppCompatActivity {
 			mService = binder.getService();
 			mService.setCurrentConversationId(null);
 			mBound = true;
-
 		}
 
 		@Override
 		public void onServiceDisconnected(ComponentName componentName) {
 			Log.e(TAG, "ServiceConnection: onServiceDisconnected");
-
 			mService = null;
 			mBound = false;
 		}
 	};
-
 
 	public static class PlaceholderFragment extends Fragment {
 		/**
@@ -355,15 +365,13 @@ public class MainActivity extends AppCompatActivity {
 		 * number.
 		 */
 		public static Fragment newInstance(int sectionNumber) {
-			if (sectionNumber == TAB_POSITION_CHAT){
+			if (sectionNumber == TAB_POSITION_CHAT) {
 				RecentChatsFragment recentChatsFragment = new RecentChatsFragment();
 				return recentChatsFragment;
-			}
-			else if (sectionNumber == TAB_POSITION_CALL){
+			} else if (sectionNumber == TAB_POSITION_CALL) {
 				RecentCallsFragment recentCallsFragment = new RecentCallsFragment();
 				return recentCallsFragment;
-			}
-			else if (sectionNumber == TAB_POSITION_INTERPRETER){
+			} else if (sectionNumber == TAB_POSITION_INTERPRETER) {
 				InterpreterFragment interpreterFragment = new InterpreterFragment();
 				return interpreterFragment;
 			}
@@ -422,7 +430,7 @@ public class MainActivity extends AppCompatActivity {
 
 	public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-		private String tabTitles[] = new String[] {
+		private String tabTitles[] = new String[]{
 				"",
 				getString(R.string.tab_text_1),
 				getString(R.string.tab_text_2),
@@ -451,16 +459,12 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 
-
-
-
-
 	}
 
 
-	private void openCamera(){
+	private void openCamera() {
 		synchronized (mInOpen) {
-			if (!mInOpen){
+			if (!mInOpen) {
 				mInOpen = true;
 				new Handler(getMainLooper()).postDelayed(new Runnable() {
 					@Override
@@ -468,14 +472,12 @@ public class MainActivity extends AppCompatActivity {
 						mInOpen = false;
 					}
 				}, 1000);
-				Log.d(TAG,"OOOOOOOOOOOOOOOOOOOOO");
+				Log.d(TAG, "OOOOOOOOOOOOOOOOOOOOO");
 				dispatchTakePictureIntent();
 			}
 		}
 
 	}
-
-
 
 
 	private void dispatchTakePictureIntent() {
@@ -494,24 +496,22 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-		if (requestCode == REQUEST_SELECT_CAMERA_PHOTO){
+		if (requestCode == REQUEST_SELECT_CAMERA_PHOTO) {
 			if (resultCode == RESULT_OK) {
 				//mCameraPhotoFileUri // the image result
 				Intent intent2 = new Intent(this, ContactMultiSelectorActivity.class);
 				startActivityForResult(intent2, REQUEST_SELECT_CONTACTS_MULTI);
 				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 			}
-		}
-		else if (requestCode == REQUEST_SELECT_CONTACTS_MULTI){
+		} else if (requestCode == REQUEST_SELECT_CONTACTS_MULTI) {
 			if (resultCode == RESULT_OK) {
 				//mCameraPhotoFileUri // the image result
 				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
 				sendImageToContacts(contacts, mCameraPhotoFileUri);
 
 			}
-		}
-		else if (requestCode == REQUEST_CONTACT_SELECTOR){
-			if (resultCode == RESULT_OK){
+		} else if (requestCode == REQUEST_CONTACT_SELECTOR) {
+			if (resultCode == RESULT_OK) {
 				String id = intent.getStringExtra(Consts.INTENT_PARTICIPANT_ID);
 				String name = intent.getStringExtra(Consts.INTENT_PARTICIPANT_NAME);
 				String lang = intent.getStringExtra(Consts.INTENT_PARTICIPANT_LANG);
@@ -519,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
 				String contactString = intent.getStringExtra(Consts.INTENT_PARTICIPANT_CONTACT_OBJ);
 				String conversationId = Conversation.getConversationId(id, mSelfUserId);
 
-				if (id.equals("")){
+				if (id.equals("")) {
 					createGroup();
 					return;
 				}
@@ -537,8 +537,7 @@ public class MainActivity extends AppCompatActivity {
 				startActivity(intent1);
 
 			}
-		}
-		else if (requestCode == REQUEST_NEW_GROUP_CONTACTS_SELECT){
+		} else if (requestCode == REQUEST_NEW_GROUP_CONTACTS_SELECT) {
 			if (resultCode == RESULT_OK) {
 				String[] contacts = intent.getStringArrayExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_RESULT);
 				mLastSelectedContactsObj = intent.getStringExtra(ContactMultiSelectorActivity.SELECTED_CONTACTS_OBJ_RESULT);
@@ -549,21 +548,18 @@ public class MainActivity extends AppCompatActivity {
 				overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 				Log.e(TAG, "contacts: " + contacts);
 			}
-		}
-		else if (requestCode == REQUEST_NEW_GROUP_PIC_NAME){
+		} else if (requestCode == REQUEST_NEW_GROUP_PIC_NAME) {
 			if (resultCode == RESULT_OK) {
 				Conversation conversation = Conversation.fromJson(intent.getStringExtra(Consts.INTENT_CONVERSATION_OBJ));
 				openConversationActivity(conversation);
-			}
-			else {
+			} else {
 				createGroup(mLastSelectedContactsObj);
 			}
 		}
 	}
 
 
-
-	public WCService getService(){
+	public WCService getService() {
 		return mService;
 	}
 
@@ -574,7 +570,7 @@ public class MainActivity extends AppCompatActivity {
 		mConversationViewModel.getOutgoingPendingMessagesLD().observe(this, pendingMessages -> {
 			Log.e(TAG, "forwardMessagesToContacts, getOutgoingPendingMessages() result: " + pendingMessages.size());
 
-			if ((pendingMessages != null)&&(pendingMessages.size()>= totalMessagesToSend)) {
+			if ((pendingMessages != null) && (pendingMessages.size() >= totalMessagesToSend)) {
 				mService.sendMessages(pendingMessages);
 //				if (mForwardContactId != null) {
 //					String conversationId = Conversation.getConversationId(mSelfId, mForwardContactId);
@@ -590,7 +586,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	@Override
-	public void onBackPressed(){
+	public void onBackPressed() {
 		if (doubleBackPressedFlag) {
 			super.onBackPressed();
 			return;
@@ -608,7 +604,7 @@ public class MainActivity extends AppCompatActivity {
 		}, 2000);
 	}
 
-	public void createGroup(){
+	public void createGroup() {
 		Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
 		intent.putExtra(Consts.INTENT_TITLE, getString(R.string.new_group));
 		intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_right_arrow);
@@ -616,7 +612,7 @@ public class MainActivity extends AppCompatActivity {
 		overridePendingTransition(R.anim.trans_left_in, R.anim.trans_left_out);
 	}
 
-	public void createGroup(String contactsObj){
+	public void createGroup(String contactsObj) {
 		Intent intent = new Intent(this, ContactMultiSelectorActivity.class);
 		intent.putExtra(Consts.INTENT_TITLE, getString(R.string.new_group));
 		intent.putExtra(Consts.INTENT_ACTION_ICON, R.drawable.ic_action_right_arrow);
@@ -641,12 +637,12 @@ public class MainActivity extends AppCompatActivity {
 		startActivity(intent);
 	}
 
-	private void getCurrentAppVersion(){
+	private void getCurrentAppVersion() {
 		PackageManager pm = this.getPackageManager();
 		PackageInfo pInfo = null;
 
 		try {
-			pInfo =  pm.getPackageInfo(this.getPackageName(),0);
+			pInfo = pm.getPackageInfo(this.getPackageName(), 0);
 		} catch (PackageManager.NameNotFoundException e1) {
 			e1.printStackTrace();
 		}
@@ -654,16 +650,16 @@ public class MainActivity extends AppCompatActivity {
 
 		mConversationViewModel.checkLatestVersion();
 		mConversationViewModel.getLatestVersion().observe(this, latestVersion -> {
-			if(latestVersion != null) {
-				if(Integer.parseInt(mCurrentVersion.replace(".", "")) <
-						Integer.parseInt(latestVersion.replace(".", ""))){
+			if (latestVersion != null) {
+				if (Integer.parseInt(mCurrentVersion.replace(".", "")) <
+						Integer.parseInt(latestVersion.replace(".", ""))) {
 					showUpdateDialog();
 				}
 			}
 		});
 	}
 
-	private void showUpdateDialog(){
+	private void showUpdateDialog() {
 		mUpdatebuilder = new AlertDialog.Builder(this);
 		mUpdatebuilder.setTitle("Update Required");
 		mUpdatebuilder.setMessage("WoChat is out of date. Please visit the Google Play Store to update to the latest version");
@@ -684,9 +680,9 @@ public class MainActivity extends AppCompatActivity {
 //		aa.edit().clear().apply();
 
 		//Wait 1 day in the first apps enter start session counting (In order not to nag at the user)
-		if(mSharedPreferences.geFirstEnterMillis() == -1) {
+		if (mSharedPreferences.geFirstEnterMillis() == -1) {
 			mSharedPreferences.saveFirstEnterMillis(System.currentTimeMillis()); // Save first enter time
-		}else {
+		} else {
 			if (System.currentTimeMillis() < mSharedPreferences.geFirstEnterMillis() + TimeUnit.DAYS.toMillis(1))
 				return;
 		}
@@ -699,5 +695,15 @@ public class MainActivity extends AppCompatActivity {
 				.build();
 		ratingDialog.show();
 
+	}
+
+	public void hideTitle() {
+		getSupportActionBar().setDisplayShowTitleEnabled(false);
+		mActionRL.setVisibility(View.VISIBLE);
+		mSelectedCounterTV.setText("1");
+	}
+
+	public void incRowsCounter() {
+		mSelectedCounterTV.setText("" + (Integer.parseInt(mSelectedCounterTV.getText().toString()) + 1));
 	}
 }

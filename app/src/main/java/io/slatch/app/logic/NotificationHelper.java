@@ -49,11 +49,16 @@ public class NotificationHelper {
 
 		String notifString = dataMap.get("notification_body");
 		String senderString = dataMap.get("sender_contact");
-
 		Message message = Message.fromJson(notifString);
 		Log.d("arik3", "message:" + message.getText() + " ,type: " + message.getMessageType() + " ,sander: " + message.getSenderId() + " , " + message.getSenderName());
+
+		if(dataMap.get("last_update_date") == null)
+			return;
+
 		ContactServer contact = ContactServer.fromJson(senderString);
-		WCRepository repo = ((WCApplication) application).getRepository();
+		WCRepository repo = ((WCApplication) application.getApplicationContext()).getRepository();
+		Log.d("arik3" , "---()()()()()()()---");
+
 
 		if(message.getRtcCode() != null && message.getRtcCode().equals(Message.RTC_CODE_OFFER)) {
 			//Not need to fire notification in call - only open call activity
@@ -69,9 +74,8 @@ public class NotificationHelper {
 						getContactFromPush(repo, application, message, contact);
 				});
 		}else{
-						getContactFromPush(repo, application, message, contact);
+				getContactFromPush(repo, application, message, contact);
 		}
-
 	}
 
 	public static void handleNotificationIncomingMessage(Application application, Message message, Contact contact){

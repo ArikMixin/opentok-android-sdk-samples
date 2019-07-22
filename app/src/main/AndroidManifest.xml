@@ -73,7 +73,8 @@
             android:theme="@style/NoActionBarAppTheme">
         </activity>
 
-        <service android:name=".firebase.WochatFirebaseMessagingService">
+        <service android:name=".firebase.WochatFirebaseMessagingService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
