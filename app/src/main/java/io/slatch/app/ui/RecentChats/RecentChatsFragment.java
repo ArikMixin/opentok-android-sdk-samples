@@ -286,7 +286,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public void onDialogClick(View mView, Conversation conversation) {
-		/************ COMMENT THIS ***********/
+		/************ COMMENT THIS IF YOU WANT TO CANCELL THE DELETE FEATURE***********/
 		if(mDeleteState) {
 
 					//Show or Hide the selection grey layout
@@ -327,7 +327,7 @@ public class RecentChatsFragment extends Fragment  implements
 
 	@Override
 	public void onDialogLongClick(View mView, Conversation conversation) {
-/************ COMMENT THIS ***********/
+/************ COMMENT THIS IF YOU WANT TO CANCELL THE DELETE FEATURE ***********/
                 if(!mDeleteState) {
                             mTrashIcon.setVisible(true);
                             mDeleteState = true;
