@@ -50,12 +50,19 @@ public class NotificationHelper {
 		String notifString = dataMap.get("notification_body");
 		String senderString = dataMap.get("sender_contact");
 		Message message = Message.fromJson(notifString);
-		Log.d("arik3", "message:" + message.getText() + " ,type: " + message.getMessageType() + " ,sander: " + message.getSenderId() + " , " + message.getSenderName());
+		Log.d("arik3", "message:" + message.getText() + " ,type: " + message.getMessageType() + " ,sander: " + message.getSenderId() + " , " + message.getSenderName() +" data"+ dataMap.get("last_update_date"));
 
-		if(dataMap.get("last_update_date") == null)
+	/*	if(dataMap.get("last_update_date") == null)
+			return;*/
+
+		ContactServer contact = null;
+		try {
+				contact = ContactServer.fromJson(senderString);
+		} catch (Exception e) {
+				e.printStackTrace();
 			return;
+		}
 
-		ContactServer contact = ContactServer.fromJson(senderString);
 		WCRepository repo = ((WCApplication) application.getApplicationContext()).getRepository();
 		Log.d("arik3" , "---()()()()()()()---");
 
@@ -69,9 +76,10 @@ public class NotificationHelper {
 		if(message.getMessageType().equals(Message.MSG_TYPE_TEXT) &&
 				!Utils.fixHebrew(message.getMessageLanguage()).equals
 				(Utils.fixHebrew(WCSharedPreferences.getInstance(application).getUserLang()))){
-						repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
+			ContactServer finalContact = contact;
+			repo.translate(message.getText(), message.getMessageLanguage(), listener -> {
 						message.setMessageText(listener);
-						getContactFromPush(repo, application, message, contact);
+						getContactFromPush(repo, application, message, finalContact);
 				});
 		}else{
 				getContactFromPush(repo, application, message, contact);

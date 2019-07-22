@@ -268,11 +268,16 @@ public class RecentChatsFragment extends Fragment  implements
 	@Override
 	public void onDialogClick(View mView, Conversation conversation) {
 		if(mDeleteState) {
-            ((MainActivity) getActivity()).incRowsCounter();
 
+					//Show or Hide the selection grey layout
                     mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
-					mSelectionRL.setVisibility(View.VISIBLE);
-
+                    if(mSelectionRL.getVisibility() != View.VISIBLE) {
+						mSelectionRL.setVisibility(View.VISIBLE);
+						((MainActivity) getActivity()).incRowsCounter(true);
+					}else {
+						mSelectionRL.setVisibility(View.GONE);
+						((MainActivity) getActivity()).incRowsCounter(false);
+					}
 		}else {
 			Intent intent = new Intent(getContext(), ConversationActivity.class);
 			intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
@@ -292,15 +297,23 @@ public class RecentChatsFragment extends Fragment  implements
 	@Override
 	public void onDialogLongClick(View mView, Conversation conversation) {
 
-					mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
-					mSelectionRL.setVisibility(View.VISIBLE);
+
 
 		if(!mDeleteState) {
 					mTrashIcon.setVisible(true);
 					mDeleteState = true;
 					((MainActivity) getActivity()).hideTitle();
+					mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
+					mSelectionRL.setVisibility(View.VISIBLE);
 		}else{
-          	 		((MainActivity)getActivity()).incRowsCounter();
+					mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
+					if(mSelectionRL.getVisibility() != View.VISIBLE) {
+						mSelectionRL.setVisibility(View.VISIBLE);
+						((MainActivity) getActivity()).incRowsCounter(true);
+					}else {
+						mSelectionRL.setVisibility(View.GONE);
+						((MainActivity) getActivity()).incRowsCounter(false);
+					}
         }
 	}
 

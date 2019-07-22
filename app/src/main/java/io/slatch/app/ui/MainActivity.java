@@ -703,7 +703,10 @@ public class MainActivity extends AppCompatActivity {
 		mSelectedCounterTV.setText("1");
 	}
 
-	public void incRowsCounter() {
-		mSelectedCounterTV.setText("" + (Integer.parseInt(mSelectedCounterTV.getText().toString()) + 1));
+	public void incRowsCounter(boolean incFlag) {
+		if(incFlag)
+			mSelectedCounterTV.setText("" + (Integer.parseInt(mSelectedCounterTV.getText().toString()) + 1));
+		else
+			mSelectedCounterTV.setText("" + (Integer.parseInt(mSelectedCounterTV.getText().toString()) - 1));
 	}
 }

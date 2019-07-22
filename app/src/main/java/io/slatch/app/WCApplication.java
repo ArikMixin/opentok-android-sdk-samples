@@ -29,15 +29,15 @@ public class WCApplication extends Application {
 			e.printStackTrace();
 		}
 
-	/*	if (BuildConfig.DEBUG) {
+		if (BuildConfig.DEBUG) {
 			WochatApi.BASE_URL = "https://api-dev.slatch.io/";
 			XMPPProvider.XMPP_DOMAIN = "ejabberd-dev.slatch.io";
 			XMPPProvider.XMPP_PORT = 5223;
-		}else {*/
+		}else {
 			WochatApi.BASE_URL = "https://api.slatch.io/";
 			XMPPProvider.XMPP_DOMAIN = "ejabberd.slatch.io";
 			XMPPProvider.XMPP_PORT = 5223;
-		//}
+		}
 	}
 
 	public AppExecutors getAppExecutors(){

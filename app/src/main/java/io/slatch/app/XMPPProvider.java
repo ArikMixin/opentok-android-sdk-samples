@@ -108,7 +108,7 @@ class XMPPProvider {
 		XMPPTCPConnectionConfiguration.Builder builder = null;
 		try {
 			builder = XMPPTCPConnectionConfiguration.builder().
-				setSecurityMode(ConnectionConfiguration.SecurityMode.disabled).
+				setSecurityMode(ConnectionConfiguration.SecurityMode.ifpossible).
 				setXmppDomain(XMPP_DOMAIN).
 				setHostAddress(InetAddress.getByName(XMPP_DOMAIN)).
 				setPort(XMPP_PORT);
