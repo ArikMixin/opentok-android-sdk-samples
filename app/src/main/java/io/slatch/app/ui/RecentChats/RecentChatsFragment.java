@@ -46,7 +46,7 @@ import io.slatch.app.viewmodel.UserViewModel;
 public class RecentChatsFragment extends Fragment implements
         DialogsListAdapter.OnDialogClickListener<Conversation>,
         DialogsListAdapter.OnDialogLongClickListener<Conversation>,
-        DateFormatter.Formatter, DialogsListAdapter.OnButtonClickListener<Conversation> {
+        DateFormatter.Formatter, DialogsListAdapter.OnButtonClickListener<Conversation>{
 
     private static final int REQUEST_SELECT_CONTACT = 1;
     private static final int REQUEST_SELECT_CONTACTS_MULTY = 2;
