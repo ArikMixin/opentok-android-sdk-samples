@@ -131,8 +131,8 @@ public class MainActivity extends AppCompatActivity {
 		mSelectedCounterTV = (TextView) findViewById(R.id.selected_counter_tv);
 		mCancelActionIV = (ImageView) findViewById(R.id.cancel_action_iv);
 		mCancelActionIV.setOnClickListener(view -> {
-			hideTitle(false);
-			recentChatsFragment.onCancelSelecion();
+				hideTitle(false);
+				recentChatsFragment.onCancelSelection();
 		});
 
 				mViewPager.setAdapter(mSectionsPagerAdapter);
