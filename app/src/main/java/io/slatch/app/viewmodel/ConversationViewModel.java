@@ -203,7 +203,7 @@ public class ConversationViewModel extends AndroidViewModel {
 		return mRepository.getLatestVersion();
 	}
 
-	public void deleteChats(String converationID) {
+	public void deleteChat(String converationID) {
 		mRepository.deleteConveration(converationID);
 	}
 

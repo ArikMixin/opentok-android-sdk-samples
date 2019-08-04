@@ -79,11 +79,13 @@ public class MainActivity extends AppCompatActivity {
 	private static final int REQUEST_SELECT_CONTACTS_MULTI = 3;
 	private static final int REQUEST_NEW_GROUP_CONTACTS_SELECT = 4;
 	private static final int REQUEST_NEW_GROUP_PIC_NAME = 5;
+	private static final String ARG_SECTION_NUMBER = "section_number";
 
 	private SectionsPagerAdapter mSectionsPagerAdapter;
-
 	private ViewPager mViewPager;
-
+	private RecentChatsFragment recentChatsFragment;
+	private RecentCallsFragment recentCallsFragment;
+	private InterpreterFragment interpreterFragment;
 	private VelocityTracker mVelocityTracker = null;
 	private Boolean mInOpen = false;
 	private FloatingActionButton mFab;
@@ -107,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
 	private RelativeLayout mActionRL;
 	private TextView mSelectedCounterTV;
 	private ImageView mCancelActionIV;
-	private static RecentChatsFragment recentChatsFragment;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -131,11 +132,12 @@ public class MainActivity extends AppCompatActivity {
 		mSelectedCounterTV = (TextView) findViewById(R.id.selected_counter_tv);
 		mCancelActionIV = (ImageView) findViewById(R.id.cancel_action_iv);
 		mCancelActionIV.setOnClickListener(view -> {
-				hideTitle(false);
-				recentChatsFragment.onCancelSelection();
+			hideTitle(false);
+			recentChatsFragment.onCancelSelection();
+			recentCallsFragment.onCancelSelection();
 		});
 
-				mViewPager.setAdapter(mSectionsPagerAdapter);
+		mViewPager.setAdapter(mSectionsPagerAdapter);
 		mViewPager.setOffscreenPageLimit(mFragmentsTitles.length); // Prevent recreation the fragments (Only 1 instance)
 
 		int currentItem = TAB_POSITION_CHAT;
@@ -199,11 +201,13 @@ public class MainActivity extends AppCompatActivity {
 		mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 			@Override
 			public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
 			}
 
 			@Override
 			public void onPageSelected(int position) {
+				//if switch tabs - clear delete selection
+						recentChatsFragment.onCancelSelection();
+						recentCallsFragment.onCancelSelection();
 
 				// 	getSupportActionBar().setTitle(mFragmentsTitles[position]); (Title in the right side)
 				if (position == TAB_POSITION_CHAT) {
@@ -231,7 +235,6 @@ public class MainActivity extends AppCompatActivity {
 
 			@Override
 			public void onPageScrollStateChanged(int state) {
-
 			}
 		});
 
@@ -356,38 +359,34 @@ public class MainActivity extends AppCompatActivity {
 			mBound = false;
 		}
 	};
-
 	public static class PlaceholderFragment extends Fragment {
 		/**
 		 * The fragment argument representing the section number for this
 		 * fragment.
 		 */
-		private static final String ARG_SECTION_NUMBER = "section_number";
-
-		public PlaceholderFragment() {
-		}
+		public PlaceholderFragment() { }
 
 		/**
 		 * Returns a new instance of this fragment for the given section
 		 * number.
 		 */
-		public static Fragment newInstance(int sectionNumber) {
-			if (sectionNumber == TAB_POSITION_CHAT) {
-				 recentChatsFragment = new RecentChatsFragment();
-				return recentChatsFragment;
-			} else if (sectionNumber == TAB_POSITION_CALL) {
-				RecentCallsFragment recentCallsFragment = new RecentCallsFragment();
-				return recentCallsFragment;
-			} else if (sectionNumber == TAB_POSITION_INTERPRETER) {
-				InterpreterFragment interpreterFragment = new InterpreterFragment();
-				return interpreterFragment;
-			}
-			PlaceholderFragment fragment = new PlaceholderFragment();
-			Bundle args = new Bundle();
-			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-			fragment.setArguments(args);
-			return fragment;
-		}
+//		public Fragment newInstance(int sectionNumber) {
+//			if (sectionNumber == TAB_POSITION_CHAT) {
+//				 recentChatsFragment = new RecentChatsFragment();
+//				return recentChatsFragment;
+//			} else if (sectionNumber == TAB_POSITION_CALL) {
+//				RecentCallsFragment recentCallsFragment = new RecentCallsFragment();
+//				return recentCallsFragment;
+//			} else if (sectionNumber == TAB_POSITION_INTERPRETER) {
+//				InterpreterFragment interpreterFragment = new InterpreterFragment();
+//				return interpreterFragment;
+//			}
+//			PlaceholderFragment fragment = new PlaceholderFragment();
+//			Bundle args = new Bundle();
+//			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+//			fragment.setArguments(args);
+//			return fragment;
+//		}
 
 		@Override
 		public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -398,42 +397,6 @@ public class MainActivity extends AppCompatActivity {
 			return rootView;
 		}
 	}
-
-//	public static class PlaceholderFragment extends Fragment {
-//
-//		public PlaceholderFragment() {
-//		}
-//
-//
-//		public static Fragment newInstance() {
-//			PlaceholderFragment fragment = new PlaceholderFragment();
-//			return fragment;
-//		}
-//
-//		@Override
-//		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//								 Bundle savedInstanceState) {
-//			View rootView = inflater.inflate(R.layout.fragment_main_activity3, container, false);
-//			return rootView;
-//		}
-//	}
-//
-//
-//
-//	public Fragment newFragmentInstance(int position) {
-//		if (position == TAB_POSITION_CHAT){
-//			RecentChatsFragment recentChatsFragment = new RecentChatsFragment();
-//			return recentChatsFragment;
-//		}
-//		else if (position == TAB_POSITION_CALL){
-//			RecentCallsFragment recentCallsFragment = new RecentCallsFragment();
-//			return recentCallsFragment;
-//		}
-//		else {
-//			return PlaceholderFragment.newInstance();
-//		}
-//	}
-
 
 	public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
@@ -450,7 +413,7 @@ public class MainActivity extends AppCompatActivity {
 
 		@Override
 		public Fragment getItem(int position) {
-			return PlaceholderFragment.newInstance(position);
+			return newInstance(position);
 		}
 
 		@Override
@@ -466,6 +429,29 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 	}
+
+	/**
+	 * Returns a new instance of this fragment for the given section
+	 * number.
+	 */
+	public Fragment newInstance(int sectionNumber) {
+		if (sectionNumber == TAB_POSITION_CHAT) {
+			recentChatsFragment = new RecentChatsFragment();
+			return recentChatsFragment;
+		} else if (sectionNumber == TAB_POSITION_CALL) {
+			recentCallsFragment = new RecentCallsFragment();
+			return recentCallsFragment;
+		} else if (sectionNumber == TAB_POSITION_INTERPRETER) {
+			interpreterFragment = new InterpreterFragment();
+			return interpreterFragment;
+		}
+		PlaceholderFragment fragment = new PlaceholderFragment();
+		Bundle args = new Bundle();
+		args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+		fragment.setArguments(args);
+		return fragment;
+	}
+
 
 	private void openCamera() {
 		synchronized (mInOpen) {

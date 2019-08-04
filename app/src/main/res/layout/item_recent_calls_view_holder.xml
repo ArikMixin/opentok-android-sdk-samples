@@ -8,12 +8,10 @@
     android:layout_height="wrap_content">
 
     <android.support.constraint.ConstraintLayout
-        android:layout_marginTop="8dp"
         android:id="@id/dialogContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
       >
-
 
         <io.slatch.app.components.CircleFlagImageView
             android:id="@id/dialogAvatar"
@@ -22,11 +20,12 @@
             android:layout_marginStart="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            android:elevation="10dp"
-            app:layout_constraintTop_toTopOf="@+id/dialogName"/>
+            app:layout_constraintTop_toTopOf="parent"/>
+        android:elevation="10dp"
 
         <TextView
             android:id="@id/dialogName"
+            android:layout_marginTop="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
@@ -86,9 +85,10 @@
         <TextView
             android:id="@+id/call_date_tv"
             android:layout_width="wrap_content"
-            android:layout_height="20dp"
+            android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_marginTop="2dp"
+            android:paddingBottom="8dp"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"
@@ -126,25 +126,39 @@
             app:layout_constraintVertical_bias="0.476"
             app:srcCompat="@drawable/phone"/>
 
+        <FrameLayout
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:id="@id/dialogDividerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            >
+
+            <View
+                android:id="@id/dialogDivider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dialog_divider"/>
+
+        </FrameLayout>
+
+        <RelativeLayout
+            android:layout_centerHorizontal="true"
+            android:id="@+id/selection_rl"
+            android:alpha="0.10"
+            android:background="@color/purple"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="@+id/dialogContainer"
+            app:layout_constraintBottom_toBottomOf="@+id/dialogContainer"
+            android:visibility="gone">
+        </RelativeLayout>
+
+
 
     </android.support.constraint.ConstraintLayout>
 
 
-    <FrameLayout
-        android:layout_below="@+id/dialogContainer"
-        android:id="@id/dialogDividerContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginTop="8dp"
-        >
 
-        <View
-            android:id="@id/dialogDivider"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/dialog_divider"/>
-
-    </FrameLayout>
 
 </RelativeLayout>

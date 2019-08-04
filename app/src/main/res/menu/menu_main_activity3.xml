@@ -8,6 +8,14 @@
         android:title="@string/action_settings"
         app:showAsAction="never"/>
 
+    <item
+        android:id="@+id/trash"
+        android:title="trash"
+        android:visible="false"
+        android:icon="@drawable/trash"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        />
 
     <item
         android:id="@+id/action_search"

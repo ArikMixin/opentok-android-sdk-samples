@@ -135,7 +135,6 @@ public class RecentChatsFragment extends Fragment implements
                 if ((url != null) && (url.equals("")))
                     url = null;
                 Picasso.get().load(url).placeholder(R.drawable.new_contact).error(R.drawable.new_contact).into(imageView);
-
             }
 
             @Override
@@ -167,23 +166,20 @@ public class RecentChatsFragment extends Fragment implements
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_main, menu);
+
         mTrashIcon = menu.findItem(R.id.trash);
-        mTrashIcon.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                for (int i = 0; i < mSelectedList.size(); i++) {
-                    mConversationViewModel.deleteChats(mSelectedList.get(i).getConversationId());
-                }
-                ((MainActivity) getActivity()).hideTitle(false);
-                onCancelSelection();
-                return false;
+        mTrashIcon.setOnMenuItemClickListener(menuItem -> {
+            for (int i = 0; i < mSelectedList.size(); i++) {
+                mConversationViewModel.deleteChat(mSelectedList.get(i).getConversationId());
             }
+            ((MainActivity) getActivity()).hideTitle(false);
+            onCancelSelection();
+            return false;
         });
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
@@ -191,6 +187,7 @@ public class RecentChatsFragment extends Fragment implements
             startActivity(intent);
             return true;
         }
+
         if (id == R.id.action_create_group) {
             ((MainActivity) getActivity()).createGroup();
             return true;
@@ -229,92 +226,58 @@ public class RecentChatsFragment extends Fragment implements
                 intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
                 intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
                 startActivity(intent);
-
             }
         }
-
     }
 
     @Override
     public void onDialogClick(View mView, Conversation conversation) {
         if (mDeleteState) {
-                //Show or Hide the selection grey layout
-                mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
-                if (mSelectionRL.getVisibility() != View.VISIBLE) {
-                    mSelectionRL.setVisibility(View.VISIBLE);
-                    ((MainActivity) getActivity()).incRowsCounter(true);
-
-                    mSelectedList.add(conversation);
-                    mSelectedLayoutList.add(mSelectionRL);
-                } else {
-                    mSelectionRL.setVisibility(View.GONE);
-                    ((MainActivity) getActivity()).incRowsCounter(false);
-                    removeFromSelectionList(conversation);
-                    mSelectedLayoutList.remove(mSelectionRL);
-
-                    if (mSelectedList.size() == 0) {
-                        ((MainActivity) getActivity()).hideTitle(false);
-                        mTrashIcon.setVisible(false);
-                        mDeleteState = false;
-                    }
-                }
+            rowSelection(mView, conversation);
         } else {
-                Intent intent = new Intent(getContext(), ConversationActivity.class);
-                intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
-                intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
-                intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
-                intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
-                intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
-                intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
-                intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
-                intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
-                intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
-                intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
-                startActivity(intent);
+            Intent intent = new Intent(getContext(), ConversationActivity.class);
+            intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
+            intent.putExtra(Consts.INTENT_PARTICIPANT_NAME, conversation.getParticipantName());
+            intent.putExtra(Consts.INTENT_PARTICIPANT_LANG, conversation.getParticipantLanguage());
+            intent.putExtra(Consts.INTENT_PARTICIPANT_PIC, conversation.getParticipantProfilePicUrl());
+            intent.putExtra(Consts.INTENT_CONVERSATION_ID, conversation.getId());
+            intent.putExtra(Consts.INTENT_CONVERSATION_OBJ, conversation.toJson());
+            intent.putExtra(Consts.INTENT_SELF_PIC_URL, mSelfUser.getProfilePicUrl());
+            intent.putExtra(Consts.INTENT_SELF_ID, mSelfUserId);
+            intent.putExtra(Consts.INTENT_SELF_LANG, mSelfUserLang);
+            intent.putExtra(Consts.INTENT_SELF_NAME, mSelfUserName);
+            startActivity(intent);
         }
     }
 
     @Override
     public void onDialogLongClick(View mView, Conversation conversation) {
-        if (!mDeleteState) {
-            mTrashIcon.setVisible(true);
-            mDeleteState = true;
-            ((MainActivity) getActivity()).hideTitle(true);
+
+        if (!mDeleteState) { //StartDelete State (Edit State)
+            changeEditState(true);
             mSelectedList.add(conversation);
-            mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
-            mSelectionRL.setVisibility(View.VISIBLE);
+            mSelectionRL = mView.findViewById(R.id.selection_rl);
             mSelectedLayoutList.add(mSelectionRL);
+            mSelectionRL.setVisibility(View.VISIBLE);
         } else {
-            mSelectionRL = (RelativeLayout) mView.findViewById(R.id.selection_rl);
-            if (mSelectionRL.getVisibility() != View.VISIBLE) {
-                mSelectionRL.setVisibility(View.VISIBLE);
-
-                ((MainActivity) getActivity()).incRowsCounter(true);
-                mSelectedList.add(conversation);
-                mSelectedLayoutList.add(mSelectionRL);
-            } else {
-                mSelectionRL.setVisibility(View.GONE);
-
-                ((MainActivity) getActivity()).incRowsCounter(false);
-                removeFromSelectionList(conversation);
-                if (mSelectedList.size() == 0) {
-                    ((MainActivity) getActivity()).hideTitle(false);
-                    mTrashIcon.setVisible(false);
-                    mDeleteState = false;
-                }
-            }
+            rowSelection(mView,conversation);
         }
+    }
+
+    private void changeEditState(boolean isEditState) {
+        mTrashIcon.setVisible(isEditState);
+        mDeleteState = isEditState;
+        ((MainActivity)getActivity()).hideTitle(isEditState);
     }
 
     @Override
     public void onButtonClick(Conversation conversation, int buttonID) {
         if (CallActivity.activityActiveFlag)
             return; // Prevent multi open
-        boolean isVideoCall = false;
+
+        boolean isVideoCall = false; //BTN_PHONE
         if (buttonID == RecentChatsViewHolder.BTN_CAMERA)
             isVideoCall = true;
-        else if (buttonID == RecentChatsViewHolder.BTN_PHONE)
-            isVideoCall = false;
 
         Intent intent = new Intent(getContext(), CallActivity.class);
         intent.putExtra(Consts.INTENT_PARTICIPANT_ID, conversation.getParticipantId());
@@ -336,18 +299,13 @@ public class RecentChatsFragment extends Fragment implements
         return Utils.dateFormatter(date);
     }
 
-
     private void initAdapter() {
-
         dialogsAdapter = new DialogsListAdapter<>(
                 R.layout.item_custom_dialog_view_holder_new,
                 RecentChatsViewHolder.class,
                 imageLoader);
 
         dialogsAdapter.setOnDialogClickListener(this);
-
-        //dialogsAdapter.setOnDialogLongClickListener(this);
-//
         dialogsAdapter.setOnDialogLongClickListener(this);
         dialogsAdapter.setOnButtonClickListener(this);
         dialogsAdapter.setDatesFormatter(this);
@@ -372,16 +330,37 @@ public class RecentChatsFragment extends Fragment implements
         }
     }
 
-    public void onCancelSelection() {
-        mSelectedList.clear();
-        mTrashIcon.setVisible(false);
+    private void rowSelection(View mView, Conversation conversation){
+        mSelectionRL = mView.findViewById(R.id.selection_rl);
 
-        for (RelativeLayout rl : mSelectedLayoutList){
-                 rl.setVisibility(View.GONE);
+        if (mSelectionRL.getVisibility() != View.VISIBLE) {
+            mSelectionRL.setVisibility(View.VISIBLE);
+            ((MainActivity) getActivity()).incRowsCounter(true);
+            mSelectedList.add(conversation);
+            mSelectedLayoutList.add(mSelectionRL);
+        } else {
+            mSelectionRL.setVisibility(View.GONE);
+            ((MainActivity) getActivity()).incRowsCounter(false);
+            removeFromSelectionList(conversation);
+            mSelectedLayoutList.remove(mSelectionRL);
+            if (mSelectedList.size() == 0) {
+                changeEditState(false);
+            }
+        }
+    }
+
+    public void onCancelSelection() {
+        if(mSelectedList.size() == 0)
+            return;
+
+        changeEditState(false);
+
+        for (RelativeLayout selectionLayout : mSelectedLayoutList){
+            selectionLayout.setVisibility(View.GONE);
         }
 
+        mSelectedList.clear();
         mSelectedLayoutList.clear();
-        mDeleteState = false;
     }
 }
 
